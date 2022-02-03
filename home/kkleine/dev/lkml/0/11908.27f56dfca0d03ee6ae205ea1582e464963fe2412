@@ -1,0 +1,120 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#28: 
+This assuming that the arch doesn't have support SMP without providing its own
+
+WARNING:BAD_SIGN_OFF: 'Signed-off-by:' is the preferred signature form
+#56: 
+Signed-Off-By: David Howells <dhowells@redhat.com>
+
+The signed-off-by line does not fall in line with the standards
+specified by the community.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#77: FILE: include/asm-arm/system.h:333:
++extern void __bad_cmpxchg(volatile void *, int);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#77: FILE: include/asm-arm/system.h:333:
++extern void __bad_cmpxchg(volatile void *, int);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#79: FILE: include/asm-arm/system.h:335:
++#define cmpxchg(ptr, old, new)						\
++({									\
++	__typeof__ (ptr) ____p = (ptr);					\
++	__typeof__(*ptr) ____old = (old);				\
++	__typeof__(*ptr) ____new = (new);				\
++	__typeof__(*ptr) ____oldval;					\
++	__typeof__(*ptr) ____res;					\
++									\
++	switch (sizeof(____res)) {					\
++	case 4:								\
++		do {							\
++			__asm__ __volatile__("@ cmpxchg\n"		\
++			"ldrex	%1, [%2]\n"				\
++			"mov	%0, #0\n"				\
++			"teq	%1, %3\n"				\
++			"strexeq %0, %4, [%2]\n"			\
++			: "=&r" (____res), "=&r" (____oldval)		\
++			: "r" (____p), "Ir" (____old), "r" (____new)	\
++			: "cc");					\
++		} while(____res);					\
++		break;							\
++	default:							\
++		__bad_cmpxchg(____p, sizeof(____res));			\
++		____oldval = 0;						\
++		break;							\
++	}								\
++	____oldval;							\
++})
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#81: FILE: include/asm-arm/system.h:337:
++	__typeof__ (ptr) ____p = (ptr);					\
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required before the open parenthesis '('
+#98: FILE: include/asm-arm/system.h:354:
++		} while(____res);					\
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#116: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#121: FILE: include/asm-generic/cmpxchg.h:1:
++/* Generic cmpxchg for those arches that don't implement it themselves
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#150: FILE: include/asm-generic/cmpxchg.h:30:
++#define cmpxchg(ptr, old, new)			\
++({						\
++	unsigned long ____flags;		\
++	__typeof__ (ptr) ____p = (ptr);		\
++	__typeof__(*ptr) ____old = (old);	\
++	__typeof__(*ptr) ____new = (new);	\
++	__typeof__(*ptr) ____res;		\
++	raw_local_irq_save(____flags);		\
++	____res = *____p;			\
++	if (likely(____res == (____old)))	\
++		*____p = (____new);		\
++	raw_local_irq_restore(____flags);	\
++	____res;				\
++})
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#153: FILE: include/asm-generic/cmpxchg.h:33:
++	__typeof__ (ptr) ____p = (ptr);		\
+
+CHECK:SPACING: No space is necessary after a cast
+#201: FILE: kernel/workqueue.c:118:
++	tmp |= (unsigned long) wq;
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.11908.commit.27f56dfca0d03ee6ae205ea1582e464963fe2412 total: 1 errors, 7 warnings, 4 checks, 149 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.11908.commit.27f56dfca0d03ee6ae205ea1582e464963fe2412 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,138 @@
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#86: FILE: fs/block_dev.c:137:
++	if (bio_data_dir(bio) == READ)
+[...]
++	else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#88: FILE: fs/block_dev.c:139:
++	else {
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'addr' - possible side-effects?
+#119: FILE: fs/block_dev.c:165:
++#define PAGES_SPANNED(addr, len)	\
++	(DIV_ROUND_UP((addr) + (len), PAGE_SIZE) - (addr) / PAGE_SIZE);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#119: FILE: fs/block_dev.c:165:
++#define PAGES_SPANNED(addr, len)	\
++	(DIV_ROUND_UP((addr) + (len), PAGE_SIZE) - (addr) / PAGE_SIZE);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#132: FILE: fs/block_dev.c:178:
++	int ret, nr_pages;
++	if (pvec->idx == pvec->nr) {
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#155: FILE: fs/block_dev.c:198:
++	unsigned blkbits = blksize_bits(bdev_hardsect_size(I_BDEV(inode)));
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#156: FILE: fs/block_dev.c:199:
++	unsigned blocksize_mask = (1<< blkbits) - 1;
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxW)
+#156: FILE: fs/block_dev.c:199:
++	unsigned blocksize_mask = (1<< blkbits) - 1;
+ 	                            ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#166: FILE: fs/block_dev.c:209:
++	struct bio * bio;
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#185: FILE: fs/block_dev.c:228:
++		addr = (unsigned long) iov[seg].iov_base;
+
+CHECK:SPACING: No space is necessary after a cast
+#196: FILE: fs/block_dev.c:239:
++		nvec = min(nvec, (unsigned long) BIO_MAX_PAGES);
+
+WARNING:MINMAX: min() should probably be min_t(unsigned long, nvec, BIO_MAX_PAGES)
+#196: FILE: fs/block_dev.c:239:
++		nvec = min(nvec, (unsigned long) BIO_MAX_PAGES);
+
+WARNING:LIKELY_MISUSE: nested (un)?likely() calls, IS_ERR already uses unlikely() internally
+#211: FILE: fs/block_dev.c:254:
++		if (unlikely(IS_ERR(page)))
+
+CHECK:SPACING: No space is necessary after a cast
+#223: FILE: fs/block_dev.c:266:
++				addr = (unsigned long) iov[seg].iov_base;
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#306: FILE: include/linux/bio.h:312:
++extern void bio_release_pages(struct bio *bio);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.11751.commit.00dc2a04621aa2036bc251276e2b6e1f272b4fbb total: 1 errors, 6 warnings, 8 checks, 236 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.11751.commit.00dc2a04621aa2036bc251276e2b6e1f272b4fbb has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

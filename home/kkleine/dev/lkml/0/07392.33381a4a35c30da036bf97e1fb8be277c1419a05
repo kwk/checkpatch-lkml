@@ -1,0 +1,333 @@
+WARNING:TYPO_SPELLING: 'independant' may be misspelled - perhaps 'independent'?
+#38: 
+Linux Kernel Markers, architecture independant code.
+                                   ^^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#40: 
+This patch also includes non-optimized default behavior from asm-generic in each
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#67: FILE: kernel/Kconfig.marker:3:
++config MARKERS
++	bool "Activate markers"
++	select MODULES
++	default n
++	help
++	  Place an empty function call at each marker site. Can be
++	  dynamically changed for a probe function.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#75: FILE: kernel/Kconfig.marker:11:
++config MARKERS_DISABLE_OPTIMIZATION
++	bool "Disable architecture specific marker optimization"
++	depends EMBEDDED
++	default n
++	help
++	  Disable code replacement jump optimisations. Especially useful if your
++	  code is in a read-only rom/flash.
++++ b/include/linux/module.h
++++ b/include/linux/module.h
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#98: FILE: include/linux/module.h:475:
++extern void list_modules(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#105: FILE: include/linux/marker.h:1:
++#ifndef _LINUX_MARKER_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __printf(1, 2) over __attribute__((format(printf, 1, 2)))
+#156: FILE: include/linux/marker.h:52:
++static inline __attribute__ ((format (printf, 1, 2)))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#162: FILE: include/linux/marker.h:58:
++extern int marker_set_probe(const char *name, const char *format,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#163: FILE: include/linux/marker.h:59:
++extern int marker_set_probe(const char *name, const char *format,
++				marker_probe_func *probe);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#165: FILE: include/linux/marker.h:61:
++extern int marker_remove_probe(marker_probe_func *probe);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#166: FILE: include/linux/marker.h:62:
++extern int marker_list_probe(marker_probe_func *probe);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#173: FILE: include/asm-arm/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#178: FILE: include/asm-arm/marker.h:6:
++ * $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#189: FILE: include/asm-cris/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#194: FILE: include/asm-cris/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#205: FILE: include/asm-frv/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#210: FILE: include/asm-frv/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#221: FILE: include/asm-generic/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#225: FILE: include/asm-generic/marker.h:5:
++ * $
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __packed over __attribute__((packed))
+#237: FILE: include/asm-generic/marker.h:17:
++} __attribute__((packed));
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#241: FILE: include/asm-generic/marker.h:21:
++	volatile char *enable;
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __packed over __attribute__((packed))
+#242: FILE: include/asm-generic/marker.h:22:
++} __attribute__((packed));
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'format' - possible side-effects?
+#246: FILE: include/asm-generic/marker.h:26:
++#define MARK(name, format, args...) \
++	do { \
++		static marker_probe_func *__mark_call_##name = \
++					__mark_empty_function; \
++		volatile static char __marker_enable_##name = 0; \
++		static const struct __mark_marker_c __mark_c_##name \
++			__attribute__((section(".markers.c"))) = \
++			{ #name, &__mark_call_##name, format } ; \
++		static const struct __mark_marker __mark_##name \
++			__attribute__((section(".markers"))) = \
++			{ &__mark_c_##name, &__marker_enable_##name } ; \
++		asm volatile ( "" : : "i" (&__mark_##name)); \
++		__mark_check_format(format, ## args); \
++		if (unlikely(__marker_enable_##name)) { \
++			preempt_disable(); \
++			(*__mark_call_##name)(format, ## args); \
++			preempt_enable_no_resched(); \
++		} \
++	} while (0)
+
+ERROR:INITIALISED_STATIC: do not initialise statics to 0
+#250: FILE: include/asm-generic/marker.h:30:
++		volatile static char __marker_enable_##name = 0; \
+
+Static variables should not be initialized explicitly to zero.
+Your compiler (or rather your loader) automatically does
+it for you.
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#250: FILE: include/asm-generic/marker.h:30:
++		volatile static char __marker_enable_##name = 0; \
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section(".markers.c") over __attribute__((section(".markers.c")))
+#252: FILE: include/asm-generic/marker.h:32:
++			__attribute__((section(".markers.c"))) = \
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section(".markers") over __attribute__((section(".markers")))
+#255: FILE: include/asm-generic/marker.h:35:
++			__attribute__((section(".markers"))) = \
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#257: FILE: include/asm-generic/marker.h:37:
++		asm volatile ( "" : : "i" (&__mark_##name)); \
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#266: FILE: include/asm-generic/marker.h:46:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#273: FILE: include/asm-h8300/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#278: FILE: include/asm-h8300/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#289: FILE: include/asm-ia64/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#294: FILE: include/asm-ia64/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#305: FILE: include/asm-m32r/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#310: FILE: include/asm-m32r/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#321: FILE: include/asm-m68k/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#326: FILE: include/asm-m68k/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#337: FILE: include/asm-m68knommu/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#342: FILE: include/asm-m68knommu/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#353: FILE: include/asm-mips/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#358: FILE: include/asm-mips/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#369: FILE: include/asm-parisc/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#374: FILE: include/asm-parisc/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#385: FILE: include/asm-ppc/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#390: FILE: include/asm-ppc/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#401: FILE: include/asm-s390/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#406: FILE: include/asm-s390/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#417: FILE: include/asm-sh64/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#422: FILE: include/asm-sh64/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#433: FILE: include/asm-sh/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#438: FILE: include/asm-sh/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#449: FILE: include/asm-sparc64/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#454: FILE: include/asm-sparc64/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#465: FILE: include/asm-sparc/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#470: FILE: include/asm-sparc/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#481: FILE: include/asm-um/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#486: FILE: include/asm-um/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#497: FILE: include/asm-v850/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#502: FILE: include/asm-v850/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#513: FILE: include/asm-x86_64/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#518: FILE: include/asm-x86_64/marker.h:6:
++ * $
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#529: FILE: include/asm-xtensa/marker.h:1:
++/*
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#534: FILE: include/asm-xtensa/marker.h:6:
++ * $
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.07392.commit.33381a4a35c30da036bf97e1fb8be277c1419a05 total: 23 errors, 33 warnings, 7 checks, 421 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.07392.commit.33381a4a35c30da036bf97e1fb8be277c1419a05 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,159 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cpu' - possible side-effects?
+#78: FILE: drivers/cpufreq/cpufreq.c:64:
++#define lock_policy_rwsem(mode, cpu)					\
++int lock_policy_rwsem_##mode						\
++(int cpu)								\
++{									\
++	int policy_cpu = per_cpu(policy_cpu, cpu);			\
++	BUG_ON(policy_cpu == -1);					\
++	down_##mode(&per_cpu(cpu_policy_rwsem, policy_cpu));		\
++	if (unlikely(!cpu_online(cpu))) {				\
++		up_##mode(&per_cpu(cpu_policy_rwsem, policy_cpu));	\
++		return -1;						\
++	}								\
++									\
++	return 0;							\
++}
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#83: FILE: drivers/cpufreq/cpufreq.c:69:
++	BUG_ON(policy_cpu == -1);					\
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#94: FILE: drivers/cpufreq/cpufreq.c:80:
++EXPORT_SYMBOL_GPL(lock_policy_rwsem_read);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#97: FILE: drivers/cpufreq/cpufreq.c:83:
++EXPORT_SYMBOL_GPL(lock_policy_rwsem_write);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#102: FILE: drivers/cpufreq/cpufreq.c:88:
++	int policy_cpu = per_cpu(policy_cpu, cpu);
++	BUG_ON(policy_cpu == -1);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#102: FILE: drivers/cpufreq/cpufreq.c:88:
++	BUG_ON(policy_cpu == -1);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#110: FILE: drivers/cpufreq/cpufreq.c:96:
++	int policy_cpu = per_cpu(policy_cpu, cpu);
++	BUG_ON(policy_cpu == -1);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#110: FILE: drivers/cpufreq/cpufreq.c:96:
++	BUG_ON(policy_cpu == -1);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#115: FILE: drivers/cpufreq/cpufreq.c:101:
++
++
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#205: FILE: drivers/cpufreq/cpufreq.c:781:
+ 		if (unlikely(managed_policy)) {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#268: FILE: drivers/cpufreq/cpufreq.c:898:
++static int __cpufreq_remove_dev (struct sys_device * sys_dev)
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#268: FILE: drivers/cpufreq/cpufreq.c:898:
++static int __cpufreq_remove_dev (struct sys_device * sys_dev)
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#313: FILE: drivers/cpufreq/cpufreq.c:1004:
++static int cpufreq_remove_dev (struct sys_device * sys_dev)
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#313: FILE: drivers/cpufreq/cpufreq.c:1004:
++static int cpufreq_remove_dev (struct sys_device * sys_dev)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#317: FILE: drivers/cpufreq/cpufreq.c:1008:
++	int retval;
++	if (unlikely(lock_policy_rwsem_write(cpu)))
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#318: FILE: drivers/cpufreq/cpufreq.c:1009:
++		BUG();
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#324: FILE: drivers/cpufreq/cpufreq.c:1015:
++
++
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#478: FILE: drivers/cpufreq/cpufreq.c:1699:
++				BUG();
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#484: FILE: drivers/cpufreq/cpufreq.c:1704:
++				__cpufreq_driver_target(policy, policy->min,
+ 						CPUFREQ_RELATION_H);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#531: FILE: include/linux/cpufreq.h:172:
++extern int __cpufreq_driver_getavg(struct cpufreq_policy *policy);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.05806.commit.ef44d8222b3a1502f038fcac1fab1d0d51e427e0 total: 2 errors, 12 warnings, 6 checks, 454 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.05806.commit.ef44d8222b3a1502f038fcac1fab1d0d51e427e0 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.
