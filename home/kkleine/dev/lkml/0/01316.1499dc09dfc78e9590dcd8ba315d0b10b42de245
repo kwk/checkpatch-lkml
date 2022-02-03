@@ -1,0 +1,539 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#26: 
+of progress. That is, the storage device must never stall because of (physical)
+
+WARNING:REPEATED_WORD: Possible repeated word: 'with'
+#42: 
+is a promise the socket will never block on receive. Along with with a memory
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#162: FILE: include/net/sock.h:439:
++extern int sk_emergency_skb_get(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#169: FILE: include/net/sock.h:446:
++extern void sk_adjust_memalloc(int socks, int tx_reserve_pages);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#170: FILE: include/net/sock.h:447:
++extern void ipfrag_reserve_memory(int ipfrag_reserve);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#171: FILE: include/net/sock.h:448:
++extern void iprt_reserve_memory(int rt_reserve);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#172: FILE: include/net/sock.h:449:
++extern int sk_set_vmio(struct sock *sk);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#173: FILE: include/net/sock.h:450:
++extern int sk_clear_vmio(struct sock *sk);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#183: FILE: include/net/sock.h:733:
++extern int sk_stream_mem_schedule(struct sock *sk, struct sk_buff *skb,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#184: FILE: include/net/sock.h:734:
++extern int sk_stream_mem_schedule(struct sock *sk, struct sk_buff *skb,
++		int size, int kind);
+
+ERROR:SWITCH_CASE_INDENT_LEVEL: switch and case should be at the same indent
+#272: FILE: net/core/dev.c:1846:
++		switch(skb->protocol) {
++			case __constant_htons(ETH_P_ARP):
++			case __constant_htons(ETH_P_IP):
++			case __constant_htons(ETH_P_IPV6):
+[...]
++			default:
+
+switch should be at the same indent as case.
+Example::
+
+  switch (suffix) {
+  case 'G':
+  case 'g':
+          mem <<= 30;
+          break;
+  case 'M':
+  case 'm':
+          mem <<= 20;
+          break;
+  case 'K':
+  case 'k':
+          mem <<= 10;
+          fallthrough;
+  default:
+          break;
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+ERROR:SPACING: space required before the open parenthesis '('
+#272: FILE: net/core/dev.c:1846:
++		switch(skb->protocol) {
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:CONSTANT_CONVERSION: __constant_htons should be htons
+#273: FILE: net/core/dev.c:1847:
++			case __constant_htons(ETH_P_ARP):
+
+Use of __constant_<foo> form is discouraged for the following functions::
+
+  __constant_cpu_to_be[x]
+  __constant_cpu_to_le[x]
+  __constant_be[x]_to_cpu
+  __constant_le[x]_to_cpu
+  __constant_htons
+  __constant_ntohs
+
+Using any of these outside of include/uapi/ is not preferred as using the
+function without __constant_ is identical when the argument is a
+constant.
+
+In big endian systems, the macros like __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to the same expression::
+
+  #define __constant_cpu_to_be32(x) ((__force __be32)(__u32)(x))
+  #define __cpu_to_be32(x)          ((__force __be32)(__u32)(x))
+
+In little endian systems, the macros __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to __constant_swab32 and __swab32.  __swab32
+has a __builtin_constant_p check::
+
+  #define __swab32(x)				\
+    (__builtin_constant_p((__u32)(x)) ?	\
+    ___constant_swab32(x) :			\
+    __fswab32(x))
+
+So ultimately they have a special case for constants.
+Similar is the case with all of the macros in the list.  Thus
+using the __constant_... forms are unnecessarily verbose and
+not preferred outside of include/uapi.
+
+See: https://lore.kernel.org/lkml/1400106425.12666.6.camel@joe-AO725/
+
+WARNING:CONSTANT_CONVERSION: __constant_htons should be htons
+#274: FILE: net/core/dev.c:1848:
++			case __constant_htons(ETH_P_IP):
+
+WARNING:CONSTANT_CONVERSION: __constant_htons should be htons
+#275: FILE: net/core/dev.c:1849:
++			case __constant_htons(ETH_P_IPV6):
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#330: FILE: net/core/skbuff.c:157:
++		gfp_mask |= __GFP_NOMEMALLOC|__GFP_NOWARN;
+ 		                            ^
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#377: FILE: net/core/skbuff.c:210:
++	if (!emergency) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#379: FILE: net/core/skbuff.c:212:
++			gfp_mask &= ~(__GFP_NOMEMALLOC|__GFP_NOWARN);
+ 			                              ^
+
+CHECK:BRACES: Unbalanced braces around else statement
+#384: FILE: net/core/skbuff.c:217:
++	} else
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#395: FILE: net/core/skbuff.c:297:
++ ^Iskb = __alloc_skb(length + NET_SKB_PAD, gfp_mask, SKB_ALLOC_RX, node);$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#395: FILE: net/core/skbuff.c:297:
++ ^Iskb = __alloc_skb(length + NET_SKB_PAD, gfp_mask, SKB_ALLOC_RX, node);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#395: FILE: net/core/skbuff.c:297:
++ ^Iskb = __alloc_skb(length + NET_SKB_PAD, gfp_mask, SKB_ALLOC_RX, node);$
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#437: FILE: net/core/skbuff.c:728:
++	if (unlikely(skb->emergency) && sk_emergency_skb_get()) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#440: FILE: net/core/skbuff.c:731:
++	} else
+
+WARNING:NETWORKING_BLOCK_COMMENT_STYLE: networking block comments don't use an empty /* line, use /* Comment...
+#478: FILE: net/core/sock.c:214:
++/*
++ * is there room for another emergency skb.
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#484: FILE: net/core/sock.c:220:
++	int thresh = (3 * ipfrag_skbs()) / 2;
++	if (nr < thresh)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#511: FILE: net/core/sock.c:247:
++	BUG_ON(nr_socks < 0);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#515: FILE: net/core/sock.c:251:
++		int rx_pages = 2 * ipfrag_pages() + iprt_pages;
++		reserve += rx_pages - rx_net_reserve;
+
+WARNING:NETWORKING_BLOCK_COMMENT_STYLE: networking block comments don't use an empty /* line, use /* Comment...
+#529: FILE: net/core/sock.c:265:
++/*
++ * tiny helper function to track the total ipfragment memory
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#556: FILE: net/core/sock.c:292:
++	int set = sock_flag(sk, SOCK_VMIO);
++	if (!set) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#568: FILE: net/core/sock.c:304:
++	int set = sock_flag(sk, SOCK_VMIO);
++	if (set) {
+
+CHECK:BRACES: Unbalanced braces around else statement
+#589: FILE: net/core/sock.c:361:
++	} else
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#639: FILE: net/ipv4/sysctl_net_ipv4.c:190:
++int proc_dointvec_fragment(ctl_table *table, int write, struct file *filp,
+                                                                      ^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#640: FILE: net/ipv4/sysctl_net_ipv4.c:191:
++int proc_dointvec_fragment(ctl_table *table, int write, struct file *filp,
++		     void __user *buffer, size_t *lenp, loff_t *ppos)
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#644: FILE: net/ipv4/sysctl_net_ipv4.c:195:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                                ^^^^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#644: FILE: net/ipv4/sysctl_net_ipv4.c:195:
++	int old_thresh = *(int *)table->data;
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#644: FILE: net/ipv4/sysctl_net_ipv4.c:195:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#644: FILE: net/ipv4/sysctl_net_ipv4.c:195:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                               ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#644: FILE: net/ipv4/sysctl_net_ipv4.c:195:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                                    ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#644: FILE: net/ipv4/sysctl_net_ipv4.c:195:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                                           ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#644: FILE: net/ipv4/sysctl_net_ipv4.c:195:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                                                ^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#674: FILE: net/ipv4/tcp_ipv4.c:1611:
++	unsigned long pflags = current->flags;
++	if (unlikely(skb->emergency)) {
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#675: FILE: net/ipv4/tcp_ipv4.c:1612:
++		BUG_ON(!sk_has_vmio(sk)); /* we dropped those before queueing */
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#694: FILE: net/ipv4/tcp_ipv4.c:1674:
++^I       ^Iif (!sk_has_vmio(sk))$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#694: FILE: net/ipv4/tcp_ipv4.c:1674:
++^I       ^Iif (!sk_has_vmio(sk))$
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#697: FILE: net/ipv4/tcp_ipv4.c:1677:
++		/*
++		   decrease window size..
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#722: FILE: net/ipv6/sysctl_net_ipv6.c:18:
++extern int proc_dointvec_fragment(ctl_table *table, int write,
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#723: FILE: net/ipv6/sysctl_net_ipv6.c:19:
++	       	struct file *filp, void __user *buffer, size_t *lenp,
+ 	       	             ^^^^
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#723: FILE: net/ipv6/sysctl_net_ipv6.c:19:
++^I       ^Istruct file *filp, void __user *buffer, size_t *lenp,$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#723: FILE: net/ipv6/sysctl_net_ipv6.c:19:
++^I       ^Istruct file *filp, void __user *buffer, size_t *lenp,$
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#723: FILE: net/ipv6/sysctl_net_ipv6.c:19:
++extern int proc_dointvec_fragment(ctl_table *table, int write,
++	       	struct file *filp, void __user *buffer, size_t *lenp,
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#724: FILE: net/ipv6/sysctl_net_ipv6.c:20:
++^I       ^Iloff_t *ppos);$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#724: FILE: net/ipv6/sysctl_net_ipv6.c:20:
++^I       ^Iloff_t *ppos);$
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#747: FILE: net/netfilter/core.c:185:
++			printk(KERN_ERR "nf_hook: NF_QUEUE encountered for "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#748: FILE: net/netfilter/core.c:186:
++			printk(KERN_ERR "nf_hook: NF_QUEUE encountered for "
++					"emergency skb - skipping rule.\n");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#763: FILE: security/selinux/avc.c:335:
++	node = kmem_cache_alloc(avc_node_cachep, GFP_ATOMIC|__GFP_NOMEMALLOC);
+ 	                                                   ^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#797: FILE: net/ipv4/route.c:2887:
++static int proc_dointvec_rt_size(ctl_table *table, int write, struct file *filp,
+                                                                            ^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#798: FILE: net/ipv4/route.c:2888:
++static int proc_dointvec_rt_size(ctl_table *table, int write, struct file *filp,
++		     void __user *buffer, size_t *lenp, loff_t *ppos)
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#802: FILE: net/ipv4/route.c:2892:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                                ^^^^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#802: FILE: net/ipv4/route.c:2892:
++	int old = *(int *)table->data;
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#802: FILE: net/ipv4/route.c:2892:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#802: FILE: net/ipv4/route.c:2892:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                               ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#802: FILE: net/ipv4/route.c:2892:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                                    ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#802: FILE: net/ipv4/route.c:2892:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                                           ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#802: FILE: net/ipv4/route.c:2892:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                                                ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#804: FILE: net/ipv4/route.c:2894:
++	iprt_reserve_memory(kmem_cache_objs_to_pages(ipv4_dst_ops.kmem_cachep,
++				*(int *)table->data - old));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#825: FILE: net/ipv4/route.c:3168:
++	iprt_reserve_memory(kmem_cache_objs_to_pages(ipv4_dst_ops.kmem_cachep,
++				ip_rt_max_size));
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#837: FILE: net/ipv6/route.c:2359:
++static int proc_dointvec_rt_size(ctl_table *table, int write, struct file *filp,
+                                                                            ^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#838: FILE: net/ipv6/route.c:2360:
++static int proc_dointvec_rt_size(ctl_table *table, int write, struct file *filp,
++		     void __user *buffer, size_t *lenp, loff_t *ppos)
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#842: FILE: net/ipv6/route.c:2364:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                                ^^^^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#842: FILE: net/ipv6/route.c:2364:
++	int old = *(int *)table->data;
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#842: FILE: net/ipv6/route.c:2364:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#842: FILE: net/ipv6/route.c:2364:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                               ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#842: FILE: net/ipv6/route.c:2364:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                                    ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#842: FILE: net/ipv6/route.c:2364:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                                           ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#842: FILE: net/ipv6/route.c:2364:
++	ret = proc_dointvec(table,write,filp,buffer,lenp,ppos);
+ 	                                                ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#844: FILE: net/ipv6/route.c:2366:
++	iprt_reserve_memory(kmem_cache_objs_to_pages(ip6_dst_ops.kmem_cachep,
++				*(int *)table->data - old));
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#856: FILE: net/ipv6/route.c:2393:
++         ^I.proc_handler^I=^I&proc_dointvec_rt_size,$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#856: FILE: net/ipv6/route.c:2393:
++         ^I.proc_handler^I=^I&proc_dointvec_rt_size,$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#856: FILE: net/ipv6/route.c:2393:
++         ^I.proc_handler^I=^I&proc_dointvec_rt_size,$
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#865: FILE: net/ipv6/route.c:2479:
++	iprt_reserve_memory(kmem_cache_objs_to_pages(ip6_dst_ops.kmem_cachep,
++				ip6_rt_max_size));
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#881: FILE: net/ipv6/tcp_ipv6.c:1685:
++	unsigned long pflags = current->flags;
++	if (unlikely(skb->emergency)) {
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#882: FILE: net/ipv6/tcp_ipv6.c:1686:
++		BUG_ON(!sk_has_vmio(sk)); /* we dropped those before queueing */
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#901: FILE: net/ipv6/tcp_ipv6.c:1743:
++^I       ^Iif (!sk_has_vmio(sk))$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#901: FILE: net/ipv6/tcp_ipv6.c:1743:
++^I       ^Iif (!sk_has_vmio(sk))$
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#904: FILE: net/ipv6/tcp_ipv6.c:1746:
++		/*
++		   decrease window size..
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.01316.commit.1499dc09dfc78e9590dcd8ba315d0b10b42de245 total: 23 errors, 39 warnings, 24 checks, 747 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.01316.commit.1499dc09dfc78e9590dcd8ba315d0b10b42de245 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.
