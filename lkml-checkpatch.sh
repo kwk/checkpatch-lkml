@@ -2,6 +2,8 @@
 
 set -e
 
+LANG=C
+
 fixed_checkpatch_opts="--show-types --summary-file"
 opt_lkml_path=$(realpath ../lkml/0)
 opt_linux_tree_root=$(realpath ../linux)
@@ -9,6 +11,8 @@ opt_checkpatch_opts="--no-signoff --verbose --subjective --mailback --codespell"
 opt_log_dir=$(realpath ../checkpatch-results/)
 opt_start_offset=0
 opt_num_messages=-1
+opt_num_parallel_jobs=$(nproc)
+opt_verbose=0
 
 usage() {
 local script=$(basename $0)
@@ -39,6 +43,8 @@ Usage: ${script}
                                                           (will be created if it doesn't exist)
     --start-offset <MESSAGE_OFFSET_IN_LKML>               defaults to: ${opt_start_offset}
     --num-messages <NUM_MESSAGES>                         defaults to: git -C <LKML_GIT_CLONE_DIR> rev-list HEAD --count
+    --num-parallel-jobs <NUM_JOBS>                        defaults to: ${opt_num_parallel_jobs}
+    --verbose                                             will turn on what commands are being run in each step (not enabled by default)
     --help | -help | -h                                   display this help text
 EOF
 }
@@ -73,6 +79,13 @@ while [ $# -gt 0 ]; do
             shift
             opt_num_messages=$1
             ;;
+        --num-parallel-jobs )
+            shift
+            opt_num_parallel_jobs=$1
+            ;;
+        --verbose )
+            opt_verbose=1
+            ;;
         -h | -help | --help )
             usage
             exit 0
@@ -93,38 +106,37 @@ fi
 run_checkpath_against_lkml() {
     cat <<EOF
 Start-Offset: $opt_start_offset
-#Messages:    $opt_num_messages
+# Messages  : $opt_num_messages
 EOF
 
     # Checkpatch runs on a temporary patch file and we want the name to reflect
     # where it originated from. That's why the patch includes the opt_lkml_path.
-    tempdir=$(mktemp -d)
+    tempdir=$(mktemp -d -p .)
     tempdir=$tempdir/$opt_lkml_path
-    mkdir -pv $tempdir
-    tmplogfile=$tempdir/checkpatch.log
+    mkdir -p $tempdir
+    # tmplogfile=$tempdir/checkpatch.log
     
     # final destination for log files
     logdir=$opt_log_dir/$opt_lkml_path
-    mkdir -pv $logdir
+    mkdir -p $logdir
     
     end_offset=$((opt_start_offset + opt_num_messages - 1))
-    for offset in $(seq $opt_start_offset $end_offset); do
-        echo "======= start-offset: $opt_start_offset offset:$offset end-offset: $end_offset ======="
-
-        # Get the n-th message from the mailing list (aka the patch message) and save it
-        # as a patchfile to be checked by checkpatch.pl
-        sha1=$(git -C $(realpath $opt_lkml_path) log --format="%H" -n1 HEAD~$offset)
-        patchfile=$tempdir/patch.offset.$(printf "%010d" $offset).commit.$sha1
-        git -C $opt_lkml_path show HEAD~$offset:m > $patchfile
-        
-        # Run checkpatch on the patchfile and if it found something,
-        # save the result in a properly named file.
-        rm -f $tmplogfile
-        $opt_linux_tree_root/scripts/checkpatch.pl --root=$opt_linux_tree_root $fixed_checkpatch_opts $opt_checkpatch_opts $patchfile 2>&1 | tee $tmplogfile
-        if [ -s $tmplogfile ]; then
-            mv -v $tmplogfile $logdir/$(printf "%010d" $offset).$sha1;
+    seq $opt_start_offset $end_offset | parallel -j $opt_num_parallel_jobs "
+        if [ "$opt_verbose" == "1" ]; then
+            set -x;
         fi
-    done
+        set -e;
+        offset={};
+        offset_str=\$(printf \"%010d\" \$offset);
+        echo \"======= start-offset: $opt_start_offset end-offset: $end_offset offset:\$offset_str bashpid: \$BASHPID =======\";
+        sha1=\$(git -C $(realpath $opt_lkml_path) log --format=\"%H\" -n1 HEAD~$offset);
+        patchfile=$tempdir/patch.offset.\$offset_str.commit.\$sha1;
+        git -C $opt_lkml_path show HEAD~{}:m > \$patchfile;
+        tmplogfile=$tempdir/checkpatch.log.\$BASHPID;
+        $opt_linux_tree_root/scripts/checkpatch.pl --root=$opt_linux_tree_root $fixed_checkpatch_opts $opt_checkpatch_opts \$patchfile 2>&1 | tee \$tmplogfile;
+        if [ -s \$tmplogfile ]; then
+            mv -v \$tmplogfile $logdir/\$offset_str.\$sha1;
+        fi"
 }
 
 run_checkpath_against_lkml
