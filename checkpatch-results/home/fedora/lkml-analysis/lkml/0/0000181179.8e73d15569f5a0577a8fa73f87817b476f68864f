@@ -1,0 +1,252 @@
+WARNING:TYPO_SPELLING: 'verson' may be misspelled - perhaps 'version'?
+#46: 
+driver (i.e. if the one provided by DKMS has a newer verson than that
+                                                     ^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct module *' should also have an identifier name
+#93: FILE: include/linux/module.h:54:
++	void (*setup)(struct module *, const char *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const char *' should also have an identifier name
+#93: FILE: include/linux/module.h:54:
++	void (*setup)(struct module *, const char *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct module *' should also have an identifier name
+#94: FILE: include/linux/module.h:55:
++	int (*test)(struct module *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct module *' should also have an identifier name
+#95: FILE: include/linux/module.h:56:
++	void (*free)(struct module *);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#122: FILE: kernel/module.c:667:
++#define MODINFO_ATTR(field)	\
++static void setup_modinfo_##field(struct module *mod, const char *s)  \
++{                                                                     \
++	mod->field = kstrdup(s, GFP_KERNEL);                          \
++}                                                                     \
++static ssize_t show_modinfo_##field(struct module_attribute *mattr,   \
++	                struct module *mod, char *buffer)             \
++{                                                                     \
++	return sprintf(buffer, "%s\n", mod->field);                   \
++}                                                                     \
++static int modinfo_##field##_exists(struct module *mod)               \
++{                                                                     \
++	return mod->field != NULL;                                    \
++}                                                                     \
++static void free_modinfo_##field(struct module *mod)                  \
++{                                                                     \
++        kfree(mod->field);                                            \
++        mod->field = NULL;                                            \
++}                                                                     \
++static struct module_attribute modinfo_##field = {                    \
++	.attr = { .name = __stringify(field), .mode = 0444,           \
++		  .owner = THIS_MODULE },                             \
++	.show = show_modinfo_##field,                                 \
++	.setup = setup_modinfo_##field,                               \
++	.test = modinfo_##field##_exists,                             \
++	.free = free_modinfo_##field,                                 \
++};
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#122: FILE: kernel/module.c:667:
++#define MODINFO_ATTR(field)	\
++static void setup_modinfo_##field(struct module *mod, const char *s)  \
++{                                                                     \
++	mod->field = kstrdup(s, GFP_KERNEL);                          \
++}                                                                     \
++static ssize_t show_modinfo_##field(struct module_attribute *mattr,   \
++	                struct module *mod, char *buffer)             \
++{                                                                     \
++	return sprintf(buffer, "%s\n", mod->field);                   \
++}                                                                     \
++static int modinfo_##field##_exists(struct module *mod)               \
++{                                                                     \
++	return mod->field != NULL;                                    \
++}                                                                     \
++static void free_modinfo_##field(struct module *mod)                  \
++{                                                                     \
++        kfree(mod->field);                                            \
++        mod->field = NULL;                                            \
++}                                                                     \
++static struct module_attribute modinfo_##field = {                    \
++	.attr = { .name = __stringify(field), .mode = 0444,           \
++		  .owner = THIS_MODULE },                             \
++	.show = show_modinfo_##field,                                 \
++	.setup = setup_modinfo_##field,                               \
++	.test = modinfo_##field##_exists,                             \
++	.free = free_modinfo_##field,                                 \
++};
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#122: FILE: kernel/module.c:667:
++#define MODINFO_ATTR(field)	\
++static void setup_modinfo_##field(struct module *mod, const char *s)  \
++{                                                                     \
++	mod->field = kstrdup(s, GFP_KERNEL);                          \
++}                                                                     \
++static ssize_t show_modinfo_##field(struct module_attribute *mattr,   \
++	                struct module *mod, char *buffer)             \
++{                                                                     \
++	return sprintf(buffer, "%s\n", mod->field);                   \
++}                                                                     \
++static int modinfo_##field##_exists(struct module *mod)               \
++{                                                                     \
++	return mod->field != NULL;                                    \
++}                                                                     \
++static void free_modinfo_##field(struct module *mod)                  \
++{                                                                     \
++        kfree(mod->field);                                            \
++        mod->field = NULL;                                            \
++}                                                                     \
++static struct module_attribute modinfo_##field = {                    \
++	.attr = { .name = __stringify(field), .mode = 0444,           \
++		  .owner = THIS_MODULE },                             \
++	.show = show_modinfo_##field,                                 \
++	.setup = setup_modinfo_##field,                               \
++	.test = modinfo_##field##_exists,                             \
++	.free = free_modinfo_##field,                                 \
++};
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#128: FILE: kernel/module.c:673:
++^I                struct module *mod, char *buffer)             \$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "mod->field"
+#134: FILE: kernel/module.c:679:
++	return mod->field != NULL;                                    \
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#138: FILE: kernel/module.c:683:
++        kfree(mod->field);                                            \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#138: FILE: kernel/module.c:683:
++        kfree(mod->field);                                            \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#139: FILE: kernel/module.c:684:
++        mod->field = NULL;                                            \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#139: FILE: kernel/module.c:684:
++        mod->field = NULL;                                            \$
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#168: FILE: kernel/module.c:1074:
++	struct module_attribute * attr;
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#175: FILE: kernel/module.c:1081:
++			error = sysfs_create_file(&mod->mkobj.kobj,&attr->attr);
+ 			                                          ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required before that '&' (ctx:OxV)
+#175: FILE: kernel/module.c:1081:
++			error = sysfs_create_file(&mod->mkobj.kobj,&attr->attr);
+ 			                                           ^
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#182: FILE: kernel/module.c:1088:
++	struct module_attribute * attr;
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#186: FILE: kernel/module.c:1092:
++		sysfs_remove_file(&mod->mkobj.kobj,&attr->attr);
+ 		                                  ^
+
+ERROR:SPACING: space required before that '&' (ctx:OxV)
+#186: FILE: kernel/module.c:1092:
++		sysfs_remove_file(&mod->mkobj.kobj,&attr->attr);
+ 		                                   ^
+
+CHECK:CAMELCASE: Avoid CamelCase: <Elf_Shdr>
+#216: FILE: kernel/module.c:1381:
++static void setup_modinfo(struct module *mod, Elf_Shdr *sechdrs,
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#219: FILE: kernel/module.c:1384:
++	struct module_attribute * attr;
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000181179.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 10 errors, 8 warnings, 4 checks, 144 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000181179.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

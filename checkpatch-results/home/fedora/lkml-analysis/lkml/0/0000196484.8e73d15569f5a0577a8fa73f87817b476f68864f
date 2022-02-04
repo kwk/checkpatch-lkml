@@ -1,0 +1,1092 @@
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/percpu.h> instead of <asm/percpu.h>
+#284: FILE: arch/ia64/kernel/minstate.h:8:
++#include <asm/percpu.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#286: FILE: arch/ia64/kernel/minstate.h:10:
++#define MINSTATE_LOAD_OFFSETS \
++(pLvSys)	add r17 = ULI_INTR_SP_OFFSET, r22;	/* prev sp - size(pt_regs) */ \
++(pLvSys)	add r18 = ULI_INTR_BSPSTORE_OFFSET, r22;	/* previous bspstore */
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#286: FILE: arch/ia64/kernel/minstate.h:10:
++#define MINSTATE_LOAD_OFFSETS \
++(pLvSys)	add r17 = ULI_INTR_SP_OFFSET, r22;	/* prev sp - size(pt_regs) */ \
++(pLvSys)	add r18 = ULI_INTR_BSPSTORE_OFFSET, r22;	/* previous bspstore */
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:CAMELCASE: Avoid CamelCase: <pLvSys>
+#287: FILE: arch/ia64/kernel/minstate.h:11:
++(pLvSys)	add r17 = ULI_INTR_SP_OFFSET, r22;	/* prev sp - size(pt_regs) */ \
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#290: FILE: arch/ia64/kernel/minstate.h:14:
++#define MINSTATE_LOAD_STACK \
++(pLvSys)	ld8 r1 = [r17];	/* sp is prev mod'd sp */ \
++(pLvSys)	ld8 r22 = [r18];	/* bspstore is prev bspstore */
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#290: FILE: arch/ia64/kernel/minstate.h:14:
++#define MINSTATE_LOAD_STACK \
++(pLvSys)	ld8 r1 = [r17];	/* sp is prev mod'd sp */ \
++(pLvSys)	ld8 r22 = [r18];	/* bspstore is prev bspstore */
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#291: FILE: arch/ia64/kernel/minstate.h:15:
++(pLvSys)	ld8 r1 = [r17];	/* sp is prev mod'd sp */ \
+
+Whitespace before opening bracket '[' is prohibited.
+There are some exceptions:
+
+1. With a type on the left::
+
+    int [] a;
+
+2. At the beginning of a line for slice initialisers::
+
+    [0...10] = 5,
+
+3. Inside a curly brace::
+
+    = { [0...10] = 5 }
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#292: FILE: arch/ia64/kernel/minstate.h:16:
++(pLvSys)	ld8 r22 = [r18];	/* bspstore is prev bspstore */
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#341: FILE: arch/ia64/kernel/minstate.h:99:
++#define MINSTATE_GET_CURRENT(reg) \
++	addl r20 = THIS_CPU(uli_cur),r0;	\
++	;;	\
++	ld8 r22 = [r20]; /* r22 = cur_uli, needed by START_SAVE_MIN_VIRT */	\
++	;;	\
++	cmp.eq pUStk,pKStk=r0,r22;	/* cur == NULL? */	\
++	add r20 = ULI_DOUBLE_OFFSET,r22;	/* r20 = &cur_uli.uli_double */	\
++	;;	\
++(pKStk)	ld4 r21 = [r20]; /* load # of doubles */	\
++(pUStk)	cmp.eq pUStk,pLvSys=r0,r0; /* init pLvSys to false */	\
++	;;	\
++(pKStk)	cmp.eq pLvSys,pUStk=r0,r21; /* First nested intr? */	\
++	;; \
++	mov reg=IA64_KR(CURRENT); /* If normal, use actual current */	\
++(pKStk)	add r21 = 1,r21; /* Increment the nested count */	\
++	;; \
++(pKStk)	st4 [r20] = r21; /* Mark that we're above a ULI */
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#341: FILE: arch/ia64/kernel/minstate.h:99:
++#define MINSTATE_GET_CURRENT(reg) \
++	addl r20 = THIS_CPU(uli_cur),r0;	\
++	;;	\
++	ld8 r22 = [r20]; /* r22 = cur_uli, needed by START_SAVE_MIN_VIRT */	\
++	;;	\
++	cmp.eq pUStk,pKStk=r0,r22;	/* cur == NULL? */	\
++	add r20 = ULI_DOUBLE_OFFSET,r22;	/* r20 = &cur_uli.uli_double */	\
++	;;	\
++(pKStk)	ld4 r21 = [r20]; /* load # of doubles */	\
++(pUStk)	cmp.eq pUStk,pLvSys=r0,r0; /* init pLvSys to false */	\
++	;;	\
++(pKStk)	cmp.eq pLvSys,pUStk=r0,r21; /* First nested intr? */	\
++	;; \
++	mov reg=IA64_KR(CURRENT); /* If normal, use actual current */	\
++(pKStk)	add r21 = 1,r21; /* Increment the nested count */	\
++	;; \
++(pKStk)	st4 [r20] = r21; /* Mark that we're above a ULI */
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#342: FILE: arch/ia64/kernel/minstate.h:100:
++	addl r20 = THIS_CPU(uli_cur),r0;	\
+ 	                            ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#344: FILE: arch/ia64/kernel/minstate.h:102:
++	ld8 r22 = [r20]; /* r22 = cur_uli, needed by START_SAVE_MIN_VIRT */	\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#346: FILE: arch/ia64/kernel/minstate.h:104:
++	cmp.eq pUStk,pKStk=r0,r22;	/* cur == NULL? */	\
+ 	            ^
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#346: FILE: arch/ia64/kernel/minstate.h:104:
++	cmp.eq pUStk,pKStk=r0,r22;	/* cur == NULL? */	\
+ 	                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#346: FILE: arch/ia64/kernel/minstate.h:104:
++	cmp.eq pUStk,pKStk=r0,r22;	/* cur == NULL? */	\
+ 	                     ^
+
+CHECK:CAMELCASE: Avoid CamelCase: <pUStk>
+#346: FILE: arch/ia64/kernel/minstate.h:104:
++	cmp.eq pUStk,pKStk=r0,r22;	/* cur == NULL? */	\
+
+CHECK:CAMELCASE: Avoid CamelCase: <pKStk>
+#346: FILE: arch/ia64/kernel/minstate.h:104:
++	cmp.eq pUStk,pKStk=r0,r22;	/* cur == NULL? */	\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#347: FILE: arch/ia64/kernel/minstate.h:105:
++	add r20 = ULI_DOUBLE_OFFSET,r22;	/* r20 = &cur_uli.uli_double */	\
+ 	                           ^
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#349: FILE: arch/ia64/kernel/minstate.h:107:
++(pKStk)	ld4 r21 = [r20]; /* load # of doubles */	\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#350: FILE: arch/ia64/kernel/minstate.h:108:
++(pUStk)	cmp.eq pUStk,pLvSys=r0,r0; /* init pLvSys to false */	\
+        	            ^
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#350: FILE: arch/ia64/kernel/minstate.h:108:
++(pUStk)	cmp.eq pUStk,pLvSys=r0,r0; /* init pLvSys to false */	\
+        	                   ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#350: FILE: arch/ia64/kernel/minstate.h:108:
++(pUStk)	cmp.eq pUStk,pLvSys=r0,r0; /* init pLvSys to false */	\
+        	                      ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#352: FILE: arch/ia64/kernel/minstate.h:110:
++(pKStk)	cmp.eq pLvSys,pUStk=r0,r21; /* First nested intr? */	\
+        	             ^
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#352: FILE: arch/ia64/kernel/minstate.h:110:
++(pKStk)	cmp.eq pLvSys,pUStk=r0,r21; /* First nested intr? */	\
+        	                   ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#352: FILE: arch/ia64/kernel/minstate.h:110:
++(pKStk)	cmp.eq pLvSys,pUStk=r0,r21; /* First nested intr? */	\
+        	                      ^
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#354: FILE: arch/ia64/kernel/minstate.h:112:
++	mov reg=IA64_KR(CURRENT); /* If normal, use actual current */	\
+ 	       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#355: FILE: arch/ia64/kernel/minstate.h:113:
++(pKStk)	add r21 = 1,r21; /* Increment the nested count */	\
+        	           ^
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#357: FILE: arch/ia64/kernel/minstate.h:115:
++(pKStk)	st4 [r20] = r21; /* Mark that we're above a ULI */
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#375: FILE: arch/ia64/kernel/minstate.h:136:
++#define CHECK_USR \
++(pLvSys) mov r17 = 0x1; /* Pretend we're on the user stack */ \
++(pUStk) ld1 r17=[r16];				/* load current->thread.on_ustack flag */
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#377: FILE: arch/ia64/kernel/minstate.h:138:
++(pUStk) ld1 r17=[r16];				/* load current->thread.on_ustack flag */
+                ^
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#380: FILE: arch/ia64/kernel/minstate.h:141:
++#define CHECK_USR \
++	ld1 r17=[r16];				/* load current->thread.on_ustack flag */
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#380: FILE: arch/ia64/kernel/minstate.h:141:
++#define CHECK_USR \
++	ld1 r17=[r16];				/* load current->thread.on_ustack flag */
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#381: FILE: arch/ia64/kernel/minstate.h:142:
++	ld1 r17=[r16];				/* load current->thread.on_ustack flag */
+ 	       ^
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#441: FILE: arch/ia64/kernel/uli_asm.S:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#462: FILE: arch/ia64/kernel/uli_asm.S:22:
++ *  along with ULI; if not, write to the Free Software$
+
+Kernel maintainers reject new instances of the GPL boilerplate paragraph
+directing people to write to the FSF for a copy of the GPL, since the
+FSF has moved in the past and may do so again.
+So do not write paragraphs about writing to the Free Software Foundation's
+mailing address.
+
+See: https://lore.kernel.org/lkml/20131006222342.GT19510@leaf/
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#463: FILE: arch/ia64/kernel/uli_asm.S:23:
++ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA$
+
+WARNING:TYPO_SPELLING: 'folowing' may be misspelled - perhaps 'following'?
+#498: FILE: arch/ia64/kernel/uli_asm.S:58:
++	mov ar.rsc = 0 // Put in lazy mode so we can read the folowing ar's
+ 	                                                      ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#511: FILE: arch/ia64/kernel/uli_asm.S:71:
++^I;; $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#519: FILE: arch/ia64/kernel/uli_asm.S:79:
++^I;; $
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#523: FILE: arch/ia64/kernel/uli_asm.S:83:
++^I;; $
+
+WARNING:TYPO_SPELLING: 'Arive' may be misspelled - perhaps 'Arrive'?
+#526: FILE: arch/ia64/kernel/uli_asm.S:86:
++	or r25=r25,r11 // Arive at post spill ar.unat
+ 	                  ^^^^^
+
+WARNING:TYPO_SPELLING: 'Reenable' may be misspelled - perhaps 'Re-enable'?
+#618: FILE: arch/ia64/kernel/uli_asm.S:178:
++	ssm psr.ic | psr.i       // Reenable interrupts
+ 	                            ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'occured' may be misspelled - perhaps 'occurred'?
+#628: FILE: arch/ia64/kernel/uli_asm.S:188:
++ * - Save the actual current's PC when this interrupt occured
+                                                       ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'occured' may be misspelled - perhaps 'occurred'?
+#629: FILE: arch/ia64/kernel/uli_asm.S:189:
++ * - Save the actual current's sp & bspstore when this interrupt occured
+                                                                  ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'Reenable' may be misspelled - perhaps 'Re-enable'?
+#631: FILE: arch/ia64/kernel/uli_asm.S:191:
++ * - Reenable interrupts on our way out
+      ^^^^^^^^
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#668: FILE: arch/ia64/kernel/uli_asm.S:228:
++^I;; $
+
+WARNING:TYPO_SPELLING: 'reenable' may be misspelled - perhaps 're-enable'?
+#680: FILE: arch/ia64/kernel/uli_asm.S:240:
++	ssm psr.i | psr.ic // reenable interrupts
+ 	                      ^^^^^^^^
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#739: FILE: drivers/base/uli.c:1:
++/*
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#760: FILE: drivers/base/uli.c:22:
++ *  along with ULI; if not, write to the Free Software$
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#761: FILE: drivers/base/uli.c:23:
++ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA$
+
+WARNING:TYPO_SPELLING: 'Reenable' may be misspelled - perhaps 'Re-enable'?
+#868: FILE: drivers/base/uli.c:130:
++ *   - uli_enable_fpu  - Reenable the kernel's FPU usage (optional)
+                          ^^^^^^^^
+
+WARNING:INCLUDE_LINUX: Use #include <linux/mmu_context.h> instead of <asm/mmu_context.h>
+#889: FILE: drivers/base/uli.c:151:
++#include <asm/mmu_context.h>
+
+WARNING:INCLUDE_LINUX: Use #include <linux/uaccess.h> instead of <asm/uaccess.h>
+#892: FILE: drivers/base/uli.c:154:
++#include <asm/uaccess.h>
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#897: FILE: drivers/base/uli.c:159:
++static struct uli * uli_table[MAX_ULIS]; /* Points to all allocated ULIs */
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#909: FILE: drivers/base/uli.c:171:
++static int uli_ioctl(struct inode *, struct file *, unsigned int,
++			unsigned long);
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#914: FILE: drivers/base/uli.c:176:
++static struct file_operations uli_fops = {
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+WARNING:INDENTED_LABEL: labels should not be indented
+#915: FILE: drivers/base/uli.c:177:
++	ioctl: uli_ioctl,
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxW)
+#916: FILE: drivers/base/uli.c:178:
++	release: uli_release,
+ 	       ^
+
+WARNING:INDENTED_LABEL: labels should not be indented
+#916: FILE: drivers/base/uli.c:178:
++	release: uli_release,
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxW)
+#917: FILE: drivers/base/uli.c:179:
++	write: uli_write,
+ 	     ^
+
+WARNING:INDENTED_LABEL: labels should not be indented
+#917: FILE: drivers/base/uli.c:179:
++	write: uli_write,
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#931: FILE: drivers/base/uli.c:193:
++uli_irq_teardown(struct uli * uli)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#942: FILE: drivers/base/uli.c:204:
++uli_setup_eret(struct uli * uli)
+
+ERROR:POINTER_LOCATION: "foo ** bar" should be "foo **bar"
+#944: FILE: drivers/base/uli.c:206:
++	struct uli ** cur_uli = &per_cpu(uli_cur, smp_processor_id());
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#965: FILE: drivers/base/uli.c:227:
++	if (likely(current->active_mm != uli->uli_mm)) {
++		activate_mm(current->active_mm, uli->uli_mm);
++	}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#980: FILE: drivers/base/uli.c:242:
++	return;
++}
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#989: FILE: drivers/base/uli.c:251:
++uli_handler(struct uli * uli)
+
+ERROR:POINTER_LOCATION: "foo ** bar" should be "foo **bar"
+#991: FILE: drivers/base/uli.c:253:
++	struct uli ** cur_uli = &per_cpu(uli_cur, smp_processor_id());
+
+WARNING:BRACES: braces {} are not necessary for any arm of this statement
+#1006: FILE: drivers/base/uli.c:268:
++	if (unlikely(!current->mm)) {
+[...]
++	} else if (likely(current->active_mm != uli->uli_mm)) {
+[...]
+
+WARNING:TYPO_SPELLING: 'Reenable' may be misspelled - perhaps 'Re-enable'?
+#1012: FILE: drivers/base/uli.c:274:
++	/* Reenable the FPU and interrupts */
+ 	   ^^^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1026: FILE: drivers/base/uli.c:288:
++	    kill_proc_info(uli->uli_sig, SEND_SIG_FORCED,
++			     uli->uli_pid)) {
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#1031: FILE: drivers/base/uli.c:293:
++	return;
++}
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1040: FILE: drivers/base/uli.c:302:
++uli_IRQ_handler(int dev, void * dev_id, struct pt_regs * regs)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1040: FILE: drivers/base/uli.c:302:
++uli_IRQ_handler(int dev, void * dev_id, struct pt_regs * regs)
+
+CHECK:SPACING: No space is necessary after a cast
+#1042: FILE: drivers/base/uli.c:304:
++	struct uli * uli = (struct uli *) dev_id;
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1042: FILE: drivers/base/uli.c:304:
++	struct uli * uli = (struct uli *) dev_id;
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1045: FILE: drivers/base/uli.c:307:
++	if (uli->uli_cpu == smp_processor_id()) {
++		uli_handler(uli);
++	}
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1058: FILE: drivers/base/uli.c:320:
++uli_return(int sig, struct pt_regs * regs)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1060: FILE: drivers/base/uli.c:322:
++	struct uli * uli = per_cpu(uli_cur, local_cpu_data->cpu);
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1071: FILE: drivers/base/uli.c:333:
++	if (regs) {
++		memcpy(&uli->uli_eframe, regs, sizeof(struct pt_regs));
++	}
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#1074: FILE: drivers/base/uli.c:336:
++^I$
+
+ERROR:POINTER_LOCATION: "foo ** bar" should be "foo **bar"
+#1085: FILE: drivers/base/uli.c:347:
++uli_new(struct uli ** uli_spot, struct uliargs * uargs)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1085: FILE: drivers/base/uli.c:347:
++uli_new(struct uli ** uli_spot, struct uliargs * uargs)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1087: FILE: drivers/base/uli.c:349:
++	struct uli * uli;
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1092: FILE: drivers/base/uli.c:354:
++	if (uargs->nsemas > ULI_MAX_SEMAS) {
++		return -EINVAL;
++	}
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!uli_table[i]"
+#1112: FILE: drivers/base/uli.c:374:
++		if (uli_table[i] == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1150: FILE: drivers/base/uli.c:412:
++	for (i = 0; i < uli->uli_nsemas; i++) {
++		sema_init(&uli->uli_sema[i], 0);
++	}
+
+WARNING:CONSIDER_COMPLETION: consider using a completion
+#1151: FILE: drivers/base/uli.c:413:
++		sema_init(&uli->uli_sema[i], 0);
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1163: FILE: drivers/base/uli.c:425:
++uli_down(struct uli * uli, int sema)
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1166: FILE: drivers/base/uli.c:428:
++	if (sema < 0 || sema >= uli->uli_nsemas) {
++		return -EINVAL;
++	}
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1178: FILE: drivers/base/uli.c:440:
++uli_up(struct uli * uli, int sema)
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1181: FILE: drivers/base/uli.c:443:
++	if (sema < 0 || sema >= uli->uli_nsemas) {
++		return -EINVAL;
++	}
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1196: FILE: drivers/base/uli.c:458:
++uli_free(struct uli * uli)
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1210: FILE: drivers/base/uli.c:472:
++	if (uli->uli_teardown) {
++		uli->uli_teardown(uli);
++	}
+
+WARNING:TYPO_SPELLING: 'Reenable' may be misspelled - perhaps 'Re-enable'?
+#1214: FILE: drivers/base/uli.c:476:
++	/* Reenable interrupts */
+ 	   ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#1233: FILE: drivers/base/uli.c:495:
++uli_release(struct inode * inode, struct file * filp)
+                                                 ^^^^
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1233: FILE: drivers/base/uli.c:495:
++uli_release(struct inode * inode, struct file * filp)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1233: FILE: drivers/base/uli.c:495:
++uli_release(struct inode * inode, struct file * filp)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1235: FILE: drivers/base/uli.c:497:
++	struct uli * uli = filp->private_data;
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1238: FILE: drivers/base/uli.c:500:
++	if (!uli) {
++		return 0;
++	}
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#1255: FILE: drivers/base/uli.c:517:
++uli_ioctl(struct inode * inode, struct file * filp,
+                                               ^^^^
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1255: FILE: drivers/base/uli.c:517:
++uli_ioctl(struct inode * inode, struct file * filp,
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1255: FILE: drivers/base/uli.c:517:
++uli_ioctl(struct inode * inode, struct file * filp,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1256: FILE: drivers/base/uli.c:518:
++uli_ioctl(struct inode * inode, struct file * filp,
++	   unsigned int cmd, unsigned long arg)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1259: FILE: drivers/base/uli.c:521:
++	struct uli * uli;
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1266: FILE: drivers/base/uli.c:528:
++		if (filp->private_data) {
++			return -EINVAL;
++		}
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#1270: FILE: drivers/base/uli.c:532:
++		if (copy_from_user(&uargs, (void*)arg, sizeof(uargs))) {
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1270: FILE: drivers/base/uli.c:532:
++		if (copy_from_user(&uargs, (void*)arg, sizeof(uargs))) {
++			return -EFAULT;
++		}
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1275: FILE: drivers/base/uli.c:537:
++		if (uargs.id < 0 || uargs.id > ULI_IRQS) {
++			return -EINVAL;
++		}
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1280: FILE: drivers/base/uli.c:542:
++		if (uargs.intarg > num_online_cpus()) {
++			return -EINVAL;
++		}
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1285: FILE: drivers/base/uli.c:547:
++		if ((err = uli_new(&uli, &uargs))) {
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1285: FILE: drivers/base/uli.c:547:
++		if ((err = uli_new(&uli, &uargs))) {
++			return err;
++		}
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1297: FILE: drivers/base/uli.c:559:
++		err = request_irq(uargs.id, uli_IRQ_handler, SA_SHIRQ,
++				    "ULI", uli);
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1325: FILE: drivers/base/uli.c:587:
++uli_write(struct file * file, const char * buf, size_t count,
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1325: FILE: drivers/base/uli.c:587:
++uli_write(struct file * file, const char * buf, size_t count,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1326: FILE: drivers/base/uli.c:588:
++uli_write(struct file * file, const char * buf, size_t count,
++	   loff_t * f_pos)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1326: FILE: drivers/base/uli.c:588:
++	   loff_t * f_pos)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1328: FILE: drivers/base/uli.c:590:
++	struct uli * uli = (struct uli *)file->private_data;
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1333: FILE: drivers/base/uli.c:595:
++		if (uli) {
++			return uli_down(uli, count);
++		}
+
+WARNING:UNNECESSARY_BREAK: break is not useful after a return
+#1337: FILE: drivers/base/uli.c:599:
++		return -EINVAL;
++		break;
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1339: FILE: drivers/base/uli.c:601:
++		if (uli) {
++			return uli_up(uli, count);
++		}
+
+WARNING:UNNECESSARY_BREAK: break is not useful after a return
+#1343: FILE: drivers/base/uli.c:605:
++		return -EINVAL;
++		break;
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1359: FILE: drivers/base/uli.c:621:
++uli_syscall(int fd, const char * buf, size_t count,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1360: FILE: drivers/base/uli.c:622:
++uli_syscall(int fd, const char * buf, size_t count,
++	     loff_t * f_pos)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1360: FILE: drivers/base/uli.c:622:
++	     loff_t * f_pos)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1362: FILE: drivers/base/uli.c:624:
++	struct uli * uli = per_cpu(uli_cur, local_cpu_data->cpu);
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1394: FILE: drivers/base/uli.c:656:
++	for (i = 0; i < NR_CPUS; i++) {
++		per_cpu(uli_cur, i) = NULL;
++	}
+
+WARNING:NR_CPUS: usage of NR_CPUS is often wrong - consider using cpu_possible(), num_possible_cpus(), for_each_possible_cpu(), etc
+#1394: FILE: drivers/base/uli.c:656:
++	for (i = 0; i < NR_CPUS; i++) {
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1399: FILE: drivers/base/uli.c:661:
++	for (i = 0; i < MAX_ULIS; i++) {
++		uli_table[i] = NULL;
++	}
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1407: FILE: drivers/base/uli.c:669:
++	if ((res = misc_register(&uli_miscdev)) < 0) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#1408: FILE: drivers/base/uli.c:670:
++		printk(KERN_ERR "%s: failed to register device, %d\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1409: FILE: drivers/base/uli.c:671:
++		printk(KERN_ERR "%s: failed to register device, %d\n",
++			ULI_NAME, res);
+
+WARNING:USE_DEVICE_INITCALL: please use device_initcall() or more appropriate function instead of __initcall() (see include/linux/init.h)
+#1416: FILE: drivers/base/uli.c:678:
++__initcall(uli_init);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#1423: FILE: drivers/base/uli.c:685:
++EXPORT_SYMBOL(uli_handler);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#1424: FILE: drivers/base/uli.c:686:
++EXPORT_SYMBOL(uli_new);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#1425: FILE: drivers/base/uli.c:687:
++EXPORT_SYMBOL(uli_return);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1430: FILE: include/asm-ia64/uli_plat.h:1:
++/*
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#1451: FILE: include/asm-ia64/uli_plat.h:22:
++ *  along with ULI; if not, write to the Free Software$
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#1452: FILE: include/asm-ia64/uli_plat.h:23:
++ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA$
+
+WARNING:INCLUDE_LINUX: Use #include <linux/delay.h> instead of <asm/delay.h>
+#1459: FILE: include/asm-ia64/uli_plat.h:30:
++#include <asm/delay.h>
+
+WARNING:INCLUDE_LINUX: Use #include <linux/processor.h> instead of <asm/processor.h>
+#1461: FILE: include/asm-ia64/uli_plat.h:32:
++#include <asm/processor.h>
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#1465: FILE: include/asm-ia64/uli_plat.h:36:
++typedef struct {
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __aligned(16) over __attribute__((__aligned__(16)))
+#1467: FILE: include/asm-ia64/uli_plat.h:38:
++} uli_context __attribute__((__aligned__(16)));
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'uli' - possible side-effects?
+#1485: FILE: include/asm-ia64/uli_plat.h:56:
++#define uli_setup_args(uli, uargs) \
++{	\
++	struct pt_regs * regs = ia64_task_regs(current);	\
++	unsigned long addr = (unsigned long)uli->uli_sp -	\
++		uargs->stacksize;	\
++\
++	/* The BSP must be 8-byte aligned */	\
++	addr = (addr + 0x7) & ~0x7;	\
++	uli->uli_arch0 = (caddr_t)addr;	\
++\
++	/* The sp must be 16-byte aligned */	\
++	addr = (unsigned long)uli->uli_sp & ~0xF;	\
++	uli->uli_sp = (caddr_t)addr;	\
++\
++	/* Set its user thread pointer */	\
++	uli->uli_arch1 = (void*)regs->r13;	\
++\
++	/* Get the status register value to use */	\
++	uli->uli_sr.psr_long = regs->cr_ipsr;	\
++\
++	/* Start with the first instruction in the bundle */	\
++	uli->uli_sr.psr_struct.ri = 0;	\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'uli' may be better as '(uli)' to avoid precedence issues
+#1485: FILE: include/asm-ia64/uli_plat.h:56:
++#define uli_setup_args(uli, uargs) \
++{	\
++	struct pt_regs * regs = ia64_task_regs(current);	\
++	unsigned long addr = (unsigned long)uli->uli_sp -	\
++		uargs->stacksize;	\
++\
++	/* The BSP must be 8-byte aligned */	\
++	addr = (addr + 0x7) & ~0x7;	\
++	uli->uli_arch0 = (caddr_t)addr;	\
++\
++	/* The sp must be 16-byte aligned */	\
++	addr = (unsigned long)uli->uli_sp & ~0xF;	\
++	uli->uli_sp = (caddr_t)addr;	\
++\
++	/* Set its user thread pointer */	\
++	uli->uli_arch1 = (void*)regs->r13;	\
++\
++	/* Get the status register value to use */	\
++	uli->uli_sr.psr_long = regs->cr_ipsr;	\
++\
++	/* Start with the first instruction in the bundle */	\
++	uli->uli_sr.psr_struct.ri = 0;	\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'uargs' may be better as '(uargs)' to avoid precedence issues
+#1485: FILE: include/asm-ia64/uli_plat.h:56:
++#define uli_setup_args(uli, uargs) \
++{	\
++	struct pt_regs * regs = ia64_task_regs(current);	\
++	unsigned long addr = (unsigned long)uli->uli_sp -	\
++		uargs->stacksize;	\
++\
++	/* The BSP must be 8-byte aligned */	\
++	addr = (addr + 0x7) & ~0x7;	\
++	uli->uli_arch0 = (caddr_t)addr;	\
++\
++	/* The sp must be 16-byte aligned */	\
++	addr = (unsigned long)uli->uli_sp & ~0xF;	\
++	uli->uli_sp = (caddr_t)addr;	\
++\
++	/* Set its user thread pointer */	\
++	uli->uli_arch1 = (void*)regs->r13;	\
++\
++	/* Get the status register value to use */	\
++	uli->uli_sr.psr_long = regs->cr_ipsr;	\
++\
++	/* Start with the first instruction in the bundle */	\
++	uli->uli_sr.psr_struct.ri = 0;	\
++}
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1487: FILE: include/asm-ia64/uli_plat.h:58:
++	struct pt_regs * regs = ia64_task_regs(current);	\
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#1500: FILE: include/asm-ia64/uli_plat.h:71:
++	uli->uli_arch1 = (void*)regs->r13;	\
+
+WARNING:TYPO_SPELLING: 'Reenable' may be misspelled - perhaps 'Re-enable'?
+#1510: FILE: include/asm-ia64/uli_plat.h:81:
++ * Reenable the FPU when the ULI handler is completed
+    ^^^^^^^^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sr' - possible side-effects?
+#1517: FILE: include/asm-ia64/uli_plat.h:88:
++#define uli_disable_fpu(sr) \
++	sr.psr_struct.dfl = 1; \
++	sr.psr_struct.dfh = 1;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#1517: FILE: include/asm-ia64/uli_plat.h:88:
++#define uli_disable_fpu(sr) \
++	sr.psr_struct.dfl = 1; \
++	sr.psr_struct.dfh = 1;
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1526: FILE: include/linux/uli.h:1:
++/*
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#1547: FILE: include/linux/uli.h:22:
++ *  along with ULI; if not, write to the Free Software$
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#1548: FILE: include/linux/uli.h:23:
++ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA$
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1571: FILE: include/linux/uli.h:46:
++	void * funcarg;		/* argument to handler function */
+
+WARNING:INCLUDE_LINUX: Use #include <linux/percpu.h> instead of <asm/percpu.h>
+#1598: FILE: include/linux/uli.h:73:
++#include <asm/percpu.h>
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1615: FILE: include/linux/uli.h:90:
++	void * uli_funcarg;		/* Argument to handler */
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1620: FILE: include/linux/uli.h:95:
++	struct mm_struct * uli_mm;	/* MM of owning process */
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1630: FILE: include/linux/uli.h:105:
++	struct uli * uli_next;		/* per-dev list of registered ULIs */
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1631: FILE: include/linux/uli.h:106:
++	struct uli * uli_prev;		/* ULI preempted by this one */
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#1638: FILE: include/linux/uli.h:113:
++	void (*uli_teardown)(struct uli*);	/* Teardown from reg'd dev */
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct uli*' should also have an identifier name
+#1638: FILE: include/linux/uli.h:113:
++	void (*uli_teardown)(struct uli*);	/* Teardown from reg'd dev */
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#1650: FILE: include/linux/uli.h:125:
++#define ULI_SIZE(nsemas) ((size_t)&(((struct uli*)0)->uli_sema[nsemas]))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1652: FILE: include/linux/uli.h:127:
++extern void uli_callup(unsigned int);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned int' should also have an identifier name
+#1652: FILE: include/linux/uli.h:127:
++extern void uli_callup(unsigned int);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1653: FILE: include/linux/uli.h:128:
++extern void uli_eret(struct uli *, unsigned long);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct uli *' should also have an identifier name
+#1653: FILE: include/linux/uli.h:128:
++extern void uli_eret(struct uli *, unsigned long);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned long' should also have an identifier name
+#1653: FILE: include/linux/uli.h:128:
++extern void uli_eret(struct uli *, unsigned long);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1654: FILE: include/linux/uli.h:129:
++extern void uli_goto_user(struct uli *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct uli *' should also have an identifier name
+#1654: FILE: include/linux/uli.h:129:
++extern void uli_goto_user(struct uli *);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1655: FILE: include/linux/uli.h:130:
++extern void uli_handler(struct uli *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct uli *' should also have an identifier name
+#1655: FILE: include/linux/uli.h:130:
++extern void uli_handler(struct uli *);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1656: FILE: include/linux/uli.h:131:
++extern void uli_return(int, struct pt_regs *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#1656: FILE: include/linux/uli.h:131:
++extern void uli_return(int, struct pt_regs *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct pt_regs *' should also have an identifier name
+#1656: FILE: include/linux/uli.h:131:
++extern void uli_return(int, struct pt_regs *);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1657: FILE: include/linux/uli.h:132:
++extern void uli_return_from_user(struct uli *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct uli *' should also have an identifier name
+#1657: FILE: include/linux/uli.h:132:
++extern void uli_return_from_user(struct uli *);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1658: FILE: include/linux/uli.h:133:
++extern void uli_setup_eret(struct uli *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct uli *' should also have an identifier name
+#1658: FILE: include/linux/uli.h:133:
++extern void uli_setup_eret(struct uli *);
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1666: FILE: include/linux/uli.h:141:
++uli_trap(int sig, struct pt_regs * regs)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1668: FILE: include/linux/uli.h:143:
++	extern struct uli * per_cpu__uli_cur;
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1669: FILE: include/linux/uli.h:144:
++	struct uli * uli = per_cpu(uli_cur, local_cpu_data->cpu);
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000196484.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 84 errors, 74 warnings, 24 checks, 1574 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000196484.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

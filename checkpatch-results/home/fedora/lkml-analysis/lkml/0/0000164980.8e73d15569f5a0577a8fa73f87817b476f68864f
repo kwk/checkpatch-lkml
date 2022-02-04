@@ -1,0 +1,65 @@
+WARNING:EMAIL_SUBJECT: A patch subject line should describe the change not the tool that found it
+#16: 
+Subject: [patch] x86_64: fix cpu_to_node setup for sparse apic_ids
+
+Naming the tool that found the issue is not very useful in the
+subject line.  A good subject line summarizes the change that
+the patch brings.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+ERROR:INITIALISED_STATIC: do not initialise statics to 0
+#48: FILE: arch/x86_64/mm/srat.c:24:
++static unsigned int __initdata num_processors = 0;
+
+Static variables should not be initialized explicitly to zero.
+Your compiler (or rather your loader) automatically does
+it for you.
+
+WARNING:MISPLACED_INIT: __initdata should be placed after num_processors
+#48: FILE: arch/x86_64/mm/srat.c:24:
++static unsigned int __initdata num_processors = 0;
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+WARNING:NR_CPUS: usage of NR_CPUS is often wrong - consider using cpu_possible(), num_possible_cpus(), for_each_possible_cpu(), etc
+#60: FILE: arch/x86_64/mm/srat.c:107:
++	if (num_processors >= NR_CPUS) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#61: FILE: arch/x86_64/mm/srat.c:108:
++		printk(KERN_ERR "SRAT: Processor #%d (lapic %u) INVALID. (Max ID: %d).\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#62: FILE: arch/x86_64/mm/srat.c:109:
++		printk(KERN_ERR "SRAT: Processor #%d (lapic %u) INVALID. (Max ID: %d).\n",
++			num_processors, pa->apic_id, NR_CPUS);
+
+WARNING:NR_CPUS: usage of NR_CPUS is often wrong - consider using cpu_possible(), num_possible_cpus(), for_each_possible_cpu(), etc
+#62: FILE: arch/x86_64/mm/srat.c:109:
++			num_processors, pa->apic_id, NR_CPUS);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#71: FILE: arch/x86_64/mm/srat.c:115:
++	printk(KERN_INFO "SRAT: PXM %u -> APIC %u -> CPU %u -> Node %u\n",
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000164980.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 1 errors, 6 warnings, 1 checks, 33 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000164980.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

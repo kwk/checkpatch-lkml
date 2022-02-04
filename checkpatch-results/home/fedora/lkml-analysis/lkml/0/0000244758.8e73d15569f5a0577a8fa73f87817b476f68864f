@@ -1,0 +1,154 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'c' - possible side-effects?
+#62: FILE: include/asm-i386/bitops.h:450:
++#define constant_rol64(v, c)				\
+ 	({						\
+ 	u64 vv = (v);					\
++	if (!(c & 63)) {				\
++	} else if ((c & 63) == 1) {			\
+ 		asm (					\
+ 		"	shldl	$1,%%edx,%%eax	\n"	\
+ 		"	rcll	$1,%%edx	\n"	\
+ 		: "=&A" (vv)				\
+ 		: "0" (vv)				\
+ 		);					\
++	} else if ((c & 63) == 63) {			\
+ 		asm (					\
+ 		"	shrdl	$1,%%edx,%%eax	\n"	\
+ 		"	rcrl	$1,%%edx	\n"	\
+ 		: "=&A" (vv)				\
+ 		: "0" (vv)				\
+ 		);					\
++	} else if ((c & 63) < 32) {			\
+ 		asm (					\
+ 		"	shldl	%3,%%edx,%%eax	\n"	\
+ 		"	shldl	%3,%2,%%edx	\n"	\
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'c' may be better as '(c)' to avoid precedence issues
+#62: FILE: include/asm-i386/bitops.h:450:
++#define constant_rol64(v, c)				\
+ 	({						\
+ 	u64 vv = (v);					\
++	if (!(c & 63)) {				\
++	} else if ((c & 63) == 1) {			\
+ 		asm (					\
+ 		"	shldl	$1,%%edx,%%eax	\n"	\
+ 		"	rcll	$1,%%edx	\n"	\
+ 		: "=&A" (vv)				\
+ 		: "0" (vv)				\
+ 		);					\
++	} else if ((c & 63) == 63) {			\
+ 		asm (					\
+ 		"	shrdl	$1,%%edx,%%eax	\n"	\
+ 		"	rcrl	$1,%%edx	\n"	\
+ 		: "=&A" (vv)				\
+ 		: "0" (vv)				\
+ 		);					\
++	} else if ((c & 63) < 32) {			\
+ 		asm (					\
+ 		"	shldl	%3,%%edx,%%eax	\n"	\
+ 		"	shldl	%3,%2,%%edx	\n"	\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'c' - possible side-effects?
+#113: FILE: include/asm-i386/bitops.h:495:
++#define constant_ror64(v, c)				\
+ 	({						\
+ 	u64 vv = (v);					\
++	if (!(c & 63)) {				\
++	} else if ((c & 63) == 1) {			\
+ 		asm (					\
+ 		"	shrdl	$1,%%edx,%%eax	\n"	\
+ 		"	rcrl	$1,%%edx	\n"	\
+ 		: "=&A" (vv)				\
+ 		: "0" (vv)				\
+ 		);					\
++	} else if ((c & 63) == 63) {			\
+ 		asm (					\
+ 		"	shldl	$1,%%edx,%%eax	\n"	\
+ 		"	rcll	$1,%%edx	\n"	\
+ 		: "=&A" (vv)				\
+ 		: "0" (vv)				\
+ 		);					\
++	} else if ((c & 63) < 32) {			\
+ 		asm (					\
+ 		"	shrdl	%3,%%edx,%%eax	\n"	\
+ 		"	shrdl	%3,%2,%%edx	\n"	\
+ 		: "=&A" (vv)				\
+ 		: "0" (vv),				\
+ 		  "r" (vv),				\
++		  "Ic" (c & 63)				\
+ 		);					\
++	} else if ((c & 63) > 32) {			\
+ 		asm (					\
+ 		"	shldl	%3,%%edx,%%eax	\n"	\
+ 		"	shldl	%3,%2,%%edx	\n"	\
+ 		: "=&A" (vv)				\
+ 		: "0" (vv),				\
+ 		  "r" (vv),				\
++		  "Ic" (64 - (c & 63))			\
+ 		);					\
++	} else /* (c & 63) == 32 */ {			\
+ 		asm (					\
+ 		"	xchgl	%%edx,%%eax	\n"	\
+ 		: "=&A" (vv)				\
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'c' may be better as '(c)' to avoid precedence issues
+#113: FILE: include/asm-i386/bitops.h:495:
++#define constant_ror64(v, c)				\
+ 	({						\
+ 	u64 vv = (v);					\
++	if (!(c & 63)) {				\
++	} else if ((c & 63) == 1) {			\
+ 		asm (					\
+ 		"	shrdl	$1,%%edx,%%eax	\n"	\
+ 		"	rcrl	$1,%%edx	\n"	\
+ 		: "=&A" (vv)				\
+ 		: "0" (vv)				\
+ 		);					\
++	} else if ((c & 63) == 63) {			\
+ 		asm (					\
+ 		"	shldl	$1,%%edx,%%eax	\n"	\
+ 		"	rcll	$1,%%edx	\n"	\
+ 		: "=&A" (vv)				\
+ 		: "0" (vv)				\
+ 		);					\
++	} else if ((c & 63) < 32) {			\
+ 		asm (					\
+ 		"	shrdl	%3,%%edx,%%eax	\n"	\
+ 		"	shrdl	%3,%2,%%edx	\n"	\
+ 		: "=&A" (vv)				\
+ 		: "0" (vv),				\
+ 		  "r" (vv),				\
++		  "Ic" (c & 63)				\
+ 		);					\
++	} else if ((c & 63) > 32) {			\
+ 		asm (					\
+ 		"	shldl	%3,%%edx,%%eax	\n"	\
+ 		"	shldl	%3,%2,%%edx	\n"	\
+ 		: "=&A" (vv)				\
+ 		: "0" (vv),				\
+ 		  "r" (vv),				\
++		  "Ic" (64 - (c & 63))			\
+ 		);					\
++	} else /* (c & 63) == 32 */ {			\
+ 		asm (					\
+ 		"	xchgl	%%edx,%%eax	\n"	\
+ 		: "=&A" (vv)				\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#173: FILE: include/asm-i386/bitops.h:545:
++static inline u64 rol64(u64 x,int num)
+                              ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000244758.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 1 errors, 0 warnings, 4 checks, 140 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000244758.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

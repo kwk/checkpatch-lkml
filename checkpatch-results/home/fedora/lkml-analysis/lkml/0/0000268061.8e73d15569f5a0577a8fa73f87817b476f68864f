@@ -1,0 +1,227 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#35: 
+> > > not a pointer to unsigned int but instead just an int. However, that's
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#143: FILE: drivers/block/pktcdvd.c:55:
++#define DPRINTK(fmt, args...) printk(KERN_NOTICE fmt, ##args)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#149: FILE: drivers/block/pktcdvd.c:61:
++#define VPRINTK(fmt, args...) printk(KERN_NOTICE fmt, ##args)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#157: FILE: drivers/block/pktcdvd.c:68:
+ 
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#173: FILE: drivers/block/pktcdvd.c:81:
++		struct pktcdvd_device *pd = pkt_devs[i];
++		if (pd && bdev_get_queue(pd->bdev) == q)
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#236: FILE: drivers/block/pktcdvd.c:1909:
++	if ((ret = blkdev_get(pd->bdev, FMODE_READ, O_RDONLY)))
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#325: FILE: drivers/block/pktcdvd.c:2014:
++	BUG_ON(pd->refcnt < 0);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#468: FILE: drivers/block/pktcdvd.c:2315:
++		printk("pktcdvd: Recursive setup not allowed\n");
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#475: FILE: drivers/block/pktcdvd.c:2320:
++		struct pktcdvd_device *pd2 = pkt_devs[i];
++		if (!pd2)
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#478: FILE: drivers/block/pktcdvd.c:2323:
++			printk("pktcdvd: %s already setup\n", bdevname(pd2->bdev, b));
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#482: FILE: drivers/block/pktcdvd.c:2327:
++			printk("pktcdvd: Can't chain pktcdvd devices\n");
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'pkt_ioctl', this function's name, in a string
+#560: FILE: drivers/block/pktcdvd.c:2381:
++	VPRINTK("pkt_ioctl: cmd %x, dev %d:%d\n", cmd, imajor(inode), iminor(inode));
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#561: FILE: drivers/block/pktcdvd.c:2382:
++	BUG_ON(!pd);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#586: FILE: drivers/block/pktcdvd.c:2404:
++		printk("pktcdvd: Unknown ioctl for %s (%x)\n", pd->name, cmd);
+
+WARNING:CONST_STRUCT: struct block_device_operations should normally be const
+#603: FILE: drivers/block/pktcdvd.c:2426:
++static struct block_device_operations pktcdvd_ops = {
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#629: FILE: drivers/block/pktcdvd.c:2449:
++		printk("pktcdvd: max %d writers supported\n", MAX_WRITERS);
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*pd)...) over kmalloc(sizeof(struct pktcdvd_device)...)
+#633: FILE: drivers/block/pktcdvd.c:2453:
++	pd = kmalloc(sizeof(struct pktcdvd_device), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'pd->pkt_dev == pkt_dev'
+#689: FILE: drivers/block/pktcdvd.c:2508:
++		if (pd && (pd->pkt_dev == pkt_dev))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#769: FILE: drivers/block/pktcdvd.c:2544:
++	struct pktcdvd_device *pd = pkt_find_dev_from_minor(ctrl_cmd->dev_index);
++	if (pd) {
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#779: FILE: drivers/block/pktcdvd.c:2554:
++static int pkt_ctl_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg)
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#828: FILE: drivers/block/pktcdvd.c:2595:
+ 
++
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#829: FILE: drivers/block/pktcdvd.c:2596:
++static struct file_operations pkt_ctl_fops = {
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#835: FILE: drivers/block/pktcdvd.c:2602:
++^I.minor ^I^I= MISC_DYNAMIC_MINOR,$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#836: FILE: drivers/block/pktcdvd.c:2603:
++^I.name  ^I^I= "pktcdvd",$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#837: FILE: drivers/block/pktcdvd.c:2604:
++^I.devfs_name ^I= "pktcdvd/control",$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#838: FILE: drivers/block/pktcdvd.c:2605:
++^I.fops  ^I^I= &pkt_ctl_fops$
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#852: FILE: drivers/block/pktcdvd.c:2614:
++		printk("pktcdvd: Unable to register block device\n");
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#871: FILE: drivers/block/pktcdvd.c:2622:
++		printk("pktcdvd: Unable to register misc device\n");
+
+ERROR:OPEN_BRACE: open brace '{' following struct go on the same line
+#1049: FILE: include/linux/pktcdvd.h:129:
++struct packet_stats
++{
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000268061.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 2 errors, 23 warnings, 4 checks, 965 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000268061.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,214 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#46: 
+'nid' is more common than 'nodeid' or 'node' when referring to a node number
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'cachep' may be better as '(cachep)' to avoid precedence issues
+#71: FILE: mm/slab.c:353:
++#define MAKE_LIST(cachep, listp, slab, nid)				\
+ 	do {								\
+ 		INIT_LIST_HEAD(listp);					\
++		list_splice(&(cachep->nodelists[nid]->slab), listp);	\
+ 	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'listp' - possible side-effects?
+#71: FILE: mm/slab.c:353:
++#define MAKE_LIST(cachep, listp, slab, nid)				\
+ 	do {								\
+ 		INIT_LIST_HEAD(listp);					\
++		list_splice(&(cachep->nodelists[nid]->slab), listp);	\
+ 	} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'slab' may be better as '(slab)' to avoid precedence issues
+#71: FILE: mm/slab.c:353:
++#define MAKE_LIST(cachep, listp, slab, nid)				\
+ 	do {								\
+ 		INIT_LIST_HEAD(listp);					\
++		list_splice(&(cachep->nodelists[nid]->slab), listp);	\
+ 	} while (0)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around cachep->nodelists[nid]->slab
+#75: FILE: mm/slab.c:356:
++		list_splice(&(cachep->nodelists[nid]->slab), listp);	\
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cachep' - possible side-effects?
+#79: FILE: mm/slab.c:359:
++#define MAKE_ALL_LISTS(cachep, ptr, nid)				\
+ 	do {								\
++	MAKE_LIST((cachep), &(ptr)->slabs_full, slabs_full, nid);	\
++	MAKE_LIST((cachep), &(ptr)->slabs_partial, slabs_partial, nid);\
++	MAKE_LIST((cachep), &(ptr)->slabs_free, slabs_free, nid);	\
+ 	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#79: FILE: mm/slab.c:359:
++#define MAKE_ALL_LISTS(cachep, ptr, nid)				\
+ 	do {								\
++	MAKE_LIST((cachep), &(ptr)->slabs_full, slabs_full, nid);	\
++	MAKE_LIST((cachep), &(ptr)->slabs_partial, slabs_partial, nid);\
++	MAKE_LIST((cachep), &(ptr)->slabs_free, slabs_free, nid);	\
+ 	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'nid' - possible side-effects?
+#79: FILE: mm/slab.c:359:
++#define MAKE_ALL_LISTS(cachep, ptr, nid)				\
+ 	do {								\
++	MAKE_LIST((cachep), &(ptr)->slabs_full, slabs_full, nid);	\
++	MAKE_LIST((cachep), &(ptr)->slabs_partial, slabs_partial, nid);\
++	MAKE_LIST((cachep), &(ptr)->slabs_free, slabs_free, nid);	\
+ 	} while (0)
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 8)
+#80: FILE: mm/slab.c:360:
+ 	do {								\
++	MAKE_LIST((cachep), &(ptr)->slabs_full, slabs_full, nid);	\
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#224: FILE: mm/slab.c:888:
++				if (!(nc = alloc_arraycache(nid,
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#225: FILE: mm/slab.c:889:
++				if (!(nc = alloc_arraycache(nid,
+ 					cachep->shared * cachep->batchcount,
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#283: FILE: mm/slab.c:980:
++	BUG_ON(cachep->nodelists[nid] != list);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc_node(sizeof(*ptr)...) over kmalloc_node(sizeof(struct kmem_list3)...)
+#284: FILE: mm/slab.c:981:
++	ptr = kmalloc_node(sizeof(struct kmem_list3), GFP_KERNEL, nid);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#310: FILE: mm/slab.c:1135:
++				  &initkmem_list3[SIZE_AC+nid], nid);
+ 				                         ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#315: FILE: mm/slab.c:1139:
++					  &initkmem_list3[SIZE_L3+nid], nid);
+ 					                         ^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#364: FILE: mm/slab.c:1768:
++				int nid;
++				for_each_online_node(nid) {
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#371: FILE: mm/slab.c:1772:
++					BUG_ON(!cachep->nodelists[nid]);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#464: FILE: mm/slab.c:2218:
++	if (!(objp = kmem_getpages(cachep, flags, nid)))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around cachep->nodelists[nid]
+#599: FILE: mm/slab.c:2789:
++				spin_lock(&(cachep->nodelists[nid])->list_lock);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around cachep->nodelists[nid]
+#601: FILE: mm/slab.c:2791:
++				spin_unlock(&(cachep->nodelists[nid])->list_lock);
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#633: FILE: mm/slab.c:2887:
+ 		printk(KERN_WARNING "slab: not allocating in inactive node %d "
++		       "for cache %s\n", nid, cachep->name);
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#694: FILE: mm/slab.c:3107:
++		if (!(new_alien = alloc_alien_cache(nid, cachep->limit)))
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#698: FILE: mm/slab.c:3110:
++		if (!(new = alloc_arraycache(nid, cachep->shared *
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#702: FILE: mm/slab.c:3113:
++		if ((l3 = cachep->nodelists[nid])) {
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#707: FILE: mm/slab.c:3116:
++			if ((nc = cachep->nodelists[nid]->shared))
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000135753.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 6 errors, 6 warnings, 13 checks, 683 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000135753.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

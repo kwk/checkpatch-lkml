@@ -1,0 +1,163 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#31: 
+Here is a working swap prefetching patch for 2.6.13. I have resuscitated and 
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#80: FILE: include/linux/swap.h:209:
++extern int add_to_swap_cache(struct page *page, swp_entry_t entry);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#90: FILE: include/linux/swap.h:253:
++extern void prepare_prefetch(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#91: FILE: include/linux/swap.h:254:
++extern void add_to_swapped_list(unsigned long index);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#92: FILE: include/linux/swap.h:255:
++extern void remove_from_swapped_list(unsigned long index);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#93: FILE: include/linux/swap.h:256:
++extern int trickle_swap(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#94: FILE: include/linux/swap.h:257:
++extern void delay_prefetch_timer(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#126: FILE: include/linux/timer.h:56:
++extern int exclusive_timer(struct timer_list *timer, unsigned long expires);
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#138: FILE: init/Kconfig:90:
++config SWAP_PREFETCH
++	bool "Support for prefetching swapped memory (EXPERIMENTAL)"
++	depends on SWAP && EXPERIMENTAL
++	default n
++	---help---
++	  This option will allow the kernel to prefetch swapped memory pages
++	  when idle. The pages will be kept on both swap and in swap_cache
++	  thus avoiding the need for further I/O if either ram or swap space
++	  is required. This is desirable on workstations.
++	  Desktop users will most likely want to say Y.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#171: FILE: kernel/timer.c:343:
++	BUG_ON(!timer->function);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#217: FILE: mm/swap_prefetch.c:1:
++#include <linux/swap.h>
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#225: FILE: mm/swap_prefetch.c:9:
++	spinlock_t		lock;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#252: FILE: mm/swap_prefetch.c:36:
++	swapped_root.cache = kmem_cache_create("swapped_entry",
++		sizeof(struct swapped_entry_t), 0, 0, NULL, NULL);
+
+ERROR:SPACING: space required before the open parenthesis '('
+#271: FILE: mm/swap_prefetch.c:55:
++	if(swapped_root.count >= swapped_root.maxcount) {
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#273: FILE: mm/swap_prefetch.c:57:
++		entry = list_entry(swapped_root.list.next,
++				struct swapped_entry_t, swapped_list);
+
+ERROR:SPACING: space required before the open parenthesis '('
+#279: FILE: mm/swap_prefetch.c:63:
++		if(!entry)
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#286: FILE: mm/swap_prefetch.c:70:
++	if (likely(!error)) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#293: FILE: mm/swap_prefetch.c:77:
++	} else
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#363: FILE: mm/swap_prefetch.c:147:
++		entry = list_entry(swapped_root.list.next,
++			struct swapped_entry_t, swapped_list);
+
+WARNING:WAITQUEUE_ACTIVE: waitqueue_active without comment
+#396: FILE: mm/swap_prefetch.c:180:
++	if (waitqueue_active(&kprefetchd_wait))
+
+WARNING:WAITQUEUE_ACTIVE: waitqueue_active without comment
+#467: FILE: mm/vmscan.c:1260:
++	if (!waitqueue_active(&pgdat->kswapd_wait))
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#470: FILE: mm/vmscan.c:1262:
++^I$
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000155474.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 3 errors, 6 warnings, 13 checks, 365 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000155474.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

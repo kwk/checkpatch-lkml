@@ -1,0 +1,481 @@
+Use of uninitialized value $typo_fix in ucfirst at /home/fedora/lkml-analysis/linux/scripts/checkpatch.pl line 3363.
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#41: 
+diff -urP linux-2.4.5-pre5/fs/fat/buffer.c linux-2.4.5-pre5-fat/fs/fat/buffer.c
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#57: FILE: fs/fat/buffer.c:62:
++	return bread (sb->s_dev, block, sb->s_blocksize);
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#63: FILE: fs/fat/buffer.c:67:
++	return getblk (sb->s_dev, block, sb->s_blocksize);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#116: FILE: fs/fat/buffer.c:111:
++		BUG();
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*dummy)...) over kmalloc(sizeof(struct buffer_head)...)
+#166: FILE: fs/fat/buffer.c:118:
++		dummy = kmalloc(sizeof(struct buffer_head), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#167: FILE: fs/fat/buffer.c:119:
++		if (dummy != NULL) {
+[...]
++		} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "dummy"
+#167: FILE: fs/fat/buffer.c:119:
++		if (dummy != NULL) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:BRACES: Unbalanced braces around else statement
+#171: FILE: fs/fat/buffer.c:123:
++		} else
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#226: FILE: fs/fat/buffer.c:152:
++void bigblock_fat_ll_rw_block (struct super_block *sb, int opr, int nbreq,
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#300: FILE: fs/fat/cache.c:96:
++			((__u32 *)bh->b_data)[(first & (sb->s_blocksize - 1)) >> 2]
++				= CT_LE_L(new_value);
+
+Assignment operators should not be written at the start of a
+line but should follow the operand at the previous line.
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#305: FILE: fs/fat/cache.c:99:
++			((__u16 *)bh->b_data)[(first & (sb->s_blocksize - 1)) >> 1]
++				= CT_LE_W(new_value);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'sbi->fat_bits != 32'
+#356: FILE: fs/fat/cache.c:301:
++	if ((sbi->fat_bits != 32) &&
+ 	    (inode->i_ino == MSDOS_ROOT_INO || (S_ISDIR(inode->i_mode) &&
+ 	     !MSDOS_I(inode)->i_start))) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#377: FILE: fs/fat/cache.c:315:
++	if (!(cluster = fat_get_cluster(inode, cluster)))
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#455: FILE: fs/fat/inode.c:204:
++static int parse_options(char *options,int *fat, int *debug,
+                                       ^
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#470: FILE: fs/fat/inode.c:313:
++			printk("FAT: blocksize option is obsolete, "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#471: FILE: fs/fat/inode.c:314:
++			printk("FAT: blocksize option is obsolete, "
++			       "not supported now\n");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#482: FILE: fs/fat/inode.c:382:
++				if (!(nr = fat_access(sb, nr, -1))) {
+
+WARNING:TYPO_SPELLING: 'MSDOS' may be misspelled - perhaps ''?
+#532: FILE: fs/fat/inode.c:451:
++		printk("MSDOS: Hardware sector size is %d\n", hard_blksize);
+ 		        ^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#532: FILE: fs/fat/inode.c:451:
++		printk("MSDOS: Hardware sector size is %d\n", hard_blksize);
+
+CHECK:SPACING: No space is necessary after a cast
+#538: FILE: fs/fat/inode.c:454:
++	if (!parse_options((char *) data, &fat, &debug, &opts,
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!bh"
+#562: FILE: fs/fat/inode.c:465:
++	if (bh == NULL) {
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#581: FILE: fs/fat/inode.c:490:
++	if (!logical_sector_size
++	    || (logical_sector_size & (logical_sector_size - 1))) {
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#582: FILE: fs/fat/inode.c:491:
++		printk("fatfs: bogus logical sector size %d\n",
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#590: FILE: fs/fat/inode.c:499:
++		printk("fatfs: bogus cluster size %d\n", sbi->cluster_size);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!fsinfo_bh"
+#646: FILE: fs/fat/inode.c:529:
++			if (fsinfo_bh == NULL) {
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#647: FILE: fs/fat/inode.c:530:
++				printk("FAT: bread failed, fsinfo block %d\n",
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#655: FILE: fs/fat/inode.c:538:
++			printk("FAT: Did not find valid FSINFO signature.\n"
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#716: FILE: fs/fat/inode.c:578:
++		error = !sbi->fats || (sbi->dir_entries & (sbi->dir_per_block - 1))
++			|| sbi->clusters + 2 > fat_clusters + MSDOS_MAX_EXTRA
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#717: FILE: fs/fat/inode.c:579:
++			|| sbi->clusters + 2 > fat_clusters + MSDOS_MAX_EXTRA
++			|| logical_sector_size < 512
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#718: FILE: fs/fat/inode.c:580:
++			|| logical_sector_size < 512
++			|| PAGE_CACHE_SIZE < logical_sector_size
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#719: FILE: fs/fat/inode.c:581:
++			|| PAGE_CACHE_SIZE < logical_sector_size
++			|| !b->secs_track || !b->heads;
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#763: FILE: fs/fat/inode.c:610:
++		       b->media,sbi->cluster_size,
+ 		               ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#764: FILE: fs/fat/inode.c:611:
++		       sbi->fats,sbi->fat_start,
+ 		                ^
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#772: FILE: fs/fat/inode.c:618:
++		printk ("Transaction block size = %d\n", hard_blksize);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#772: FILE: fs/fat/inode.c:618:
++		printk ("Transaction block size = %d\n", hard_blksize);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#807: FILE: fs/fat/inode.c:796:
++				if (!(nr = fat_access(sb, nr, -1))) {
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#824: FILE: fs/fat/inode.c:831:
++		date_dos2unix(CF_LE_W(de->time),CF_LE_W(de->date));
+ 		                               ^
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#833: FILE: fs/fat/inode.c:852:
++	if (!(bh = fat_bread(sb, i_pos >> MSDOS_SB(sb)->dir_per_block_bits))) {
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#874: FILE: fs/fat/misc.c:123:
++		printk("FAT: Did not find valid FSINFO signature.\n"
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#903: FILE: fs/fat/misc.c:178:
++	last = file_cluster = 0;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#951: FILE: fs/fat/misc.c:225:
++	PRINTK (("cnt = %d --", count));
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#954: FILE: fs/fat/misc.c:227:
++	printk("free cluster: %d\n", nr);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#975: FILE: fs/fat/misc.c:245:
++	printk("set to %x\n", fat_access(sb, nr, -1));
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#987: FILE: fs/fat/misc.c:258:
++	last = file_cluster = 0;
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#997: FILE: fs/fat/misc.c:265:
++			if (!(curr = fat_access(sb, last = curr, -1))) {
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#1006: FILE: fs/fat/misc.c:273:
++	printk("last = %d\n", last);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1009: FILE: fs/fat/misc.c:275:
++	if (last)
+[...]
+ 	else {
+[...]
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#1019: FILE: fs/fat/misc.c:284:
++		printk("next set to %d\n",fat_access(sb, last, -1));
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1019: FILE: fs/fat/misc.c:284:
++		printk("next set to %d\n",fat_access(sb, last, -1));
+ 		                         ^
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1042: FILE: fs/fat/misc.c:288:
++	if (MSDOS_SB(sb)->cvf_format && MSDOS_SB(sb)->cvf_format->zero_out_cluster)
+[...]
++	else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1044: FILE: fs/fat/misc.c:290:
++	else {
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#1047: FILE: fs/fat/misc.c:293:
++			printk("zeroing sector %d\n", sector);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1049: FILE: fs/fat/misc.c:295:
++			if (!(bh = fat_getblk(sb, sector)))
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1049: FILE: fs/fat/misc.c:295:
++			if (!(bh = fat_getblk(sb, sector)))
+[...]
++			else {
+[...]
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#1050: FILE: fs/fat/misc.c:296:
++				printk("getblk failed\n");
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1051: FILE: fs/fat/misc.c:297:
++			else {
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#1067: FILE: fs/fat/misc.c:310:
++		printk ("file_cluster badly computed!!! %d <> %ld\n",
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#1067: FILE: fs/fat/misc.c:310:
++		printk ("file_cluster badly computed!!! %d <> %ld\n",
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1105: FILE: fs/fat/misc.c:407:
++		if ((sector = fat_bmap(dir,offset >> sb->s_blocksize_bits)) == -1)
+ 		                          ^
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1105: FILE: fs/fat/misc.c:407:
++		if ((sector = fat_bmap(dir,offset >> sb->s_blocksize_bits)) == -1)
+
+CHECK:SPACING: No space is necessary after a cast
+#1119: FILE: fs/fat/misc.c:421:
++		*de = (struct msdos_dir_entry *) ((*bh)->b_data + offset);
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1154: FILE: fs/fat/misc.c:536:
++					       name,number,ino,res_bh,res_de)) >= 0)
+ 					           ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1154: FILE: fs/fat/misc.c:536:
++					       name,number,ino,res_bh,res_de)) >= 0)
+ 					                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1154: FILE: fs/fat/misc.c:536:
++					       name,number,ino,res_bh,res_de)) >= 0)
+ 					                      ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1154: FILE: fs/fat/misc.c:536:
++					       name,number,ino,res_bh,res_de)) >= 0)
+ 					                             ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1168: FILE: fs/fat/misc.c:589:
++		return raw_scan_nonroot(sb,start,name,number,ino,res_bh,res_de);
+ 		                          ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1168: FILE: fs/fat/misc.c:589:
++		return raw_scan_nonroot(sb,start,name,number,ino,res_bh,res_de);
+ 		                                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1168: FILE: fs/fat/misc.c:589:
++		return raw_scan_nonroot(sb,start,name,number,ino,res_bh,res_de);
+ 		                                     ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1168: FILE: fs/fat/misc.c:589:
++		return raw_scan_nonroot(sb,start,name,number,ino,res_bh,res_de);
+ 		                                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1168: FILE: fs/fat/misc.c:589:
++		return raw_scan_nonroot(sb,start,name,number,ino,res_bh,res_de);
+ 		                                                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1168: FILE: fs/fat/misc.c:589:
++		return raw_scan_nonroot(sb,start,name,number,ino,res_bh,res_de);
+ 		                                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1170: FILE: fs/fat/misc.c:591:
++		return raw_scan_root(sb,name,number,ino,res_bh,res_de);
+ 		                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1170: FILE: fs/fat/misc.c:591:
++		return raw_scan_root(sb,name,number,ino,res_bh,res_de);
+ 		                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1170: FILE: fs/fat/misc.c:591:
++		return raw_scan_root(sb,name,number,ino,res_bh,res_de);
+ 		                                   ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1170: FILE: fs/fat/misc.c:591:
++		return raw_scan_root(sb,name,number,ino,res_bh,res_de);
+ 		                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1170: FILE: fs/fat/misc.c:591:
++		return raw_scan_root(sb,name,number,ino,res_bh,res_de);
+ 		                                              ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#1194: FILE: include/linux/msdos_fs.h:81:
++#define IS_FSINFO(x)		(CF_LE_L((x)->signature1) == FAT_FSINFO_SIG1	 \
++				 && CF_LE_L((x)->signature2) == FAT_FSINFO_SIG2)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1195: FILE: include/linux/msdos_fs.h:82:
++#define IS_FSINFO(x)		(CF_LE_L((x)->signature1) == FAT_FSINFO_SIG1	 \
++				 && CF_LE_L((x)->signature2) == FAT_FSINFO_SIG2)
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#1217: FILE: include/linux/msdos_fs.h:217:
++	    (*de - (struct msdos_dir_entry *)(*bh)->b_data) < MSDOS_SB(dir->i_sb)->dir_per_block - 1) {
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000532869.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 28 errors, 26 warnings, 25 checks, 1130 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000532869.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

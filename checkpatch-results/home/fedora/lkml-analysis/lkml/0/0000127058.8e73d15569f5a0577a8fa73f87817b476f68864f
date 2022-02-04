@@ -1,0 +1,82 @@
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*iter)...) over kmalloc(sizeof(struct ccwdev_iter)...)
+#90: FILE: drivers/s390/cio/blacklist.c:296:
++	iter = kmalloc(sizeof(struct ccwdev_iter), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'iter->devno == __MAX_SUBCHANNEL'
+#133: FILE: drivers/s390/cio/blacklist.c:335:
++		if ((iter->devno == __MAX_SUBCHANNEL) ||
++		    !is_blacklisted(iter->devno + 1))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'iter->devno == __MAX_SUBCHANNEL'
+#140: FILE: drivers/s390/cio/blacklist.c:342:
++	if ((iter->devno == __MAX_SUBCHANNEL) ||
++	    !is_blacklisted(iter->devno + 1)) {
+
+WARNING:CONST_STRUCT: struct seq_operations should normally be const
+#166: FILE: drivers/s390/cio/blacklist.c:376:
++static struct seq_operations cio_ignore_proc_seq_ops = {
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#179: FILE: drivers/s390/cio/blacklist.c:389:
++static struct file_operations cio_ignore_proc_fops = {
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000127058.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 0 errors, 2 warnings, 3 checks, 154 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000127058.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

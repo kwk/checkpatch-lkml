@@ -1,0 +1,598 @@
+ERROR:POINTER_LOCATION: "foo *	bar" should be "foo *bar"
+#113: FILE: fs/nfs/inode.c:109:
++static struct rpc_version *	nfsacl_version[] = {
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:ARRAY_SIZE: Prefer ARRAY_SIZE(nfsacl_version)
+#120: FILE: fs/nfs/inode.c:116:
++	.nrvers =		sizeof(nfsacl_version) / sizeof(nfsacl_version[0]),
+
+The ARRAY_SIZE(foo) macro should be preferred over
+sizeof(foo)/sizeof(foo[0]) for finding number of elements in an
+array.
+
+The macro is defined in include/linux/kernel.h::
+
+  #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "server->acl_client"
+#134: FILE: fs/nfs/inode.c:179:
++	if (server->acl_client != NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "server->acl_client"
+#145: FILE: fs/nfs/inode.c:204:
++	if (server->acl_client != NULL)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!server->acl_client"
+#192: FILE: fs/nfs/inode.c:492:
++		if (server->acl_client == NULL)
+
+WARNING:CONST_STRUCT: struct inode_operations should normally be const
+#217: FILE: fs/nfs/inode.c:710:
++static struct inode_operations nfs_special_inode_operations = {
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+CHECK:BRACES: Unbalanced braces around else statement
+#235: FILE: fs/nfs/inode.c:773:
++		else {
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#291: FILE: fs/nfs/nfs3proc.c:739:
++		if (status == -ENOSYS) {
+
+ENOSYS means that a nonexistent system call was called.
+Earlier, it was wrongly used for things like invalid operations on
+otherwise valid syscalls.  This should be avoided in new code.
+
+See: https://lore.kernel.org/lkml/5eb299021dec23c1a48fa7d9f2c8b794e967766d.1408730669.git.luto@amacapital.net/
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#291: FILE: fs/nfs/nfs3proc.c:739:
++		if (status == -ENOSYS) {
+[...]
++		} else if (status == -ENOTSUPP)
+[...]
+
+WARNING:ENOTSUPP: ENOTSUPP is not a SUSV4 error code, prefer EOPNOTSUPP
+#295: FILE: fs/nfs/nfs3proc.c:743:
++		} else if (status == -ENOTSUPP)
+
+ENOTSUPP is not a standard error code and should be avoided in new patches.
+EOPNOTSUPP should be used instead.
+
+See: https://lore.kernel.org/netdev/20200510182252.GA411829@lunn.ch/
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#312: FILE: fs/nfs/nfs3proc.c:760:
++		/* The (count > 4) test will exclude ACL entries from the list
++		   of names even if their ACL_GROUP_ENTRY and ACL_MASK have
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#314: FILE: fs/nfs/nfs3proc.c:762:
++		   four-entry ACLs, instead of minimal (three-entry) ACLs. */
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#315: FILE: fs/nfs/nfs3proc.c:763:
++^I^I   $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SWITCH_CASE_INDENT_LEVEL: switch and case should be at the same indent
+#346: FILE: fs/nfs/nfs3proc.c:794:
++	switch(type) {
++		case ACL_TYPE_ACCESS:
+[...]
++		case ACL_TYPE_DEFAULT:
+[...]
++		default:
+
+switch should be at the same indent as case.
+Example::
+
+  switch (suffix) {
+  case 'G':
+  case 'g':
+          mem <<= 30;
+          break;
+  case 'M':
+  case 'm':
+          mem <<= 20;
+          break;
+  case 'K':
+  case 'k':
+          mem <<= 10;
+          fallthrough;
+  default:
+          break;
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+ERROR:SPACING: space required before the open parenthesis '('
+#346: FILE: fs/nfs/nfs3proc.c:794:
++	switch(type) {
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#348: FILE: fs/nfs/nfs3proc.c:796:
++			args.mask = NFS3_ACLCNT|NFS3_ACL;
+ 			                       ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#354: FILE: fs/nfs/nfs3proc.c:802:
++			args.mask = NFS3_DFACLCNT|NFS3_DFACL;
+ 			                         ^
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#371: FILE: fs/nfs/nfs3proc.c:819:
++		if (status == -ENOSYS) {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#371: FILE: fs/nfs/nfs3proc.c:819:
++		if (status == -ENOSYS) {
+[...]
++		} else if (status == -ENOTSUPP)
+[...]
+
+WARNING:ENOTSUPP: ENOTSUPP is not a SUSV4 error code, prefer EOPNOTSUPP
+#375: FILE: fs/nfs/nfs3proc.c:823:
++		} else if (status == -ENOTSUPP)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#387: FILE: fs/nfs/nfs3proc.c:835:
++			mode_t mode = inode->i_mode;
++			if (!posix_acl_equiv_mode(res.acl_access, &mode) &&
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#430: FILE: fs/nfs/nfs3proc.c:878:
++	/* We are doing this here, because XDR marshalling can only
++	   return -ENOMEM. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#430: FILE: fs/nfs/nfs3proc.c:878:
++	   return -ENOMEM. */
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#434: FILE: fs/nfs/nfs3proc.c:882:
++	args.mask = NFS3_ACL|NFS3_DFACL;
+ 	                    ^
+
+ERROR:SWITCH_CASE_INDENT_LEVEL: switch and case should be at the same indent
+#436: FILE: fs/nfs/nfs3proc.c:884:
++		switch(type) {
++			case ACL_TYPE_ACCESS:
+[...]
++			case ACL_TYPE_DEFAULT:
+[...]
++			default:
+
+ERROR:SPACING: space required before the open parenthesis '('
+#436: FILE: fs/nfs/nfs3proc.c:884:
++		switch(type) {
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#439: FILE: fs/nfs/nfs3proc.c:887:
++				args.acl_default = NFS_PROTO(inode)->getacl(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#449: FILE: fs/nfs/nfs3proc.c:897:
++				args.acl_access = NFS_PROTO(inode)->getacl(
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!args.acl_access"
+#470: FILE: fs/nfs/nfs3proc.c:918:
++	if (args.acl_access == NULL) {
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#491: FILE: fs/nfs/nfs3proc.c:939:
++		if (status == -ENOSYS) {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#491: FILE: fs/nfs/nfs3proc.c:939:
++		if (status == -ENOSYS) {
+[...]
++		} else if (status == -ENOTSUPP)
+[...]
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#493: FILE: fs/nfs/nfs3proc.c:941:
++			dprintk("NFS_ACL SETACL RPC not supported"
++				"(will not retry)\n");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:ENOTSUPP: ENOTSUPP is not a SUSV4 error code, prefer EOPNOTSUPP
+#496: FILE: fs/nfs/nfs3proc.c:944:
++		} else if (status == -ENOTSUPP)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#500: FILE: fs/nfs/nfs3proc.c:948:
++		 * has changed. */
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#544: FILE: fs/nfs/nfs3xdr.c:66:
++#define NFS3_getaclargs_sz	(NFS3_fh_sz+1)
+                           	           ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#545: FILE: fs/nfs/nfs3xdr.c:67:
++#define NFS3_setaclargs_sz	(NFS3_fh_sz+1+2*(2+5*3))
+                           	           ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#545: FILE: fs/nfs/nfs3xdr.c:67:
++#define NFS3_setaclargs_sz	(NFS3_fh_sz+1+2*(2+5*3))
+                           	             ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#545: FILE: fs/nfs/nfs3xdr.c:67:
++#define NFS3_setaclargs_sz	(NFS3_fh_sz+1+2*(2+5*3))
+                           	               ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#545: FILE: fs/nfs/nfs3xdr.c:67:
++#define NFS3_setaclargs_sz	(NFS3_fh_sz+1+2*(2+5*3))
+                           	                  ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#545: FILE: fs/nfs/nfs3xdr.c:67:
++#define NFS3_setaclargs_sz	(NFS3_fh_sz+1+2*(2+5*3))
+                           	                    ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#553: FILE: fs/nfs/nfs3xdr.c:84:
++#define NFS3_getaclres_sz	(1+NFS3_post_op_attr_sz+1+2*(2+5*3))
+                          	  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#553: FILE: fs/nfs/nfs3xdr.c:84:
++#define NFS3_getaclres_sz	(1+NFS3_post_op_attr_sz+1+2*(2+5*3))
+                          	                       ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#553: FILE: fs/nfs/nfs3xdr.c:84:
++#define NFS3_getaclres_sz	(1+NFS3_post_op_attr_sz+1+2*(2+5*3))
+                          	                         ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#553: FILE: fs/nfs/nfs3xdr.c:84:
++#define NFS3_getaclres_sz	(1+NFS3_post_op_attr_sz+1+2*(2+5*3))
+                          	                           ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#553: FILE: fs/nfs/nfs3xdr.c:84:
++#define NFS3_getaclres_sz	(1+NFS3_post_op_attr_sz+1+2*(2+5*3))
+                          	                              ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#553: FILE: fs/nfs/nfs3xdr.c:84:
++#define NFS3_getaclres_sz	(1+NFS3_post_op_attr_sz+1+2*(2+5*3))
+                          	                                ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#554: FILE: fs/nfs/nfs3xdr.c:85:
++#define NFS3_setaclres_sz	(1+NFS3_post_op_attr_sz)
+                          	  ^
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#594: FILE: fs/nfs/nfs3xdr.c:671:
++                   struct nfs3_setaclargs *args)$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#594: FILE: fs/nfs/nfs3xdr.c:671:
++nfs3_xdr_setaclargs(struct rpc_rqst *req, u32 *p,
++                   struct nfs3_setaclargs *args)
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#594: FILE: fs/nfs/nfs3xdr.c:671:
++                   struct nfs3_setaclargs *args)$
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#597: FILE: fs/nfs/nfs3xdr.c:674:
++	unsigned int base, len_in_head, len = nfsacl_size(
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#652: FILE: fs/nfs/nfs3xdr.c:1064:
++^I$
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#657: FILE: fs/nfs/nfs3xdr.c:1069:
++	if (res->mask & ~(NFS3_ACL|NFS3_ACLCNT|NFS3_DFACL|NFS3_DFACLCNT))
+ 	                          ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#657: FILE: fs/nfs/nfs3xdr.c:1069:
++	if (res->mask & ~(NFS3_ACL|NFS3_ACLCNT|NFS3_DFACL|NFS3_DFACLCNT))
+ 	                                      ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#657: FILE: fs/nfs/nfs3xdr.c:1069:
++	if (res->mask & ~(NFS3_ACL|NFS3_ACLCNT|NFS3_DFACL|NFS3_DFACLCNT))
+ 	                                                 ^
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#660: FILE: fs/nfs/nfs3xdr.c:1072:
++^I$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#698: FILE: fs/nfs/nfs3xdr.c:1146:
++  PROC(GETACL,^I^Igetaclargs,^Igetaclres, 1),$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#699: FILE: fs/nfs/nfs3xdr.c:1147:
++  PROC(SETACL,^I^Isetaclargs,^Isetaclres, 0),$
+
+CHECK:SPACING: space preferred before that '/' (ctx:VxE)
+#704: FILE: fs/nfs/nfs3xdr.c:1152:
++	.nrprocs		= sizeof(nfs3_acl_procedures)/
+ 	        		                             ^
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#714: FILE: fs/nfs/xattr.c:1:
++#include <linux/fs.h>
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#724: FILE: fs/nfs/xattr.c:11:
++	int error=0, pos=0, len=0;
+ 	         ^
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#724: FILE: fs/nfs/xattr.c:11:
++	int error=0, pos=0, len=0;
+ 	                ^
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#724: FILE: fs/nfs/xattr.c:11:
++	int error=0, pos=0, len=0;
+ 	                       ^
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#731: FILE: fs/nfs/xattr.c:18:
++^I$
+
+ERROR:SPACING: space required before the open parenthesis '('
+#738: FILE: fs/nfs/xattr.c:25:
++		} while(0)
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#769: FILE: fs/nfs/xattr.c:56:
++	if (IS_ERR(acl))
+[...]
++	else if (acl) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#777: FILE: fs/nfs/xattr.c:64:
++	} else
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#867: FILE: include/linux/nfs_fs.h:296:
++extern ssize_t nfs_listxattr(struct dentry *, char *, size_t);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#868: FILE: include/linux/nfs_fs.h:297:
++extern ssize_t nfs_getxattr(struct dentry *, const char *, void *, size_t);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct dentry *' should also have an identifier name
+#868: FILE: include/linux/nfs_fs.h:297:
++extern ssize_t nfs_getxattr(struct dentry *, const char *, void *, size_t);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const char *' should also have an identifier name
+#868: FILE: include/linux/nfs_fs.h:297:
++extern ssize_t nfs_getxattr(struct dentry *, const char *, void *, size_t);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#868: FILE: include/linux/nfs_fs.h:297:
++extern ssize_t nfs_getxattr(struct dentry *, const char *, void *, size_t);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'size_t' should also have an identifier name
+#868: FILE: include/linux/nfs_fs.h:297:
++extern ssize_t nfs_getxattr(struct dentry *, const char *, void *, size_t);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#869: FILE: include/linux/nfs_fs.h:298:
++extern int nfs_setxattr(struct dentry *, const char *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct dentry *' should also have an identifier name
+#869: FILE: include/linux/nfs_fs.h:298:
++extern int nfs_setxattr(struct dentry *, const char *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const char *' should also have an identifier name
+#869: FILE: include/linux/nfs_fs.h:298:
++extern int nfs_setxattr(struct dentry *, const char *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const void *' should also have an identifier name
+#869: FILE: include/linux/nfs_fs.h:298:
++extern int nfs_setxattr(struct dentry *, const char *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'size_t' should also have an identifier name
+#869: FILE: include/linux/nfs_fs.h:298:
++extern int nfs_setxattr(struct dentry *, const char *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#869: FILE: include/linux/nfs_fs.h:298:
++extern int nfs_setxattr(struct dentry *, const char *,
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#871: FILE: include/linux/nfs_fs.h:300:
++extern int nfs_removexattr (struct dentry *, const char *name);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#871: FILE: include/linux/nfs_fs.h:300:
++extern int nfs_removexattr (struct dentry *, const char *name);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct dentry *' should also have an identifier name
+#871: FILE: include/linux/nfs_fs.h:300:
++extern int nfs_removexattr (struct dentry *, const char *name);
+
+ERROR:POINTER_LOCATION: "foo *	bar" should be "foo *bar"
+#891: FILE: include/linux/nfs_fs_sb.h:13:
++	struct rpc_clnt *	acl_client;	/* ACL RPC client handle */
+
+ERROR:POINTER_LOCATION: "foo *		bar" should be "foo *bar"
+#925: FILE: include/linux/nfs_xdr.h:364:
++	struct nfs_fh *		fh;
+
+ERROR:POINTER_LOCATION: "foo **		bar" should be "foo **bar"
+#927: FILE: include/linux/nfs_xdr.h:366:
++	struct page **		pages;
+
+ERROR:POINTER_LOCATION: "foo *		bar" should be "foo *bar"
+#931: FILE: include/linux/nfs_xdr.h:370:
++	struct inode *		inode;
+
+ERROR:POINTER_LOCATION: "foo *	bar" should be "foo *bar"
+#933: FILE: include/linux/nfs_xdr.h:372:
++	struct posix_acl *	acl_access;
+
+ERROR:POINTER_LOCATION: "foo *	bar" should be "foo *bar"
+#934: FILE: include/linux/nfs_xdr.h:373:
++	struct posix_acl *	acl_default;
+
+ERROR:POINTER_LOCATION: "foo **		bar" should be "foo **bar"
+#935: FILE: include/linux/nfs_xdr.h:374:
++	struct page **		pages;
+
+ERROR:POINTER_LOCATION: "foo *	bar" should be "foo *bar"
+#946: FILE: include/linux/nfs_xdr.h:499:
++	struct nfs_fattr *	fattr;
+
+ERROR:POINTER_LOCATION: "foo *	bar" should be "foo *bar"
+#950: FILE: include/linux/nfs_xdr.h:503:
++	struct posix_acl *	acl_access;
+
+ERROR:POINTER_LOCATION: "foo *	bar" should be "foo *bar"
+#951: FILE: include/linux/nfs_xdr.h:504:
++	struct posix_acl *	acl_default;
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct inode *' should also have an identifier name
+#963: FILE: include/linux/nfs_xdr.h:740:
++	int	(*setacl)(struct inode *, int, struct posix_acl *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#963: FILE: include/linux/nfs_xdr.h:740:
++	int	(*setacl)(struct inode *, int, struct posix_acl *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct posix_acl *' should also have an identifier name
+#963: FILE: include/linux/nfs_xdr.h:740:
++	int	(*setacl)(struct inode *, int, struct posix_acl *);
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000286187.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 24 errors, 33 warnings, 38 checks, 859 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000286187.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

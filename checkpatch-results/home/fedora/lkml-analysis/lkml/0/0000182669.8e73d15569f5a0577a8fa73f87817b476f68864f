@@ -1,0 +1,230 @@
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '__get' may be better as '(__get)' to avoid precedence issues
+#92: FILE: include/linux/fs.h:1679:
++#define DEFINE_SIMPLE_ATTRIBUTE(__fops, __get, __set, __fmt)		\
++static int __fops ## _open(struct inode *inode, struct file *file)	\
++{									\
++	__simple_attr_check_format(__fmt, 0ul);				\
++	return simple_attr_open(inode, file, &__get, &__set, __fmt);	\
++}									\
++static struct file_operations __fops = {				\
++	.owner	 = THIS_MODULE,						\
++	.open	 = __fops ## _open,					\
++	.release = simple_attr_close,					\
++	.read	 = simple_attr_read,					\
++	.write	 = simple_attr_write,					\
++};
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '__set' may be better as '(__set)' to avoid precedence issues
+#92: FILE: include/linux/fs.h:1679:
++#define DEFINE_SIMPLE_ATTRIBUTE(__fops, __get, __set, __fmt)		\
++static int __fops ## _open(struct inode *inode, struct file *file)	\
++{									\
++	__simple_attr_check_format(__fmt, 0ul);				\
++	return simple_attr_open(inode, file, &__get, &__set, __fmt);	\
++}									\
++static struct file_operations __fops = {				\
++	.owner	 = THIS_MODULE,						\
++	.open	 = __fops ## _open,					\
++	.release = simple_attr_close,					\
++	.read	 = simple_attr_read,					\
++	.write	 = simple_attr_write,					\
++};
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__fmt' - possible side-effects?
+#92: FILE: include/linux/fs.h:1679:
++#define DEFINE_SIMPLE_ATTRIBUTE(__fops, __get, __set, __fmt)		\
++static int __fops ## _open(struct inode *inode, struct file *file)	\
++{									\
++	__simple_attr_check_format(__fmt, 0ul);				\
++	return simple_attr_open(inode, file, &__get, &__set, __fmt);	\
++}									\
++static struct file_operations __fops = {				\
++	.owner	 = THIS_MODULE,						\
++	.open	 = __fops ## _open,					\
++	.release = simple_attr_close,					\
++	.read	 = simple_attr_read,					\
++	.write	 = simple_attr_write,					\
++};
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#92: FILE: include/linux/fs.h:1679:
++#define DEFINE_SIMPLE_ATTRIBUTE(__fops, __get, __set, __fmt)		\
++static int __fops ## _open(struct inode *inode, struct file *file)	\
++{									\
++	__simple_attr_check_format(__fmt, 0ul);				\
++	return simple_attr_open(inode, file, &__get, &__set, __fmt);	\
++}									\
++static struct file_operations __fops = {				\
++	.owner	 = THIS_MODULE,						\
++	.open	 = __fops ## _open,					\
++	.release = simple_attr_close,					\
++	.read	 = simple_attr_read,					\
++	.write	 = simple_attr_write,					\
++};
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#98: FILE: include/linux/fs.h:1685:
++static struct file_operations __fops = {				\
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __printf(1, 2) over __attribute__((format(printf, 1, 2)))
+#106: FILE: include/linux/fs.h:1693:
++static inline void __attribute__((format(printf, 1, 2)))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#113: FILE: include/linux/fs.h:1700:
++int simple_attr_open(struct inode *inode, struct file *file,
++		long (*get)(void *), void (*set)(void *, long),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#117: FILE: include/linux/fs.h:1704:
++ssize_t simple_attr_read(struct file *file, char __user *buf,
++					size_t len, loff_t *ppos);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#119: FILE: include/linux/fs.h:1706:
++ssize_t simple_attr_write(struct file *file, const char __user *buf,
++					size_t len, loff_t *ppos);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#121: FILE: include/linux/fs.h:1708:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#136: FILE: fs/libfs.c:525:
++	long (*get)(void *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#137: FILE: fs/libfs.c:526:
++	void (*set)(void *, long);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'long' should also have an identifier name
+#137: FILE: fs/libfs.c:526:
++	void (*set)(void *, long);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#146: FILE: fs/libfs.c:535:
++ * to set the attribute specific access operations. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#148: FILE: fs/libfs.c:537:
++int simple_attr_open(struct inode *inode, struct file *file,
++		long (*get)(void *), void (*set)(void *, long),
+
+WARNING:SIZEOF_PARENTHESIS: sizeof *attr should be sizeof(*attr)
+#153: FILE: fs/libfs.c:542:
++	attr = kmalloc(sizeof *attr, GFP_KERNEL);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#181: FILE: fs/libfs.c:570:
++ssize_t simple_attr_read(struct file *file, char __user *buf,
++					size_t len, loff_t *ppos)
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#193: FILE: fs/libfs.c:582:
++		size = scnprintf(attr->get_buf, sizeof (attr->get_buf),
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#203: FILE: fs/libfs.c:592:
++ssize_t simple_attr_write(struct file *file, const char __user *buf,
++					size_t len, loff_t *ppos)
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#214: FILE: fs/libfs.c:603:
++	size = min(sizeof (attr->set_buf) - 1, len);
+
+WARNING:CONSIDER_KSTRTO: simple_strtol is obsolete, use kstrtol instead
+#220: FILE: fs/libfs.c:609:
++	val = simple_strtol(attr->set_buf, NULL, 0);
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000182669.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 0 errors, 11 warnings, 10 checks, 253 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000182669.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,1470 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#40: 
+The NUMA API change that introduced kmalloc_node was accepted for 2.6.12-rc3.
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#163: FILE: mm/slab.c:268:
++	spinlock_t lock;
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#193: FILE: mm/slab.c:297:
++^Iunsigned int ^Ifree_limit;$
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#194: FILE: mm/slab.c:298:
++	spinlock_t      list_lock;
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#220: FILE: mm/slab.c:324:
++#define CACHE(x) \
++	if (size <=x) \
++		return i; \
++	else \
++		i++;
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'x' may be better as '(x)' to avoid precedence issues
+#220: FILE: mm/slab.c:324:
++#define CACHE(x) \
++	if (size <=x) \
++		return i; \
++	else \
++		i++;
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#220: FILE: mm/slab.c:324:
++#define CACHE(x) \
++	if (size <=x) \
++		return i; \
++	else \
++		i++;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#220: FILE: mm/slab.c:324:
++#define CACHE(x) \
++	if (size <=x) \
++		return i; \
++	else \
++		i++;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:SPACING: spaces required around that '<=' (ctx:WxV)
+#221: FILE: mm/slab.c:325:
++	if (size <=x) \
+ 	         ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#228: FILE: mm/slab.c:332:
++		extern void __bad_size(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'parent' - possible side-effects?
+#263: FILE: mm/slab.c:356:
++#define LIST3_INIT(parent) \
++	do {	\
++		INIT_LIST_HEAD(&(parent)->slabs_full);	\
++		INIT_LIST_HEAD(&(parent)->slabs_partial);	\
++		INIT_LIST_HEAD(&(parent)->slabs_free);	\
++		(parent)->shared = NULL; \
++		(parent)->list_lock = SPIN_LOCK_UNLOCKED;	\
++		(parent)->free_objects = 0;	\
++		(parent)->free_touched = 0;	\
++	} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'cachep' may be better as '(cachep)' to avoid precedence issues
+#275: FILE: mm/slab.c:368:
++#define MAKE_LIST(cachep, listp, slab, nodeid)	\
++	do {	\
++		INIT_LIST_HEAD(listp);		\
++		list_splice(&(cachep->nodelists[nodeid]->slab), listp); \
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'listp' - possible side-effects?
+#275: FILE: mm/slab.c:368:
++#define MAKE_LIST(cachep, listp, slab, nodeid)	\
++	do {	\
++		INIT_LIST_HEAD(listp);		\
++		list_splice(&(cachep->nodelists[nodeid]->slab), listp); \
++	} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'slab' may be better as '(slab)' to avoid precedence issues
+#275: FILE: mm/slab.c:368:
++#define MAKE_LIST(cachep, listp, slab, nodeid)	\
++	do {	\
++		INIT_LIST_HEAD(listp);		\
++		list_splice(&(cachep->nodelists[nodeid]->slab), listp); \
++	} while (0)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around cachep->nodelists[nodeid]->slab
+#278: FILE: mm/slab.c:371:
++		list_splice(&(cachep->nodelists[nodeid]->slab), listp); \
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cachep' - possible side-effects?
+#281: FILE: mm/slab.c:374:
++#define	MAKE_ALL_LISTS(cachep, ptr, nodeid)			\
++	do {					\
++	MAKE_LIST((cachep), (&(ptr)->slabs_full), slabs_full, nodeid);	\
++	MAKE_LIST((cachep), (&(ptr)->slabs_partial), slabs_partial, nodeid); \
++	MAKE_LIST((cachep), (&(ptr)->slabs_free), slabs_free, nodeid);	\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#281: FILE: mm/slab.c:374:
++#define	MAKE_ALL_LISTS(cachep, ptr, nodeid)			\
++	do {					\
++	MAKE_LIST((cachep), (&(ptr)->slabs_full), slabs_full, nodeid);	\
++	MAKE_LIST((cachep), (&(ptr)->slabs_partial), slabs_partial, nodeid); \
++	MAKE_LIST((cachep), (&(ptr)->slabs_free), slabs_free, nodeid);	\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'nodeid' - possible side-effects?
+#281: FILE: mm/slab.c:374:
++#define	MAKE_ALL_LISTS(cachep, ptr, nodeid)			\
++	do {					\
++	MAKE_LIST((cachep), (&(ptr)->slabs_full), slabs_full, nodeid);	\
++	MAKE_LIST((cachep), (&(ptr)->slabs_partial), slabs_partial, nodeid); \
++	MAKE_LIST((cachep), (&(ptr)->slabs_free), slabs_free, nodeid);	\
++	} while (0)
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 8)
+#282: FILE: mm/slab.c:375:
++	do {					\
++	MAKE_LIST((cachep), (&(ptr)->slabs_full), slabs_full, nodeid);	\
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#297: FILE: mm/slab.c:392:
++^Iunsigned int ^I^Ishared;$
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#386: FILE: mm/slab.c:778:
+ }
++#ifdef CONFIG_NUMA
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#390: FILE: mm/slab.c:782:
++	int memsize = sizeof(void*)*MAX_NUMNODES;
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#390: FILE: mm/slab.c:782:
++	int memsize = sizeof(void*)*MAX_NUMNODES;
+ 	                           ^
+
+ERROR:SPACING: spaces required around that '<=' (ctx:WxV)
+#405: FILE: mm/slab.c:797:
++				for (i--; i <=0; i--)
+ 				            ^
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#442: FILE: mm/slab.c:834:
++	int i=0;
+ 	     ^
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#457: FILE: mm/slab.c:849:
+ static int __devinit cpuup_callback(struct notifier_block *nfb,
+
+WARNING:TYPO_SPELLING: 'begining' may be misspelled - perhaps 'beginning'?
+#470: FILE: mm/slab.c:862:
++		/* we need to do this right in the begining since
+ 		                                   ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#483: FILE: mm/slab.c:874:
++				if (!(l3 = kmalloc_node(memsize,
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#484: FILE: mm/slab.c:875:
++				if (!(l3 = kmalloc_node(memsize,
++						GFP_KERNEL, node)))
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:VxV)
+#488: FILE: mm/slab.c:879:
++				  ((unsigned long)cachep)%REAPTIMEOUT_LIST3;
+ 				                         ^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#502: FILE: mm/slab.c:892:
++		/* Now we can go ahead with allocating the shared array's
++		  & array cache's */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#502: FILE: mm/slab.c:892:
++		  & array cache's */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#505: FILE: mm/slab.c:895:
++			nc = alloc_arraycache(cpu, cachep->limit,
++					cachep->batchcount);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#516: FILE: mm/slab.c:901:
++			BUG_ON(!l3);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#518: FILE: mm/slab.c:903:
++				if (!(nc = alloc_arraycache(cpu,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#519: FILE: mm/slab.c:904:
++				if (!(nc = alloc_arraycache(cpu,
++					cachep->shared*cachep->batchcount,
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#519: FILE: mm/slab.c:904:
++					cachep->shared*cachep->batchcount,
+ 					              ^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#524: FILE: mm/slab.c:909:
++				/* we are serialised from CPU_DEAD or
++				  CPU_UP_CANCELLED by the cpucontrol lock */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#524: FILE: mm/slab.c:909:
++				  CPU_UP_CANCELLED by the cpucontrol lock */
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#556: FILE: mm/slab.c:946:
++                                spin_unlock(&l3->list_lock);$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#556: FILE: mm/slab.c:946:
++                                spin_unlock(&l3->list_lock);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#557: FILE: mm/slab.c:947:
++                                goto unlock_cache;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#557: FILE: mm/slab.c:947:
++                                goto unlock_cache;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#558: FILE: mm/slab.c:948:
++                        }$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#558: FILE: mm/slab.c:948:
++                        }$
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#562: FILE: mm/slab.c:952:
++				free_block(cachep, l3->shared->entry,
++						l3->shared->avail);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#594: FILE: mm/slab.c:992:
++static void init_list(kmem_cache_t *cachep, struct kmem_list3 *list,
++		int nodeid)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#598: FILE: mm/slab.c:996:
++	BUG_ON(cachep->nodelists[nodeid] != list);
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc_node(sizeof(*ptr)...) over kmalloc_node(sizeof(struct kmem_list3)...)
+#599: FILE: mm/slab.c:997:
++	ptr = kmalloc_node(sizeof(struct kmem_list3), GFP_KERNEL, nodeid);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#600: FILE: mm/slab.c:998:
++	BUG_ON(!ptr);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#676: FILE: mm/slab.c:1080:
++	sizes[INDEX_AC].cs_cachep = kmem_cache_create(names[INDEX_AC].name,
++				sizes[INDEX_AC].cs_size, ARCH_KMALLOC_MINALIGN,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#682: FILE: mm/slab.c:1086:
++			kmem_cache_create(names[INDEX_L3].name,
++				sizes[INDEX_L3].cs_size, ARCH_KMALLOC_MINALIGN,
+
+ERROR:SPACING: space required before the open parenthesis '('
+#698: FILE: mm/slab.c:1097:
++		if(!sizes->cs_cachep)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#700: FILE: mm/slab.c:1099:
++			sizes->cs_cachep = kmem_cache_create(names->name,
++				sizes->cs_size, ARCH_KMALLOC_MINALIGN,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#717: FILE: mm/slab.c:1125:
++		memcpy(ptr, ac_data(&cache_cache),
++				sizeof(struct arraycache_init));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#727: FILE: mm/slab.c:1132:
++		BUG_ON(ac_data(malloc_sizes[INDEX_AC].cs_cachep)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#730: FILE: mm/slab.c:1135:
++		memcpy(ptr, ac_data(malloc_sizes[INDEX_AC].cs_cachep),
+ 				sizeof(struct arraycache_init));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#741: FILE: mm/slab.c:1145:
++		init_list(&cache_cache, &initkmem_list3[CACHE_CACHE],
++				numa_node_id());
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 32)
+#744: FILE: mm/slab.c:1147:
++		for_each_online_node(node) {
++				init_list(malloc_sizes[INDEX_L3].cs_cachep,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#746: FILE: mm/slab.c:1149:
++				init_list(malloc_sizes[INDEX_L3].cs_cachep,
++						&initkmem_list3[SIZE_L3+node], node);
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#746: FILE: mm/slab.c:1149:
++						&initkmem_list3[SIZE_L3+node], node);
+ 						                       ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#750: FILE: mm/slab.c:1153:
++			init_list(malloc_sizes[INDEX_AC].cs_cachep,
++					&initkmem_list3[SIZE_AC],
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#785: FILE: mm/slab.c:1469:
++/* For setting up all the kmem_list3s for cache whose objsize is same
++   as size of kmem_list3. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#785: FILE: mm/slab.c:1469:
++   as size of kmem_list3. */
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#791: FILE: mm/slab.c:1475:
++		cachep->nodelists[node] = &initkmem_list3[SIZE_L3+node];
+ 		                                                 ^
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:VxV)
+#794: FILE: mm/slab.c:1478:
++			((unsigned long)cachep)%REAPTIMEOUT_LIST3;
+ 			                       ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#838: FILE: mm/slab.c:1774:
++				kmalloc(sizeof(struct arraycache_init),
++						GFP_KERNEL);
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:VxV)
+#852: FILE: mm/slab.c:1788:
++			((unsigned long)cachep)%REAPTIMEOUT_LIST3;
+ 			                       ^
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#855: FILE: mm/slab.c:1791:
++		BUG_ON(!cachep->nodelists[numa_node_id()]);
+
+ERROR:SPACING: space required before the open parenthesis '('
+#892: FILE: mm/slab.c:1877:
++#define check_spinlock_acquired_node(x, y) do { } while(0)
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1036: FILE: mm/slab.c:2055:
++		if ((l3 = cachep->nodelists[i])) {
+
+ERROR:POINTER_LOCATION: "foo* bar" should be "foo *bar"
+#1053: FILE: mm/slab.c:2072:
++static struct slab* alloc_slabmgmt(kmem_cache_t *cachep, void *objp,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1054: FILE: mm/slab.c:2073:
++static struct slab* alloc_slabmgmt(kmem_cache_t *cachep, void *objp,
++			int colour_off, unsigned int __nocast local_flags)
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1063: FILE: mm/slab.c:2104:
++		void *objp = slabp->s_mem+cachep->objsize*i;
+ 		                         ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1063: FILE: mm/slab.c:2104:
++		void *objp = slabp->s_mem+cachep->objsize*i;
+ 		                                         ^
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around l3->slabs_free
+#1115: FILE: mm/slab.c:2249:
++	list_add_tail(&slabp->list, &(l3->slabs_free));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1139: FILE: mm/slab.c:2402:
++	BUG_ON(ac->avail > 0 || !l3);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1154: FILE: mm/slab.c:2413:
++			memcpy(ac->entry,
++				&(shared_array->entry[shared_array->avail]),
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around shared_array->entry[shared_array->avail]
+#1154: FILE: mm/slab.c:2413:
++				&(shared_array->entry[shared_array->avail]),
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#1155: FILE: mm/slab.c:2414:
++				sizeof(void*)*batchcount);
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1155: FILE: mm/slab.c:2414:
++				sizeof(void*)*batchcount);
+ 				             ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1165: FILE: mm/slab.c:2442:
++				slabp->free*cachep->objsize;
+ 				           ^
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1217: FILE: mm/slab.c:2577:
++ ^Istruct slab *slabp;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1217: FILE: mm/slab.c:2577:
++ ^Istruct slab *slabp;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1217: FILE: mm/slab.c:2577:
++ ^Istruct slab *slabp;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1218: FILE: mm/slab.c:2578:
++ ^Istruct kmem_list3 *l3;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1218: FILE: mm/slab.c:2578:
++ ^Istruct kmem_list3 *l3;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1218: FILE: mm/slab.c:2578:
++ ^Istruct kmem_list3 *l3;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1219: FILE: mm/slab.c:2579:
++ ^Ivoid *obj;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1219: FILE: mm/slab.c:2579:
++ ^Ivoid *obj;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1219: FILE: mm/slab.c:2579:
++ ^Ivoid *obj;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1220: FILE: mm/slab.c:2580:
++ ^Ikmem_bufctl_t next;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1220: FILE: mm/slab.c:2580:
++ ^Ikmem_bufctl_t next;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1220: FILE: mm/slab.c:2580:
++ ^Ikmem_bufctl_t next;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1221: FILE: mm/slab.c:2581:
++ ^Iint x;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1221: FILE: mm/slab.c:2581:
++ ^Iint x;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1221: FILE: mm/slab.c:2581:
++ ^Iint x;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1223: FILE: mm/slab.c:2583:
++ ^Il3 = cachep->nodelists[nodeid];$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1223: FILE: mm/slab.c:2583:
++ ^Il3 = cachep->nodelists[nodeid];$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1223: FILE: mm/slab.c:2583:
++ ^Il3 = cachep->nodelists[nodeid];$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1224: FILE: mm/slab.c:2584:
++ ^IBUG_ON(!l3);$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1224: FILE: mm/slab.c:2584:
++ ^IBUG_ON(!l3);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1224: FILE: mm/slab.c:2584:
++ ^IBUG_ON(!l3);$
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1224: FILE: mm/slab.c:2584:
++ 	BUG_ON(!l3);
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1227: FILE: mm/slab.c:2587:
++ ^Ispin_lock(&l3->list_lock);$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1227: FILE: mm/slab.c:2587:
++ ^Ispin_lock(&l3->list_lock);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1227: FILE: mm/slab.c:2587:
++ ^Ispin_lock(&l3->list_lock);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1228: FILE: mm/slab.c:2588:
++ ^Ientry = l3->slabs_partial.next;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1228: FILE: mm/slab.c:2588:
++ ^Ientry = l3->slabs_partial.next;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1228: FILE: mm/slab.c:2588:
++ ^Ientry = l3->slabs_partial.next;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1229: FILE: mm/slab.c:2589:
++ ^Iif (entry == &l3->slabs_partial) {$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1229: FILE: mm/slab.c:2589:
++ ^Iif (entry == &l3->slabs_partial) {$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1229: FILE: mm/slab.c:2589:
++ ^Iif (entry == &l3->slabs_partial) {$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1230: FILE: mm/slab.c:2590:
++ ^I^Il3->free_touched = 1;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1230: FILE: mm/slab.c:2590:
++ ^I^Il3->free_touched = 1;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1230: FILE: mm/slab.c:2590:
++ ^I^Il3->free_touched = 1;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1231: FILE: mm/slab.c:2591:
++ ^I^Ientry = l3->slabs_free.next;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1231: FILE: mm/slab.c:2591:
++ ^I^Ientry = l3->slabs_free.next;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1231: FILE: mm/slab.c:2591:
++ ^I^Ientry = l3->slabs_free.next;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1232: FILE: mm/slab.c:2592:
++ ^I^Iif (entry == &l3->slabs_free)$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1232: FILE: mm/slab.c:2592:
++ ^I^Iif (entry == &l3->slabs_free)$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1232: FILE: mm/slab.c:2592:
++ ^I^Iif (entry == &l3->slabs_free)$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1233: FILE: mm/slab.c:2593:
++ ^I^I^Igoto must_grow;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1233: FILE: mm/slab.c:2593:
++ ^I^I^Igoto must_grow;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1233: FILE: mm/slab.c:2593:
++ ^I^I^Igoto must_grow;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1234: FILE: mm/slab.c:2594:
++ ^I}$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1234: FILE: mm/slab.c:2594:
++ ^I}$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1234: FILE: mm/slab.c:2594:
++ ^I}$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1236: FILE: mm/slab.c:2596:
++ ^Islabp = list_entry(entry, struct slab, list);$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1236: FILE: mm/slab.c:2596:
++ ^Islabp = list_entry(entry, struct slab, list);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1236: FILE: mm/slab.c:2596:
++ ^Islabp = list_entry(entry, struct slab, list);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1237: FILE: mm/slab.c:2597:
++ ^Icheck_spinlock_acquired_node(cachep, nodeid);$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1237: FILE: mm/slab.c:2597:
++ ^Icheck_spinlock_acquired_node(cachep, nodeid);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1237: FILE: mm/slab.c:2597:
++ ^Icheck_spinlock_acquired_node(cachep, nodeid);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1238: FILE: mm/slab.c:2598:
++ ^Icheck_slabp(cachep, slabp);$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1238: FILE: mm/slab.c:2598:
++ ^Icheck_slabp(cachep, slabp);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1238: FILE: mm/slab.c:2598:
++ ^Icheck_slabp(cachep, slabp);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1240: FILE: mm/slab.c:2600:
++ ^ISTATS_INC_NODEALLOCS(cachep);$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1240: FILE: mm/slab.c:2600:
++ ^ISTATS_INC_NODEALLOCS(cachep);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1240: FILE: mm/slab.c:2600:
++ ^ISTATS_INC_NODEALLOCS(cachep);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1241: FILE: mm/slab.c:2601:
++ ^ISTATS_INC_ACTIVE(cachep);$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1241: FILE: mm/slab.c:2601:
++ ^ISTATS_INC_ACTIVE(cachep);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1241: FILE: mm/slab.c:2601:
++ ^ISTATS_INC_ACTIVE(cachep);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1242: FILE: mm/slab.c:2602:
++ ^ISTATS_SET_HIGH(cachep);$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1242: FILE: mm/slab.c:2602:
++ ^ISTATS_SET_HIGH(cachep);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1242: FILE: mm/slab.c:2602:
++ ^ISTATS_SET_HIGH(cachep);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1244: FILE: mm/slab.c:2604:
++ ^IBUG_ON(slabp->inuse == cachep->num);$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1244: FILE: mm/slab.c:2604:
++ ^IBUG_ON(slabp->inuse == cachep->num);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1244: FILE: mm/slab.c:2604:
++ ^IBUG_ON(slabp->inuse == cachep->num);$
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1244: FILE: mm/slab.c:2604:
++ 	BUG_ON(slabp->inuse == cachep->num);
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1246: FILE: mm/slab.c:2606:
++ ^I/* get obj pointer */$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1246: FILE: mm/slab.c:2606:
++ ^I/* get obj pointer */$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1246: FILE: mm/slab.c:2606:
++ ^I/* get obj pointer */$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1247: FILE: mm/slab.c:2607:
++ ^Iobj =  slabp->s_mem + slabp->free*cachep->objsize;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1247: FILE: mm/slab.c:2607:
++ ^Iobj =  slabp->s_mem + slabp->free*cachep->objsize;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1247: FILE: mm/slab.c:2607:
++ ^Iobj =  slabp->s_mem + slabp->free*cachep->objsize;$
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1247: FILE: mm/slab.c:2607:
++ 	obj =  slabp->s_mem + slabp->free*cachep->objsize;
+  	                                 ^
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1248: FILE: mm/slab.c:2608:
++ ^Islabp->inuse++;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1248: FILE: mm/slab.c:2608:
++ ^Islabp->inuse++;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1248: FILE: mm/slab.c:2608:
++ ^Islabp->inuse++;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1249: FILE: mm/slab.c:2609:
++ ^Inext = slab_bufctl(slabp)[slabp->free];$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1249: FILE: mm/slab.c:2609:
++ ^Inext = slab_bufctl(slabp)[slabp->free];$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1249: FILE: mm/slab.c:2609:
++ ^Inext = slab_bufctl(slabp)[slabp->free];$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1251: FILE: mm/slab.c:2611:
++ ^Islab_bufctl(slabp)[slabp->free] = BUFCTL_ALLOC;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1251: FILE: mm/slab.c:2611:
++ ^Islab_bufctl(slabp)[slabp->free] = BUFCTL_ALLOC;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1251: FILE: mm/slab.c:2611:
++ ^Islab_bufctl(slabp)[slabp->free] = BUFCTL_ALLOC;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1253: FILE: mm/slab.c:2613:
++ ^Islabp->free = next;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1253: FILE: mm/slab.c:2613:
++ ^Islabp->free = next;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1253: FILE: mm/slab.c:2613:
++ ^Islabp->free = next;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1254: FILE: mm/slab.c:2614:
++ ^Icheck_slabp(cachep, slabp);$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1254: FILE: mm/slab.c:2614:
++ ^Icheck_slabp(cachep, slabp);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1254: FILE: mm/slab.c:2614:
++ ^Icheck_slabp(cachep, slabp);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1255: FILE: mm/slab.c:2615:
++ ^Il3->free_objects--;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1255: FILE: mm/slab.c:2615:
++ ^Il3->free_objects--;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1255: FILE: mm/slab.c:2615:
++ ^Il3->free_objects--;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1256: FILE: mm/slab.c:2616:
++ ^I/* move slabp to correct slabp list: */$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1256: FILE: mm/slab.c:2616:
++ ^I/* move slabp to correct slabp list: */$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1256: FILE: mm/slab.c:2616:
++ ^I/* move slabp to correct slabp list: */$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1257: FILE: mm/slab.c:2617:
++ ^Ilist_del(&slabp->list);$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1257: FILE: mm/slab.c:2617:
++ ^Ilist_del(&slabp->list);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1257: FILE: mm/slab.c:2617:
++ ^Ilist_del(&slabp->list);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1259: FILE: mm/slab.c:2619:
++ ^Iif (slabp->free == BUFCTL_END) {$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1259: FILE: mm/slab.c:2619:
++ ^Iif (slabp->free == BUFCTL_END) {$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1259: FILE: mm/slab.c:2619:
++ ^Iif (slabp->free == BUFCTL_END) {$
+
+WARNING:BRACES: braces {} are not necessary for any arm of this statement
+#1259: FILE: mm/slab.c:2619:
++ 	if (slabp->free == BUFCTL_END) {
+[...]
++ 	} else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1260: FILE: mm/slab.c:2620:
++ ^I^Ilist_add(&slabp->list, &l3->slabs_full);$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1260: FILE: mm/slab.c:2620:
++ ^I^Ilist_add(&slabp->list, &l3->slabs_full);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1260: FILE: mm/slab.c:2620:
++ ^I^Ilist_add(&slabp->list, &l3->slabs_full);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1261: FILE: mm/slab.c:2621:
++ ^I} else {$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1261: FILE: mm/slab.c:2621:
++ ^I} else {$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1261: FILE: mm/slab.c:2621:
++ ^I} else {$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1262: FILE: mm/slab.c:2622:
++ ^I^Ilist_add(&slabp->list, &l3->slabs_partial);$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1262: FILE: mm/slab.c:2622:
++ ^I^Ilist_add(&slabp->list, &l3->slabs_partial);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1262: FILE: mm/slab.c:2622:
++ ^I^Ilist_add(&slabp->list, &l3->slabs_partial);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1263: FILE: mm/slab.c:2623:
++ ^I}$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1263: FILE: mm/slab.c:2623:
++ ^I}$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1263: FILE: mm/slab.c:2623:
++ ^I}$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1265: FILE: mm/slab.c:2625:
++ ^Ispin_unlock(&l3->list_lock);$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1265: FILE: mm/slab.c:2625:
++ ^Ispin_unlock(&l3->list_lock);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1265: FILE: mm/slab.c:2625:
++ ^Ispin_unlock(&l3->list_lock);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1266: FILE: mm/slab.c:2626:
++ ^Igoto done;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1266: FILE: mm/slab.c:2626:
++ ^Igoto done;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1266: FILE: mm/slab.c:2626:
++ ^Igoto done;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1269: FILE: mm/slab.c:2629:
++ ^Ispin_unlock(&l3->list_lock);$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1269: FILE: mm/slab.c:2629:
++ ^Ispin_unlock(&l3->list_lock);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1269: FILE: mm/slab.c:2629:
++ ^Ispin_unlock(&l3->list_lock);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1270: FILE: mm/slab.c:2630:
++ ^Ix = cache_grow(cachep, flags, nodeid);$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1270: FILE: mm/slab.c:2630:
++ ^Ix = cache_grow(cachep, flags, nodeid);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1270: FILE: mm/slab.c:2630:
++ ^Ix = cache_grow(cachep, flags, nodeid);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1272: FILE: mm/slab.c:2632:
++ ^Iif (!x)$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1272: FILE: mm/slab.c:2632:
++ ^Iif (!x)$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1272: FILE: mm/slab.c:2632:
++ ^Iif (!x)$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1273: FILE: mm/slab.c:2633:
++ ^I^Ireturn NULL;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1273: FILE: mm/slab.c:2633:
++ ^I^Ireturn NULL;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1273: FILE: mm/slab.c:2633:
++ ^I^Ireturn NULL;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1275: FILE: mm/slab.c:2635:
++ ^Igoto retry;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1275: FILE: mm/slab.c:2635:
++ ^Igoto retry;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1275: FILE: mm/slab.c:2635:
++ ^Igoto retry;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1277: FILE: mm/slab.c:2637:
++ ^Ireturn obj;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1277: FILE: mm/slab.c:2637:
++ ^Ireturn obj;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1277: FILE: mm/slab.c:2637:
++ ^Ireturn obj;$
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1310: FILE: mm/slab.c:2665:
++
++
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around shared_array->entry[shared_array->avail]
+#1368: FILE: mm/slab.c:2716:
++			memcpy(&(shared_array->entry[shared_array->avail]),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1369: FILE: mm/slab.c:2717:
++			memcpy(&(shared_array->entry[shared_array->avail]),
++					ac->entry,
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around l3->slabs_free
+#1387: FILE: mm/slab.c:2732:
++		while (p != &(l3->slabs_free)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around ac->entry[batchcount]
+#1399: FILE: mm/slab.c:2746:
++	memmove(ac->entry, &(ac->entry[batchcount]),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1400: FILE: mm/slab.c:2747:
++	memmove(ac->entry, &(ac->entry[batchcount]),
+ 			sizeof(void*)*ac->avail);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1403: FILE: mm/slab.c:2750:
+ 
++
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1417: FILE: mm/slab.c:2771:
++		struct slab *slabp;
++		slabp = GET_PAGE_SLAB(virt_to_page(objp));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1429: FILE: mm/slab.c:2783:
++					__drain_alien_cache(cachep,
++							alien, nodeid);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around cachep->nodelists[nodeid]
+#1433: FILE: mm/slab.c:2787:
++				spin_lock(&(cachep->nodelists[nodeid])->
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around cachep->nodelists[nodeid]
+#1436: FILE: mm/slab.c:2790:
++				spin_unlock(&(cachep->nodelists[nodeid])->
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#1603: FILE: mm/slab.c:3138:
++		list_for_each(q,&l3->slabs_full) {
+ 		               ^
+
+ERROR:SPACING: space required before that '&' (ctx:OxV)
+#1603: FILE: mm/slab.c:3138:
++		list_for_each(q,&l3->slabs_full) {
+ 		                ^
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#1610: FILE: mm/slab.c:3142:
++				printk(KERN_INFO "slab %s: wrong slabp found in full slab chain at %p (%d/%d).\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1611: FILE: mm/slab.c:3143:
++				printk(KERN_INFO "slab %s: wrong slabp found in full slab chain at %p (%d/%d).\n",
++						cachep->name, slabp, slabp->inuse, cachep->num);
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#1621: FILE: mm/slab.c:3148:
++		list_for_each(q,&l3->slabs_partial) {
+ 		               ^
+
+ERROR:SPACING: space required before that '&' (ctx:OxV)
+#1621: FILE: mm/slab.c:3148:
++		list_for_each(q,&l3->slabs_partial) {
+ 		                ^
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#1628: FILE: mm/slab.c:3152:
++				printk(KERN_INFO "slab %s: wrong slab found in partial chain at %p (%d/%d).\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1629: FILE: mm/slab.c:3153:
++				printk(KERN_INFO "slab %s: wrong slab found in partial chain at %p (%d/%d).\n",
++						cachep->name, slabp, slabp->inuse, cachep->num);
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#1639: FILE: mm/slab.c:3158:
++		list_for_each(q,&l3->slabs_free) {
+ 		               ^
+
+ERROR:SPACING: space required before that '&' (ctx:OxV)
+#1639: FILE: mm/slab.c:3158:
++		list_for_each(q,&l3->slabs_free) {
+ 		                ^
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#1646: FILE: mm/slab.c:3162:
++				printk(KERN_INFO "slab %s: wrong slab found in free chain at %p (%d/%d).\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1647: FILE: mm/slab.c:3163:
++				printk(KERN_INFO "slab %s: wrong slab found in free chain at %p (%d/%d).\n",
++						cachep->name, slabp, slabp->inuse, cachep->num);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1675: FILE: mm/slab.c:3189:
++		if (!(new_alien = alloc_alien_cache(i, cachep->limit)))
+
+CHECK:SPACING: space preferred before that '*' (ctx:VxE)
+#1678: FILE: mm/slab.c:3192:
++		if (!(new = alloc_arraycache(i, (cachep->shared*
+ 		                                               ^
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1678: FILE: mm/slab.c:3192:
++		if (!(new = alloc_arraycache(i, (cachep->shared*
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1681: FILE: mm/slab.c:3195:
++		if ((l3 = cachep->nodelists[node])) {
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#1682: FILE: mm/slab.c:3196:
++		if ((l3 = cachep->nodelists[node])) {
++
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1685: FILE: mm/slab.c:3199:
++			if ((nc = cachep->nodelists[node]->shared))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1687: FILE: mm/slab.c:3201:
++				free_block(cachep, nc->entry,
++							nc->avail);
+
+CHECK:SPACING: space preferred before that '*' (ctx:VxE)
+#1695: FILE: mm/slab.c:3209:
++			l3->free_limit = (1 + nr_cpus_node(node))*
+ 			                                         ^
+
+CHECK:SPACING: space preferred before that '*' (ctx:VxE)
+#1698: FILE: mm/slab.c:3212:
++			l3->free_limit = (1 + num_online_cpus())*
+ 			                                        ^
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1708: FILE: mm/slab.c:3222:
++		if (!(l3 = kmalloc_node(sizeof(struct kmem_list3),
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc_node(sizeof(*l3)...) over kmalloc_node(sizeof(struct kmem_list3)...)
+#1708: FILE: mm/slab.c:3222:
++		if (!(l3 = kmalloc_node(sizeof(struct kmem_list3),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1709: FILE: mm/slab.c:3223:
++		if (!(l3 = kmalloc_node(sizeof(struct kmem_list3),
++						GFP_KERNEL, node)))
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:VxV)
+#1714: FILE: mm/slab.c:3228:
++			((unsigned long)cachep)%REAPTIMEOUT_LIST3;
+ 			                       ^
+
+CHECK:SPACING: space preferred before that '*' (ctx:VxE)
+#1718: FILE: mm/slab.c:3232:
++		l3->free_limit = (1 + nr_cpus_node(node))*
+ 		                                         ^
+
+CHECK:SPACING: space preferred before that '*' (ctx:VxE)
+#1721: FILE: mm/slab.c:3235:
++		l3->free_limit = (1 + num_online_cpus())*
+ 		                                        ^
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#1756: FILE: mm/slab.c:3274:
++			for (i--; i >= 0; i--) kfree(new.new[i]);
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#1801: FILE: mm/slab.c:3301:
++		printk(KERN_ERR "alloc_kmemlist failed for %s, error %d.\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1802: FILE: mm/slab.c:3302:
++		printk(KERN_ERR "alloc_kmemlist failed for %s, error %d.\n",
++				cachep->name, -err);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1803: FILE: mm/slab.c:3303:
++		BUG();
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around ac->entry[tofree]
+#1830: FILE: mm/slab.c:3376:
++		memmove(ac->entry, &(ac->entry[tofree]),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1831: FILE: mm/slab.c:3377:
++		memmove(ac->entry, &(ac->entry[tofree]),
+ 					sizeof(void*)*ac->avail);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1856: FILE: mm/slab.c:3424:
++		drain_array_locked(searchp, ac_data(searchp), 0,
++				numa_node_id());
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1876: FILE: mm/slab.c:3439:
++			drain_array_locked(searchp, l3->shared, 0,
++				numa_node_id());
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1886: FILE: mm/slab.c:3446:
++		tofree = (l3->free_limit+5*searchp->num-1)/(5*searchp->num);
+ 		                        ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1886: FILE: mm/slab.c:3446:
++		tofree = (l3->free_limit+5*searchp->num-1)/(5*searchp->num);
+ 		                          ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#1886: FILE: mm/slab.c:3446:
++		tofree = (l3->free_limit+5*searchp->num-1)/(5*searchp->num);
+ 		                                       ^
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#1886: FILE: mm/slab.c:3446:
++		tofree = (l3->free_limit+5*searchp->num-1)/(5*searchp->num);
+ 		                                          ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1886: FILE: mm/slab.c:3446:
++		tofree = (l3->free_limit+5*searchp->num-1)/(5*searchp->num);
+ 		                                             ^
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around l3->slabs_free
+#1891: FILE: mm/slab.c:3449:
++			if (p == &(l3->slabs_free))
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1918: FILE: mm/slab.c:3501:
+ 		seq_puts(m, " : globalstat <listallocs> <maxobjs> <grown> <reaped>"
++				" <error> <maxfreeable> <nodeallocs> <remotefrees>");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#1966: FILE: mm/slab.c:3553:
++		list_for_each(q,&l3->slabs_full) {
+ 		               ^
+
+ERROR:SPACING: space required before that '&' (ctx:OxV)
+#1966: FILE: mm/slab.c:3553:
++		list_for_each(q,&l3->slabs_full) {
+ 		                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#1973: FILE: mm/slab.c:3560:
++		list_for_each(q,&l3->slabs_partial) {
+ 		               ^
+
+ERROR:SPACING: space required before that '&' (ctx:OxV)
+#1973: FILE: mm/slab.c:3560:
++		list_for_each(q,&l3->slabs_partial) {
+ 		                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#1982: FILE: mm/slab.c:3569:
++		list_for_each(q,&l3->slabs_free) {
+ 		               ^
+
+ERROR:SPACING: space required before that '&' (ctx:OxV)
+#1982: FILE: mm/slab.c:3569:
++		list_for_each(q,&l3->slabs_free) {
+ 		                ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2009: FILE: mm/slab.c:3596:
++	seq_printf(m, " : slabdata %6lu %6lu %6lu",
++			active_slabs, num_slabs, shared_avail);
+
+WARNING:LINE_CONTINUATIONS: Avoid line continuations in quoted strings
+#2024: FILE: mm/slab.c:3608:
++		seq_printf(m, " : globalstat %7lu %6lu %5lu %4lu \
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#2054: FILE: mm/slab.c:3664:
++		list_for_each(q,&l3->slabs_full) {
+ 		               ^
+
+ERROR:SPACING: space required before that '&' (ctx:OxV)
+#2054: FILE: mm/slab.c:3664:
++		list_for_each(q,&l3->slabs_full) {
+ 		                ^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#2057: FILE: mm/slab.c:3667:
++			int i;
++			slabp = list_entry(q, struct slab, list);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#2061: FILE: mm/slab.c:3671:
++				printk("obj %p/%d: %p", slabp, i, (void *)sym);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#2063: FILE: mm/slab.c:3673:
++				printk("\n");
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000180469.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 80 errors, 129 warnings, 78 checks, 1880 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000180469.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

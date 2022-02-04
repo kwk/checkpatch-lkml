@@ -1,0 +1,320 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#44: 
+Atomic pte operations using pte_xchg and pte_cmpxchg only work for the lowest
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#78: FILE: mm/memory.c:39:
++ * Jan 2005 ^IScalability improvement by reducing the use and the length of time$
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#139: FILE: mm/memory.c:1759:
++	struct page * page;
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments should align the * on each line
+#154: FILE: mm/memory.c:1769:
++		 * already have populated the entry
++		*/
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#156: FILE: mm/memory.c:1771:
++		if (ptep_cmpxchg(mm, addr, page_table, orig_entry, entry)) {
+[...]
++		} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#159: FILE: mm/memory.c:1774:
++		} else
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#198: FILE: mm/memory.c:1791:
++	entry = maybe_mkwrite(pte_mkdirty(mk_pte(page,
++						vma->vm_page_prot)),
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#210: FILE: mm/memory.c:1801:
++        }$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#210: FILE: mm/memory.c:1801:
++        }$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#244: FILE: mm/memory.c:1832:
++        pmd_t *pmd, pte_t orig_entry)$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#244: FILE: mm/memory.c:1832:
++        pmd_t *pmd, pte_t orig_entry)$
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments should align the * on each line
+#305: FILE: mm/memory.c:1993:
++ * page table lock.
++*/
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments should align the * on each line
+#368: FILE: mm/memory.c:2044:
++	 * another chance to do this again.
++	*/
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#369: FILE: mm/memory.c:2045:
++	if (ptep_cmpxchg(mm, address, pte, entry, new_entry)) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#373: FILE: mm/memory.c:2049:
++	} else
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#462: FILE: mm/memory.c:2131:
++		if (!pmd_test_and_populate(mm, pmd, new))
+[...]
++		else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#464: FILE: mm/memory.c:2133:
++		else {
+
+ERROR:DEFINE_ARCH_HAS: #define of '__ARCH_HAVE_PUD_TEST_AND_POPULATE' is wrong - use Kconfig variables or standard guards instead
+#503: FILE: include/asm-generic/pgtable-nopmd.h:34:
++#define __ARCH_HAVE_PUD_TEST_AND_POPULATE
+
+The ARCH_HAS_xyz and ARCH_HAVE_xyz patterns are wrong.
+
+For big conceptual features use Kconfig symbols instead.  And for
+smaller things where we have compatibility fallback functions but
+want architectures able to override them with optimized ones, we
+should either use weak functions (appropriate for some cases), or
+the symbol that protects them should be the same symbol we use.
+
+See: https://lore.kernel.org/lkml/CA+55aFycQ9XJvEOsiM3txHL5bjUc8CeKWJNR_H+MiicaddB42Q@mail.gmail.com/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__pgd' - possible side-effects?
+#543: FILE: include/asm-generic/pgtable.h:168:
++#define pgd_test_and_populate(__mm, __pgd, __pud)			\
++({									\
++	int __rc;							\
++	spin_lock(&mm->page_table_lock);				\
++	__rc = pgd_none(*(__pgd));					\
++	if (__rc) pgd_populate(__mm, __pgd, __pud);			\
++	spin_unlock(&mm->page_table_lock);				\
++	__rc;								\
++})
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#548: FILE: include/asm-generic/pgtable.h:173:
++	if (__rc) pgd_populate(__mm, __pgd, __pud);			\
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__pud' - possible side-effects?
+#555: FILE: include/asm-generic/pgtable.h:180:
++#define pud_test_and_populate(__mm, __pud, __pmd)			\
++({									\
++	int __rc;							\
++	spin_lock(&mm->page_table_lock);				\
++	__rc = pud_none(*(__pud));					\
++	if (__rc) pud_populate(__mm, __pud, __pmd);			\
++	spin_unlock(&mm->page_table_lock);				\
++	__rc;								\
++})
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#560: FILE: include/asm-generic/pgtable.h:185:
++	if (__rc) pud_populate(__mm, __pud, __pmd);			\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__pmd' - possible side-effects?
+#567: FILE: include/asm-generic/pgtable.h:192:
++#define pmd_test_and_populate(__mm, __pmd, __page)			\
++({									\
++	int __rc;							\
++	spin_lock(&mm->page_table_lock);				\
++	__rc = !pmd_present(*(__pmd));					\
++	if (__rc) pmd_populate(__mm, __pmd, __page);			\
++	spin_unlock(&mm->page_table_lock);				\
++	__rc;								\
++})
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#572: FILE: include/asm-generic/pgtable.h:197:
++	if (__rc) pmd_populate(__mm, __pmd, __page);			\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__pgd' - possible side-effects?
+#603: FILE: include/asm-generic/pgtable.h:268:
++#define pgd_test_and_populate(__mm, __pgd, __pud)			\
++({									\
++	int __rc;							\
++	__rc = pgd_none(*(__pgd));					\
++	if (__rc) pgd_populate(__mm, __pgd, __pud);			\
++	__rc;								\
++})
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#607: FILE: include/asm-generic/pgtable.h:272:
++	if (__rc) pgd_populate(__mm, __pgd, __pud);			\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__pud' - possible side-effects?
+#613: FILE: include/asm-generic/pgtable.h:278:
++#define pud_test_and_populate(__mm, __pud, __pmd)			\
++({									\
++       int __rc;							\
++       __rc = pud_none(*(__pud));					\
++       if (__rc) pud_populate(__mm, __pud, __pmd);			\
++       __rc;								\
++})
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#615: FILE: include/asm-generic/pgtable.h:280:
++       int __rc;^I^I^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#616: FILE: include/asm-generic/pgtable.h:281:
++       __rc = pud_none(*(__pud));^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#617: FILE: include/asm-generic/pgtable.h:282:
++       if (__rc) pud_populate(__mm, __pud, __pmd);^I^I^I\$
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#617: FILE: include/asm-generic/pgtable.h:282:
++       if (__rc) pud_populate(__mm, __pud, __pmd);			\
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#618: FILE: include/asm-generic/pgtable.h:283:
++       __rc;^I^I^I^I^I^I^I^I\$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__pmd' - possible side-effects?
+#623: FILE: include/asm-generic/pgtable.h:288:
++#define pmd_test_and_populate(__mm, __pmd, __page)			\
++({									\
++       int __rc;							\
++       __rc = !pmd_present(*(__pmd));					\
++       if (__rc) pmd_populate(__mm, __pmd, __page);			\
++       __rc;								\
++})
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#625: FILE: include/asm-generic/pgtable.h:290:
++       int __rc;^I^I^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#626: FILE: include/asm-generic/pgtable.h:291:
++       __rc = !pmd_present(*(__pmd));^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#627: FILE: include/asm-generic/pgtable.h:292:
++       if (__rc) pmd_populate(__mm, __pmd, __page);^I^I^I\$
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#627: FILE: include/asm-generic/pgtable.h:292:
++       if (__rc) pmd_populate(__mm, __pmd, __page);			\
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#628: FILE: include/asm-generic/pgtable.h:293:
++       __rc;^I^I^I^I^I^I^I^I\$
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#715: FILE: include/asm-ia64/pgalloc.h:117:
++pud_test_and_populate (struct mm_struct *mm, pud_t *pud_entry, pmd_t *pmd)
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#717: FILE: include/asm-ia64/pgalloc.h:119:
++	return ia64_cmpxchg8_acq(pud_entry,__pa(pmd), PUD_NONE) == PUD_NONE;
+ 	                                  ^
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#722: FILE: include/asm-ia64/pgalloc.h:124:
++pmd_test_and_populate (struct mm_struct *mm, pmd_t *pmd_entry, struct page *pte)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#727: FILE: include/asm-ia64/pgalloc.h:129:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000186743.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 11 errors, 17 warnings, 14 checks, 619 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000186743.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,147 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#32: 
+Ok, how does this one look?  It needs some obvious work, but is the approach 
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#118: FILE: arch/ia64/pci/pci.c:549:
++	if ((ret = pci_get_legacy_mem(dev, &addr)))
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#285: FILE: arch/ia64/sn/pci/pci_dma.c:534:
++		*(volatile u8 *)(addr) = (u8)(val);
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#289: FILE: arch/ia64/sn/pci/pci_dma.c:538:
++		*(volatile u16 *)(addr) = (u16)(val);
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#293: FILE: arch/ia64/sn/pci/pci_dma.c:542:
++		*(volatile u32 *)(addr) = (u32)(val);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR | S_IWUSR' are not preferred. Consider using octal permissions '0600'.
+#443: FILE: drivers/pci/pci-sysfs.c:384:
++			res_attr->attr.mode = S_IRUSR | S_IWUSR;
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*pdev->legacy_io)...) over kmalloc(sizeof(struct bin_attribute)...)
+#453: FILE: drivers/pci/pci-sysfs.c:394:
++	pdev->legacy_io = kmalloc(sizeof(struct bin_attribute) * 2,
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR | S_IWUSR' are not preferred. Consider using octal permissions '0600'.
+#458: FILE: drivers/pci/pci-sysfs.c:399:
++		pdev->legacy_io->attr.mode = S_IRUSR | S_IWUSR;
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#467: FILE: drivers/pci/pci-sysfs.c:408:
++		pdev->legacy_mem->size = 1024*1024;
+ 		                             ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR | S_IWUSR' are not preferred. Consider using octal permissions '0600'.
+#468: FILE: drivers/pci/pci-sysfs.c:409:
++		pdev->legacy_mem->attr.mode = S_IRUSR | S_IWUSR;
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#663: FILE: include/asm-ia64/pci.h:89:
++extern int pci_mmap_legacy_page_range (struct pci_dev *dev,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#663: FILE: include/asm-ia64/pci.h:89:
++extern int pci_mmap_legacy_page_range (struct pci_dev *dev,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#706: FILE: include/asm-ia64/sn/sn_sal.h:505:
++			*((u8*)data_ptr) = (u8)isrv.v0;
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#709: FILE: include/asm-ia64/sn/sn_sal.h:508:
++			*((u16*)data_ptr) = (u16)isrv.v0;
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#712: FILE: include/asm-ia64/sn/sn_sal.h:511:
++			*((u32*)data_ptr) = (u32)isrv.v0;
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#715: FILE: include/asm-ia64/sn/sn_sal.h:514:
++			*((u64*)data_ptr) = (u64)isrv.v0;
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct kobject *' should also have an identifier name
+#755: FILE: include/linux/sysfs.h:58:
++	int (*mmap)(struct kobject *, struct bin_attribute *attr,
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000221747.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 5 errors, 9 warnings, 3 checks, 617 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000221747.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

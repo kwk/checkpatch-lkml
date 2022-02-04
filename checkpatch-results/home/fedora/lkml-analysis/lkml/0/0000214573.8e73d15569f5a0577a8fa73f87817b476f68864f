@@ -1,0 +1,324 @@
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#82: FILE: drivers/i2c/chips/it87.c:167:
++#define PWM_FROM_REG(val) (((val)&0x7f) << 1)
+                                  ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#116: FILE: drivers/i2c/chips/it87.c:460:
++}
++static ssize_t show_pwm_enable(struct device *dev, char *buf, int nr)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#119: FILE: drivers/i2c/chips/it87.c:463:
++	struct it87_data *data = it87_update_device(dev);
++	return sprintf(buf,"%d\n", (data->fan_main_ctrl & (1 << nr)) ? 1 : 0);
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#119: FILE: drivers/i2c/chips/it87.c:463:
++	return sprintf(buf,"%d\n", (data->fan_main_ctrl & (1 << nr)) ? 1 : 0);
+ 	                  ^
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#121: FILE: drivers/i2c/chips/it87.c:465:
++}
++static ssize_t show_pwm(struct device *dev, char *buf, int nr)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#124: FILE: drivers/i2c/chips/it87.c:468:
++	struct it87_data *data = it87_update_device(dev);
++	return sprintf(buf,"%d\n", data->manual_pwm_ctl[nr]);
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#124: FILE: drivers/i2c/chips/it87.c:468:
++	return sprintf(buf,"%d\n", data->manual_pwm_ctl[nr]);
+ 	                  ^
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#132: FILE: drivers/i2c/chips/it87.c:516:
+ }
++static ssize_t set_pwm_enable(struct device *dev, const char *buf,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#133: FILE: drivers/i2c/chips/it87.c:517:
++static ssize_t set_pwm_enable(struct device *dev, const char *buf,
++		size_t count, int nr)
+
+WARNING:CONSIDER_KSTRTO: simple_strtol is obsolete, use kstrtol instead
+#137: FILE: drivers/i2c/chips/it87.c:521:
++	int val = simple_strtol(buf, NULL, 10);
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#139: FILE: drivers/i2c/chips/it87.c:523:
++	if (val == 0) {
+[...]
++	} else if (val == 1) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#153: FILE: drivers/i2c/chips/it87.c:537:
++	} else
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#158: FILE: drivers/i2c/chips/it87.c:542:
++}
++static ssize_t set_pwm(struct device *dev, const char *buf,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#159: FILE: drivers/i2c/chips/it87.c:543:
++static ssize_t set_pwm(struct device *dev, const char *buf,
++		size_t count, int nr)
+
+WARNING:CONSIDER_KSTRTO: simple_strtol is obsolete, use kstrtol instead
+#163: FILE: drivers/i2c/chips/it87.c:547:
++	int val = simple_strtol(buf, NULL, 10);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'offset' - possible side-effects?
+#181: FILE: drivers/i2c/chips/it87.c:592:
++#define show_pwm_offset(offset)						\
++static ssize_t show_pwm##offset##_enable (struct device *dev,		\
++	char *buf)							\
++{									\
++	return show_pwm_enable(dev, buf, offset - 1);			\
++}									\
++static ssize_t show_pwm##offset (struct device *dev, char *buf)		\
++{									\
++	return show_pwm(dev, buf, offset - 1);				\
++}									\
++static ssize_t set_pwm##offset##_enable (struct device *dev,		\
++		const char *buf, size_t count)				\
++{									\
++	return set_pwm_enable(dev, buf, count, offset - 1);		\
++}									\
++static ssize_t set_pwm##offset (struct device *dev,			\
++		const char *buf, size_t count)				\
++{									\
++	return set_pwm(dev, buf, count, offset - 1);			\
++}									\
++static DEVICE_ATTR(pwm##offset##_enable, S_IRUGO | S_IWUSR,		\
++		show_pwm##offset##_enable,				\
++		set_pwm##offset##_enable);				\
++static DEVICE_ATTR(pwm##offset, S_IRUGO | S_IWUSR,			\
++		show_pwm##offset , set_pwm##offset );
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'offset' may be better as '(offset)' to avoid precedence issues
+#181: FILE: drivers/i2c/chips/it87.c:592:
++#define show_pwm_offset(offset)						\
++static ssize_t show_pwm##offset##_enable (struct device *dev,		\
++	char *buf)							\
++{									\
++	return show_pwm_enable(dev, buf, offset - 1);			\
++}									\
++static ssize_t show_pwm##offset (struct device *dev, char *buf)		\
++{									\
++	return show_pwm(dev, buf, offset - 1);				\
++}									\
++static ssize_t set_pwm##offset##_enable (struct device *dev,		\
++		const char *buf, size_t count)				\
++{									\
++	return set_pwm_enable(dev, buf, count, offset - 1);		\
++}									\
++static ssize_t set_pwm##offset (struct device *dev,			\
++		const char *buf, size_t count)				\
++{									\
++	return set_pwm(dev, buf, count, offset - 1);			\
++}									\
++static DEVICE_ATTR(pwm##offset##_enable, S_IRUGO | S_IWUSR,		\
++		show_pwm##offset##_enable,				\
++		set_pwm##offset##_enable);				\
++static DEVICE_ATTR(pwm##offset, S_IRUGO | S_IWUSR,			\
++		show_pwm##offset , set_pwm##offset );
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#181: FILE: drivers/i2c/chips/it87.c:592:
++#define show_pwm_offset(offset)						\
++static ssize_t show_pwm##offset##_enable (struct device *dev,		\
++	char *buf)							\
++{									\
++	return show_pwm_enable(dev, buf, offset - 1);			\
++}									\
++static ssize_t show_pwm##offset (struct device *dev, char *buf)		\
++{									\
++	return show_pwm(dev, buf, offset - 1);				\
++}									\
++static ssize_t set_pwm##offset##_enable (struct device *dev,		\
++		const char *buf, size_t count)				\
++{									\
++	return set_pwm_enable(dev, buf, count, offset - 1);		\
++}									\
++static ssize_t set_pwm##offset (struct device *dev,			\
++		const char *buf, size_t count)				\
++{									\
++	return set_pwm(dev, buf, count, offset - 1);			\
++}									\
++static DEVICE_ATTR(pwm##offset##_enable, S_IRUGO | S_IWUSR,		\
++		show_pwm##offset##_enable,				\
++		set_pwm##offset##_enable);				\
++static DEVICE_ATTR(pwm##offset, S_IRUGO | S_IWUSR,			\
++		show_pwm##offset , set_pwm##offset );
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#182: FILE: drivers/i2c/chips/it87.c:593:
++static ssize_t show_pwm##offset##_enable (struct device *dev,		\
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#187: FILE: drivers/i2c/chips/it87.c:598:
++static ssize_t show_pwm##offset (struct device *dev, char *buf)		\
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#191: FILE: drivers/i2c/chips/it87.c:602:
++static ssize_t set_pwm##offset##_enable (struct device *dev,		\
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#196: FILE: drivers/i2c/chips/it87.c:607:
++static ssize_t set_pwm##offset (struct device *dev,			\
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#201: FILE: drivers/i2c/chips/it87.c:612:
++static DEVICE_ATTR(pwm##offset##_enable, S_IRUGO | S_IWUSR,		\
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#204: FILE: drivers/i2c/chips/it87.c:615:
++static DEVICE_ATTR(pwm##offset, S_IRUGO | S_IWUSR,			\
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#205: FILE: drivers/i2c/chips/it87.c:616:
++		show_pwm##offset , set_pwm##offset );
+ 		                 ^
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#205: FILE: drivers/i2c/chips/it87.c:616:
++		show_pwm##offset , set_pwm##offset );
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#244: FILE: drivers/i2c/chips/it87.c:954:
++	 *   this is not implemented, so we initialize to something sane */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#245: FILE: drivers/i2c/chips/it87.c:955:
++	for (i = 0; i < 3; i++) {
++		data->manual_pwm_ctl[i] = 0xff;
+ 	}
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#266: FILE: drivers/i2c/chips/it87.c:984:
++	 * other mode registers */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#275: FILE: drivers/i2c/chips/it87.c:993:
++				 * interface */
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#281: FILE: drivers/i2c/chips/it87.c:999:
++ ^I}$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#281: FILE: drivers/i2c/chips/it87.c:999:
++ ^I}$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#281: FILE: drivers/i2c/chips/it87.c:999:
++ ^I}$
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000214573.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 5 errors, 17 warnings, 11 checks, 233 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000214573.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

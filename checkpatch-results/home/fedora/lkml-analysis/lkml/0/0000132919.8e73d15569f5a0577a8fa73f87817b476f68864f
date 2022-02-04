@@ -1,0 +1,89 @@
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#88: FILE: drivers/input/misc/uinput.c:179:
++		printk(KERN_DEBUG "%s: write device info first\n", UINPUT_NAME);
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*newdev)...) over kzalloc(sizeof(struct uinput_device)...)
+#112: FILE: drivers/input/misc/uinput.c:198:
++	newdev = kzalloc(sizeof(struct uinput_device), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:LONG_LINE: line length of 110 exceeds 100 columns
+#230: FILE: drivers/input/misc/uinput.c:328:
++static inline ssize_t uinput_inject_event(struct uinput_device *udev, const char __user *buffer, size_t count)
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#305: FILE: drivers/input/misc/uinput.c:387:
++		if (copy_to_user(buffer + retval, &udev->buff[udev->tail], sizeof(struct input_event))) {
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_arg' - possible side-effects?
+#344: FILE: drivers/input/misc/uinput.c:423:
++#define uinput_set_bit(_arg, _bit, _max)		\
++({							\
++	int __ret = 0;					\
++	if (udev->state == UIST_CREATED)		\
++		__ret =  -EINVAL;			\
++	else if ((_arg) > (_max))			\
++		__ret = -EINVAL;			\
++	else set_bit((_arg), udev->dev->_bit);		\
++	__ret;						\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_bit' may be better as '(_bit)' to avoid precedence issues
+#344: FILE: drivers/input/misc/uinput.c:423:
++#define uinput_set_bit(_arg, _bit, _max)		\
++({							\
++	int __ret = 0;					\
++	if (udev->state == UIST_CREATED)		\
++		__ret =  -EINVAL;			\
++	else if ((_arg) > (_max))			\
++		__ret = -EINVAL;			\
++	else set_bit((_arg), udev->dev->_bit);		\
++	__ret;						\
++})
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#351: FILE: drivers/input/misc/uinput.c:430:
++	else set_bit((_arg), udev->dev->_bit);		\
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000132919.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 1 errors, 3 warnings, 3 checks, 492 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000132919.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

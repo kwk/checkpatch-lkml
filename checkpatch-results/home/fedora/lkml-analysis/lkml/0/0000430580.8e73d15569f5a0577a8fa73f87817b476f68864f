@@ -1,0 +1,120 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#138: FILE: include/linux/pid.h:36:
++extern int FASTCALL(attach_pid(struct task_struct *task, enum pid_type type, int nr));
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#140: FILE: include/linux/pid.h:38:
++extern void FASTCALL(link_pid(struct task_struct *task, struct pid_link *link, struct pid *pid));
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#148: FILE: include/linux/pid.h:53:
++extern void switch_exec_pids(struct task_struct *leader, struct task_struct *thread);
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#177: FILE: include/linux/sched.h:808:
++extern task_t * FASTCALL(next_thread(task_t *p));
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#177: FILE: include/linux/sched.h:808:
++extern task_t * FASTCALL(next_thread(task_t *p));
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#179: FILE: include/linux/sched.h:810:
++#define thread_group_leader(p)	(p->pid == p->tgid)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'p' may be better as '(p)' to avoid precedence issues
+#179: FILE: include/linux/sched.h:810:
++#define thread_group_leader(p)	(p->pid == p->tgid)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pos' - possible side-effects?
+#222: FILE: include/linux/list.h:209:
++#define __list_for_each(pos, head) \
+ 	for (pos = (head)->next; pos != (head); pos = pos->next)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'head' - possible side-effects?
+#222: FILE: include/linux/list.h:209:
++#define __list_for_each(pos, head) \
+ 	for (pos = (head)->next; pos != (head); pos = pos->next)
+
+CHECK:BRACES: Unbalanced braces around else statement
+#262: FILE: kernel/fork.c:844:
++	} else
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#311: FILE: kernel/exit.c:689:
++		BUG();
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:USE_LOCKDEP: Where possible, use lockdep_assert_held instead of assertions based on spin_is_locked
+#312: FILE: kernel/exit.c:690:
++	if (!spin_is_locked(&p->sig->siglock) &&
+
+lockdep_assert_held() annotations should be preferred over
+assertions based on spin_is_locked()
+
+See: https://www.kernel.org/doc/html/latest/locking/lockdep-design.html#annotations
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#313: FILE: kernel/exit.c:691:
++	if (!spin_is_locked(&p->sig->siglock) &&
++				!rwlock_is_locked(&tasklist_lock))
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#314: FILE: kernel/exit.c:692:
++		BUG();
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#528: FILE: kernel/pid.c:240:
++	leader->pid = leader->tgid = thread->pid;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000430580.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 1 errors, 3 warnings, 11 checks, 450 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000430580.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

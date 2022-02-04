@@ -1,0 +1,87 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#61: 
+diff -NurpP --minimal linux-2.6.11-rc2/include/linux/spinlock.h linux-2.6.11-rc2-spin/include/linux/spinlock.h
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#69: FILE: include/linux/spinlock.h:42:
++#define assert_spin_locked(x)	BUG_ON(!spin_is_locked(x))
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:USE_LOCKDEP: Where possible, use lockdep_assert_held instead of assertions based on spin_is_locked
+#69: FILE: include/linux/spinlock.h:42:
++#define assert_spin_locked(x)	BUG_ON(!spin_is_locked(x))
+
+lockdep_assert_held() annotations should be preferred over
+assertions based on spin_is_locked()
+
+See: https://www.kernel.org/doc/html/latest/locking/lockdep-design.html#annotations
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#78: FILE: include/linux/spinlock.h:151:
++ * the lock value properly */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#79: FILE: include/linux/spinlock.h:152:
++#define assert_spin_locked(x) \
++	({ \
++		CHECK_LOCK(x); \
++		BUG_ON(!(x)->lock); \
++	})
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#82: FILE: include/linux/spinlock.h:155:
++		BUG_ON(!(x)->lock); \
+
+ERROR:SPACING: space required before the open parenthesis '('
+#92: FILE: include/linux/spinlock.h:214:
++#define assert_spin_locked(lock)	do { (void)(lock); } while(0)
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#92: FILE: include/linux/spinlock.h:214:
++#define assert_spin_locked(lock)	do { (void)(lock); } while(0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000211774.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 1 errors, 6 warnings, 1 checks, 246 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000211774.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

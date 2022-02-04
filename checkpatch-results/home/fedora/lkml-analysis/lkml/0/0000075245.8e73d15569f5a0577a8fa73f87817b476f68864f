@@ -1,0 +1,209 @@
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/elf.h> instead of <asm/elf.h>
+#134: FILE: arch/i386/kernel/asm-offsets.c:16:
++#include <asm/elf.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#225: FILE: arch/i386/kernel/sysenter.c:32:
++EXPORT_SYMBOL_GPL(vdso_enabled);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+WARNING:CONSIDER_KSTRTO: simple_strtoul is obsolete, use kstrtoul instead
+#229: FILE: arch/i386/kernel/sysenter.c:36:
++	vdso_enabled = simple_strtoul(s, NULL, 0);
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+CHECK:UNDOCUMENTED_SETUP: __setup appears un-documented -- check Documentation/admin-guide/kernel-parameters.txt
+#234: FILE: arch/i386/kernel/sysenter.c:41:
++__setup("vdso=", vdso_setup);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#253: FILE: arch/i386/kernel/sysenter.c:77:
++	printk("Compat vDSO mapped to %08lx.\n", __fix_to_virt(FIX_VDSO));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#278: FILE: arch/i386/kernel/sysenter.c:100:
++static struct page *syscall_nopage(struct vm_area_struct *vma,
++				unsigned long adr, int *type)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#281: FILE: arch/i386/kernel/sysenter.c:103:
++	struct page *p = virt_to_page(adr - vma->vm_start + syscall_page);
++	get_page(p);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:CONST_STRUCT: struct vm_operations_struct should normally be const
+#290: FILE: arch/i386/kernel/sysenter.c:112:
++static struct vm_operations_struct syscall_vm_ops = {
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#296: FILE: arch/i386/kernel/sysenter.c:118:
++extern void SYSENTER_RETURN;
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#322: FILE: arch/i386/kernel/sysenter.c:144:
++	vma->vm_flags = VM_READ|VM_EXEC|VM_MAYREAD|VM_MAYEXEC|VM_MAYWRITE;
+ 	                       ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#322: FILE: arch/i386/kernel/sysenter.c:144:
++	vma->vm_flags = VM_READ|VM_EXEC|VM_MAYREAD|VM_MAYEXEC|VM_MAYWRITE;
+ 	                               ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#322: FILE: arch/i386/kernel/sysenter.c:144:
++	vma->vm_flags = VM_READ|VM_EXEC|VM_MAYREAD|VM_MAYEXEC|VM_MAYWRITE;
+ 	                                          ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#322: FILE: arch/i386/kernel/sysenter.c:144:
++	vma->vm_flags = VM_READ|VM_EXEC|VM_MAYREAD|VM_MAYEXEC|VM_MAYWRITE;
+ 	                                                     ^
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __weak over __attribute__((weak))
+#416: FILE: fs/proc/task_mmu.c:121:
++__attribute__((weak)) const char *arch_vma_name(struct vm_area_struct *vma)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#431: FILE: fs/proc/task_mmu.c:162:
++		const char *name = arch_vma_name(vma);
++		if (!name) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#434: FILE: fs/proc/task_mmu.c:165:
++				if (vma->vm_start <= mm->start_brk &&
+ 						vma->vm_end >= mm->brk) {
+
+CHECK:SPACING: No space is necessary after a cast
+#496: FILE: include/asm-i386/elf.h:150:
++#define VDSO_HIGH_EHDR		((const struct elfhdr *) VDSO_HIGH_BASE)
+
+CHECK:SPACING: No space is necessary after a cast
+#497: FILE: include/asm-i386/elf.h:151:
++#define VDSO_EHDR		((const struct elfhdr *) VDSO_COMPAT_BASE)
+
+ERROR:DEFINE_ARCH_HAS: #define of 'ARCH_HAS_SETUP_ADDITIONAL_PAGES' is wrong - use Kconfig variables or standard guards instead
+#503: FILE: include/asm-i386/elf.h:157:
++#define ARCH_HAS_SETUP_ADDITIONAL_PAGES
+
+The ARCH_HAS_xyz and ARCH_HAVE_xyz patterns are wrong.
+
+For big conceptual features use Kconfig symbols instead.  And for
+smaller things where we have compatibility fallback functions but
+want architectures able to override them with optimized ones, we
+should either use weak functions (appropriate for some cases), or
+the symbol that protects them should be the same symbol we use.
+
+See: https://lore.kernel.org/lkml/CA+55aFycQ9XJvEOsiM3txHL5bjUc8CeKWJNR_H+MiicaddB42Q@mail.gmail.com/
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#505: FILE: include/asm-i386/elf.h:159:
++extern int arch_setup_additional_pages(struct linux_binprm *bprm,
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#506: FILE: include/asm-i386/elf.h:160:
++                                       int executable_stack);$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#506: FILE: include/asm-i386/elf.h:160:
++                                       int executable_stack);$
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (0, 16)
+#514: FILE: include/asm-i386/elf.h:165:
++do if (vdso_enabled) {						\
++		NEW_AUX_ENT(AT_SYSINFO,	VDSO_ENTRY);		\
+
+CHECK:SPACING: No space is necessary after a cast
+#531: FILE: include/asm-i386/elf.h:182:
++		(const struct elf_phdr *) (VDSO_HIGH_BASE		      \
+
+CHECK:SPACING: No space is necessary after a cast
+#546: FILE: include/asm-i386/elf.h:204:
++		(const struct elf_phdr *) (VDSO_HIGH_BASE		      \
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#620: FILE: include/asm-i386/page.h:127:
++#define MAXMEM			(__FIXADDR_TOP-__PAGE_OFFSET-__VMALLOC_RESERVE)
+               			              ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#620: FILE: include/asm-i386/page.h:127:
++#define MAXMEM			(__FIXADDR_TOP-__PAGE_OFFSET-__VMALLOC_RESERVE)
+               			                            ^
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#664: FILE: include/linux/sysctl.h:190:
++	VM_VDSO_ENABLED=33,	/* map VDSO into new processes? */
+ 	               ^
+
+WARNING:DUPLICATED_SYSCTL_CONST: duplicated sysctl range checking value 'zero', consider using the shared one in include/linux/sysctl.h
+#693: FILE: kernel/sysctl.c:935:
++		.extra1		= &zero,
+
+Commit d91bff3011cf ("proc/sysctl: add shared variables for range
+check") added some shared const variables to be used instead of a local
+copy in each source file.
+
+Consider replacing the sysctl range checking value with the shared
+one in include/linux/sysctl.h.  The following conversion scheme may
+be used::
+
+  &zero     ->  SYSCTL_ZERO
+  &one      ->  SYSCTL_ONE
+  &int_max  ->  SYSCTL_INT_MAX
+
+See:
+
+  1. https://lore.kernel.org/lkml/20190430180111.10688-1-mcroce@redhat.com/
+  2. https://lore.kernel.org/lkml/20190531131422.14970-1-mcroce@redhat.com/
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000075245.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 3 errors, 11 warnings, 15 checks, 510 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000075245.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

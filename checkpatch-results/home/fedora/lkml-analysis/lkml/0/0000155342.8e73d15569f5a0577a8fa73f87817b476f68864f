@@ -1,0 +1,627 @@
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#63: FILE: drivers/char/ipmi/ipmi_msghandler.c:67:
+ 
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:INCLUDE_LINUX: Use #include <linux/atomic.h> instead of <asm/atomic.h>
+#71: FILE: drivers/char/ipmi/ipmi_msghandler.c:75:
++#include <asm/atomic.h>
+
+ERROR:OPEN_BRACE: open brace '{' following struct go on the same line
+#73: FILE: drivers/char/ipmi/ipmi_msghandler.c:77:
++struct synced_list
++{
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#75: FILE: drivers/char/ipmi/ipmi_msghandler.c:79:
++	spinlock_t       lock;
+
+ERROR:OPEN_BRACE: open brace '{' following struct go on the same line
+#79: FILE: drivers/char/ipmi/ipmi_msghandler.c:83:
++struct synced_list_entry
++{
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#92: FILE: drivers/char/ipmi/ipmi_msghandler.c:96:
++/* Can be used for synced list find and clear operations for finding
++   and deleting a specific entry. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#92: FILE: drivers/char/ipmi/ipmi_msghandler.c:96:
++   and deleting a specific entry. */
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#130: FILE: drivers/char/ipmi/ipmi_msghandler.c:134:
++#define synced_list_put_entry_nolock(pos, head) \
++	synced_list_wake(pos);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pos' - possible side-effects?
+#133: FILE: drivers/char/ipmi/ipmi_msghandler.c:137:
++#define synced_list_for_each_entry(pos, l, entry, flags)		\
++	for ((spin_lock_irqsave(&(l)->lock, flags),			      \
++	      pos = container_of((l)->head.next, typeof(*(pos)),entry.link)); \
++	     (prefetch((pos)->entry.link.next),				      \
++	      &(pos)->entry.link != (&(l)->head)			      \
++	        ? (atomic_inc(&(pos)->entry.usecount),			      \
++                   spin_unlock_irqrestore(&(l)->lock, flags), 1)	      \
++	        : (spin_unlock_irqrestore(&(l)->lock, flags), 0));	      \
++	     (spin_lock_irqsave(&(l)->lock, flags),			      \
++	      synced_list_wake(&(pos)->entry),				      \
++              pos = container_of((pos)->entry.link.next, typeof(*(pos)),      \
++				 entry.link)))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'l' - possible side-effects?
+#133: FILE: drivers/char/ipmi/ipmi_msghandler.c:137:
++#define synced_list_for_each_entry(pos, l, entry, flags)		\
++	for ((spin_lock_irqsave(&(l)->lock, flags),			      \
++	      pos = container_of((l)->head.next, typeof(*(pos)),entry.link)); \
++	     (prefetch((pos)->entry.link.next),				      \
++	      &(pos)->entry.link != (&(l)->head)			      \
++	        ? (atomic_inc(&(pos)->entry.usecount),			      \
++                   spin_unlock_irqrestore(&(l)->lock, flags), 1)	      \
++	        : (spin_unlock_irqrestore(&(l)->lock, flags), 0));	      \
++	     (spin_lock_irqsave(&(l)->lock, flags),			      \
++	      synced_list_wake(&(pos)->entry),				      \
++              pos = container_of((pos)->entry.link.next, typeof(*(pos)),      \
++				 entry.link)))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'entry' - possible side-effects?
+#133: FILE: drivers/char/ipmi/ipmi_msghandler.c:137:
++#define synced_list_for_each_entry(pos, l, entry, flags)		\
++	for ((spin_lock_irqsave(&(l)->lock, flags),			      \
++	      pos = container_of((l)->head.next, typeof(*(pos)),entry.link)); \
++	     (prefetch((pos)->entry.link.next),				      \
++	      &(pos)->entry.link != (&(l)->head)			      \
++	        ? (atomic_inc(&(pos)->entry.usecount),			      \
++                   spin_unlock_irqrestore(&(l)->lock, flags), 1)	      \
++	        : (spin_unlock_irqrestore(&(l)->lock, flags), 0));	      \
++	     (spin_lock_irqsave(&(l)->lock, flags),			      \
++	      synced_list_wake(&(pos)->entry),				      \
++              pos = container_of((pos)->entry.link.next, typeof(*(pos)),      \
++				 entry.link)))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'flags' - possible side-effects?
+#133: FILE: drivers/char/ipmi/ipmi_msghandler.c:137:
++#define synced_list_for_each_entry(pos, l, entry, flags)		\
++	for ((spin_lock_irqsave(&(l)->lock, flags),			      \
++	      pos = container_of((l)->head.next, typeof(*(pos)),entry.link)); \
++	     (prefetch((pos)->entry.link.next),				      \
++	      &(pos)->entry.link != (&(l)->head)			      \
++	        ? (atomic_inc(&(pos)->entry.usecount),			      \
++                   spin_unlock_irqrestore(&(l)->lock, flags), 1)	      \
++	        : (spin_unlock_irqrestore(&(l)->lock, flags), 0));	      \
++	     (spin_lock_irqsave(&(l)->lock, flags),			      \
++	      synced_list_wake(&(pos)->entry),				      \
++              pos = container_of((pos)->entry.link.next, typeof(*(pos)),      \
++				 entry.link)))
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#135: FILE: drivers/char/ipmi/ipmi_msghandler.c:139:
++	      pos = container_of((l)->head.next, typeof(*(pos)),entry.link)); \
+ 	                                                       ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#138: FILE: drivers/char/ipmi/ipmi_msghandler.c:142:
++^I        ? (atomic_inc(&(pos)->entry.usecount),^I^I^I      \$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#139: FILE: drivers/char/ipmi/ipmi_msghandler.c:143:
++                   spin_unlock_irqrestore(&(l)->lock, flags), 1)^I      \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#139: FILE: drivers/char/ipmi/ipmi_msghandler.c:143:
++                   spin_unlock_irqrestore(&(l)->lock, flags), 1)^I      \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#140: FILE: drivers/char/ipmi/ipmi_msghandler.c:144:
++^I        : (spin_unlock_irqrestore(&(l)->lock, flags), 0));^I      \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#143: FILE: drivers/char/ipmi/ipmi_msghandler.c:147:
++              pos = container_of((pos)->entry.link.next, typeof(*(pos)),      \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#143: FILE: drivers/char/ipmi/ipmi_msghandler.c:147:
++              pos = container_of((pos)->entry.link.next, typeof(*(pos)),      \$
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#147: FILE: drivers/char/ipmi/ipmi_msghandler.c:151:
++/* If you must exit a synced_list_for_each_entry loop abnormally (with
++   a break, return, goto) then you *must* call this first, with the
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#148: FILE: drivers/char/ipmi/ipmi_msghandler.c:152:
++   current entry.  Otherwise, the entry will be left locked. */
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#153: FILE: drivers/char/ipmi/ipmi_msghandler.c:157:
++	unsigned long flags;
++	spin_lock_irqsave(&head->lock, flags);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#159: FILE: drivers/char/ipmi/ipmi_msghandler.c:163:
++/* Can only be called in a synced list loop.  This will preserve the
++   entry at least until synced_list_put_entry() is called. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#159: FILE: drivers/char/ipmi/ipmi_msghandler.c:163:
++   entry at least until synced_list_put_entry() is called. */
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#205: FILE: drivers/char/ipmi/ipmi_msghandler.c:209:
++			struct synced_list_entry_task_q e;
++			e.process = current;
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#226: FILE: drivers/char/ipmi/ipmi_msghandler.c:230:
++/* Returns the entry "gotten".  Note that this will always stop on a
++   match, even if the return value is SYNCED_LIST_MATCH_CONTINUE. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#226: FILE: drivers/char/ipmi/ipmi_msghandler.c:230:
++   match, even if the return value is SYNCED_LIST_MATCH_CONTINUE. */
+
+ERROR:OPEN_BRACE: open brace '{' following struct go on the same line
+#265: FILE: drivers/char/ipmi/ipmi_msghandler.c:269:
++struct ipmi_user
++{
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#277: FILE: drivers/char/ipmi/ipmi_msghandler.c:286:
++	ipmi_user_t user = container_of(e, struct ipmi_user, link);
++	if (user == match_data)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#283: FILE: drivers/char/ipmi/ipmi_msghandler.c:292:
++
++
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#297: FILE: drivers/char/ipmi/ipmi_msghandler.c:305:
++	struct cmd_rcvr *rcvr = container_of(e, struct cmd_rcvr, link);
++	if (rcvr->user == match_data)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#308: FILE: drivers/char/ipmi/ipmi_msghandler.c:316:
++	struct cmd_rcvr *cmp = match_data;
++	if ((cmp->netfn == rcvr->netfn) && (cmp->cmd == rcvr->cmd))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'cmp->netfn == rcvr->netfn'
+#308: FILE: drivers/char/ipmi/ipmi_msghandler.c:316:
++	if ((cmp->netfn == rcvr->netfn) && (cmp->cmd == rcvr->cmd))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'cmp->cmd == rcvr->cmd'
+#308: FILE: drivers/char/ipmi/ipmi_msghandler.c:316:
++	if ((cmp->netfn == rcvr->netfn) && (cmp->cmd == rcvr->cmd))
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#318: FILE: drivers/char/ipmi/ipmi_msghandler.c:326:
++	struct cmd_rcvr *cmp = match_data;
++	if ((cmp->netfn == rcvr->netfn) && (cmp->cmd == rcvr->cmd)
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#318: FILE: drivers/char/ipmi/ipmi_msghandler.c:326:
++	if ((cmp->netfn == rcvr->netfn) && (cmp->cmd == rcvr->cmd)
++	    && (cmp->user == rcvr->user))
++	{
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'cmp->netfn == rcvr->netfn'
+#318: FILE: drivers/char/ipmi/ipmi_msghandler.c:326:
++	if ((cmp->netfn == rcvr->netfn) && (cmp->cmd == rcvr->cmd)
++	    && (cmp->user == rcvr->user))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'cmp->cmd == rcvr->cmd'
+#318: FILE: drivers/char/ipmi/ipmi_msghandler.c:326:
++	if ((cmp->netfn == rcvr->netfn) && (cmp->cmd == rcvr->cmd)
++	    && (cmp->user == rcvr->user))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'cmp->user == rcvr->user'
+#318: FILE: drivers/char/ipmi/ipmi_msghandler.c:326:
++	if ((cmp->netfn == rcvr->netfn) && (cmp->cmd == rcvr->cmd)
++	    && (cmp->user == rcvr->user))
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#319: FILE: drivers/char/ipmi/ipmi_msghandler.c:327:
++	if ((cmp->netfn == rcvr->netfn) && (cmp->cmd == rcvr->cmd)
++	    && (cmp->user == rcvr->user))
+
+CHECK:BRACES: Unbalanced braces around else statement
+#322: FILE: drivers/char/ipmi/ipmi_msghandler.c:330:
++	} else
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#326: FILE: drivers/char/ipmi/ipmi_msghandler.c:334:
++
++
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#364: FILE: drivers/char/ipmi/ipmi_msghandler.c:540:
++ * a slot doesn't get reused too quickly. */
+
+CHECK:SPACING: No space is necessary after a cast
+#365: FILE: drivers/char/ipmi/ipmi_msghandler.c:541:
++#define IPMI_INVALID_INTERFACE_ENTRY ((ipmi_smi_t) ((long) 1))
+
+WARNING:TYPECAST_INT_CONSTANT: Unnecessary typecast of c90 int constant - '(long) 1' could be '1L'
+#365: FILE: drivers/char/ipmi/ipmi_msghandler.c:541:
++#define IPMI_INVALID_INTERFACE_ENTRY ((ipmi_smi_t) ((long) 1))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#366: FILE: drivers/char/ipmi/ipmi_msghandler.c:542:
++#define IPMI_INVALID_INTERFACE(i) (((i) == NULL) \
++				   || (i == IPMI_INVALID_INTERFACE_ENTRY))
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#367: FILE: drivers/char/ipmi/ipmi_msghandler.c:543:
++#define IPMI_INVALID_INTERFACE(i) (((i) == NULL) \
++				   || (i == IPMI_INVALID_INTERFACE_ENTRY))
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#388: FILE: drivers/char/ipmi/ipmi_msghandler.c:556:
+ 
++
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#402: FILE: drivers/char/ipmi/ipmi_msghandler.c:570:
++	struct cmd_rcvr *rcvr = container_of(e, struct cmd_rcvr, link);
++	kfree(rcvr);
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#415: FILE: drivers/char/ipmi/ipmi_msghandler.c:582:
++		if ((intf->seq_table[i].inuse)
++		    && (intf->seq_table[i].recv_msg))
++		{
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'intf->seq_table[i].inuse'
+#415: FILE: drivers/char/ipmi/ipmi_msghandler.c:582:
++		if ((intf->seq_table[i].inuse)
++		    && (intf->seq_table[i].recv_msg))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'intf->seq_table[i].recv_msg'
+#415: FILE: drivers/char/ipmi/ipmi_msghandler.c:582:
++		if ((intf->seq_table[i].inuse)
++		    && (intf->seq_table[i].recv_msg))
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#416: FILE: drivers/char/ipmi/ipmi_msghandler.c:583:
++		if ((intf->seq_table[i].inuse)
++		    && (intf->seq_table[i].recv_msg))
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#445: FILE: drivers/char/ipmi/ipmi_msghandler.c:609:
++		ipmi_smi_t intf = ipmi_interfaces[i];
++		if (IPMI_INVALID_INTERFACE(intf))
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#462: FILE: drivers/char/ipmi/ipmi_msghandler.c:741:
++/* Note that if the message has a user, it must be called with the
++   user "gotten" by synced_list_get_entry. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#462: FILE: drivers/char/ipmi/ipmi_msghandler.c:741:
++   user "gotten" by synced_list_get_entry. */
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#473: FILE: drivers/char/ipmi/ipmi_msghandler.c:763:
++		ipmi_user_t user = msg->user;
++		user->handler->ipmi_recv_hndl(msg,
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#484: FILE: drivers/char/ipmi/ipmi_msghandler.c:841:
++			/* This is safe because removing the entry gets the
++			   seq lock, and we hold the seq_lock now, so the user
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#485: FILE: drivers/char/ipmi/ipmi_msghandler.c:842:
++			   in the recv_msg must be valid. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#496: FILE: drivers/char/ipmi/ipmi_msghandler.c:906:
++		/* This is safe because removing the entry gets the
++		   seq lock, and we hold the seq_lock now, so the user
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#497: FILE: drivers/char/ipmi/ipmi_msghandler.c:907:
++		   in the recv_msg must be valid. */
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'if_num >= MAX_IPMI_INTERFACES'
+#514: FILE: drivers/char/ipmi/ipmi_msghandler.c:967:
++	if ((if_num >= MAX_IPMI_INTERFACES) || IPMI_INVALID_INTERFACE(intf)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'intf->seq_table[i].recv_msg->user == user'
+#597: FILE: drivers/char/ipmi/ipmi_msghandler.c:1018:
++		if (intf->seq_table[i].inuse
++		    && (intf->seq_table[i].recv_msg->user == user))
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#598: FILE: drivers/char/ipmi/ipmi_msghandler.c:1019:
++		if (intf->seq_table[i].inuse
++		    && (intf->seq_table[i].recv_msg->user == user))
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#775: FILE: drivers/char/ipmi/ipmi_msghandler.c:1167:
++	ipmi_smi_t intf = user->intf;
++	intf->handlers->set_run_to_completion(intf->send_info, val);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#960: FILE: drivers/char/ipmi/ipmi_msghandler.c:2052:
++	/* FIXME - this is an ugly kludge, this sets the intf for the
++	   caller before sending any messages with it. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#960: FILE: drivers/char/ipmi/ipmi_msghandler.c:2052:
++	   caller before sending any messages with it. */
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#963: FILE: drivers/char/ipmi/ipmi_msghandler.c:2055:
++	if ((version_major > 1)
++	    || ((version_major == 1) && (version_minor >= 5)))
++	{
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'version_major > 1'
+#963: FILE: drivers/char/ipmi/ipmi_msghandler.c:2055:
++	if ((version_major > 1)
++	    || ((version_major == 1) && (version_minor >= 5)))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'version_major == 1'
+#963: FILE: drivers/char/ipmi/ipmi_msghandler.c:2055:
++	if ((version_major > 1)
++	    || ((version_major == 1) && (version_minor >= 5)))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'version_minor >= 5'
+#963: FILE: drivers/char/ipmi/ipmi_msghandler.c:2055:
++	if ((version_major > 1)
++	    || ((version_major == 1) && (version_minor >= 5)))
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#964: FILE: drivers/char/ipmi/ipmi_msghandler.c:2056:
++	if ((version_major > 1)
++	    || ((version_major == 1) && (version_minor >= 5)))
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#967: FILE: drivers/char/ipmi/ipmi_msghandler.c:2059:
++		/* Start scanning the channels to see what is
++		   available. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#967: FILE: drivers/char/ipmi/ipmi_msghandler.c:2059:
++		   available. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1076: FILE: drivers/char/ipmi/ipmi_msghandler.c:2108:
++			 * are done. */
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1085: FILE: drivers/char/ipmi/ipmi_msghandler.c:2114:
++	spin_unlock_irqrestore(&interfaces_lock,flags);
+ 	                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1108: FILE: drivers/char/ipmi/ipmi_msghandler.c:2131:
++	spin_unlock_irqrestore(&interfaces_lock,flags);
+ 	                                       ^
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1158: FILE: drivers/char/ipmi/ipmi_msghandler.c:2236:
++	if (entry) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1162: FILE: drivers/char/ipmi/ipmi_msghandler.c:2240:
++	} else
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#1167: FILE: drivers/char/ipmi/ipmi_msghandler.c:2245:
++		/* Safe because the user delete must delete the user
++		   from this table and grab this lock. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1167: FILE: drivers/char/ipmi/ipmi_msghandler.c:2245:
++		   from this table and grab this lock. */
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1225: FILE: drivers/char/ipmi/ipmi_msghandler.c:2427:
++	if (entry) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1229: FILE: drivers/char/ipmi/ipmi_msghandler.c:2431:
++	} else
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#1233: FILE: drivers/char/ipmi/ipmi_msghandler.c:2435:
++		/* Safe because the user delete must delete the user
++		   from this table and grab this lock. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1233: FILE: drivers/char/ipmi/ipmi_msghandler.c:2435:
++		   from this table and grab this lock. */
+
+ERROR:SPACING: space prohibited after that '!' (ctx:BxW)
+#1323: FILE: drivers/char/ipmi/ipmi_msghandler.c:2624:
++	if ((! entry) && recv_msg->user) {
+ 	     ^
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around '! entry'
+#1323: FILE: drivers/char/ipmi/ipmi_msghandler.c:2624:
++	if ((! entry) && recv_msg->user) {
+
+ERROR:SPACING: space prohibited after that '!' (ctx:BxW)
+#1354: FILE: drivers/char/ipmi/ipmi_msghandler.c:2724:
++		if (! entry)
+ 		    ^
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#1373: FILE: drivers/char/ipmi/ipmi_msghandler.c:2797:
+ 	if ((msg->data_size >= 2)
+ 	    && (msg->data[0] == (IPMI_NETFN_APP_REQUEST << 2))
+ 	    && (msg->data[1] == IPMI_SEND_MSG_CMD)
++	    && (msg->user_data == NULL))
++	{
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1377: FILE: drivers/char/ipmi/ipmi_msghandler.c:2800:
+ 	    && (msg->data[1] == IPMI_SEND_MSG_CMD)
++	    && (msg->user_data == NULL))
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!msg->user_data"
+#1377: FILE: drivers/char/ipmi/ipmi_msghandler.c:2800:
++	    && (msg->user_data == NULL))
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#1467: FILE: drivers/char/ipmi/ipmi_msghandler.c:2932:
++		/* This is safe because removing the entry gets the
++		   seq lock, and we hold the seq_lock now, so the user
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1468: FILE: drivers/char/ipmi/ipmi_msghandler.c:2933:
++		   in the recv_msg must be valid. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#1485: FILE: drivers/char/ipmi/ipmi_msghandler.c:2950:
++		/* Start with the max timer, set to normal
++		   timer after the message is sent. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1485: FILE: drivers/char/ipmi/ipmi_msghandler.c:2950:
++		   timer after the message is sent. */
+
+ERROR:SPACING: space prohibited after that '!' (ctx:BxW)
+#1497: FILE: drivers/char/ipmi/ipmi_msghandler.c:2962:
++		if (! smi_msg)
+ 		    ^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1505: FILE: drivers/char/ipmi/ipmi_msghandler.c:2970:
++		 * local MC, which don't get resent. */
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around intf->seq_table[j]
+#1575: FILE: drivers/char/ipmi/ipmi_msghandler.c:3015:
++			check_msg_timeout(intf, &(intf->seq_table[j]),
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000155342.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 17 errors, 44 warnings, 37 checks, 1573 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000155342.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

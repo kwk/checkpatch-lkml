@@ -1,0 +1,151 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#61: 
+> high-performance switch/router platforms, only a layer-2 rewrite of the dst 
+
+WARNING:USE_RELATIVE_PATH: use relative pathname instead of absolute in changelog text
+#71: 
+diff -urN /usr/src/linux-2.6.8-1.521/include/linux/if_ether.h linux-2.6.8-1.521wccp/include/linux/if_ether.h
+
+WARNING:USE_RELATIVE_PATH: use relative pathname instead of absolute in changelog text
+#72: 
+--- /usr/src/linux-2.6.8-1.521/include/linux/if_ether.h	2004-08-14 09:37:15.000000000 +0400
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#79: FILE: include/linux/if_ether.h:63:
++					 * defined in draft-wilson-wrec-wccp-v2-00.txt */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#90: FILE: net/ipv4/ip_gre.c:608:
++		skb->protocol = *(u16*)(h + 2);
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'flags == 0'
+#95: FILE: net/ipv4/ip_gre.c:613:
++		if ((flags == 0) && (skb->protocol == __constant_htons(ETH_P_WCCP))) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'skb->protocol == __constant_htons(ETH_P_WCCP)'
+#95: FILE: net/ipv4/ip_gre.c:613:
++		if ((flags == 0) && (skb->protocol == __constant_htons(ETH_P_WCCP))) {
+
+WARNING:CONSTANT_CONVERSION: __constant_htons should be htons
+#95: FILE: net/ipv4/ip_gre.c:613:
++		if ((flags == 0) && (skb->protocol == __constant_htons(ETH_P_WCCP))) {
+
+Use of __constant_<foo> form is discouraged for the following functions::
+
+  __constant_cpu_to_be[x]
+  __constant_cpu_to_le[x]
+  __constant_be[x]_to_cpu
+  __constant_le[x]_to_cpu
+  __constant_htons
+  __constant_ntohs
+
+Using any of these outside of include/uapi/ is not preferred as using the
+function without __constant_ is identical when the argument is a
+constant.
+
+In big endian systems, the macros like __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to the same expression::
+
+  #define __constant_cpu_to_be32(x) ((__force __be32)(__u32)(x))
+  #define __cpu_to_be32(x)          ((__force __be32)(__u32)(x))
+
+In little endian systems, the macros __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to __constant_swab32 and __swab32.  __swab32
+has a __builtin_constant_p check::
+
+  #define __swab32(x)				\
+    (__builtin_constant_p((__u32)(x)) ?	\
+    ___constant_swab32(x) :			\
+    __fswab32(x))
+
+So ultimately they have a special case for constants.
+Similar is the case with all of the macros in the list.  Thus
+using the __constant_... forms are unnecessarily verbose and
+not preferred outside of include/uapi.
+
+See: https://lore.kernel.org/lkml/1400106425.12666.6.camel@joe-AO725/
+
+WARNING:CONSTANT_CONVERSION: __constant_htons should be htons
+#96: FILE: net/ipv4/ip_gre.c:614:
++			skb->protocol = __constant_htons(ETH_P_IP);
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#97: FILE: net/ipv4/ip_gre.c:615:
++^I^I^Iif ((*(h + offset) & 0xF0) != 0x40) $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000249873.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 2 errors, 6 warnings, 2 checks, 32 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000249873.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,49 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'v' - possible side-effects?
+#77: FILE: include/asm-generic/atomic-call-if.h:45:
++#define atomic_lock_call_if_contended(v, fn_name)			\
++do {									\
++	if (atomic_xchg(v, 0) != 1)					\
++		fn_name(v);						\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'v' - possible side-effects?
+#95: FILE: include/asm-generic/atomic-call-if.h:63:
++#define atomic_unlock_call_if_contended(v, fn_name)			\
++do {									\
++	if (atomic_xchg(v, 1) != 0)					\
++		fn_name(v);						\
++} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#161: FILE: include/asm-i386/atomic.h:333:
++#define atomic_contended_unlock_fixup(v)				\
++do {									\
++	atomic_set(v, 1);						\
++} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#212: FILE: include/asm-x86_64/atomic.h:298:
++#define atomic_contended_unlock_fixup(v)				\
++do {									\
++	atomic_set(v, 1);						\
++} while (0)
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000123341.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 0 errors, 2 warnings, 2 checks, 144 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000123341.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

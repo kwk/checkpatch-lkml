@@ -1,0 +1,365 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#78: 
+diff -urpN 2.6.12-rc2.1.be/include/asm-i386/bitops.h 2.6.12-rc2.2.ror/include/asm-i386/bitops.h
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#109: FILE: include/asm-i386/bitops.h:450:
++#define constant_rol64(v,c) \
+                         ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'c' - possible side-effects?
+#109: FILE: include/asm-i386/bitops.h:450:
++#define constant_rol64(v,c) \
++	({						\
++	u64 vv = (v);					\
++	if(!(c&63)) {					\
++	} else if((c&63)==1) {				\
++		asm (					\
++		"	shldl	$1,%%edx,%%eax	\n"	\
++		"	rcll	$1,%%edx	\n"	\
++		: "=&A" (vv)				\
++		: "0" (vv)				\
++		);					\
++	} else if((c&63)==63) {				\
++		asm (					\
++		"	shrdl	$1,%%edx,%%eax	\n"	\
++		"	rcrl	$1,%%edx	\n"	\
++		: "=&A" (vv)				\
++		: "0" (vv)				\
++		);					\
++	} else if((c&63)<32) {				\
++		asm (					\
++		"	shldl	%3,%%edx,%%eax	\n"	\
++		"	shldl	%3,%2,%%edx	\n"	\
++		: "=&A" (vv)				\
++		: "0" (vv), "r" (vv), "Ic" (c&63)	\
++		);					\
++	} else if((c&63)>32) {				\
++		asm (					\
++		"	shrdl	%3,%%edx,%%eax	\n"	\
++		"	shrdl	%3,%2,%%edx	\n"	\
++		: "=&A" (vv)				\
++		: "0" (vv), "r" (vv), "Ic" (64-(c&63))	\
++		);					\
++	} else /* (c&63)==32 */ {			\
++		asm (					\
++		"	xchgl	%%edx,%%eax	\n"	\
++		: "=&A" (vv)				\
++		: "0" (vv)				\
++		);					\
++	}						\
++	vv;						\
++	})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'c' may be better as '(c)' to avoid precedence issues
+#109: FILE: include/asm-i386/bitops.h:450:
++#define constant_rol64(v,c) \
++	({						\
++	u64 vv = (v);					\
++	if(!(c&63)) {					\
++	} else if((c&63)==1) {				\
++		asm (					\
++		"	shldl	$1,%%edx,%%eax	\n"	\
++		"	rcll	$1,%%edx	\n"	\
++		: "=&A" (vv)				\
++		: "0" (vv)				\
++		);					\
++	} else if((c&63)==63) {				\
++		asm (					\
++		"	shrdl	$1,%%edx,%%eax	\n"	\
++		"	rcrl	$1,%%edx	\n"	\
++		: "=&A" (vv)				\
++		: "0" (vv)				\
++		);					\
++	} else if((c&63)<32) {				\
++		asm (					\
++		"	shldl	%3,%%edx,%%eax	\n"	\
++		"	shldl	%3,%2,%%edx	\n"	\
++		: "=&A" (vv)				\
++		: "0" (vv), "r" (vv), "Ic" (c&63)	\
++		);					\
++	} else if((c&63)>32) {				\
++		asm (					\
++		"	shrdl	%3,%%edx,%%eax	\n"	\
++		"	shrdl	%3,%2,%%edx	\n"	\
++		: "=&A" (vv)				\
++		: "0" (vv), "r" (vv), "Ic" (64-(c&63))	\
++		);					\
++	} else /* (c&63)==32 */ {			\
++		asm (					\
++		"	xchgl	%%edx,%%eax	\n"	\
++		: "=&A" (vv)				\
++		: "0" (vv)				\
++		);					\
++	}						\
++	vv;						\
++	})
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#112: FILE: include/asm-i386/bitops.h:453:
++	if(!(c&63)) {					\
+ 	      ^
+
+ERROR:SPACING: space required before the open parenthesis '('
+#112: FILE: include/asm-i386/bitops.h:453:
++	if(!(c&63)) {					\
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#112: FILE: include/asm-i386/bitops.h:453:
++	if(!(c&63)) {					\
+[...]
++	} else if((c&63)==1) {				\
+[...]
++	} else if((c&63)==63) {				\
+[...]
++	} else if((c&63)<32) {				\
+[...]
++	} else if((c&63)>32) {				\
+[...]
++	} else /* (c&63)==32 */ {			\
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#113: FILE: include/asm-i386/bitops.h:454:
++	} else if((c&63)==1) {				\
+ 	            ^
+
+ERROR:SPACING: spaces required around that '==' (ctx:VxV)
+#113: FILE: include/asm-i386/bitops.h:454:
++	} else if((c&63)==1) {				\
+ 	                ^
+
+ERROR:SPACING: space required before the open parenthesis '('
+#113: FILE: include/asm-i386/bitops.h:454:
++	} else if((c&63)==1) {				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#115: FILE: include/asm-i386/bitops.h:456:
++		"	shldl	$1,%%edx,%%eax	\n"	\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#116: FILE: include/asm-i386/bitops.h:457:
++		"	rcll	$1,%%edx	\n"	\
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#120: FILE: include/asm-i386/bitops.h:461:
++	} else if((c&63)==63) {				\
+ 	            ^
+
+ERROR:SPACING: spaces required around that '==' (ctx:VxV)
+#120: FILE: include/asm-i386/bitops.h:461:
++	} else if((c&63)==63) {				\
+ 	                ^
+
+ERROR:SPACING: space required before the open parenthesis '('
+#120: FILE: include/asm-i386/bitops.h:461:
++	} else if((c&63)==63) {				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#122: FILE: include/asm-i386/bitops.h:463:
++		"	shrdl	$1,%%edx,%%eax	\n"	\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#123: FILE: include/asm-i386/bitops.h:464:
++		"	rcrl	$1,%%edx	\n"	\
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#127: FILE: include/asm-i386/bitops.h:468:
++	} else if((c&63)<32) {				\
+ 	            ^
+
+ERROR:SPACING: spaces required around that '<' (ctx:VxV)
+#127: FILE: include/asm-i386/bitops.h:468:
++	} else if((c&63)<32) {				\
+ 	                ^
+
+ERROR:SPACING: space required before the open parenthesis '('
+#127: FILE: include/asm-i386/bitops.h:468:
++	} else if((c&63)<32) {				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#129: FILE: include/asm-i386/bitops.h:470:
++		"	shldl	%3,%%edx,%%eax	\n"	\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#130: FILE: include/asm-i386/bitops.h:471:
++		"	shldl	%3,%2,%%edx	\n"	\
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#132: FILE: include/asm-i386/bitops.h:473:
++		: "0" (vv), "r" (vv), "Ic" (c&63)	\
+ 		                             ^
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#134: FILE: include/asm-i386/bitops.h:475:
++	} else if((c&63)>32) {				\
+ 	            ^
+
+ERROR:SPACING: spaces required around that '>' (ctx:VxV)
+#134: FILE: include/asm-i386/bitops.h:475:
++	} else if((c&63)>32) {				\
+ 	                ^
+
+ERROR:SPACING: space required before the open parenthesis '('
+#134: FILE: include/asm-i386/bitops.h:475:
++	} else if((c&63)>32) {				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#136: FILE: include/asm-i386/bitops.h:477:
++		"	shrdl	%3,%%edx,%%eax	\n"	\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#137: FILE: include/asm-i386/bitops.h:478:
++		"	shrdl	%3,%2,%%edx	\n"	\
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#139: FILE: include/asm-i386/bitops.h:480:
++		: "0" (vv), "r" (vv), "Ic" (64-(c&63))	\
+ 		                              ^
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#139: FILE: include/asm-i386/bitops.h:480:
++		: "0" (vv), "r" (vv), "Ic" (64-(c&63))	\
+ 		                                 ^
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#143: FILE: include/asm-i386/bitops.h:484:
++		"	xchgl	%%edx,%%eax	\n"	\
+
+ERROR:OPEN_BRACE: open brace '{' following function definitions go on the next line
+#154: FILE: include/asm-i386/bitops.h:495:
++static inline u64 rol64(u64 x,int num) {
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#154: FILE: include/asm-i386/bitops.h:495:
++static inline u64 rol64(u64 x,int num) {
+                              ^
+
+ERROR:SPACING: space required before the open parenthesis '('
+#155: FILE: include/asm-i386/bitops.h:496:
++	if(__builtin_constant_p(num))
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#156: FILE: include/asm-i386/bitops.h:497:
++		return constant_rol64(x,num);
+ 		                       ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#158: FILE: include/asm-i386/bitops.h:499:
++	return ((x<<num) | (x>>(64-num)));
+ 	          ^
+
+CHECK:SPACING: spaces preferred around that '>>' (ctx:VxV)
+#158: FILE: include/asm-i386/bitops.h:499:
++	return ((x<<num) | (x>>(64-num)));
+ 	                     ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#158: FILE: include/asm-i386/bitops.h:499:
++	return ((x<<num) | (x>>(64-num)));
+ 	                          ^
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#160: FILE: include/asm-i386/bitops.h:501:
++}
++static inline u64 ror64(u64 x,int num) {
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:OPEN_BRACE: open brace '{' following function definitions go on the next line
+#160: FILE: include/asm-i386/bitops.h:501:
++static inline u64 ror64(u64 x,int num) {
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#160: FILE: include/asm-i386/bitops.h:501:
++static inline u64 ror64(u64 x,int num) {
+                              ^
+
+ERROR:SPACING: space required before the open parenthesis '('
+#161: FILE: include/asm-i386/bitops.h:502:
++	if(__builtin_constant_p(num))
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#162: FILE: include/asm-i386/bitops.h:503:
++		return constant_rol64(x,(64-num));
+ 		                       ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#162: FILE: include/asm-i386/bitops.h:503:
++		return constant_rol64(x,(64-num));
+ 		                           ^
+
+CHECK:SPACING: spaces preferred around that '>>' (ctx:VxV)
+#163: FILE: include/asm-i386/bitops.h:504:
++	return ((x>>num) | (x<<(64-num)));
+ 	          ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#163: FILE: include/asm-i386/bitops.h:504:
++	return ((x>>num) | (x<<(64-num)));
+ 	                     ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#163: FILE: include/asm-i386/bitops.h:504:
++	return ((x>>num) | (x<<(64-num)));
+ 	                          ^
+
+ERROR:DEFINE_ARCH_HAS: #define of 'ARCH_HAS_ROL64' is wrong - use Kconfig variables or standard guards instead
+#166: FILE: include/asm-i386/bitops.h:507:
++#define ARCH_HAS_ROL64
+
+The ARCH_HAS_xyz and ARCH_HAVE_xyz patterns are wrong.
+
+For big conceptual features use Kconfig symbols instead.  And for
+smaller things where we have compatibility fallback functions but
+want architectures able to override them with optimized ones, we
+should either use weak functions (appropriate for some cases), or
+the symbol that protects them should be the same symbol we use.
+
+See: https://lore.kernel.org/lkml/CA+55aFycQ9XJvEOsiM3txHL5bjUc8CeKWJNR_H+MiicaddB42Q@mail.gmail.com/
+
+ERROR:DEFINE_ARCH_HAS: #define of 'ARCH_HAS_ROR64' is wrong - use Kconfig variables or standard guards instead
+#167: FILE: include/asm-i386/bitops.h:508:
++#define ARCH_HAS_ROR64
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000189240.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 20 errors, 10 warnings, 19 checks, 137 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000189240.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

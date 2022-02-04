@@ -1,0 +1,382 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#122: FILE: arch/i386/kernel/vm86.c:331:
++#define pushb(base, ptr, val, regs) \
++	do { \
++		int err; \
++		__asm__ __volatile__(				\
++			"decw %w0\n\t"				\
++			"1: movb %3,0(%2,%0)\n\t"		\
++			"xor %1,%1\n\t"				\
++			"2:\n"					\
++			".section .fixup,\"ax\"\n\t"		\
++			"3:	movl $1,%1\n\t"			\
++			"	jmp 2b\n\t"			\
++			".previous\n"				\
++			".section __ex_table,\"a\"\n"		\
++			"	.align 4\n"			\
++			"	.long 1b,3b\n"			\
++			".previous"				\
++			: "=r" (ptr), "=r" (err)		\
++			: "r" (base), "q" (val), "0" (ptr));	\
++		if (err) \
++			return_to_32bit(regs, VM86_UNKNOWN); \
++	} while(0)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#142: FILE: arch/i386/kernel/vm86.c:351:
++	} while(0)
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#144: FILE: arch/i386/kernel/vm86.c:353:
++#define pushw(base, ptr, val, regs) \
++	do { \
++		int err; \
++		__asm__ __volatile__(				\
++			"decw %w0\n\t"				\
++			"1: movb %h3,0(%2,%0)\n\t"		\
++			"decw %w0\n\t"				\
++			"2: movb %b3,0(%2,%0)\n\t"		\
++			"xor %1,%1\n\t"				\
++			"3:\n"					\
++			".section .fixup,\"ax\"\n\t"		\
++			"4:	movl $1,%1\n\t"			\
++			"	jmp 3b\n\t"			\
++			".previous\n"				\
++			".section __ex_table,\"a\"\n"		\
++			"	.align 4\n"			\
++			"	.long 1b,4b\n"			\
++			"	.long 2b,4b\n"			\
++			".previous"				\
++			: "=r" (ptr), "=r" (err)		\
++			: "r" (base), "q" (val), "0" (ptr));	\
++		if (err) \
++			return_to_32bit(regs, VM86_UNKNOWN); \
++	} while(0)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#167: FILE: arch/i386/kernel/vm86.c:376:
++	} while(0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#169: FILE: arch/i386/kernel/vm86.c:378:
++#define pushl(base, ptr, val, regs) \
++	do { \
++		int err; \
++		__asm__ __volatile__(				\
++			"decw %w0\n\t"				\
++			"rorl $16,%3\n\t"			\
++			"1: movb %h3,0(%2,%0)\n\t"		\
++			"decw %w0\n\t"				\
++			"2: movb %b3,0(%2,%0)\n\t"		\
++			"decw %w0\n\t"				\
++			"rorl $16,%3\n\t"			\
++			"3: movb %h3,0(%2,%0)\n\t"		\
++			"decw %w0\n\t"				\
++			"4: movb %b3,0(%2,%0)\n\t"		\
++			"xor %1,%1\n\t"				\
++			"5:\n"					\
++			".section .fixup,\"ax\"\n\t"		\
++			"6:	movl $1,%1\n\t"			\
++			"	jmp 5b\n\t"			\
++			".previous\n"				\
++			".section __ex_table,\"a\"\n"		\
++			"	.align 4\n"			\
++			"	.long 1b,6b\n"			\
++			"	.long 2b,6b\n"			\
++			"	.long 3b,6b\n"			\
++			"	.long 4b,6b\n"			\
++			".previous"				\
++			: "=r" (ptr), "=r" (err)		\
++			: "r" (base), "q" (val), "0" (ptr));	\
++		if (err) \
++			return_to_32bit(regs, VM86_UNKNOWN); \
++	} while(0)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#200: FILE: arch/i386/kernel/vm86.c:409:
++	} while(0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'base' - possible side-effects?
+#202: FILE: arch/i386/kernel/vm86.c:411:
++#define popb(base, ptr, regs) \
++	({ \
++	 	unsigned long __res; \
++	 	unsigned int err; \
++		__asm__ __volatile__( \
++			"1:movb 0(%1,%0),%b2\n\t"		\
++			"incw %w0\n\t"				\
++			"xor %3,%3\n\t"				\
++			"2:\n"					\
++			".section .fixup,\"ax\"\n\t"		\
++			"3:	movl $1,%1\n\t"			\
++			"	jmp 2b\n\t"			\
++			".previous\n"				\
++			".section __ex_table,\"a\"\n"		\
++			"	.align 4\n"			\
++			"	.long 1b,3b\n"			\
++			".previous"				\
++			: "=r" (ptr), "=r" (base), "=q" (__res), \
++				"=r" (err) \
++			: "0" (ptr), "1" (base), "2" (0)); \
++		if (err) \
++			return_to_32bit(regs, VM86_UNKNOWN); \
++		__res; \
++	})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#202: FILE: arch/i386/kernel/vm86.c:411:
++#define popb(base, ptr, regs) \
++	({ \
++	 	unsigned long __res; \
++	 	unsigned int err; \
++		__asm__ __volatile__( \
++			"1:movb 0(%1,%0),%b2\n\t"		\
++			"incw %w0\n\t"				\
++			"xor %3,%3\n\t"				\
++			"2:\n"					\
++			".section .fixup,\"ax\"\n\t"		\
++			"3:	movl $1,%1\n\t"			\
++			"	jmp 2b\n\t"			\
++			".previous\n"				\
++			".section __ex_table,\"a\"\n"		\
++			"	.align 4\n"			\
++			"	.long 1b,3b\n"			\
++			".previous"				\
++			: "=r" (ptr), "=r" (base), "=q" (__res), \
++				"=r" (err) \
++			: "0" (ptr), "1" (base), "2" (0)); \
++		if (err) \
++			return_to_32bit(regs, VM86_UNKNOWN); \
++		__res; \
++	})
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#204: FILE: arch/i386/kernel/vm86.c:413:
++^I ^Iunsigned long __res; \$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#204: FILE: arch/i386/kernel/vm86.c:413:
++^I ^Iunsigned long __res; \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#205: FILE: arch/i386/kernel/vm86.c:414:
++^I ^Iunsigned int err; \$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#205: FILE: arch/i386/kernel/vm86.c:414:
++^I ^Iunsigned int err; \$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'base' - possible side-effects?
+#227: FILE: arch/i386/kernel/vm86.c:436:
++#define popw(base, ptr, regs) \
++	({ \
++	 	unsigned long __res; \
++	 	unsigned int err; \
++		__asm__ __volatile__( \
++			"1:movb 0(%1,%0),%b2\n\t"		\
++			"incw %w0\n\t"				\
++			"2:movb 0(%1,%0),%h2\n\t"		\
++			"incw %w0\n\t"				\
++			"xor %3,%3\n\t"				\
++			"3:\n"					\
++			".section .fixup,\"ax\"\n\t"		\
++			"4:	movl $1,%1\n\t"			\
++			"	jmp 3b\n\t"			\
++			".previous\n"				\
++			".section __ex_table,\"a\"\n"		\
++			"	.align 4\n"			\
++			"	.long 1b,4b\n"			\
++			"	.long 2b,4b\n"			\
++			".previous"				\
++			: "=r" (ptr), "=r" (base), "=q" (__res), \
++				"=r" (err) \
++			: "0" (ptr), "1" (base), "2" (0)); \
++		if (err) \
++			return_to_32bit(regs, VM86_UNKNOWN); \
++		__res; \
++	})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#227: FILE: arch/i386/kernel/vm86.c:436:
++#define popw(base, ptr, regs) \
++	({ \
++	 	unsigned long __res; \
++	 	unsigned int err; \
++		__asm__ __volatile__( \
++			"1:movb 0(%1,%0),%b2\n\t"		\
++			"incw %w0\n\t"				\
++			"2:movb 0(%1,%0),%h2\n\t"		\
++			"incw %w0\n\t"				\
++			"xor %3,%3\n\t"				\
++			"3:\n"					\
++			".section .fixup,\"ax\"\n\t"		\
++			"4:	movl $1,%1\n\t"			\
++			"	jmp 3b\n\t"			\
++			".previous\n"				\
++			".section __ex_table,\"a\"\n"		\
++			"	.align 4\n"			\
++			"	.long 1b,4b\n"			\
++			"	.long 2b,4b\n"			\
++			".previous"				\
++			: "=r" (ptr), "=r" (base), "=q" (__res), \
++				"=r" (err) \
++			: "0" (ptr), "1" (base), "2" (0)); \
++		if (err) \
++			return_to_32bit(regs, VM86_UNKNOWN); \
++		__res; \
++	})
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#229: FILE: arch/i386/kernel/vm86.c:438:
++^I ^Iunsigned long __res; \$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#229: FILE: arch/i386/kernel/vm86.c:438:
++^I ^Iunsigned long __res; \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#230: FILE: arch/i386/kernel/vm86.c:439:
++^I ^Iunsigned int err; \$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#230: FILE: arch/i386/kernel/vm86.c:439:
++^I ^Iunsigned int err; \$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'base' - possible side-effects?
+#255: FILE: arch/i386/kernel/vm86.c:464:
++#define popl(base, ptr, regs) \
++	({ \
++	 	unsigned long __res; \
++	 	unsigned int err; \
++		__asm__ __volatile__( \
++			"1:movb 0(%1,%0),%b2\n\t"		\
++			"incw %w0\n\t"				\
++			"2:movb 0(%1,%0),%h2\n\t"		\
++			"incw %w0\n\t"				\
++			"rorl $16,%2\n\t"			\
++			"3:movb 0(%1,%0),%b2\n\t"		\
++			"incw %w0\n\t"				\
++			"4:movb 0(%1,%0),%h2\n\t"		\
++			"incw %w0\n\t"				\
++			"rorl $16,%2\n\t"			\
++			"xor %3,%3\n\t"				\
++			"5:\n"					\
++			".section .fixup,\"ax\"\n\t"		\
++			"6:	movl $1,%1\n\t"			\
++			"	jmp 5b\n\t"			\
++			".previous\n"				\
++			".section __ex_table,\"a\"\n"		\
++			"	.align 4\n"			\
++			"	.long 1b,6b\n"			\
++			"	.long 2b,6b\n"			\
++			"	.long 3b,6b\n"			\
++			"	.long 4b,6b\n"			\
++			".previous"				\
++			: "=r" (ptr), "=r" (base), "=q" (__res), \
++				"=r" (err) \
++			: "0" (ptr), "1" (base), "2" (0)); \
++		if (err) \
++			return_to_32bit(regs, VM86_UNKNOWN); \
++		__res; \
++	})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#255: FILE: arch/i386/kernel/vm86.c:464:
++#define popl(base, ptr, regs) \
++	({ \
++	 	unsigned long __res; \
++	 	unsigned int err; \
++		__asm__ __volatile__( \
++			"1:movb 0(%1,%0),%b2\n\t"		\
++			"incw %w0\n\t"				\
++			"2:movb 0(%1,%0),%h2\n\t"		\
++			"incw %w0\n\t"				\
++			"rorl $16,%2\n\t"			\
++			"3:movb 0(%1,%0),%b2\n\t"		\
++			"incw %w0\n\t"				\
++			"4:movb 0(%1,%0),%h2\n\t"		\
++			"incw %w0\n\t"				\
++			"rorl $16,%2\n\t"			\
++			"xor %3,%3\n\t"				\
++			"5:\n"					\
++			".section .fixup,\"ax\"\n\t"		\
++			"6:	movl $1,%1\n\t"			\
++			"	jmp 5b\n\t"			\
++			".previous\n"				\
++			".section __ex_table,\"a\"\n"		\
++			"	.align 4\n"			\
++			"	.long 1b,6b\n"			\
++			"	.long 2b,6b\n"			\
++			"	.long 3b,6b\n"			\
++			"	.long 4b,6b\n"			\
++			".previous"				\
++			: "=r" (ptr), "=r" (base), "=q" (__res), \
++				"=r" (err) \
++			: "0" (ptr), "1" (base), "2" (0)); \
++		if (err) \
++			return_to_32bit(regs, VM86_UNKNOWN); \
++		__res; \
++	})
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#257: FILE: arch/i386/kernel/vm86.c:466:
++^I ^Iunsigned long __res; \$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#257: FILE: arch/i386/kernel/vm86.c:466:
++^I ^Iunsigned long __res; \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#258: FILE: arch/i386/kernel/vm86.c:467:
++^I ^Iunsigned int err; \$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#258: FILE: arch/i386/kernel/vm86.c:467:
++^I ^Iunsigned int err; \$
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#311: FILE: arch/i386/kernel/vm86.c:559:
++		pushw(ssp,sp,popw(ssp,sp, regs) | TF_MASK, regs);
+ 		         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#311: FILE: arch/i386/kernel/vm86.c:559:
++		pushw(ssp,sp,popw(ssp,sp, regs) | TF_MASK, regs);
+ 		            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#311: FILE: arch/i386/kernel/vm86.c:559:
++		pushw(ssp,sp,popw(ssp,sp, regs) | TF_MASK, regs);
+ 		                     ^
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#377: FILE: arch/i386/kernel/vm86.c:621:
++^I        int intno=popb(csp, ip, regs);$
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#377: FILE: arch/i386/kernel/vm86.c:621:
++	        int intno=popb(csp, ip, regs);
+ 	                 ^
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000489990.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 14 errors, 6 warnings, 9 checks, 338 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000489990.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

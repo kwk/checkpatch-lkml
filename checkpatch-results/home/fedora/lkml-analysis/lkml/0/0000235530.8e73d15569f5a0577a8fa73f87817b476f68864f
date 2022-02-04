@@ -1,0 +1,137 @@
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#176: FILE: kernel/scheduler.c:144:
++#define	SLEEP_ON_VAR					\
++	unsigned long flags;				\
++	wait_queue_t wait;				\
++	init_waitqueue_entry(&wait, current);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#181: FILE: kernel/scheduler.c:149:
++#define SLEEP_ON_HEAD					\
++	spin_lock_irqsave(&q->lock,flags);		\
++	__add_wait_queue(q, &wait);			\
++	spin_unlock(&q->lock);
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#181: FILE: kernel/scheduler.c:149:
++#define SLEEP_ON_HEAD					\
++	spin_lock_irqsave(&q->lock,flags);		\
++	__add_wait_queue(q, &wait);			\
++	spin_unlock(&q->lock);
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#182: FILE: kernel/scheduler.c:150:
++	spin_lock_irqsave(&q->lock,flags);		\
+ 	                          ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#186: FILE: kernel/scheduler.c:154:
++#define	SLEEP_ON_TAIL					\
++	spin_lock_irq(&q->lock);			\
++	__remove_wait_queue(q, &wait);			\
++	spin_unlock_irqrestore(&q->lock, flags);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#186: FILE: kernel/scheduler.c:154:
++#define	SLEEP_ON_TAIL					\
++	spin_lock_irq(&q->lock);			\
++	__remove_wait_queue(q, &wait);			\
++	spin_unlock_irqrestore(&q->lock, flags);
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#197: FILE: kernel/scheduler.c:165:
++	SLEEP_ON_HEAD
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#202: FILE: kernel/scheduler.c:170:
++EXPORT_SYMBOL(interruptible_sleep_on);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#217: FILE: kernel/scheduler.c:185:
++EXPORT_SYMBOL(interruptible_sleep_on_timeout);
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#225: FILE: kernel/scheduler.c:193:
++	SLEEP_ON_HEAD
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#230: FILE: kernel/scheduler.c:198:
++EXPORT_SYMBOL(sleep_on);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#245: FILE: kernel/scheduler.c:213:
++EXPORT_SYMBOL(sleep_on_timeout);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#258: FILE: kernel/scheduler.c:226:
++		printk(KERN_ERR "Debug: sleeping function called from invalid"
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#259: FILE: kernel/scheduler.c:227:
++		printk(KERN_ERR "Debug: sleeping function called from invalid"
++				" context at %s:%d\n", file, line);
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#260: FILE: kernel/scheduler.c:228:
++		printk("in_atomic():%d, irqs_disabled():%d\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#261: FILE: kernel/scheduler.c:229:
++		printk("in_atomic():%d, irqs_disabled():%d\n",
++			in_atomic(), irqs_disabled());
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000235530.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 3 errors, 12 warnings, 1 checks, 204 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000235530.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

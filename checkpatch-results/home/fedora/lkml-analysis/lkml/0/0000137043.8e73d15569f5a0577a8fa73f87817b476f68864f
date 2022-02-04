@@ -1,0 +1,429 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#57: 
+--- linux-2.6.14+slab_cleanup.orig/mm/slab.c	2005-11-07 15:58:06.022235912 -0800
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#85: FILE: mm/slab.c:203:
++#define SLAB_LIMIT	(((kmem_bufctl_t)(~0U))-2)
+                   	                       ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#127: FILE: mm/slab.c:321:
++#define CACHE(x)		\
++	if (size <= x)		\
++		return i;	\
++	else			\
+ 		i++;
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'x' may be better as '(x)' to avoid precedence issues
+#127: FILE: mm/slab.c:321:
++#define CACHE(x)		\
++	if (size <= x)		\
++		return i;	\
++	else			\
+ 		i++;
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#127: FILE: mm/slab.c:321:
++#define CACHE(x)		\
++	if (size <= x)		\
++		return i;	\
++	else			\
+ 		i++;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#127: FILE: mm/slab.c:321:
++#define CACHE(x)		\
++	if (size <= x)		\
++		return i;	\
++	else			\
+ 		i++;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'cachep' may be better as '(cachep)' to avoid precedence issues
+#142: FILE: mm/slab.c:352:
++#define MAKE_LIST(cachep, listp, slab, nodeid)				\
++	do {								\
++		INIT_LIST_HEAD(listp);					\
++		list_splice(&(cachep->nodelists[nodeid]->slab), listp);	\
+ 	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'listp' - possible side-effects?
+#142: FILE: mm/slab.c:352:
++#define MAKE_LIST(cachep, listp, slab, nodeid)				\
++	do {								\
++		INIT_LIST_HEAD(listp);					\
++		list_splice(&(cachep->nodelists[nodeid]->slab), listp);	\
+ 	} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'slab' may be better as '(slab)' to avoid precedence issues
+#142: FILE: mm/slab.c:352:
++#define MAKE_LIST(cachep, listp, slab, nodeid)				\
++	do {								\
++		INIT_LIST_HEAD(listp);					\
++		list_splice(&(cachep->nodelists[nodeid]->slab), listp);	\
+ 	} while (0)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around cachep->nodelists[nodeid]->slab
+#145: FILE: mm/slab.c:355:
++		list_splice(&(cachep->nodelists[nodeid]->slab), listp);	\
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cachep' - possible side-effects?
+#150: FILE: mm/slab.c:358:
++#define	MAKE_ALL_LISTS(cachep, ptr, nodeid)				\
++	do {								\
+ 	MAKE_LIST((cachep), (&(ptr)->slabs_full), slabs_full, nodeid);	\
++	MAKE_LIST((cachep), (&(ptr)->slabs_partial), slabs_partial, nodeid);\
+ 	MAKE_LIST((cachep), (&(ptr)->slabs_free), slabs_free, nodeid);	\
+ 	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#150: FILE: mm/slab.c:358:
++#define	MAKE_ALL_LISTS(cachep, ptr, nodeid)				\
++	do {								\
+ 	MAKE_LIST((cachep), (&(ptr)->slabs_full), slabs_full, nodeid);	\
++	MAKE_LIST((cachep), (&(ptr)->slabs_partial), slabs_partial, nodeid);\
+ 	MAKE_LIST((cachep), (&(ptr)->slabs_free), slabs_free, nodeid);	\
+ 	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'nodeid' - possible side-effects?
+#150: FILE: mm/slab.c:358:
++#define	MAKE_ALL_LISTS(cachep, ptr, nodeid)				\
++	do {								\
+ 	MAKE_LIST((cachep), (&(ptr)->slabs_full), slabs_full, nodeid);	\
++	MAKE_LIST((cachep), (&(ptr)->slabs_partial), slabs_partial, nodeid);\
+ 	MAKE_LIST((cachep), (&(ptr)->slabs_free), slabs_free, nodeid);	\
+ 	} while (0)
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 8)
+#151: FILE: mm/slab.c:359:
++	do {								\
+ 	MAKE_LIST((cachep), (&(ptr)->slabs_full), slabs_full, nodeid);	\
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#176: FILE: mm/slab.c:434:
++ * Optimization question: fewer reaps means less $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#193: FILE: mm/slab.c:455:
++#define	STATS_SET_FREEABLE(x,i)	do { if ((x)->max_freeable < i)	\
+        	                    ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#193: FILE: mm/slab.c:455:
++#define	STATS_SET_FREEABLE(x,i)	do { if ((x)->max_freeable < i)	\
++					(x)->max_freeable = i;	\
+ 				} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#193: FILE: mm/slab.c:455:
++#define	STATS_SET_FREEABLE(x,i)	do { if ((x)->max_freeable < i)	\
++					(x)->max_freeable = i;	\
+ 				} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'i' may be better as '(i)' to avoid precedence issues
+#193: FILE: mm/slab.c:455:
++#define	STATS_SET_FREEABLE(x,i)	do { if ((x)->max_freeable < i)	\
++					(x)->max_freeable = i;	\
+ 				} while (0)
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#205: FILE: mm/slab.c:473:
++#define	STATS_SET_FREEABLE(x,i)	do { } while (0)
+        	                    ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#234: FILE: mm/slab.c:532:
++	return (void **)(objp+cachep->objsize-BYTES_PER_WORD);
+ 	                     ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#234: FILE: mm/slab.c:532:
++	return (void **)(objp+cachep->objsize-BYTES_PER_WORD);
+ 	                                     ^
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#370: FILE: mm/slab.c:834:
+ static int __devinit cpuup_callback(struct notifier_block *nfb,
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#503: FILE: mm/slab.c:1135:
++				  &initkmem_list3[SIZE_AC+node], node);
+ 				                         ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#511: FILE: mm/slab.c:1139:
++					  &initkmem_list3[SIZE_L3+node], node);
+ 					                         ^
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#663: FILE: mm/slab.c:1347:
++				printk(KERN_ERR "Slab corruption: start=%p, "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#664: FILE: mm/slab.c:1348:
++				printk(KERN_ERR "Slab corruption: start=%p, "
++				       "len=%d\n", realobj, size);
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#733: FILE: mm/slab.c:1406:
++						 cachep->objsize/PAGE_SIZE, 1);
+ 						                ^
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around function pointer (cachep->dtor)
+#742: FILE: mm/slab.c:1422:
++			(cachep->dtor)(objp + obj_dbghead(cachep), cachep, 0);
+
+WARNING:TYPO_SPELLING: 'noone' may be misspelled - perhaps 'no one'?
+#878: FILE: mm/slab.c:1802:
++			 * destroy its slab cache and noone else reuses the
+ 			                              ^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+ERROR:SPACING: space required before the open parenthesis '('
+#892: FILE: mm/slab.c:1860:
++#define check_irq_off()				do { } while(0)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#893: FILE: mm/slab.c:1861:
++#define check_irq_on()				do { } while(0)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#894: FILE: mm/slab.c:1862:
++#define check_spinlock_acquired(x)		do { } while(0)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#895: FILE: mm/slab.c:1863:
++#define check_spinlock_acquired_node(x, y)	do { } while(0)
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1029: FILE: mm/slab.c:2123:
++^I       ^I^Ikernel_map_pages(virt_to_page(objp),$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1029: FILE: mm/slab.c:2123:
++^I       ^I^Ikernel_map_pages(virt_to_page(objp),$
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#1127: FILE: mm/slab.c:2262:
++^I^I       (unsigned long)objp);^I$
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#1133: FILE: mm/slab.c:2267:
++		printk(KERN_ERR "kfree_debugcheck: bad ptr %lxh.\n",
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'kfree_debugcheck', this function's name, in a string
+#1133: FILE: mm/slab.c:2267:
++		printk(KERN_ERR "kfree_debugcheck: bad ptr %lxh.\n",
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#1150: FILE: mm/slab.c:2288:
++		printk(KERN_ERR "%p is %s.\n", GET_PAGE_CACHE(page),
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1174: FILE: mm/slab.c:2312:
++	BUG_ON(objp != slabp->s_mem + objnr * cachep->objsize);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#1186: FILE: mm/slab.c:2321:
++			     SLAB_CTOR_CONSTRUCTOR|SLAB_CTOR_VERIFY);
+ 			                          ^
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1202: FILE: mm/slab.c:2334:
++^I       ^I^Ikernel_map_pages(virt_to_page(objp),$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1202: FILE: mm/slab.c:2334:
++^I       ^I^Ikernel_map_pages(virt_to_page(objp),$
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#1215: FILE: mm/slab.c:2359:
++		printk(KERN_ERR "slab: Internal list corruption detected in "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1216: FILE: mm/slab.c:2360:
++		printk(KERN_ERR "slab: Internal list corruption detected in "
++		       "cache '%s'(%d), slabp %p(%d). Hexdump:\n",
+
+ERROR:SPACING: space required before the open parenthesis '('
+#1232: FILE: mm/slab.c:2374:
++#define kfree_debugcheck(x)			do { } while(0)
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1233: FILE: mm/slab.c:2375:
++#define cache_free_debugcheck(x,objp,z)		(objp)
+                                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1233: FILE: mm/slab.c:2375:
++#define cache_free_debugcheck(x,objp,z)		(objp)
+                                     ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1234: FILE: mm/slab.c:2376:
++#define check_slabp(x,y)			do { } while(0)
+                      ^
+
+ERROR:SPACING: space required before the open parenthesis '('
+#1234: FILE: mm/slab.c:2376:
++#define check_slabp(x,y)			do { } while(0)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around shared_array->entry[shared_array->avail]
+#1255: FILE: mm/slab.c:2409:
++			memcpy(ac->entry, &(shared_array->entry[shared_array->avail]),
+
+WARNING:TYPO_SPELLING: 'reenable' may be misspelled - perhaps 're-enable'?
+#1265: FILE: mm/slab.c:2466:
++		/* cache_grow can reenable interrupts, then ac could change. */
+ 		                  ^^^^^^^^
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1317: FILE: mm/slab.c:2512:
++			slab_error(cachep, "double free, or memory outside "
++				   "object was overwritten");
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around cachep->nodelists[nodeid]
+#1440: FILE: mm/slab.c:2784:
++				spin_lock(&(cachep->nodelists[nodeid])->list_lock);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around cachep->nodelists[nodeid]
+#1444: FILE: mm/slab.c:2786:
++				spin_unlock(&(cachep->nodelists[nodeid])->list_lock);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#1472: FILE: mm/slab.c:2881:
++		printk(KERN_WARNING "slab: not allocating in inactive node %d "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1473: FILE: mm/slab.c:2882:
++		printk(KERN_WARNING "slab: not allocating in inactive node %d "
++		       "for cache %s\n", nodeid, cachep->name);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1535: FILE: mm/slab.c:3105:
++		if (!(new = alloc_arraycache(node, cachep->shared *
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#1761: FILE: mm/slab.c:3489:
++		   (1<<cachep->gfporder));
+ 		     ^
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000137043.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 17 errors, 20 warnings, 23 checks, 1660 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000137043.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

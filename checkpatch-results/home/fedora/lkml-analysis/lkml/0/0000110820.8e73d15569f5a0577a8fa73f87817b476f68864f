@@ -1,0 +1,163 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#39: 
+>  > > > > tested. These patches are being put up for testing hopefully in -mm.
+
+WARNING:REPEATED_WORD: Possible repeated word: 'etc'
+#58: 
+and that, RL etc etc.)
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#112: FILE: include/linux/sysctl.h:150:
++	KERN_SCHED_THROTTLE1=72,  /* int: sleep_avg throttling enabled */
+ 	                    ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#113: FILE: include/linux/sysctl.h:151:
++	KERN_SCHED_THROTTLE2=73,  /* int: throttling grace period in secs */
+ 	                    ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#146: FILE: kernel/sched.c:164:
++#define THROTTLE_BIAS(p) \
++	(throttle && (p)->mm && (p)->sleep_avg > (p)->slice_avg)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#150: FILE: kernel/sched.c:168:
++#define THROTTLE_SOFT(p) \
++	((p)->throttle_stamp && time_after(jiffies, (p)->throttle_stamp) && \
++	(p)->sleep_avg >= (p)->slice_avg + THROTTLE_BASE)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#155: FILE: kernel/sched.c:173:
++#define THROTTLE_HARD(p) \
++	((p)->throttle_stamp && time_after(jiffies, (p)->throttle_stamp + HZ) && \
++	(p)->sleep_avg >= (p)->slice_avg + THROTTLE_BASE)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#159: FILE: kernel/sched.c:177:
++#define THROTTLE_ENGAGE(p) (throttle && !(p)->throttle_stamp && \
++	(p)->mm && PRIO_TO_NICE((p)->static_prio) >= 0 && \
++	(p)->sleep_avg >= (p)->slice_avg + THROTTLE_BASE)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#163: FILE: kernel/sched.c:181:
++#define THROTTLE_DISENGAGE(p) ((p)->throttle_stamp && \
++	(PRIO_TO_NICE((p)->static_prio) < 0 || !THROTTLE_BIAS((p)) || \
++	time_after(jiffies, (p)->last_slice + (throttle_secs * HZ))))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#167: FILE: kernel/sched.c:185:
++#define CURRENT_COST(p) \
++	(NS_TO_JIFFIES(THROTTLE_SOFT((p)) ? \
++	min((p)->sleep_avg, (p)->slice_avg) : NS_MAX_SLEEP_AVG) * \
++	MAX_BONUS / MAX_SLEEP_AVG)
+
+CHECK:BRACES: Unbalanced braces around else statement
+#204: FILE: kernel/sched.c:864:
++				else {
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#373: FILE: kernel/sysctl.c:72:
++extern int throttle;
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#374: FILE: kernel/sysctl.c:73:
++extern int throttle_secs;
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#375: FILE: kernel/sysctl.c:74:
++extern int throttle_secs_max;
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#384: FILE: kernel/sysctl.c:231:
++ * kern_table.  We use these as one-element integer vectors. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#400: FILE: kernel/sysctl.c:682:
++		.maxlen		= sizeof (int),
+
+WARNING:DUPLICATED_SYSCTL_CONST: duplicated sysctl range checking value 'zero', consider using the shared one in include/linux/sysctl.h
+#404: FILE: kernel/sysctl.c:686:
++		.extra1		= &zero,
+
+Commit d91bff3011cf ("proc/sysctl: add shared variables for range
+check") added some shared const variables to be used instead of a local
+copy in each source file.
+
+Consider replacing the sysctl range checking value with the shared
+one in include/linux/sysctl.h.  The following conversion scheme may
+be used::
+
+  &zero     ->  SYSCTL_ZERO
+  &one      ->  SYSCTL_ONE
+  &int_max  ->  SYSCTL_INT_MAX
+
+See:
+
+  1. https://lore.kernel.org/lkml/20190430180111.10688-1-mcroce@redhat.com/
+  2. https://lore.kernel.org/lkml/20190531131422.14970-1-mcroce@redhat.com/
+
+WARNING:DUPLICATED_SYSCTL_CONST: duplicated sysctl range checking value 'one', consider using the shared one in include/linux/sysctl.h
+#405: FILE: kernel/sysctl.c:687:
++		.extra2		= &one,
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#411: FILE: kernel/sysctl.c:693:
++		.maxlen		= sizeof (int),
+
+WARNING:DUPLICATED_SYSCTL_CONST: duplicated sysctl range checking value 'zero', consider using the shared one in include/linux/sysctl.h
+#415: FILE: kernel/sysctl.c:697:
++		.extra1		= &zero,
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000110820.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 2 errors, 11 warnings, 7 checks, 307 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000110820.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,291 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#26: 
+This patch modifies the way pagesets in struct zone are allocated. It relocates
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#97: FILE: include/linux/mm.h:694:
++extern void setup_per_cpu_pageset(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#147: FILE: mm/page_alloc.c:71:
++struct per_cpu_pageset pageset_table[MAX_NR_ZONES*MAX_NUMNODES*NR_CPUS] __initdata;
+                                                  ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#147: FILE: mm/page_alloc.c:71:
++struct per_cpu_pageset pageset_table[MAX_NR_ZONES*MAX_NUMNODES*NR_CPUS] __initdata;
+                                                               ^
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'list' may be better as '(list)' to avoid precedence issues
+#207: FILE: mm/page_alloc.c:1616:
++#define MAKE_LIST(list, nlist)  \
++	do {    \
++		if(list_empty(&list))      \
++			INIT_LIST_HEAD(nlist);          \
++		else {  nlist->next->prev = nlist;      \
++			nlist->prev->next = nlist;      \
++		}                                       \
++	}while(0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'nlist' - possible side-effects?
+#207: FILE: mm/page_alloc.c:1616:
++#define MAKE_LIST(list, nlist)  \
++	do {    \
++		if(list_empty(&list))      \
++			INIT_LIST_HEAD(nlist);          \
++		else {  nlist->next->prev = nlist;      \
++			nlist->prev->next = nlist;      \
++		}                                       \
++	}while(0)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#209: FILE: mm/page_alloc.c:1618:
++		if(list_empty(&list))      \
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#211: FILE: mm/page_alloc.c:1620:
++		else {  nlist->next->prev = nlist;      \
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:SPACING: space required after that close brace '}'
+#214: FILE: mm/page_alloc.c:1623:
++	}while(0)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#214: FILE: mm/page_alloc.c:1623:
++	}while(0)
+
+WARNING:TYPO_SPELLING: 'Dynamicaly' may be misspelled - perhaps 'Dynamically'?
+#217: FILE: mm/page_alloc.c:1626:
++ * Dynamicaly allocate memory for the
+    ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#220: FILE: mm/page_alloc.c:1629:
++static inline int __devinit process_zones(int cpu)
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc_node(sizeof(*npageset)...) over kmalloc_node(sizeof(struct per_cpu_pageset)...)
+#227: FILE: mm/page_alloc.c:1636:
++		npageset = kmalloc_node(sizeof(struct per_cpu_pageset),
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#228: FILE: mm/page_alloc.c:1637:
++		npageset = kmalloc_node(sizeof(struct per_cpu_pageset),
++					 GFP_KERNEL, cpu_to_node(cpu));
+
+ERROR:SPACING: space required before the open parenthesis '('
+#229: FILE: mm/page_alloc.c:1638:
++		if(!npageset) {
+
+ERROR:SPACING: space required before the open parenthesis '('
+#234: FILE: mm/page_alloc.c:1643:
++		if(zone->pageset[cpu]) {
+
+ERROR:ELSE_AFTER_BRACE: else should follow close brace '}'
+#239: FILE: mm/page_alloc.c:1648:
++		}
++		else {
+
+`else {` should follow the closing block `}` on the same line.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#239: FILE: mm/page_alloc.c:1648:
++		else {
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+ERROR:SPACING: space required before the open parenthesis '('
+#270: FILE: mm/page_alloc.c:1679:
++		if(dzone == zone)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#278: FILE: mm/page_alloc.c:1687:
++static int __devinit pageset_cpuup_callback(struct notifier_block *nfb,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#279: FILE: mm/page_alloc.c:1688:
++static int __devinit pageset_cpuup_callback(struct notifier_block *nfb,
++		unsigned long action,
+
+ERROR:SWITCH_CASE_INDENT_LEVEL: switch and case should be at the same indent
+#284: FILE: mm/page_alloc.c:1693:
++	switch(action) {
++		case CPU_UP_PREPARE:
+[...]
++		case CPU_DEAD:
+[...]
++		default:
+
+switch should be at the same indent as case.
+Example::
+
+  switch (suffix) {
+  case 'G':
+  case 'g':
+          mem <<= 30;
+          break;
+  case 'M':
+  case 'm':
+          mem <<= 20;
+          break;
+  case 'K':
+  case 'k':
+          mem <<= 10;
+          fallthrough;
+  default:
+          break;
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+ERROR:SPACING: space required before the open parenthesis '('
+#284: FILE: mm/page_alloc.c:1693:
++	switch(action) {
+
+ERROR:SPACING: space required before the open parenthesis '('
+#286: FILE: mm/page_alloc.c:1695:
++			if(process_zones(cpu))
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#293: FILE: mm/page_alloc.c:1702:
++				struct zone *zone;
++				for_each_zone(zone) {
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#311: FILE: mm/page_alloc.c:1720:
++}
++struct notifier_block pageset_notifier = { &pageset_cpuup_callback, NULL, 0 };
+
+ERROR:FUNCTION_WITHOUT_ARGS: Bad function definition - void __init setup_per_cpu_pageset() should probably be void __init setup_per_cpu_pageset(void)
+#313: FILE: mm/page_alloc.c:1722:
++void __init setup_per_cpu_pageset()
+
+Function declarations without arguments like::
+
+  int foo()
+
+should be::
+
+  int foo(void)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#316: FILE: mm/page_alloc.c:1725:
++	/*Iintialize per_cpu_pageset for cpu 0.
++	  A cpuup callback will do this for every cpu
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#319: FILE: mm/page_alloc.c:1728:
++	BUG_ON(process_zones(smp_processor_id()));
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:LONG_LINE: line length of 119 exceeds 100 columns
+#330: FILE: mm/page_alloc.c:1790:
++			struct per_cpu_pageset *pgset = &pageset_table[nid*MAX_NR_ZONES*NR_CPUS + (j * NR_CPUS) + cpu];
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#330: FILE: mm/page_alloc.c:1790:
++			struct per_cpu_pageset *pgset = &pageset_table[nid*MAX_NR_ZONES*NR_CPUS + (j * NR_CPUS) + cpu];
+ 			                                                  ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#330: FILE: mm/page_alloc.c:1790:
++			struct per_cpu_pageset *pgset = &pageset_table[nid*MAX_NR_ZONES*NR_CPUS + (j * NR_CPUS) + cpu];
+ 			                                                               ^
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000194713.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 12 errors, 8 warnings, 12 checks, 233 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000194713.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

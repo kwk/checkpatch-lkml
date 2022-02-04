@@ -1,0 +1,233 @@
+ERROR:DIFF_IN_COMMIT_MSG: Avoid using diff content in the commit message - patch(1) might not work
+#64: 
+--- a/include/linux/sched.h	2003-05-27 03:00:23.000000000 +0200
+
+Avoid having diff content in commit message.
+This causes problems when one tries to apply a file containing both
+the changelog and the diff because patch(1) tries to apply the diff
+which it found in the changelog.
+
+See: https://lore.kernel.org/lkml/20150611134006.9df79a893e3636019ad2759e@linux-foundation.org/
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#80: FILE: include/linux/sched.h:495:
++extern void set_task_node(task_t *p, int node);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#84: FILE: include/linux/sched.h:499:
++#define set_task_node(p,n)     {}
+                        ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#108: FILE: kernel/sched.c:206:
++static atomic_t node_nr_homenode[MAX_NUMNODES][MAX_NUMNODES] ____cacheline_maxaligned_in_smp =
++	{[0 ... MAX_NUMNODES-1][0 ... MAX_NUMNODES-1] = ATOMIC_INIT(0)};
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#108: FILE: kernel/sched.c:206:
++	{[0 ... MAX_NUMNODES-1][0 ... MAX_NUMNODES-1] = ATOMIC_INIT(0)};
+ 	                    ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#108: FILE: kernel/sched.c:206:
++	{[0 ... MAX_NUMNODES-1][0 ... MAX_NUMNODES-1] = ATOMIC_INIT(0)};
+ 	                                          ^
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#110: FILE: kernel/sched.c:208:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:NR_CPUS: usage of NR_CPUS is often wrong - consider using cpu_possible(), num_possible_cpus(), for_each_possible_cpu(), etc
+#140: FILE: kernel/sched.c:235:
++	for (i = 0; i < NR_CPUS; i++) {
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#147: FILE: kernel/sched.c:242:
++#define homenode_set(p,n)    (p)->node = (n)
+                       ^
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#147: FILE: kernel/sched.c:242:
++#define homenode_set(p,n)    (p)->node = (n)
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 24)
+#164: FILE: kernel/sched.c:259:
++	if ((src_node == this_node) ||		/* same node */
+[...]
++			return 1;
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'src_node == this_node'
+#164: FILE: kernel/sched.c:259:
++	if ((src_node == this_node) ||		/* same node */
++	    (homenode(p) == this_node) ||	/* task is from this_node */
++	    (rq->nr_running == rq->nr_homenode[src_node]) ||
++	    ((rq->nr_running > rq->nr_homenode[src_node]) &&
++	     (homenode(p) != src_node)))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rq->nr_running == rq->nr_homenode[src_node]'
+#164: FILE: kernel/sched.c:259:
++	if ((src_node == this_node) ||		/* same node */
++	    (homenode(p) == this_node) ||	/* task is from this_node */
++	    (rq->nr_running == rq->nr_homenode[src_node]) ||
++	    ((rq->nr_running > rq->nr_homenode[src_node]) &&
++	     (homenode(p) != src_node)))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rq->nr_running > rq->nr_homenode[src_node]'
+#164: FILE: kernel/sched.c:259:
++	if ((src_node == this_node) ||		/* same node */
++	    (homenode(p) == this_node) ||	/* task is from this_node */
++	    (rq->nr_running == rq->nr_homenode[src_node]) ||
++	    ((rq->nr_running > rq->nr_homenode[src_node]) &&
++	     (homenode(p) != src_node)))
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#178: FILE: kernel/sched.c:271:
++# define nr_running_inc(rq,n)  do { (rq)->nr_running++; } while (0)
+                           ^
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#178: FILE: kernel/sched.c:271:
++# define nr_running_inc(rq,n)  do { (rq)->nr_running++; } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#179: FILE: kernel/sched.c:272:
++# define nr_running_dec(rq,n)  do { (rq)->nr_running--; } while (0)
+                           ^
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#179: FILE: kernel/sched.c:272:
++# define nr_running_dec(rq,n)  do { (rq)->nr_running--; } while (0)
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#180: FILE: kernel/sched.c:273:
++# define homenode_set(p,n)     do { } while (0)
+                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#181: FILE: kernel/sched.c:274:
++# define numa_should_migrate(p,q,c) (1)
+                               ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#181: FILE: kernel/sched.c:274:
++# define numa_should_migrate(p,q,c) (1)
+                                 ^
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#221: FILE: kernel/sched.c:818:
++	if (node < 0 || node >= numnodes) return;
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#227: FILE: kernel/sched.c:824:
++	homenode_set(p,node);
+ 	              ^
+
+WARNING:TYPO_SPELLING: 'prefered' may be misspelled - perhaps 'preferred'?
+#291: FILE: kernel/sched.c:987:
++		 * with homenode == this_node such that these CPUs are prefered.
+ 		                                                       ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#307: FILE: kernel/sched.c:1033:
++	nr_running_inc(this_rq,homenode(p));
+ 	                      ^
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#316: FILE: kernel/sched.c:1114:
++^Iif (!CAN_MIGRATE_TASK(tmp, busiest, this_cpu) $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#317: FILE: kernel/sched.c:1115:
++	if (!CAN_MIGRATE_TASK(tmp, busiest, this_cpu) 
++	    || !numa_should_migrate(tmp, busiest, this_cpu)) {
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000367462.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 14 errors, 5 warnings, 8 checks, 243 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000367462.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

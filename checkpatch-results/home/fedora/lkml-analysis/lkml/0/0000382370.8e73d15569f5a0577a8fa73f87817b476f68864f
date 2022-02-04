@@ -1,0 +1,116 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#33: 
+> I've just done this with the via686a driver. Saves about 100 lines of code.
+
+ERROR:DIFF_IN_COMMIT_MSG: Avoid using diff content in the commit message - patch(1) might not work
+#69: 
+--- a/drivers/i2c/chips/lm75.c	Wed Mar 26 12:28:45 2003
+
+Avoid having diff content in commit message.
+This causes problems when one tries to apply a file containing both
+the changelog and the diff because patch(1) tries to apply the diff
+which it found in the changelog.
+
+See: https://lore.kernel.org/lkml/20150611134006.9df79a893e3636019ad2759e@linux-foundation.org/
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'value' may be better as '(value)' to avoid precedence issues
+#75: FILE: drivers/i2c/chips/lm75.c:105:
++#define show(value)	\
++static ssize_t show_##value(struct device *dev, char *buf)	\
++{								\
++	struct i2c_client *client = to_i2c_client(dev);		\
++	struct lm75_data *data = i2c_get_clientdata(client);	\
++	int temp;						\
++								\
++	lm75_update_client(client);				\
++	temp = TEMP_FROM_REG(data->value);			\
++	return i2c_write_real(buf, temp, 1);			\
++}
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#86: FILE: drivers/i2c/chips/lm75.c:116:
++}
++show(temp);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'show_temp' to 'temp_show'
+#112: FILE: drivers/i2c/chips/lm75.c:142:
++}
+
+The function names used in DEVICE_ATTR is unusual.
+Typically, the store and show functions are used with <attr>_store and
+<attr>_show, where <attr> is a named attribute variable of the device.
+
+Consider the following examples::
+
+  static DEVICE_ATTR(type, 0444, type_show, NULL);
+  static DEVICE_ATTR(power, 0644, power_show, power_store);
+
+The function names should preferably follow the above pattern.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#114: FILE: drivers/i2c/chips/lm75.c:144:
++static DEVICE_ATTR(temp, S_IRUGO, show_temp, NULL);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'show_temp_os' to 'temp_os_show' 'set_temp_os' to 'temp_os_store'
+#115: FILE: drivers/i2c/chips/lm75.c:145:
++static DEVICE_ATTR(temp_os, 0644, show_temp_os, set_temp_os);
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'show_temp_hyst' to 'temp_hyst_show' 'set_temp_hyst' to 'temp_hyst_store'
+#116: FILE: drivers/i2c/chips/lm75.c:146:
++static DEVICE_ATTR(temp_hyst, 0644, show_temp_hyst, set_temp_hyst);
+
+WARNING:CONSIDER_KSTRTO: simple_strtoul is obsolete, use kstrtoul instead
+#143: FILE: drivers/i2c/i2c-proc.c:388:
++	*real = simple_strtoul(buf, &temp, 10);
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#185: FILE: drivers/i2c/i2c-proc.c:759:
++EXPORT_SYMBOL(i2c_read_real);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#196: FILE: include/linux/i2c-proc.h:413:
++extern int i2c_write_real(char *buf, int real, int magnitude);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#197: FILE: include/linux/i2c-proc.h:414:
++extern int i2c_read_real(const char *buf, int *real, int magnitude);
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000382370.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 1 errors, 7 warnings, 4 checks, 118 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000382370.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

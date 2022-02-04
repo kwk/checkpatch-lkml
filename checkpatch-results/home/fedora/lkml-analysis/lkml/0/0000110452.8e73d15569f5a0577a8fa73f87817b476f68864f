@@ -1,0 +1,84 @@
+WARNING:TYPO_SPELLING: 'interating' may be misspelled - perhaps 'iterating'?
+#20: 
+Subject: [PATCH 2/5] pid: Add macros for interating through tasks by type.
+                                         ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#61: FILE: include/linux/pid.h:57:
++#define do_each_task(task, type)					\
++	if (task) {					\
++		prefetch((task)->pids[type].pid_list.next);	\
++		do {
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'task' - possible side-effects?
+#61: FILE: include/linux/pid.h:57:
++#define do_each_task(task, type)					\
++	if (task) {					\
++		prefetch((task)->pids[type].pid_list.next);	\
++		do {
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#65: FILE: include/linux/pid.h:61:
++		do {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#66: FILE: include/linux/pid.h:62:
++#define while_each_task(task, type)					\
++		} while (task = pid_task((task)->pids[type].pid_list.next, \
++						(type)),		\
++			prefetch((task)->pids[type].pid_list.next),	\
++			hlist_unhashed(&(task)->pids[type].pid_chain));	\
++	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'task' - possible side-effects?
+#66: FILE: include/linux/pid.h:62:
++#define while_each_task(task, type)					\
++		} while (task = pid_task((task)->pids[type].pid_list.next, \
++						(type)),		\
++			prefetch((task)->pids[type].pid_list.next),	\
++			hlist_unhashed(&(task)->pids[type].pid_chain));	\
++	}
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000110452.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 2 errors, 1 warnings, 3 checks, 16 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000110452.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

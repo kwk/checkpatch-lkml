@@ -1,0 +1,213 @@
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '__get' may be better as '(__get)' to avoid precedence issues
+#103: FILE: include/linux/fs.h:1676:
++#define DEFINE_SIMPLE_ATTRIBUTE(__fops, __get, __set, __fmt)		\
++static int __fops ## _open(struct inode *inode, struct file *file)	\
++{									\
++	__simple_attr_check_format(__fmt, 0ul);				\
++	return simple_attr_open(inode, file, &__get, &__set, __fmt);	\
++}									\
++static struct file_operations __fops = {				\
++	.owner	 = THIS_MODULE,						\
++	.open	 = __fops ## _open,					\
++	.release = simple_attr_close,					\
++	.read	 = simple_attr_read,					\
++	.write	 = simple_attr_write,					\
++};
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '__set' may be better as '(__set)' to avoid precedence issues
+#103: FILE: include/linux/fs.h:1676:
++#define DEFINE_SIMPLE_ATTRIBUTE(__fops, __get, __set, __fmt)		\
++static int __fops ## _open(struct inode *inode, struct file *file)	\
++{									\
++	__simple_attr_check_format(__fmt, 0ul);				\
++	return simple_attr_open(inode, file, &__get, &__set, __fmt);	\
++}									\
++static struct file_operations __fops = {				\
++	.owner	 = THIS_MODULE,						\
++	.open	 = __fops ## _open,					\
++	.release = simple_attr_close,					\
++	.read	 = simple_attr_read,					\
++	.write	 = simple_attr_write,					\
++};
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__fmt' - possible side-effects?
+#103: FILE: include/linux/fs.h:1676:
++#define DEFINE_SIMPLE_ATTRIBUTE(__fops, __get, __set, __fmt)		\
++static int __fops ## _open(struct inode *inode, struct file *file)	\
++{									\
++	__simple_attr_check_format(__fmt, 0ul);				\
++	return simple_attr_open(inode, file, &__get, &__set, __fmt);	\
++}									\
++static struct file_operations __fops = {				\
++	.owner	 = THIS_MODULE,						\
++	.open	 = __fops ## _open,					\
++	.release = simple_attr_close,					\
++	.read	 = simple_attr_read,					\
++	.write	 = simple_attr_write,					\
++};
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#103: FILE: include/linux/fs.h:1676:
++#define DEFINE_SIMPLE_ATTRIBUTE(__fops, __get, __set, __fmt)		\
++static int __fops ## _open(struct inode *inode, struct file *file)	\
++{									\
++	__simple_attr_check_format(__fmt, 0ul);				\
++	return simple_attr_open(inode, file, &__get, &__set, __fmt);	\
++}									\
++static struct file_operations __fops = {				\
++	.owner	 = THIS_MODULE,						\
++	.open	 = __fops ## _open,					\
++	.release = simple_attr_close,					\
++	.read	 = simple_attr_read,					\
++	.write	 = simple_attr_write,					\
++};
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#109: FILE: include/linux/fs.h:1682:
++static struct file_operations __fops = {				\
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __printf(1, 2) over __attribute__((format(printf, 1, 2)))
+#117: FILE: include/linux/fs.h:1690:
++static inline void __attribute__((format(printf, 1, 2)))
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#132: FILE: include/linux/fs.h:1705:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#145: FILE: fs/libfs.c:525:
++	u64 (*get)(void *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#146: FILE: fs/libfs.c:526:
++	void (*set)(void *, u64);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'u64' should also have an identifier name
+#146: FILE: fs/libfs.c:526:
++	void (*set)(void *, u64);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#155: FILE: fs/libfs.c:535:
++ * to set the attribute specific access operations. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:CONSIDER_KSTRTO: simple_strtol is obsolete, use kstrtol instead
+#230: FILE: fs/libfs.c:610:
++	val = simple_strtol(attr->set_buf, NULL, 0);
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#245: FILE: fs/libfs.c:646:
++EXPORT_SYMBOL_GPL(simple_attr_close);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#246: FILE: fs/libfs.c:647:
++EXPORT_SYMBOL_GPL(simple_attr_read);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#247: FILE: fs/libfs.c:648:
++EXPORT_SYMBOL_GPL(simple_attr_write);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#296: FILE: fs/debugfs/file.c:52:
++}
++static u64 debugfs_u8_get(void *data)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#312: FILE: fs/debugfs/file.c:94:
++}
++static u64 debugfs_u16_get(void *data)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#329: FILE: fs/debugfs/file.c:136:
++}
++static u64 debugfs_u32_get(void *data)
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000182522.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 0 errors, 11 warnings, 7 checks, 245 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000182522.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

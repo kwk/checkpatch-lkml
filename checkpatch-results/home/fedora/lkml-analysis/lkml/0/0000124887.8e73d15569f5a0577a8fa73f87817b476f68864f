@@ -1,0 +1,167 @@
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#51: FILE: drivers/message/i2o/Kconfig:27:
++config I2O_LCT_NOTIFY_ON_CHANGES
++	bool "Enable LCT notification"
++	depends on I2O
++	default y
++	---help---
++	  Only say N here if you have a I2O controller from SUN. The SUN
++	  firmware doesn't support LCT notification on changes. If this option
++	  is enabled on such a controller the driver will hang up in a endless
++	  loop. On all other controllers say Y.
++
++	  If unsure, say Y.
++
+ config I2O_EXT_ADAPTEC
+ 	bool "Enable Adaptec extensions"
+ 	depends on I2O
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#91: FILE: drivers/message/i2o/device.c:356:
++	lct = c->lct = kmalloc(table_size * 4, GFP_KERNEL);
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:SPACING: No space is necessary after a cast
+#250: FILE: drivers/message/i2o/device.c:503:
++		cpu_to_le32((u16) group << 16 | I2O_PARAMS_FIELD_GET),
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#251: FILE: drivers/message/i2o/device.c:504:
++		cpu_to_le32((s16) field << 16 | 0x00000001)
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#357: FILE: drivers/message/i2o/i2o_block.c:1112:
++	if (!i2o_parm_field_get(i2o_dev, 0x0004, 1, &blocksize, 4) ||
+[...]
+ 	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#366: FILE: drivers/message/i2o/i2o_block.c:1118:
++	if (!i2o_parm_field_get(i2o_dev, 0x0004, 0, &size, 8) ||
+[...]
+ 	} else
+[...]
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'type == 0x01'
+#390: FILE: drivers/message/i2o/i2o_scsi.c:116:
++		if (!i2o_parm_field_get(i2o_dev, 0x0000, 0, &type, 1)
+ 		    && (type == 0x01))	/* SCSI bus */
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'type == 0x01'
+#399: FILE: drivers/message/i2o/i2o_scsi.c:149:
++		if (!i2o_parm_field_get(i2o_dev, 0x0000, 0, &type, 1)
+ 		    && (type == 0x01))	/* only SCSI bus */
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'type == 0x01'
+#408: FILE: drivers/message/i2o/i2o_scsi.c:241:
++			if (!i2o_parm_field_get(d, 0x0000, 0, &type, 1)
+ 			    && (type == 0x01))	/* SCSI bus */
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'i2o_shost->lun'
+#418: FILE: drivers/message/i2o/i2o_scsi.c:249:
++						    cpu_to_le64(i2o_shost->
++								lun++);
+
+A single dereferencing identifier spanned on multiple lines like::
+
+  struct_identifier->member[index].
+  member = <foo>;
+
+is generally hard to follow. It can easily lead to typos and so makes
+the code vulnerable to bugs.
+
+If fixing the multiple line dereferencing leads to an 80 column
+violation, then either rewrite the code in a more simple way or if the
+starting part of the dereferencing identifier is the same and used at
+multiple places then store it in a temporary variable, and use that
+temporary variable only at all the places. For example, if there are
+two dereferencing identifiers::
+
+  member1->member2->member3.foo1;
+  member1->member2->member3.foo2;
+
+then store the member1->member2->member3 part in a temporary variable.
+It not only helps to avoid the 80 column violation but also reduces
+the program size by removing the unnecessary dereferences.
+
+But if none of the above methods work then ignore the 80 column
+violation because it is much easier to read a dereferencing identifier
+on a single line.
+
+WARNING:MISORDERED_TYPE: type 'long unsigned int' should be specified in [[un]signed] [short|int|long|long long] order
+#453: FILE: drivers/message/i2o/i2o_scsi.c:294:
++			 (long unsigned int)le64_to_cpu(lun),
+
+WARNING:UNNECESSARY_INT: Prefer 'unsigned long' over 'long unsigned int' as the int is unnecessary
+#453: FILE: drivers/message/i2o/i2o_scsi.c:294:
++			 (long unsigned int)le64_to_cpu(lun),
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000124887.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 0 errors, 4 warnings, 8 checks, 392 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000124887.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

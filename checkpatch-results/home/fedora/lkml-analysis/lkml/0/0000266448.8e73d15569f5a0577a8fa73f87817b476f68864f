@@ -1,0 +1,226 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#29: 
+diff -Nur linux-2.6.7.org/drivers/message/fusion/linux_compat.h linux-2.6.7/drivers/message/fusion/linux_compat.h
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#36: FILE: drivers/message/fusion/linux_compat.h:195:
++#define MPT_HOST_LOCK(host_lock)		\
++	if (crashdump_mode()) 			\
++		spin_lock(host_lock);		\
++	else					\
++		spin_lock_irq(host_lock);
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'host_lock' - possible side-effects?
+#36: FILE: drivers/message/fusion/linux_compat.h:195:
++#define MPT_HOST_LOCK(host_lock)		\
++	if (crashdump_mode()) 			\
++		spin_lock(host_lock);		\
++	else					\
++		spin_lock_irq(host_lock);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#36: FILE: drivers/message/fusion/linux_compat.h:195:
++#define MPT_HOST_LOCK(host_lock)		\
++	if (crashdump_mode()) 			\
++		spin_lock(host_lock);		\
++	else					\
++		spin_lock_irq(host_lock);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#37: FILE: drivers/message/fusion/linux_compat.h:196:
++^Iif (crashdump_mode()) ^I^I^I\$
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#42: FILE: drivers/message/fusion/linux_compat.h:201:
++#define MPT_HOST_UNLOCK(host_lock)		\
++	if (crashdump_mode())			\
++		spin_unlock(host_lock);		\
++	else					\
++		spin_unlock_irq(host_lock);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'host_lock' - possible side-effects?
+#42: FILE: drivers/message/fusion/linux_compat.h:201:
++#define MPT_HOST_UNLOCK(host_lock)		\
++	if (crashdump_mode())			\
++		spin_unlock(host_lock);		\
++	else					\
++		spin_unlock_irq(host_lock);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#42: FILE: drivers/message/fusion/linux_compat.h:201:
++#define MPT_HOST_UNLOCK(host_lock)		\
++	if (crashdump_mode())			\
++		spin_unlock(host_lock);		\
++	else					\
++		spin_unlock_irq(host_lock);
+
+CHECK:CAMELCASE: Avoid CamelCase: <IntStatus>
+#63: FILE: drivers/message/fusion/mptbase.c:6300:
++	intstat = CHIPREG_READ32(&ioc->chip->IntStatus);
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+ERROR:SPACING: space required before the open parenthesis '('
+#65: FILE: drivers/message/fusion/mptbase.c:6302:
++	if(intstat & MPI_HIS_REPLY_MESSAGE_INTERRUPT)
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#68: FILE: drivers/message/fusion/mptbase.c:6305:
++}
++/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#76: FILE: drivers/message/fusion/mptbase.c:6346:
++EXPORT_SYMBOL(mpt_poll_interrupt);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#87: FILE: drivers/message/fusion/mptbase.h:1069:
++extern void	 mpt_poll_interrupt(MPT_ADAPTER *ioc);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+ERROR:SPACING: space required before the open parenthesis '('
+#133: FILE: drivers/message/fusion/mptscsih.c:7284:
++	if(!hd)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#138: FILE: drivers/message/fusion/mptscsih.c:7289:
++	if(spin_is_locked(&ioc->FreeQlock)) {
+
+CHECK:CAMELCASE: Avoid CamelCase: <FreeQlock>
+#138: FILE: drivers/message/fusion/mptscsih.c:7289:
++	if(spin_is_locked(&ioc->FreeQlock)) {
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#138: FILE: drivers/message/fusion/mptscsih.c:7289:
++	if(spin_is_locked(&ioc->FreeQlock)) {
++		return -EBUSY;
++	}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:USE_LOCKDEP: Where possible, use lockdep_assert_held instead of assertions based on spin_is_locked
+#138: FILE: drivers/message/fusion/mptscsih.c:7289:
++	if(spin_is_locked(&ioc->FreeQlock)) {
+
+lockdep_assert_held() annotations should be preferred over
+assertions based on spin_is_locked()
+
+See: https://www.kernel.org/doc/html/latest/locking/lockdep-design.html#annotations
+
+ERROR:SPACING: space required before the open parenthesis '('
+#151: FILE: drivers/message/fusion/mptscsih.c:7302:
++	if(!hd)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#157: FILE: drivers/message/fusion/mptscsih.c:7308:
++}
++/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#178: FILE: drivers/message/fusion/mptscsih.h:166:
++extern	int		 x_scsi_sanity_check(struct scsi_device *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct scsi_device *' should also have an identifier name
+#178: FILE: drivers/message/fusion/mptscsih.h:166:
++extern	int		 x_scsi_sanity_check(struct scsi_device *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#179: FILE: drivers/message/fusion/mptscsih.h:167:
++extern	void		 x_scsi_poll(struct scsi_device *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct scsi_device *' should also have an identifier name
+#179: FILE: drivers/message/fusion/mptscsih.h:167:
++extern	void		 x_scsi_poll(struct scsi_device *);
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000266448.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 6 errors, 9 warnings, 9 checks, 130 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000266448.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

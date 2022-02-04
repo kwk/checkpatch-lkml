@@ -1,0 +1,120 @@
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*bprm)...) over kmalloc(sizeof(struct linux_binprm)...)
+#57: FILE: fs/exec.c:944:
++	bprm = kmalloc(sizeof(struct linux_binprm), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#58: FILE: fs/exec.c:945:
++	if (!bprm) {
++		return -ENOMEM;
++	}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#62: FILE: fs/exec.c:949:
++	bprm->p = PAGE_SIZE*MAX_ARG_PAGES-sizeof(void *);
+ 	                   ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#62: FILE: fs/exec.c:949:
++	bprm->p = PAGE_SIZE*MAX_ARG_PAGES-sizeof(void *);
+ 	                                 ^
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#63: FILE: fs/exec.c:950:
++^Imemset(bprm->page, 0, MAX_ARG_PAGES*sizeof(bprm->page[0])); $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#63: FILE: fs/exec.c:950:
++	memset(bprm->page, 0, MAX_ARG_PAGES*sizeof(bprm->page[0])); 
+ 	                                   ^
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#76: FILE: fs/exec.c:957:
++	if ((bprm->argc = count(argv, bprm->p / sizeof(void *))) < 0) {
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#85: FILE: fs/exec.c:964:
++	if ((bprm->envc = count(envp, bprm->p / sizeof(void *))) < 0) {
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#116: FILE: fs/exec.c:988:
++	retval = search_binary_handler(bprm,regs);
+ 	                                   ^
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#133: FILE: fs/exec.c:1000:
++		struct page * page = bprm->page[i];
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000217085.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 5 errors, 1 warnings, 4 checks, 99 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000217085.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

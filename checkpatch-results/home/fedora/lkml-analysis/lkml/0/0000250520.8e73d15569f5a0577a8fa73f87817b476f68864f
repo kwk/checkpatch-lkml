@@ -1,0 +1,278 @@
+WARNING:TYPO_SPELLING: 'doesnt' may be misspelled - perhaps 'doesn't'?
+#73: 
+cond_resched_lock() doesnt notice that a reschedule is due.
+                    ^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:TYPO_SPELLING: 'didnt' may be misspelled - perhaps 'didn't'?
+#85: 
+CONFIG_PREEMPT enabled, didnt have any spin-nicely preemption logic for
+                        ^^^^^
+
+WARNING:TYPO_SPELLING: 'didnt' may be misspelled - perhaps 'didn't'?
+#93: 
+the above list didnt do any IRQ-enabling while spinning - possibly
+               ^^^^^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#273: FILE: include/asm-x86_64/spinlock.h:240:
++	atomic_t *count = (atomic_t *)lock;
++	atomic_dec(count);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ';' (ctx:VxV)
+#344: FILE: include/linux/spinlock.h:237:
++#define _read_trylock(lock)	({preempt_disable();_raw_read_trylock(lock) ? \
+                            	                   ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ';' (ctx:VxV)
+#345: FILE: include/linux/spinlock.h:238:
++				1 : ({preempt_enable(); 0;});})
+ 				                         ^
+
+ERROR:SPACING: space required after that ';' (ctx:VxV)
+#345: FILE: include/linux/spinlock.h:238:
++				1 : ({preempt_enable(); 0;});})
+ 				                            ^
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#384: FILE: include/linux/spinlock.h:486:
++extern int  _metered_read_trylock (rwlock_t *lock);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#384: FILE: include/linux/spinlock.h:486:
++extern int  _metered_read_trylock (rwlock_t *lock);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#424: FILE: include/linux/sched.h:1135:
++extern int cond_resched_lock(spinlock_t * lock);
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#424: FILE: include/linux/sched.h:1135:
++extern int cond_resched_lock(spinlock_t * lock);
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#487: FILE: include/asm-sparc/spinlock.h:88:
++typedef struct {
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#503: FILE: include/asm-sparc/spinlock.h:152:
++typedef struct {
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#504: FILE: include/asm-sparc/spinlock.h:153:
++	volatile unsigned int lock;
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#705: FILE: kernel/spinlock.c:43:
++^I$
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#829: FILE: kernel/spinlock.c:156:
++EXPORT_SYMBOL(_spin_lock);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#837: FILE: kernel/spinlock.c:164:
++EXPORT_SYMBOL(_write_lock);
+
+WARNING:TYPO_SPELLING: 'preemptable' may be misspelled - perhaps 'preemptible'?
+#843: FILE: kernel/spinlock.c:170:
++ * time (making _this_ CPU preemptable if possible), and we also signal
+                            ^^^^^^^^^^^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'locktype' - possible side-effects?
+#849: FILE: kernel/spinlock.c:176:
++#define BUILD_LOCK_OPS(op, locktype)					\
++void __lockfunc _##op##_lock(locktype *lock)				\
++{									\
++	preempt_disable();						\
++	for (;;) {							\
++		if (likely(_raw_##op##_trylock(lock)))			\
++			break;						\
++		preempt_enable();					\
++		if (!(lock)->break_lock)				\
++			(lock)->break_lock = 1;				\
++		cpu_relax();						\
++		preempt_disable();					\
++	}								\
++}									\
++									\
++EXPORT_SYMBOL(_##op##_lock);						\
++									\
++unsigned long __lockfunc _##op##_lock_irqsave(locktype *lock)		\
++{									\
++	unsigned long flags;						\
++									\
++	preempt_disable();						\
++	for (;;) {							\
++		local_irq_save(flags);					\
++		if (likely(_raw_##op##_trylock(lock)))			\
++			break;						\
++		local_irq_restore(flags);				\
++									\
++		preempt_enable();					\
++		if (!(lock)->break_lock)				\
++			(lock)->break_lock = 1;				\
++		cpu_relax();						\
++		preempt_disable();					\
++	}								\
++	return flags;							\
++}									\
++									\
++EXPORT_SYMBOL(_##op##_lock_irqsave);					\
++									\
++void __lockfunc _##op##_lock_irq(locktype *lock)			\
++{									\
++	_##op##_lock_irqsave(lock);					\
++}									\
++									\
++EXPORT_SYMBOL(_##op##_lock_irq);					\
++									\
++void __lockfunc _##op##_lock_bh(locktype *lock)				\
++{									\
++	unsigned long flags;						\
++									\
++	/*							*/	\
++	/* Careful: we must exclude softirqs too, hence the	*/	\
++	/* irq-disabling. We use the generic preemption-aware	*/	\
++	/* function:						*/	\
++	/**/								\
++	flags = _##op##_lock_irqsave(lock);				\
++	local_bh_disable();						\
++	local_irq_restore(flags);					\
++}									\
++									\
++EXPORT_SYMBOL(_##op##_lock_bh)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'locktype' may be better as '(locktype)' to avoid precedence issues
+#849: FILE: kernel/spinlock.c:176:
++#define BUILD_LOCK_OPS(op, locktype)					\
++void __lockfunc _##op##_lock(locktype *lock)				\
++{									\
++	preempt_disable();						\
++	for (;;) {							\
++		if (likely(_raw_##op##_trylock(lock)))			\
++			break;						\
++		preempt_enable();					\
++		if (!(lock)->break_lock)				\
++			(lock)->break_lock = 1;				\
++		cpu_relax();						\
++		preempt_disable();					\
++	}								\
++}									\
++									\
++EXPORT_SYMBOL(_##op##_lock);						\
++									\
++unsigned long __lockfunc _##op##_lock_irqsave(locktype *lock)		\
++{									\
++	unsigned long flags;						\
++									\
++	preempt_disable();						\
++	for (;;) {							\
++		local_irq_save(flags);					\
++		if (likely(_raw_##op##_trylock(lock)))			\
++			break;						\
++		local_irq_restore(flags);				\
++									\
++		preempt_enable();					\
++		if (!(lock)->break_lock)				\
++			(lock)->break_lock = 1;				\
++		cpu_relax();						\
++		preempt_disable();					\
++	}								\
++	return flags;							\
++}									\
++									\
++EXPORT_SYMBOL(_##op##_lock_irqsave);					\
++									\
++void __lockfunc _##op##_lock_irq(locktype *lock)			\
++{									\
++	_##op##_lock_irqsave(lock);					\
++}									\
++									\
++EXPORT_SYMBOL(_##op##_lock_irq);					\
++									\
++void __lockfunc _##op##_lock_bh(locktype *lock)				\
++{									\
++	unsigned long flags;						\
++									\
++	/*							*/	\
++	/* Careful: we must exclude softirqs too, hence the	*/	\
++	/* irq-disabling. We use the generic preemption-aware	*/	\
++	/* function:						*/	\
++	/**/								\
++	flags = _##op##_lock_irqsave(lock);				\
++	local_bh_disable();						\
++	local_irq_restore(flags);					\
++}									\
++									\
++EXPORT_SYMBOL(_##op##_lock_bh)
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#850: FILE: kernel/spinlock.c:177:
++void __lockfunc _##op##_lock(locktype *lock)				\
+                                       ^
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#864: FILE: kernel/spinlock.c:191:
++EXPORT_SYMBOL(_##op##_lock);						\
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#886: FILE: kernel/spinlock.c:213:
++EXPORT_SYMBOL(_##op##_lock_irqsave);					\
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#893: FILE: kernel/spinlock.c:220:
++EXPORT_SYMBOL(_##op##_lock_irq);					\
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#964: FILE: kernel/sched.c:3226:
++int cond_resched_lock(spinlock_t * lock)
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#985: FILE: kernel/sched.c:3247:
++EXPORT_SYMBOL(cond_resched_lock);
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000250520.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 6 errors, 15 warnings, 5 checks, 782 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000250520.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

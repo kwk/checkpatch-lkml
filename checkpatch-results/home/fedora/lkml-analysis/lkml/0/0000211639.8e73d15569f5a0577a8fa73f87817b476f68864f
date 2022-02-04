@@ -1,0 +1,328 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#43: 
+diff -urp -X /home/axboe/cdrom/exclude /opt/kernel/linux-2.6.10/drivers/block/cfq-iosched.c linux-2.6.10/drivers/block/cfq-iosched.c
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#85: FILE: drivers/block/elevator.c:330:
++		BUG_ON(q->ordered == QUEUE_ORDERED_NONE);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#109: FILE: drivers/block/ll_rw_blk.c:276:
++	rq->bio = rq->biotail = NULL;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+ERROR:SWITCH_CASE_INDENT_LEVEL: switch and case should be at the same indent
+#132: FILE: drivers/block/ll_rw_blk.c:302:
++	switch (flag) {
++		case QUEUE_ORDERED_NONE:
+[...]
++		case QUEUE_ORDERED_TAG:
+[...]
++		case QUEUE_ORDERED_FLUSH:
+[...]
++		default:
+
+switch should be at the same indent as case.
+Example::
+
+  switch (suffix) {
+  case 'G':
+  case 'g':
+          mem <<= 30;
+          break;
+  case 'M':
+  case 'm':
+          mem <<= 20;
+          break;
+  case 'K':
+  case 'k':
+          mem <<= 10;
+          fallthrough;
+  default:
+          break;
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#146: FILE: drivers/block/ll_rw_blk.c:316:
++				q->flush_rq = kmem_cache_alloc(request_cachep,
++								GFP_KERNEL);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#149: FILE: drivers/block/ll_rw_blk.c:319:
++			printk("blk_queue_ordered: bad value %d\n", flag);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#169: FILE: drivers/block/ll_rw_blk.c:353:
++	if (!flush_rq->errors)
+[...]
++	else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#171: FILE: drivers/block/ll_rw_blk.c:355:
++	else {
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#199: FILE: drivers/block/ll_rw_blk.c:383:
++	BUG_ON(!blk_barrier_rq(rq));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#234: FILE: drivers/block/ll_rw_blk.c:418:
++	BUG_ON(!blk_barrier_rq(rq));
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'q->ordered == QUEUE_ORDERED_NONE'
+#405: FILE: drivers/block/ll_rw_blk.c:2576:
++	if (barrier && (q->ordered == QUEUE_ORDERED_NONE)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#464: FILE: drivers/ide/ide-disk.c:713:
++		printk(KERN_ERR "%s: barrier support doesn't work\n", drive->name);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'sector >= rq->hard_sector'
+#470: FILE: drivers/ide/ide-disk.c:719:
++		if ((sector >= rq->hard_sector) &&
++		    (sector < rq->hard_sector + rq->hard_nr_sectors))
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#478: FILE: drivers/ide/ide-disk.c:727:
++		printk(KERN_ERR "%s: failed barrier write: "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#479: FILE: drivers/ide/ide-disk.c:728:
++		printk(KERN_ERR "%s: failed barrier write: "
++				"sector=%Lx(good=%d/bad=%d)\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:PRINTF_L: %Lx is non-standard C, use %llx
+#479: FILE: drivers/ide/ide-disk.c:728:
++				"sector=%Lx(good=%d/bad=%d)\n",
+
+CHECK:SPACING: No space is necessary after a cast
+#482: FILE: drivers/ide/ide-disk.c:731:
++				(int) (rq->hard_nr_sectors-good_sectors));
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#482: FILE: drivers/ide/ide-disk.c:731:
++				(int) (rq->hard_nr_sectors-good_sectors));
+ 				                          ^
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#541: FILE: drivers/ide/ide-disk.c:1159:
++	printk(KERN_INFO "%s: cache flushes %ssupported\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#542: FILE: drivers/ide/ide-disk.c:1160:
++	printk(KERN_INFO "%s: cache flushes %ssupported\n",
+ 		drive->name, barrier ? "" : "not ");
+
+WARNING:TYPO_SPELLING: 'uptodate' may be misspelled - perhaps 'up-to-date'?
+#614: FILE: drivers/ide/ide-io.c:58:
++int __ide_end_request(ide_drive_t *drive, struct request *rq, int uptodate,
+                                                                   ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#819: FILE: drivers/scsi/hosts.c:268:
++		printk(KERN_ERR "scsi: ordered flushes don't support queueing\n");
+
+CHECK:SPACING: No space is necessary after a cast
+#947: FILE: drivers/scsi/scsi_lib.c:976:
++		drv = *(struct scsi_driver **) rq->rq_disk->private_data;
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#963: FILE: drivers/scsi/scsi_lib.c:992:
++		printk("scsi: barrier error, disabling flush support\n");
+
+CHECK:SPACING: No space is necessary after a cast
+#968: FILE: drivers/scsi/scsi_lib.c:997:
++		drv = *(struct scsi_driver **) rq->rq_disk->private_data;
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#983: FILE: drivers/scsi/scsi_lib.c:1409:
++	if (shost->ordered_tag)
+[...]
++	else if (shost->ordered_flush) {
+[...]
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1132: FILE: include/linux/blkdev.h:538:
++extern void blk_end_sync_rq(struct request *rq);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+ERROR:SPACING: space required after that ',' (ctx:OxV)
+#1144: FILE: include/linux/blkdev.h:631:
++extern struct request *blk_start_pre_flush(request_queue_t *,struct request *);
+                                                             ^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1144: FILE: include/linux/blkdev.h:631:
++extern struct request *blk_start_pre_flush(request_queue_t *,struct request *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'request_queue_t *' should also have an identifier name
+#1144: FILE: include/linux/blkdev.h:631:
++extern struct request *blk_start_pre_flush(request_queue_t *,struct request *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request *' should also have an identifier name
+#1144: FILE: include/linux/blkdev.h:631:
++extern struct request *blk_start_pre_flush(request_queue_t *,struct request *);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1145: FILE: include/linux/blkdev.h:632:
++extern int blk_complete_barrier_rq(request_queue_t *, struct request *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'request_queue_t *' should also have an identifier name
+#1145: FILE: include/linux/blkdev.h:632:
++extern int blk_complete_barrier_rq(request_queue_t *, struct request *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request *' should also have an identifier name
+#1145: FILE: include/linux/blkdev.h:632:
++extern int blk_complete_barrier_rq(request_queue_t *, struct request *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#1145: FILE: include/linux/blkdev.h:632:
++extern int blk_complete_barrier_rq(request_queue_t *, struct request *, int);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1146: FILE: include/linux/blkdev.h:633:
++extern int blk_complete_barrier_rq_locked(request_queue_t *, struct request *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'request_queue_t *' should also have an identifier name
+#1146: FILE: include/linux/blkdev.h:633:
++extern int blk_complete_barrier_rq_locked(request_queue_t *, struct request *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request *' should also have an identifier name
+#1146: FILE: include/linux/blkdev.h:633:
++extern int blk_complete_barrier_rq_locked(request_queue_t *, struct request *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#1146: FILE: include/linux/blkdev.h:633:
++extern int blk_complete_barrier_rq_locked(request_queue_t *, struct request *, int);
+
+WARNING:TYPO_SPELLING: 'uptodate' may be misspelled - perhaps 'up-to-date'?
+#1165: FILE: include/linux/ide.h:1133:
++extern int __ide_end_request (ide_drive_t *drive, struct request *rq, int uptodate, int nrsecs);
+                                                                           ^^^^^^^^
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#1165: FILE: include/linux/ide.h:1133:
++extern int __ide_end_request (ide_drive_t *drive, struct request *rq, int uptodate, int nrsecs);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1165: FILE: include/linux/ide.h:1133:
++extern int __ide_end_request (ide_drive_t *drive, struct request *rq, int uptodate, int nrsecs);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request_queue *' should also have an identifier name
+#1176: FILE: include/scsi/scsi_driver.h:17:
++	int (*prepare_flush)(struct request_queue *, struct request *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request *' should also have an identifier name
+#1176: FILE: include/scsi/scsi_driver.h:17:
++	int (*prepare_flush)(struct request_queue *, struct request *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request_queue *' should also have an identifier name
+#1177: FILE: include/scsi/scsi_driver.h:18:
++	void (*end_flush)(struct request_queue *, struct request *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request *' should also have an identifier name
+#1177: FILE: include/scsi/scsi_driver.h:18:
++	void (*end_flush)(struct request_queue *, struct request *);
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000211639.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 2 errors, 27 warnings, 17 checks, 1035 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000211639.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

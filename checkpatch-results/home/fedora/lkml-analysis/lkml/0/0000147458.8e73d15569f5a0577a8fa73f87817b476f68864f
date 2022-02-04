@@ -1,0 +1,173 @@
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#49: FILE: drivers/net/bonding/bond_main.c:4395:
++                                         struct bonding *bond,$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#49: FILE: drivers/net/bonding/bond_main.c:4395:
++static void bond_activebackup_xmit_copy(struct sk_buff *skb,
++                                         struct bonding *bond,
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#49: FILE: drivers/net/bonding/bond_main.c:4395:
++                                         struct bonding *bond,$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#50: FILE: drivers/net/bonding/bond_main.c:4396:
++                                         struct slave *slave)$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#50: FILE: drivers/net/bonding/bond_main.c:4396:
++                                         struct slave *slave)$
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#58: FILE: drivers/net/bonding/bond_main.c:4404:
++		printk(KERN_ERR DRV_NAME ": Error: "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#59: FILE: drivers/net/bonding/bond_main.c:4405:
++		printk(KERN_ERR DRV_NAME ": Error: "
++		       "bond_activebackup_xmit_copy(): skb_copy() failed\n");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'bond_activebackup_xmit_copy', this function's name, in a string
+#59: FILE: drivers/net/bonding/bond_main.c:4405:
++		       "bond_activebackup_xmit_copy(): skb_copy() failed\n");
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#79: FILE: drivers/net/bonding/bond_main.c:4425:
++	return;
++}
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#94: FILE: drivers/net/bonding/bond_main.c:4447:
++	/* Xmit IGMP frames on all slaves to ensure rapid fail-over
++	   for multicast traffic on snooping switches */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#94: FILE: drivers/net/bonding/bond_main.c:4447:
++	   for multicast traffic on snooping switches */
+
+WARNING:CONSTANT_CONVERSION: __constant_htons should be htons
+#95: FILE: drivers/net/bonding/bond_main.c:4448:
++	if (skb->protocol == __constant_htons(ETH_P_IP) &&
+
+Use of __constant_<foo> form is discouraged for the following functions::
+
+  __constant_cpu_to_be[x]
+  __constant_cpu_to_le[x]
+  __constant_be[x]_to_cpu
+  __constant_le[x]_to_cpu
+  __constant_htons
+  __constant_ntohs
+
+Using any of these outside of include/uapi/ is not preferred as using the
+function without __constant_ is identical when the argument is a
+constant.
+
+In big endian systems, the macros like __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to the same expression::
+
+  #define __constant_cpu_to_be32(x) ((__force __be32)(__u32)(x))
+  #define __cpu_to_be32(x)          ((__force __be32)(__u32)(x))
+
+In little endian systems, the macros __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to __constant_swab32 and __swab32.  __swab32
+has a __builtin_constant_p check::
+
+  #define __swab32(x)				\
+    (__builtin_constant_p((__u32)(x)) ?	\
+    ___constant_swab32(x) :			\
+    __fswab32(x))
+
+So ultimately they have a special case for constants.
+Similar is the case with all of the macros in the list.  Thus
+using the __constant_... forms are unnecessarily verbose and
+not preferred outside of include/uapi.
+
+See: https://lore.kernel.org/lkml/1400106425.12666.6.camel@joe-AO725/
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#102: FILE: drivers/net/bonding/bond_main.c:4455:
++^I^I                            active_slave->prev)$
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'slave->link == BOND_LINK_UP'
+#103: FILE: drivers/net/bonding/bond_main.c:4456:
++			if (IS_UP(slave->dev) &&
++			    (slave->link == BOND_LINK_UP))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000147458.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 3 errors, 9 warnings, 2 checks, 67 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000147458.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

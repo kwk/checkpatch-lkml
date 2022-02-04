@@ -1,0 +1,89 @@
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*slot)...) over kmalloc(sizeof(struct slot)...)
+#78: FILE: drivers/pci/hotplug/shpchp_core.c:116:
++		slot = kmalloc(sizeof(struct slot), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#118: FILE: drivers/pci/hotplug/shpchp_core.c:142:
++		slot->hpc_ops = hpc_ops = ctrl->hpc_ops;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around hotplug_slot_info->power_status
+#150: FILE: drivers/pci/hotplug/shpchp_core.c:158:
++			&(hotplug_slot_info->power_status));
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around hotplug_slot_info->attention_status
+#152: FILE: drivers/pci/hotplug/shpchp_core.c:160:
++			&(hotplug_slot_info->attention_status));
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around hotplug_slot_info->latch_status
+#154: FILE: drivers/pci/hotplug/shpchp_core.c:162:
++			&(hotplug_slot_info->latch_status));
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around hotplug_slot_info->adapter_status
+#156: FILE: drivers/pci/hotplug/shpchp_core.c:164:
++			&(hotplug_slot_info->adapter_status));
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#159: FILE: drivers/pci/hotplug/shpchp_core.c:167:
++		dbg("Registering bus=%x dev=%x hp_slot=%x sun=%x "
++			"slot_device_offset=%x\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000126734.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 0 errors, 1 warnings, 6 checks, 132 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000126734.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

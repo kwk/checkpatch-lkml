@@ -1,0 +1,627 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#24: 
+Since we don't want ghash.h, just move the two needed macros (which don't use
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#296: FILE: arch/um/kernel/physmem.c:50:
++ * ^Iany others$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#299: FILE: arch/um/kernel/physmem.c:53:
++ * ^Ifield is of type NAME_ptrs, another is the hash key$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#301: FILE: arch/um/kernel/physmem.c:55:
++ * ^Ifield$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#305: FILE: arch/um/kernel/physmem.c:59:
++ * ^Iprototype is int KEYCMP(KEYTYPE, KEYTYPE), it returns zero for equal,$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#306: FILE: arch/um/kernel/physmem.c:60:
++ * ^Inon-zero for not equal$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#308: FILE: arch/um/kernel/physmem.c:62:
++ * ^Iit returns a number in the range 0 ... HASHSIZE - 1$
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#313: FILE: arch/um/kernel/physmem.c:67:
++#define DEF_HASH_STRUCTS(NAME,HASHSIZE,TYPE) \
+                              ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#313: FILE: arch/um/kernel/physmem.c:67:
++#define DEF_HASH_STRUCTS(NAME,HASHSIZE,TYPE) \
+                                       ^
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#313: FILE: arch/um/kernel/physmem.c:67:
++#define DEF_HASH_STRUCTS(NAME,HASHSIZE,TYPE) \
++\
++struct NAME##_table {\
++	TYPE * hashtable[HASHSIZE];\
++	int nr_entries;\
++};\
++\
++struct NAME##_ptrs {\
++	TYPE * next_hash;\
++	TYPE * prev_hash;\
++};
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#321: FILE: arch/um/kernel/physmem.c:75:
++	TYPE * next_hash;\
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#322: FILE: arch/um/kernel/physmem.c:76:
++	TYPE * prev_hash;\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#325: FILE: arch/um/kernel/physmem.c:79:
++#define DEF_HASH(LINKAGE,NAME,TYPE,PTRS,KEYTYPE,KEY,KEYCMP,HASHFN)\
+                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#325: FILE: arch/um/kernel/physmem.c:79:
++#define DEF_HASH(LINKAGE,NAME,TYPE,PTRS,KEYTYPE,KEY,KEYCMP,HASHFN)\
+                              ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#325: FILE: arch/um/kernel/physmem.c:79:
++#define DEF_HASH(LINKAGE,NAME,TYPE,PTRS,KEYTYPE,KEY,KEYCMP,HASHFN)\
+                                   ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#325: FILE: arch/um/kernel/physmem.c:79:
++#define DEF_HASH(LINKAGE,NAME,TYPE,PTRS,KEYTYPE,KEY,KEYCMP,HASHFN)\
+                                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#325: FILE: arch/um/kernel/physmem.c:79:
++#define DEF_HASH(LINKAGE,NAME,TYPE,PTRS,KEYTYPE,KEY,KEYCMP,HASHFN)\
+                                                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#325: FILE: arch/um/kernel/physmem.c:79:
++#define DEF_HASH(LINKAGE,NAME,TYPE,PTRS,KEYTYPE,KEY,KEYCMP,HASHFN)\
+                                                    ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#325: FILE: arch/um/kernel/physmem.c:79:
++#define DEF_HASH(LINKAGE,NAME,TYPE,PTRS,KEYTYPE,KEY,KEYCMP,HASHFN)\
+                                                           ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'LINKAGE' - possible side-effects?
+#325: FILE: arch/um/kernel/physmem.c:79:
++#define DEF_HASH(LINKAGE,NAME,TYPE,PTRS,KEYTYPE,KEY,KEYCMP,HASHFN)\
++\
++LINKAGE void insert_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
++{\
++	int ix = HASHFN(elem->KEY);\
++	TYPE ** base = &tbl->hashtable[ix];\
++	TYPE * ptr = *base;\
++	TYPE * prev = NULL;\
++\
++	tbl->nr_entries++;\
++	while(ptr && KEYCMP(ptr->KEY, elem->KEY)) {\
++		base = &ptr->PTRS.next_hash;\
++		prev = ptr;\
++		ptr = *base;\
++	}\
++	elem->PTRS.next_hash = ptr;\
++	elem->PTRS.prev_hash = prev;\
++	if(ptr) {\
++		ptr->PTRS.prev_hash = elem;\
++	}\
++	*base = elem;\
++}\
++\
++LINKAGE void remove_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
++{\
++	TYPE * next = elem->PTRS.next_hash;\
++	TYPE * prev = elem->PTRS.prev_hash;\
++\
++	tbl->nr_entries--;\
++	if(next)\
++		next->PTRS.prev_hash = prev;\
++	if(prev)\
++		prev->PTRS.next_hash = next;\
++	else {\
++		int ix = HASHFN(elem->KEY);\
++		tbl->hashtable[ix] = next;\
++	}\
++}\
++\
++LINKAGE TYPE * find_##NAME##_hash(struct NAME##_table * tbl, KEYTYPE pos)\
++{\
++	int ix = HASHFN(pos);\
++	TYPE * ptr = tbl->hashtable[ix];\
++	while(ptr && KEYCMP(ptr->KEY, pos))\
++		ptr = ptr->PTRS.next_hash;\
++	return ptr;\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'PTRS' - possible side-effects?
+#325: FILE: arch/um/kernel/physmem.c:79:
++#define DEF_HASH(LINKAGE,NAME,TYPE,PTRS,KEYTYPE,KEY,KEYCMP,HASHFN)\
++\
++LINKAGE void insert_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
++{\
++	int ix = HASHFN(elem->KEY);\
++	TYPE ** base = &tbl->hashtable[ix];\
++	TYPE * ptr = *base;\
++	TYPE * prev = NULL;\
++\
++	tbl->nr_entries++;\
++	while(ptr && KEYCMP(ptr->KEY, elem->KEY)) {\
++		base = &ptr->PTRS.next_hash;\
++		prev = ptr;\
++		ptr = *base;\
++	}\
++	elem->PTRS.next_hash = ptr;\
++	elem->PTRS.prev_hash = prev;\
++	if(ptr) {\
++		ptr->PTRS.prev_hash = elem;\
++	}\
++	*base = elem;\
++}\
++\
++LINKAGE void remove_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
++{\
++	TYPE * next = elem->PTRS.next_hash;\
++	TYPE * prev = elem->PTRS.prev_hash;\
++\
++	tbl->nr_entries--;\
++	if(next)\
++		next->PTRS.prev_hash = prev;\
++	if(prev)\
++		prev->PTRS.next_hash = next;\
++	else {\
++		int ix = HASHFN(elem->KEY);\
++		tbl->hashtable[ix] = next;\
++	}\
++}\
++\
++LINKAGE TYPE * find_##NAME##_hash(struct NAME##_table * tbl, KEYTYPE pos)\
++{\
++	int ix = HASHFN(pos);\
++	TYPE * ptr = tbl->hashtable[ix];\
++	while(ptr && KEYCMP(ptr->KEY, pos))\
++		ptr = ptr->PTRS.next_hash;\
++	return ptr;\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'PTRS' may be better as '(PTRS)' to avoid precedence issues
+#325: FILE: arch/um/kernel/physmem.c:79:
++#define DEF_HASH(LINKAGE,NAME,TYPE,PTRS,KEYTYPE,KEY,KEYCMP,HASHFN)\
++\
++LINKAGE void insert_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
++{\
++	int ix = HASHFN(elem->KEY);\
++	TYPE ** base = &tbl->hashtable[ix];\
++	TYPE * ptr = *base;\
++	TYPE * prev = NULL;\
++\
++	tbl->nr_entries++;\
++	while(ptr && KEYCMP(ptr->KEY, elem->KEY)) {\
++		base = &ptr->PTRS.next_hash;\
++		prev = ptr;\
++		ptr = *base;\
++	}\
++	elem->PTRS.next_hash = ptr;\
++	elem->PTRS.prev_hash = prev;\
++	if(ptr) {\
++		ptr->PTRS.prev_hash = elem;\
++	}\
++	*base = elem;\
++}\
++\
++LINKAGE void remove_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
++{\
++	TYPE * next = elem->PTRS.next_hash;\
++	TYPE * prev = elem->PTRS.prev_hash;\
++\
++	tbl->nr_entries--;\
++	if(next)\
++		next->PTRS.prev_hash = prev;\
++	if(prev)\
++		prev->PTRS.next_hash = next;\
++	else {\
++		int ix = HASHFN(elem->KEY);\
++		tbl->hashtable[ix] = next;\
++	}\
++}\
++\
++LINKAGE TYPE * find_##NAME##_hash(struct NAME##_table * tbl, KEYTYPE pos)\
++{\
++	int ix = HASHFN(pos);\
++	TYPE * ptr = tbl->hashtable[ix];\
++	while(ptr && KEYCMP(ptr->KEY, pos))\
++		ptr = ptr->PTRS.next_hash;\
++	return ptr;\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'KEY' - possible side-effects?
+#325: FILE: arch/um/kernel/physmem.c:79:
++#define DEF_HASH(LINKAGE,NAME,TYPE,PTRS,KEYTYPE,KEY,KEYCMP,HASHFN)\
++\
++LINKAGE void insert_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
++{\
++	int ix = HASHFN(elem->KEY);\
++	TYPE ** base = &tbl->hashtable[ix];\
++	TYPE * ptr = *base;\
++	TYPE * prev = NULL;\
++\
++	tbl->nr_entries++;\
++	while(ptr && KEYCMP(ptr->KEY, elem->KEY)) {\
++		base = &ptr->PTRS.next_hash;\
++		prev = ptr;\
++		ptr = *base;\
++	}\
++	elem->PTRS.next_hash = ptr;\
++	elem->PTRS.prev_hash = prev;\
++	if(ptr) {\
++		ptr->PTRS.prev_hash = elem;\
++	}\
++	*base = elem;\
++}\
++\
++LINKAGE void remove_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
++{\
++	TYPE * next = elem->PTRS.next_hash;\
++	TYPE * prev = elem->PTRS.prev_hash;\
++\
++	tbl->nr_entries--;\
++	if(next)\
++		next->PTRS.prev_hash = prev;\
++	if(prev)\
++		prev->PTRS.next_hash = next;\
++	else {\
++		int ix = HASHFN(elem->KEY);\
++		tbl->hashtable[ix] = next;\
++	}\
++}\
++\
++LINKAGE TYPE * find_##NAME##_hash(struct NAME##_table * tbl, KEYTYPE pos)\
++{\
++	int ix = HASHFN(pos);\
++	TYPE * ptr = tbl->hashtable[ix];\
++	while(ptr && KEYCMP(ptr->KEY, pos))\
++		ptr = ptr->PTRS.next_hash;\
++	return ptr;\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'KEY' may be better as '(KEY)' to avoid precedence issues
+#325: FILE: arch/um/kernel/physmem.c:79:
++#define DEF_HASH(LINKAGE,NAME,TYPE,PTRS,KEYTYPE,KEY,KEYCMP,HASHFN)\
++\
++LINKAGE void insert_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
++{\
++	int ix = HASHFN(elem->KEY);\
++	TYPE ** base = &tbl->hashtable[ix];\
++	TYPE * ptr = *base;\
++	TYPE * prev = NULL;\
++\
++	tbl->nr_entries++;\
++	while(ptr && KEYCMP(ptr->KEY, elem->KEY)) {\
++		base = &ptr->PTRS.next_hash;\
++		prev = ptr;\
++		ptr = *base;\
++	}\
++	elem->PTRS.next_hash = ptr;\
++	elem->PTRS.prev_hash = prev;\
++	if(ptr) {\
++		ptr->PTRS.prev_hash = elem;\
++	}\
++	*base = elem;\
++}\
++\
++LINKAGE void remove_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
++{\
++	TYPE * next = elem->PTRS.next_hash;\
++	TYPE * prev = elem->PTRS.prev_hash;\
++\
++	tbl->nr_entries--;\
++	if(next)\
++		next->PTRS.prev_hash = prev;\
++	if(prev)\
++		prev->PTRS.next_hash = next;\
++	else {\
++		int ix = HASHFN(elem->KEY);\
++		tbl->hashtable[ix] = next;\
++	}\
++}\
++\
++LINKAGE TYPE * find_##NAME##_hash(struct NAME##_table * tbl, KEYTYPE pos)\
++{\
++	int ix = HASHFN(pos);\
++	TYPE * ptr = tbl->hashtable[ix];\
++	while(ptr && KEYCMP(ptr->KEY, pos))\
++		ptr = ptr->PTRS.next_hash;\
++	return ptr;\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'KEYCMP' - possible side-effects?
+#325: FILE: arch/um/kernel/physmem.c:79:
++#define DEF_HASH(LINKAGE,NAME,TYPE,PTRS,KEYTYPE,KEY,KEYCMP,HASHFN)\
++\
++LINKAGE void insert_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
++{\
++	int ix = HASHFN(elem->KEY);\
++	TYPE ** base = &tbl->hashtable[ix];\
++	TYPE * ptr = *base;\
++	TYPE * prev = NULL;\
++\
++	tbl->nr_entries++;\
++	while(ptr && KEYCMP(ptr->KEY, elem->KEY)) {\
++		base = &ptr->PTRS.next_hash;\
++		prev = ptr;\
++		ptr = *base;\
++	}\
++	elem->PTRS.next_hash = ptr;\
++	elem->PTRS.prev_hash = prev;\
++	if(ptr) {\
++		ptr->PTRS.prev_hash = elem;\
++	}\
++	*base = elem;\
++}\
++\
++LINKAGE void remove_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
++{\
++	TYPE * next = elem->PTRS.next_hash;\
++	TYPE * prev = elem->PTRS.prev_hash;\
++\
++	tbl->nr_entries--;\
++	if(next)\
++		next->PTRS.prev_hash = prev;\
++	if(prev)\
++		prev->PTRS.next_hash = next;\
++	else {\
++		int ix = HASHFN(elem->KEY);\
++		tbl->hashtable[ix] = next;\
++	}\
++}\
++\
++LINKAGE TYPE * find_##NAME##_hash(struct NAME##_table * tbl, KEYTYPE pos)\
++{\
++	int ix = HASHFN(pos);\
++	TYPE * ptr = tbl->hashtable[ix];\
++	while(ptr && KEYCMP(ptr->KEY, pos))\
++		ptr = ptr->PTRS.next_hash;\
++	return ptr;\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'KEYCMP' may be better as '(KEYCMP)' to avoid precedence issues
+#325: FILE: arch/um/kernel/physmem.c:79:
++#define DEF_HASH(LINKAGE,NAME,TYPE,PTRS,KEYTYPE,KEY,KEYCMP,HASHFN)\
++\
++LINKAGE void insert_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
++{\
++	int ix = HASHFN(elem->KEY);\
++	TYPE ** base = &tbl->hashtable[ix];\
++	TYPE * ptr = *base;\
++	TYPE * prev = NULL;\
++\
++	tbl->nr_entries++;\
++	while(ptr && KEYCMP(ptr->KEY, elem->KEY)) {\
++		base = &ptr->PTRS.next_hash;\
++		prev = ptr;\
++		ptr = *base;\
++	}\
++	elem->PTRS.next_hash = ptr;\
++	elem->PTRS.prev_hash = prev;\
++	if(ptr) {\
++		ptr->PTRS.prev_hash = elem;\
++	}\
++	*base = elem;\
++}\
++\
++LINKAGE void remove_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
++{\
++	TYPE * next = elem->PTRS.next_hash;\
++	TYPE * prev = elem->PTRS.prev_hash;\
++\
++	tbl->nr_entries--;\
++	if(next)\
++		next->PTRS.prev_hash = prev;\
++	if(prev)\
++		prev->PTRS.next_hash = next;\
++	else {\
++		int ix = HASHFN(elem->KEY);\
++		tbl->hashtable[ix] = next;\
++	}\
++}\
++\
++LINKAGE TYPE * find_##NAME##_hash(struct NAME##_table * tbl, KEYTYPE pos)\
++{\
++	int ix = HASHFN(pos);\
++	TYPE * ptr = tbl->hashtable[ix];\
++	while(ptr && KEYCMP(ptr->KEY, pos))\
++		ptr = ptr->PTRS.next_hash;\
++	return ptr;\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'HASHFN' - possible side-effects?
+#325: FILE: arch/um/kernel/physmem.c:79:
++#define DEF_HASH(LINKAGE,NAME,TYPE,PTRS,KEYTYPE,KEY,KEYCMP,HASHFN)\
++\
++LINKAGE void insert_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
++{\
++	int ix = HASHFN(elem->KEY);\
++	TYPE ** base = &tbl->hashtable[ix];\
++	TYPE * ptr = *base;\
++	TYPE * prev = NULL;\
++\
++	tbl->nr_entries++;\
++	while(ptr && KEYCMP(ptr->KEY, elem->KEY)) {\
++		base = &ptr->PTRS.next_hash;\
++		prev = ptr;\
++		ptr = *base;\
++	}\
++	elem->PTRS.next_hash = ptr;\
++	elem->PTRS.prev_hash = prev;\
++	if(ptr) {\
++		ptr->PTRS.prev_hash = elem;\
++	}\
++	*base = elem;\
++}\
++\
++LINKAGE void remove_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
++{\
++	TYPE * next = elem->PTRS.next_hash;\
++	TYPE * prev = elem->PTRS.prev_hash;\
++\
++	tbl->nr_entries--;\
++	if(next)\
++		next->PTRS.prev_hash = prev;\
++	if(prev)\
++		prev->PTRS.next_hash = next;\
++	else {\
++		int ix = HASHFN(elem->KEY);\
++		tbl->hashtable[ix] = next;\
++	}\
++}\
++\
++LINKAGE TYPE * find_##NAME##_hash(struct NAME##_table * tbl, KEYTYPE pos)\
++{\
++	int ix = HASHFN(pos);\
++	TYPE * ptr = tbl->hashtable[ix];\
++	while(ptr && KEYCMP(ptr->KEY, pos))\
++		ptr = ptr->PTRS.next_hash;\
++	return ptr;\
++}
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#327: FILE: arch/um/kernel/physmem.c:81:
++LINKAGE void insert_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#327: FILE: arch/um/kernel/physmem.c:81:
++LINKAGE void insert_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
+
+ERROR:POINTER_LOCATION: "foo ** bar" should be "foo **bar"
+#330: FILE: arch/um/kernel/physmem.c:84:
++	TYPE ** base = &tbl->hashtable[ix];\
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#331: FILE: arch/um/kernel/physmem.c:85:
++	TYPE * ptr = *base;\
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#332: FILE: arch/um/kernel/physmem.c:86:
++	TYPE * prev = NULL;\
+
+ERROR:SPACING: space required before the open parenthesis '('
+#335: FILE: arch/um/kernel/physmem.c:89:
++	while(ptr && KEYCMP(ptr->KEY, elem->KEY)) {\
+
+ERROR:SPACING: space required after that close brace '}'
+#339: FILE: arch/um/kernel/physmem.c:93:
++	}\
+
+ERROR:SPACING: space required before the open parenthesis '('
+#342: FILE: arch/um/kernel/physmem.c:96:
++	if(ptr) {\
+
+ERROR:SPACING: space required after that close brace '}'
+#344: FILE: arch/um/kernel/physmem.c:98:
++	}\
+
+ERROR:SPACING: space required after that close brace '}'
+#346: FILE: arch/um/kernel/physmem.c:100:
++}\
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#348: FILE: arch/um/kernel/physmem.c:102:
++LINKAGE void remove_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#348: FILE: arch/um/kernel/physmem.c:102:
++LINKAGE void remove_##NAME##_hash(struct NAME##_table * tbl, TYPE * elem)\
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#350: FILE: arch/um/kernel/physmem.c:104:
++	TYPE * next = elem->PTRS.next_hash;\
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#351: FILE: arch/um/kernel/physmem.c:105:
++	TYPE * prev = elem->PTRS.prev_hash;\
+
+ERROR:SPACING: space required before the open parenthesis '('
+#354: FILE: arch/um/kernel/physmem.c:108:
++	if(next)\
+
+ERROR:SPACING: space required before the open parenthesis '('
+#356: FILE: arch/um/kernel/physmem.c:110:
++	if(prev)\
+
+ERROR:SPACING: space required after that close brace '}'
+#361: FILE: arch/um/kernel/physmem.c:115:
++	}\
+
+ERROR:SPACING: space required after that close brace '}'
+#362: FILE: arch/um/kernel/physmem.c:116:
++}\
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#364: FILE: arch/um/kernel/physmem.c:118:
++LINKAGE TYPE * find_##NAME##_hash(struct NAME##_table * tbl, KEYTYPE pos)\
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#364: FILE: arch/um/kernel/physmem.c:118:
++LINKAGE TYPE * find_##NAME##_hash(struct NAME##_table * tbl, KEYTYPE pos)\
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#367: FILE: arch/um/kernel/physmem.c:121:
++	TYPE * ptr = tbl->hashtable[ix];\
+
+ERROR:SPACING: space required before the open parenthesis '('
+#368: FILE: arch/um/kernel/physmem.c:122:
++	while(ptr && KEYCMP(ptr->KEY, pos))\
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000251556.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 33 errors, 8 warnings, 8 checks, 92 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000251556.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

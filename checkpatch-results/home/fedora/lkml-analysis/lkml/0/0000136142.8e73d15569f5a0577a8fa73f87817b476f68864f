@@ -1,0 +1,115 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#229: FILE: include/linux/stat.h:75:
++extern void __check_inumber_with_bogus_size(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ino' - possible side-effects?
+#230: FILE: include/linux/stat.h:76:
++#define check_inumber(ino, to)					\
++({								\
++	int res = 1;						\
++	switch (sizeof(*to)) {					\
++		case 2:						\
++			if (ino > 0xffff)			\
++				res = 0;			\
++			break;					\
++		case 4:						\
++			if (ino > 0xffffffff)			\
++				res = 0;			\
++			break;					\
++		case 8:						\
++			break;					\
++		default:					\
++			__check_inumber_with_bogus_size();	\
++	}							\
++	res;							\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ino' may be better as '(ino)' to avoid precedence issues
+#230: FILE: include/linux/stat.h:76:
++#define check_inumber(ino, to)					\
++({								\
++	int res = 1;						\
++	switch (sizeof(*to)) {					\
++		case 2:						\
++			if (ino > 0xffff)			\
++				res = 0;			\
++			break;					\
++		case 4:						\
++			if (ino > 0xffffffff)			\
++				res = 0;			\
++			break;					\
++		case 8:						\
++			break;					\
++		default:					\
++			__check_inumber_with_bogus_size();	\
++	}							\
++	res;							\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'to' may be better as '(to)' to avoid precedence issues
+#230: FILE: include/linux/stat.h:76:
++#define check_inumber(ino, to)					\
++({								\
++	int res = 1;						\
++	switch (sizeof(*to)) {					\
++		case 2:						\
++			if (ino > 0xffff)			\
++				res = 0;			\
++			break;					\
++		case 4:						\
++			if (ino > 0xffffffff)			\
++				res = 0;			\
++			break;					\
++		case 8:						\
++			break;					\
++		default:					\
++			__check_inumber_with_bogus_size();	\
++	}							\
++	res;							\
++})
+
+ERROR:SWITCH_CASE_INDENT_LEVEL: switch and case should be at the same indent
+#233: FILE: include/linux/stat.h:79:
++	switch (sizeof(*to)) {					\
++		case 2:						\
+[...]
++		case 4:						\
+[...]
++		case 8:						\
+[...]
++		default:					\
+
+switch should be at the same indent as case.
+Example::
+
+  switch (suffix) {
+  case 'G':
+  case 'g':
+          mem <<= 30;
+          break;
+  case 'M':
+  case 'm':
+          mem <<= 20;
+          break;
+  case 'K':
+  case 'k':
+          mem <<= 10;
+          fallthrough;
+  default:
+          break;
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000136142.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 1 errors, 0 warnings, 4 checks, 129 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000136142.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

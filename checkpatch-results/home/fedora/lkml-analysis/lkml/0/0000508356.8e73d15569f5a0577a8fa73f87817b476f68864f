@@ -1,0 +1,342 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#50: 
+diff -urN -X /home/mckenney/dontdiff linux-v2.4.9/arch/alpha/kernel/smp.c linux-v2.4.9.wmbdd/arch/alpha/kernel/smp.c
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#62: FILE: arch/alpha/kernel/smp.c:63:
++	spinlock_t mutex;
+
+WARNING:NR_CPUS: usage of NR_CPUS is often wrong - consider using cpu_possible(), num_possible_cpus(), for_each_possible_cpu(), etc
+#69: FILE: arch/alpha/kernel/smp.c:70:
++} mb_data[NR_CPUS] __cacheline_aligned;
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#94: FILE: arch/alpha/kernel/smp.c:795:
++	/* Avoid lock contention when extra IPIs arrive (due to race) and
++	   when waiting for global mb shootdown. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#94: FILE: arch/alpha/kernel/smp.c:795:
++	   when waiting for global mb shootdown. */
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#95: FILE: arch/alpha/kernel/smp.c:796:
++	if ((mb_global_data.need_mb & this_cpu_mask) == 0) {
++		return;
++	}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+ERROR:ELSE_AFTER_BRACE: else should follow close brace '}'
+#120: FILE: arch/alpha/kernel/smp.c:867:
+ 		}
++		else if (which == IPI_MB) {
+
+`else {` should follow the closing block `}` on the same line.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#181: FILE: arch/alpha/kernel/smp.c:956:
++^I$
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#217: FILE: include/asm-arm/system.h:42:
++#define mbdd() mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#218: FILE: include/asm-arm/system.h:43:
++#define wmbdd() wmb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#246: FILE: include/asm-cris/system.h:147:
++#define mbdd() mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#247: FILE: include/asm-cris/system.h:148:
++#define wmbdd() wmb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#271: FILE: include/asm-i386/system.h:275:
++#define mbdd()	mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#272: FILE: include/asm-i386/system.h:276:
++#define wmbdd()	wmb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#335: FILE: include/asm-ia64/system.h:127:
++#define rmbdd()	mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#336: FILE: include/asm-ia64/system.h:128:
++#define wmbdd()	mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#389: FILE: include/asm-mips/system.h:172:
++#define wmbdd()	mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#390: FILE: include/asm-mips/system.h:173:
++#define mbdd()	mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#416: FILE: include/asm-mips64/system.h:151:
++#define rmbdd() mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#417: FILE: include/asm-mips64/system.h:152:
++#define wmbdd() mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#441: FILE: include/asm-parisc/system.h:54:
++#define smp_mbdd()	rmb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#442: FILE: include/asm-parisc/system.h:55:
++#define smp_wmbdd()	wmb()
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#450: FILE: include/asm-parisc/system.h:64:
++#define smp_mbdd()	__asm__ __volatile__("":::"memory");
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#450: FILE: include/asm-parisc/system.h:64:
++#define smp_mbdd()	__asm__ __volatile__("":::"memory");
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#451: FILE: include/asm-parisc/system.h:65:
++#define smp_wmbdd()	__asm__ __volatile__("":::"memory");
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#451: FILE: include/asm-parisc/system.h:65:
++#define smp_wmbdd()	__asm__ __volatile__("":::"memory");
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#459: FILE: include/asm-parisc/system.h:129:
++#define mbdd() mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#460: FILE: include/asm-parisc/system.h:130:
++#define wmbdd() mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#471: FILE: include/asm-ppc/system.h:36:
++#define mbdd()	mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#472: FILE: include/asm-ppc/system.h:37:
++#define wmbdd()	wmb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#480: FILE: include/asm-ppc/system.h:46:
++#define smp_mbdd()	mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#481: FILE: include/asm-ppc/system.h:47:
++#define smp_wmbdd()	wmb()
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxW)
+#486: FILE: include/asm-ppc/system.h:52:
++#define smp_mbdd()	__asm__ __volatile__("": : :"memory")
+                   	                       ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: spaces required around that ':' (ctx:WxV)
+#486: FILE: include/asm-ppc/system.h:52:
++#define smp_mbdd()	__asm__ __volatile__("": : :"memory")
+                   	                           ^
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#486: FILE: include/asm-ppc/system.h:52:
++#define smp_mbdd()	__asm__ __volatile__("": : :"memory")
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxW)
+#487: FILE: include/asm-ppc/system.h:53:
++#define smp_wmbdd()	__asm__ __volatile__("": : :"memory")
+                    	                       ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:WxV)
+#487: FILE: include/asm-ppc/system.h:53:
++#define smp_wmbdd()	__asm__ __volatile__("": : :"memory")
+                    	                           ^
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#487: FILE: include/asm-ppc/system.h:53:
++#define smp_wmbdd()	__asm__ __volatile__("": : :"memory")
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#498: FILE: include/asm-s390/system.h:121:
++#define mbdd()	mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#499: FILE: include/asm-s390/system.h:122:
++#define wmbdd()	wmb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#503: FILE: include/asm-s390/system.h:126:
++#define smp_mbdd()     mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#504: FILE: include/asm-s390/system.h:127:
++#define smp_wmbdd()    wmb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#515: FILE: include/asm-s390x/system.h:134:
++#define mbdd()	mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#516: FILE: include/asm-s390x/system.h:135:
++#define wmbdd()	wmb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#520: FILE: include/asm-s390x/system.h:139:
++#define smp_mbdd()     mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#521: FILE: include/asm-s390x/system.h:140:
++#define smp_wmbdd()    wmb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#532: FILE: include/asm-sh/system.h:92:
++#define mbdd()	mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#533: FILE: include/asm-sh/system.h:93:
++#define wmbdd()	wmb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#539: FILE: include/asm-sh/system.h:99:
++#define smp_mbdd()	mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#540: FILE: include/asm-sh/system.h:100:
++#define smp_wmbdd()	wmb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#557: FILE: include/asm-sparc/system.h:281:
++#define mbdd()	mb()
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#558: FILE: include/asm-sparc/system.h:282:
++#define wmbdd()	wmb()
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#564: FILE: include/asm-sparc/system.h:288:
++#define smp_mbdd()	__asm__ __volatile__("":::"memory");
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#564: FILE: include/asm-sparc/system.h:288:
++#define smp_mbdd()	__asm__ __volatile__("":::"memory");
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#565: FILE: include/asm-sparc/system.h:289:
++#define smp_wmbdd()	__asm__ __volatile__("":::"memory");
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#565: FILE: include/asm-sparc/system.h:289:
++#define smp_wmbdd()	__asm__ __volatile__("":::"memory");
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#591: FILE: include/asm-sparc64/system.h:122:
++#define smp_mbdd()	__asm__ __volatile__("":::"memory");
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#591: FILE: include/asm-sparc64/system.h:122:
++#define smp_mbdd()	__asm__ __volatile__("":::"memory");
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#592: FILE: include/asm-sparc64/system.h:123:
++#define smp_wmbdd()	__asm__ __volatile__("":::"memory");
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#592: FILE: include/asm-sparc64/system.h:123:
++#define smp_wmbdd()	__asm__ __volatile__("":::"memory");
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000508356.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 14 errors, 45 warnings, 1 checks, 471 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000508356.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

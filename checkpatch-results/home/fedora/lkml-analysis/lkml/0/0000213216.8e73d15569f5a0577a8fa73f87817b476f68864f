@@ -1,0 +1,213 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#71: 
+diff -Nrup linux-2.6.11-rc1/include/linux/sched.h linux-2.6.11-rc1-uiso2/include/linux/sched.h
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#83: FILE: include/linux/sched.h:138:
++extern void account_iso_ticks(struct task_struct *p);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'policy' - possible side-effects?
+#85: FILE: include/linux/sched.h:140:
++#define SCHED_RANGE(policy)	((policy) == SCHED_NORMAL || \
++				(policy) == SCHED_FIFO || \
++				(policy) == SCHED_RR || \
++				(policy) == SCHED_ISO)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'policy' - possible side-effects?
+#90: FILE: include/linux/sched.h:145:
++#define SCHED_RT(policy)	((policy) == SCHED_FIFO || \
++				(policy) == SCHED_RR || \
++				(policy) == SCHED_ISO)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'policy' - possible side-effects?
+#94: FILE: include/linux/sched.h:149:
++#define SCHED_POSIX_RT(policy)	((policy) == SCHED_FIFO || \
++				(policy) == SCHED_RR)
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#121: FILE: include/linux/sched.h:384:
++#define posix_rt_task(p)       ^I(unlikely((p)->policy == SCHED_FIFO || \$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#121: FILE: include/linux/sched.h:384:
++#define posix_rt_task(p)       	(unlikely((p)->policy == SCHED_FIFO || \
++					  (p)->policy == SCHED_RR))
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#134: FILE: include/linux/sysctl.h:138:
++	KERN_ISO_CPU=68,        /* int: cpu% allowed by SCHED_ISO class */
+ 	            ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#135: FILE: include/linux/sysctl.h:139:
++	KERN_ISO_TIMEOUT=69,    /* int: centisecs after SCHED_ISO is throttled */
+ 	                ^
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#136: FILE: include/linux/sysctl.h:140:
++	KERN_ISO_THROTTLE_COUNT=70, /* int: no. of throttled SCHED_ISO ticks */
+ 	                       ^
+
+ERROR:GLOBAL_INITIALISERS: do not initialise globals to 0
+#160: FILE: kernel/sched.c:174:
++int iso_throttle_count = 0; /* No. of throttled SCHED_ISO ticks */
+
+Global variables should not be initialized explicitly to
+0 (or NULL, false, etc.).  Your compiler (or rather your
+loader, which is responsible for zeroing out the relevant
+sections) automatically does it for you.
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#180: FILE: kernel/sched.c:306:
++^Iif (unlikely(rq->iso_throttle)) { $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#233: FILE: kernel/sched.c:2343:
++		if (!rq->iso_throttle) {
++			rq->iso_ticks += (100 - iso_cpu);
++		}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#249: FILE: kernel/sched.c:2359:
++
++}
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'idx == ISO_PRIO'
+#320: FILE: kernel/sched.c:2845:
++	if (unlikely(rq->iso_throttle && (idx == ISO_PRIO))) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'param->sched_priority == 0'
+#365: FILE: kernel/sched.c:3341:
++	if ((!SCHED_POSIX_RT(policy)) != (param->sched_priority == 0))
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#423: FILE: kernel/sched.c:4283:
++	__setscheduler(p, SCHED_FIFO, MAX_RT_PRIO-2);
+ 	                                         ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#432: FILE: kernel/sched.c:4367:
++		__setscheduler(p, SCHED_FIFO, MAX_RT_PRIO-2);
+ 		                                         ^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#444: FILE: kernel/sysctl.c:223:
++/* Constants for minimum and maximum testing in vm_table.
++   We use these as one-element integer vectors. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#444: FILE: kernel/sysctl.c:223:
++   We use these as one-element integer vectors. */
+
+WARNING:DUPLICATED_SYSCTL_CONST: duplicated sysctl range checking value 'zero', consider using the shared one in include/linux/sysctl.h
+#463: FILE: kernel/sysctl.c:649:
++		.extra1		= &zero,
+
+Commit d91bff3011cf ("proc/sysctl: add shared variables for range
+check") added some shared const variables to be used instead of a local
+copy in each source file.
+
+Consider replacing the sysctl range checking value with the shared
+one in include/linux/sysctl.h.  The following conversion scheme may
+be used::
+
+  &zero     ->  SYSCTL_ZERO
+  &one      ->  SYSCTL_ONE
+  &int_max  ->  SYSCTL_INT_MAX
+
+See:
+
+  1. https://lore.kernel.org/lkml/20190430180111.10688-1-mcroce@redhat.com/
+  2. https://lore.kernel.org/lkml/20190531131422.14970-1-mcroce@redhat.com/
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000213216.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 5 errors, 6 warnings, 10 checks, 391 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000213216.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

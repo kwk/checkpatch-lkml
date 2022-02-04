@@ -1,0 +1,233 @@
+WARNING:REPEATED_WORD: Possible repeated word: 'in'
+#40: 
+- removed the modulo (%) in in the cross-node balancing trigger
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#151: FILE: include/linux/sched.h:447:
++extern void sched_balance_exec(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#152: FILE: include/linux/sched.h:448:
++extern void node_nr_running_init(void);
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#204: FILE: kernel/sched.c:190:
++static atomic_t node_nr_running[MAX_NUMNODES] ____cacheline_maxaligned_in_smp =
++	{[0 ...MAX_NUMNODES-1] = ATOMIC_INIT(0)};
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#204: FILE: kernel/sched.c:190:
++	{[0 ...MAX_NUMNODES-1] = ATOMIC_INIT(0)};
+ 	                   ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:NR_CPUS: usage of NR_CPUS is often wrong - consider using cpu_possible(), num_possible_cpus(), for_each_possible_cpu(), etc
+#227: FILE: kernel/sched.c:213:
++	for (i = 0; i < NR_CPUS; i++)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#232: FILE: kernel/sched.c:218:
++# define nr_running_inc(rq)    do { (rq)->nr_running++; } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#233: FILE: kernel/sched.c:219:
++# define nr_running_dec(rq)    do { (rq)->nr_running--; } while (0)
+
+WARNING:NR_CPUS: usage of NR_CPUS is often wrong - consider using cpu_possible(), num_possible_cpus(), for_each_possible_cpu(), etc
+#307: FILE: kernel/sched.c:714:
++	for (i = 0; i < NR_CPUS; ++i) {
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#332: FILE: kernel/sched.c:739:
++^I$
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#333: FILE: kernel/sched.c:740:
++	this_load = maxload = atomic_read(&node_nr_running[this_node]);
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#338: FILE: kernel/sched.c:745:
++		if (load > maxload && (100*load > NODE_THRESHOLD*this_load)) {
+ 		                          ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#338: FILE: kernel/sched.c:745:
++		if (load > maxload && (100*load > NODE_THRESHOLD*this_load)) {
+ 		                                                ^
+
+WARNING:LONG_LINE: line length of 128 exceeds 100 columns
+#358: FILE: kernel/sched.c:784:
++static inline runqueue_t *find_busiest_queue(runqueue_t *this_rq, int this_cpu, int idle, int *imbalance, unsigned long cpumask)
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'this_rq->nr_balanced'
+#404: FILE: kernel/sched.c:903:
++	if (++(this_rq->nr_balanced) == NODE_BALANCE_RATE) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#406: FILE: kernel/sched.c:905:
++		int node = find_busiest_node(this_node);
++		this_rq->nr_balanced = 0;
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#412: FILE: kernel/sched.c:911:
++	busiest = find_busiest_queue(this_rq, this_cpu, idle, &imbalance,
++				    cpumask);
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#503: FILE: kernel/sched.c:193:
++static int internode_lb[MAX_NUMNODES] ____cacheline_maxaligned_in_smp =
++	{[0 ...MAX_NUMNODES-1] = NODE_BALANCE_MAX};
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#503: FILE: kernel/sched.c:193:
++	{[0 ...MAX_NUMNODES-1] = NODE_BALANCE_MAX};
+ 	                   ^
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#512: FILE: kernel/sched.c:740:
++ * Find the busiest node. All previous node loads contribute with a $
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#523: FILE: kernel/sched.c:750:
++	this_load = maxload = (this_rq()->prev_node_load[this_node] >> 1)
+
+CHECK:BRACES: Unbalanced braces around else statement
+#544: FILE: kernel/sched.c:770:
++	} else
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#548: FILE: kernel/sched.c:774:
++  ^I^Inode = -1;$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#548: FILE: kernel/sched.c:774:
++  ^I^Inode = -1;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#548: FILE: kernel/sched.c:774:
++  ^I^Inode = -1;$
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'this_rq->nr_balanced'
+#568: FILE: kernel/sched.c:937:
++	if (++(this_rq->nr_balanced) == internode_lb[this_node]) {
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#577: FILE: kernel/sched.c:1002:
++	if (!idle && ((--imbalance)/remote_steal_factor(busiest))) {
+ 	                           ^
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000399524.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 5 errors, 9 warnings, 13 checks, 433 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000399524.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

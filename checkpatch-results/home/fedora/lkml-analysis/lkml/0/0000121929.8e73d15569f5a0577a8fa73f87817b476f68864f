@@ -1,0 +1,951 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#37: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:3884:
++static inline void *ipath_get_egrbuf(const ipath_type t, uint32_t bufnum,
++					 int err)
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'devdata[t].ipath_pd[port]->port_rcvegrbufs_perchunk'
+#64: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:3911:
++				 devdata[t].ipath_pd[port]->
++				 port_rcvegrbufs_perchunk)
+
+A single dereferencing identifier spanned on multiple lines like::
+
+  struct_identifier->member[index].
+  member = <foo>;
+
+is generally hard to follow. It can easily lead to typos and so makes
+the code vulnerable to bugs.
+
+If fixing the multiple line dereferencing leads to an 80 column
+violation, then either rewrite the code in a more simple way or if the
+starting part of the dereferencing identifier is the same and used at
+multiple places then store it in a temporary variable, and use that
+temporary variable only at all the places. For example, if there are
+two dereferencing identifiers::
+
+  member1->member2->member3.foo1;
+  member1->member2->member3.foo2;
+
+then store the member1->member2->member3 part in a temporary variable.
+It not only helps to avoid the 80 column violation but also reduces
+the program size by removing the unnecessary dereferences.
+
+But if none of the above methods work then ignore the 80 column
+violation because it is much easier to read a dereferencing identifier
+on a single line.
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#72: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:3919:
++			  uint64_t * rc, void *ebuf)
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#72: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:3919:
++			  uint64_t * rc, void *ebuf)
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#76: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:3923:
++	uint8_t pad, *bthbytes;
+
+CHECK:SPACING: No space is necessary after a cast
+#80: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:3927:
++	bthbytes = (uint8_t *)((struct ips_message_header_typ *) &rc[1])->bth;
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#83: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:3930:
++	elen = tlen - (IPATH_SMA_HDRSZ + pad + (uint32_t) sizeof(uint32_t));
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#105: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:3952:
++	slen = ipath_sma_data[sindex].len = elen + IPATH_SMA_HDRSZ;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#116: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:3963:
++			    uint32_t tlen, struct ether_header_typ * hdr)
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#116: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:3963:
++			    uint32_t tlen, struct ether_header_typ * hdr)
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#118: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:3965:
++	uint32_t elen;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#119: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:3966:
++	uint8_t pad, *bthbytes;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#125: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:3972:
++	uint64_t __iomem *egrbase;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#126: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:3973:
++	uint64_t lenvalid;	/* in words */
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#133: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:3980:
++		if (!(nskb = dev_alloc_skb(dd->ipath_ibmaxlen + 4))) {
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:SPACING: No space is necessary after a cast
+#139: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:3986:
++		bthbytes = (uint8_t *) hdr->bth;
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#172: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4019:
++
++}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#177: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4024:
++	uint64_t *rc;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#180: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4027:
++	const uint32_t rsize = dd->ipath_rcvhdrentsize;	/* words */
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#181: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4028:
++	const uint32_t maxcnt = dd->ipath_rcvhdrcnt * rsize;	/* in words */
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#182: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4029:
++	uint32_t etail = -1, l, hdrqtail, sma_this_time = 0;
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#184: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4031:
++	uint32_t eflags, i, etype, tlen, pkttot=0;
+ 	                                       ^
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#184: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4031:
++	uint32_t eflags, i, etype, tlen, pkttot=0;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#185: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4032:
++	static uint64_t totcalls; /* stats, may eventually remove */
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#211: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4058:
++		uint32_t qp;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#212: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4059:
++		uint8_t *bthbytes;
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#214: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4061:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#215: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4062:
++		rc = (uint64_t *) (dd->ipath_pd[0]->port_rcvhdrq + (l << 2));
+
+CHECK:SPACING: No space is necessary after a cast
+#216: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4063:
++		hdr = (struct ips_message_header_typ *) & rc[1];
+
+ERROR:SPACING: space prohibited after that '&' (ctx:WxW)
+#216: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4063:
++		hdr = (struct ips_message_header_typ *) & rc[1];
+ 		                                        ^
+
+CHECK:SPACING: No space is necessary after a cast
+#222: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4069:
++		bthbytes = (uint8_t *) hdr->bth;
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#224: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4071:
++		eflags = ips_get_hdr_err_flags((uint32_t*)rc);
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#225: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4072:
++		etype = ips_get_rcv_type((uint32_t*)rc);
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#226: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4073:
++		tlen = ips_get_length_in_bytes((uint32_t*)rc);	/* total length */
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#236: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4083:
++			etail = ips_get_index((uint32_t*)rc);
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#238: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4085:
++			if (tlen > sizeof(*hdr)
++			    || etype == RCVHQ_RCV_TYPE_NON_KD) {
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#249: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4096:
++		if (etype != RCVHQ_RCV_TYPE_NON_KD
++		    && etype != RCVHQ_RCV_TYPE_ERROR
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#250: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4097:
++		    && etype != RCVHQ_RCV_TYPE_ERROR
++		    && ips_get_ipath_ver(hdr->iph.ver_port_tid_offset) !=
+
+WARNING:SIZEOF_PARENTHESIS: sizeof emsg should be sizeof(emsg)
+#258: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4105:
++			get_rhf_errstring(eflags, emsg, sizeof emsg);
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#262: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4109:
++			     ips_get_index((uint32_t*)rc), emsg);
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#305: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4152:
++		} else if (eflags &
++			   (INFINIPATH_RHF_H_TIDERR | INFINIPATH_RHF_H_IHDRERR))
++		{
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#313: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4160:
++			uint8_t opcode;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#314: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4161:
++			uint8_t opcode;
++			if (ebuf) {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#314: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4161:
++			if (ebuf) {
+[...]
++			} else
+[...]
+
+CHECK:SPACING: No space is necessary after a cast
+#315: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4162:
++				bthbytes = (uint8_t *) ebuf;
+
+CHECK:BRACES: Unbalanced braces around else statement
+#317: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4164:
++			} else
+
+WARNING:SIZEOF_PARENTHESIS: sizeof emsg should be sizeof(emsg)
+#319: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4166:
++			get_rhf_errstring(eflags, emsg, sizeof emsg);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#378: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4225:
++	const unsigned piobregs = (unsigned)devdata[t].ipath_pioavregs;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#378: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4225:
++	const unsigned piobregs = (unsigned)devdata[t].ipath_pioavregs;
+
+WARNING:TYPO_SPELLING: 'atomicly' may be misspelled - perhaps 'atomically'?
+#386: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4233:
++	 * We would like to do this atomicly, to avoid spinlocks in the
+ 	                            ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#405: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4252:
++		_IPATH_PDBG("Refill avail, dma0=%llx shad0=%llx, "
++			    "d1=%llx s1=%llx, d2=%llx s2=%llx, d3=%llx s3=%llx\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#416: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4263:
++			_IPATH_PDBG("2nd group, dma4=%llx shad4=%llx, "
++				    "d5=%llx s5=%llx, d6=%llx s6=%llx, d7=%llx s7=%llx\n",
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#428: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4275:
++		uint64_t pchbusy, pchg, piov, pnew;
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'devdata[t].ipath_pioavailshadow[i]'
+#433: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4280:
++		    _IPATH_ALL_CHECKBITS & ~(devdata[t].
++					     ipath_pioavailshadow[i] ^ piov);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#452: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4299:
++	if (copy_from_user(&kinfo, uinfo, sizeof kinfo))
+[...]
++	else {
+[...]
+
+WARNING:SIZEOF_PARENTHESIS: sizeof kinfo should be sizeof(kinfo)
+#452: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4299:
++	if (copy_from_user(&kinfo, uinfo, sizeof kinfo))
+
+CHECK:BRACES: Unbalanced braces around else statement
+#454: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4301:
++	else {
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#469: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4316:
++				if ((ret =
+
+WARNING:LONG_LINE_STRING: line length of 108 exceeds 100 columns
+#490: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4337:
++					    ("eager skip 0x%x invalid, must be word multiple; using 0x%x\n",
+
+A string starts before but extends beyond the maximum line length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:SPACING: No space is necessary after a cast
+#511: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4358:
++				      (uint64_t __user *) kinfo.spu_rcvhdraddr,
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#513: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4360:
++				uint64_t physaddr, uaddr, off, atmp;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#515: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4362:
++				struct page *pagep;
++				off = offset_in_page(kinfo.spu_rcvhdraddr);
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'kinfo.spu_rcvhdraddr'
+#518: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4365:
++				    PAGE_MASK & (unsigned long)kinfo.
++				    spu_rcvhdraddr;
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#519: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4366:
++				if ((ret = ipath_get_upages_nocopy(uaddr, &pagep))) {
+
+WARNING:LONG_LINE_STRING: line length of 113 exceeds 100 columns
+#521: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4368:
++					    ("Failed to lookup and lock address %llx for rcvhdrtail: errno %d\n",
+
+WARNING:LONG_LINE_STRING: line length of 102 exceeds 100 columns
+#533: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4380:
++				    ("port %d user addr %llx hdrtailaddr, %llx physical (off=%llx)\n",
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#574: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4421:
++			if (!(ret = ipath_create_rcvhdrq(pd)))
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#577: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4424:
++				uint64_t head;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#578: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4425:
++				uint32_t head32;
+
+CHECK:SPACING: No space is necessary after a cast
+#594: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4441:
++				head = (uint64_t) head32;
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'dd->ipath_rcvctrl'
+#626: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4473:
++							dd->
++							ipath_rcvctrl &
+
+WARNING:SIZEOF_PARENTHESIS: sizeof kbase should be sizeof(kbase)
+#647: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4494:
++	memset(&kbase, 0, sizeof kbase);
+
+WARNING:LONG_LINE: line length of 142 exceeds 100 columns
+#652: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4499:
++	kbase.spi_rcv_egrbuftotlen = pd->port_rcvegrbuf_chunks * PAGE_SIZE * (1 << pd->port_rcvegrbuf_order);	/* have to mmap whole thing */
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:REPEATED_WORD: Possible repeated word: 'are'
+#659: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4506:
++	 * are are configured and present
+
+CHECK:SPACING: No space is necessary after a cast
+#682: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4529:
++	kbase.spi_rcvhdr_base = (uint64_t) pd->port_rcvhdrq_phys;
+
+CHECK:SPACING: No space is necessary after a cast
+#683: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4530:
++	kbase.spi_rcv_egrbufs = (uint64_t) pd->port_rcvegr_phys;
+
+CHECK:SPACING: No space is necessary after a cast
+#684: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4531:
++	kbase.spi_pioavailaddr = (uint64_t) dd->ipath_pioavailregs_phys;
+
+CHECK:SPACING: No space is necessary after a cast
+#685: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4532:
++	kbase.spi_status = (uint64_t) kbase.spi_pioavailaddr +
+
+CHECK:SPACING: No space is necessary after a cast
+#687: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4534:
++	kbase.spi_piobufbase = (uint64_t) pd->port_piobufs;
+
+WARNING:SIZEOF_PARENTHESIS: sizeof kbase should be sizeof(kbase)
+#702: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4549:
++	if (copy_to_user(ubase, &kbase, sizeof kbase))
+
+ERROR:POINTER_LOCATION: "foo* bar" should be "foo *bar"
+#723: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4570:
++static int ipath_wr_eeprom(struct ipath_portdata* pd,
+
+WARNING:SIZEOF_PARENTHESIS: sizeof kreq should be sizeof(kreq)
+#732: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4579:
++	if (copy_from_user(&kreq, req, sizeof kreq))
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#741: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4588:
++	if (!(buf = vmalloc(kreq.len))) {
+
+CHECK:SPACING: No space is necessary after a cast
+#748: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4595:
++	if (copy_from_user(buf, (void __user *) kreq.addr, kreq.len)) {
+
+WARNING:SIZEOF_PARENTHESIS: sizeof kreq should be sizeof(kreq)
+#773: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4620:
++	if (copy_from_user(&kreq, req, sizeof kreq))
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#782: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4629:
++	if (!(buf = vmalloc(kreq.len))) {
+
+CHECK:SPACING: No space is necessary after a cast
+#795: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4642:
++	if (copy_to_user((void __user *) kreq.addr, buf, kreq.len))
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#813: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4660:
++static int ipath_wait_intr(struct ipath_portdata * pd, uint32_t flag)
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#817: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4664:
++	uint32_t im = 0;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#818: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4665:
++	uint32_t head, tail, timeo = 0, wflag = 0;
+
+WARNING:TYPO_SPELLING: 'atomicly' may be misspelled - perhaps 'atomically'?
+#860: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4707:
++		 * it atomicly
+ 		      ^^^^^^^^
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#924: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4771:
++static int ipath_tid_update(struct ipath_portdata * pd,
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#928: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4775:
++	uint32_t tid, porttid, cnt, i, tidcnt;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u16' over 'uint16_t'
+#930: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4777:
++	uint16_t *tidlist;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#932: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4779:
++	uint64_t vaddr, physaddr, lenvalid;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#933: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4780:
++	uint64_t __iomem *tidbase;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#934: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4781:
++	uint64_t tidmap[8];
+
+WARNING:SIZEOF_PARENTHESIS: sizeof tu should be sizeof(tu)
+#942: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4789:
++	if (copy_from_user(&tu, tidu, sizeof tu)) {
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#947: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4794:
++	if (!(cnt = tu.tidcnt)) {
+
+CHECK:SPACING: No space is necessary after a cast
+#962: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4809:
++	tidlist = (uint16_t *) (&pagep[cnt]);
+
+CHECK:SPACING: No space is necessary after a cast
+#970: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4817:
++		(((char __iomem *) devdata[pd->port_unit].ipath_kregbase) +
+
+CHECK:SPACING: No space is necessary after a cast
+#978: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4825:
++	if (!access_ok(VERIFY_WRITE, (void __user *) vaddr, cnt * PAGE_SIZE)) {
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#984: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4831:
++	if ((ret = ipath_get_upages((unsigned long)vaddr, cnt, pagep))) {
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#1051: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4898:
++		uint32_t limit;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#1052: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4899:
++		uint64_t tidval;
+
+WARNING:INDENTED_LABEL: labels should not be indented
+#1060: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4907:
++	      cleanup:
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1065: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4912:
++		if ((limit = sizeof(tidmap) * BITS_PER_BYTE) > tidcnt)
+
+CHECK:SPACING: No space is necessary after a cast
+#1096: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4943:
++		if ((r = copy_to_user((void __user *) tu.tidlist, tidlist,
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1096: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4943:
++		int r;
++		if ((r = copy_to_user((void __user *) tu.tidlist, tidlist,
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1096: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4943:
++		if ((r = copy_to_user((void __user *) tu.tidlist, tidlist,
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1099: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4946:
++			_IPATH_DBG("Failed to copy out %d TIDs (%lx bytes) "
++				   "to %llx (ret %x)\n", cnt,
+
+CHECK:SPACING: No space is necessary after a cast
+#1104: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4951:
++		if (copy_to_user((void __user *) tu.tidmap, tidmap,
+
+WARNING:SIZEOF_PARENTHESIS: sizeof tidmap should be sizeof(tidmap)
+#1105: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4952:
++				 sizeof tidmap)) {
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1119: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4966:
++		_IPATH_DBG("Failed to map %u TID pages, failing with %d, "
++			   "tidu %p\n", tu.tidcnt, -ret, tidu);
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1135: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4982:
++static int ipath_tid_free(struct ipath_portdata * pd,
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#1139: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4986:
++	uint32_t tid, porttid, cnt, limit, tidcnt;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#1142: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4989:
++	uint64_t __iomem *tidbase;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#1143: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4990:
++	uint64_t tidmap[8];
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#1144: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4991:
++	uint64_t tidval;
+
+WARNING:SIZEOF_PARENTHESIS: sizeof tu should be sizeof(tu)
+#1152: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:4999:
++	if (copy_from_user(&tu, tidu, sizeof tu)) {
+
+CHECK:SPACING: No space is necessary after a cast
+#1157: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5004:
++	if (copy_from_user(tidmap, (void __user *) tu.tidmap, sizeof tidmap)) {
+
+WARNING:SIZEOF_PARENTHESIS: sizeof tidmap should be sizeof(tidmap)
+#1157: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5004:
++	if (copy_from_user(tidmap, (void __user *) tu.tidmap, sizeof tidmap)) {
+
+CHECK:SPACING: No space is necessary after a cast
+#1165: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5012:
++		((char __iomem *) (devdata[pd->port_unit].ipath_kregbase) +
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1170: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5017:
++	if ((limit = sizeof(tidmap) * BITS_PER_BYTE) > tidcnt)
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1193: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5040:
++		if (dd->ipath_pageshadow[porttid + tid]) {
+[...]
++		} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1199: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5046:
++		} else
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1213: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5060:
++int ipath_setrcvhdrsize(const ipath_type mdev, unsigned rhdrsize)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1216: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5063:
++	int ret = 0;
++	if (devdata[mdev].ipath_flags & IPATH_RCVHDRSZ_SET) {
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1222: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5069:
++		} else
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1246: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5093:
++
++
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1255: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5102:
++	unsigned piobcnt, iter;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#1258: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5105:
++	uint64_t *shadow = dd->ipath_pioavailshadow;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#1259: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5106:
++	uint32_t __iomem *buf;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1261: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5108:
++	piobcnt = (unsigned)devdata[mdev].ipath_piobcnt;
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1264: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5111:
++	if (dd->ipath_upd_pio_shadow) {
+[...]
++	else
+[...]
+
+ERROR:ELSE_AFTER_BRACE: else should follow close brace '}'
+#1274: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5121:
++	}
++	else
+
+`else {` should follow the closing block `}` on the same line.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:LONG_LINE_STRING: line length of 123 exceeds 100 columns
+#1317: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5164:
++			    ("%u pio sends with no bufavail; dmacopy: %llx %llx %llx %llx; shadow:  %llx %llx %llx %llx\n",
+
+WARNING:LONG_LINE_STRING: line length of 110 exceeds 100 columns
+#1331: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5178:
++				    ("2nd group: dmacopy: %llx %llx %llx %llx; shadow: %llx %llx %llx %llx\n",
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1375: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5222:
++	unsigned piobcnt;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#1376: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5223:
++	uint64_t *shadow = devdata[mdev].ipath_pioavailshadow;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1378: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5225:
++	piobcnt = (unsigned)devdata[mdev].ipath_piobcnt;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#1402: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5249:
++	uint32_t __iomem *piobuf;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#1403: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5250:
++	uint32_t plen = 0, clen, pbufn;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#1407: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5254:
++	uint32_t *tmpbuf = NULL;
+
+WARNING:SIZEOF_PARENTHESIS: sizeof kpkt should be sizeof(kpkt)
+#1409: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5256:
++	if (unlikely((copy_from_user(&kpkt, upkt, sizeof kpkt))))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1435: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5282:
++		_IPATH_DBG("Pkt len 0x%x > ibmaxlen %x\n",
++			plen - 4, devdata[t].ipath_ibmaxlen);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1439: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5286:
++	if (!(tmpbuf = vmalloc(plen))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1451: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5298:
++		_IPATH_SMADBG("No PIO buffers available unit %u %u times\n",
++			t, devdata[t].ipath_nosma_bufs);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1455: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5302:
++		_IPATH_SMADBG(
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 12)
+#1461: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5308:
++	if ((devdata[t].ipath_lastibcstat & 0x11) != 0x11 &&
+[...]
++	    uint64_t val;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1462: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5309:
++	if ((devdata[t].ipath_lastibcstat & 0x11) != 0x11 &&
++		(devdata[t].ipath_lastibcstat & 0x21) != 0x21) {
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1467: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5314:
++	     * (that is, that lastibcstat * isn't "stale") */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:TABSTOP: Statements should start on a tabstop
+#1468: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5315:
++	    uint64_t val;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#1468: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5315:
++	    uint64_t val;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1469: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5316:
++	    uint64_t val;
++	    val = ipath_kget_kreg64(t, kr_ibcstatus);
+
+WARNING:TABSTOP: Statements should start on a tabstop
+#1470: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5317:
++	    if ((val & 0x11) != 0x11 && (val & 0x21) != 0x21) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1472: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5319:
++		_IPATH_SMADBG("Invalid Link state 0x%llx unit %u for send, try INIT\n",
++			val, t);
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 20)
+#1475: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5322:
++		if ((val & 0x11) != 0x11 && (val & 0x21) != 0x21)
++		    _IPATH_SMADBG("Link state still not OK unit %u (0x%llx) after INIT\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1477: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5324:
++		    _IPATH_SMADBG("Link state still not OK unit %u (0x%llx) after INIT\n",
++				t, val);
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 20)
+#1478: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5325:
++		else
++		    _IPATH_SMADBG("Link state OK unit %u (0x%llx) after INIT\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1480: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5327:
++		    _IPATH_SMADBG("Link state OK unit %u (0x%llx) after INIT\n",
++				t, val);
+
+WARNING:TABSTOP: Statements should start on a tabstop
+#1481: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5328:
++	    }
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1487: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5334:
++		_IPATH_SMADBG("unit %u 0x%x+1w pio%d, (scnt %d)\n",
++			t, plen - 1, pbufn, kpkt.sps_cnt);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1489: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5336:
++
++
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1491: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5338:
++	 * or WC buffer can be written out of order */
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#1493: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5340:
++	mb();
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#1495: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5342:
++	for (clen=i=0; i < kpkt.sps_cnt; i++) {
+ 	         ^
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#1495: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5342:
++	for (clen=i=0; i < kpkt.sps_cnt; i++) {
+ 	           ^
+
+CHECK:SPACING: No space is necessary after a cast
+#1497: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5344:
++					    (void __user *) iov->iov_base,
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1505: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5352:
++	 * flush again, so packet is sent. */
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1506: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5353:
++	memcpy_toio32(piobuf+2, tmpbuf, clen-1);
+ 	                    ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#1506: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5353:
++	memcpy_toio32(piobuf+2, tmpbuf, clen-1);
+ 	                                    ^
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#1507: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5354:
++	mb();
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#1508: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5355:
++	writel(tmpbuf[clen-1], piobuf+clen+1);
+ 	                  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1508: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5355:
++	writel(tmpbuf[clen-1], piobuf+clen+1);
+ 	                             ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1508: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5355:
++	writel(tmpbuf[clen-1], piobuf+clen+1);
+ 	                                  ^
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#1509: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5356:
++	mb();
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#1516: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5363:
++		uint32_t sendctrl;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1517: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5364:
++		uint32_t sendctrl;
++		sendctrl = devdata[t].ipath_sendctrl | INFINIPATH_S_DISARM |
+
+WARNING:TYPO_SPELLING: 'implemention' may be misspelled - perhaps 'implementation'?
+#1530: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5377:
++ * implemention of the ioctl to get the counter values from the chip
+    ^^^^^^^^^^^^
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#1540: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5387:
++	uint64_t val;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#1541: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5388:
++	uint64_t __user *ucreg;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u16' over 'uint16_t'
+#1542: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5389:
++	uint16_t vcreg;
+
+CHECK:SPACING: No space is necessary after a cast
+#1544: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5391:
++	ucreg = (uint64_t __user *) ucounters;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1554: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5401:
++		ipath_creg creg = vcreg;
++		val = ipath_snap_cntr(t, creg);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1555: FILE: drivers/infiniband/hw/ipath/ipath_driver.c:5402:
++		if ((ret = copy_to_user(ucreg, &val, sizeof(val)))) {
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000121929.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 30 errors, 58 warnings, 99 checks, 1533 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000121929.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,634 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#28: 
+I tweaked a bit.  I deleted accessing ‘movsl_mask’ every time, which 
+
+CHECK:INVALID_UTF8: Invalid UTF-8, patch and commit message should be encoded in UTF-8
+#28: 
+I tweaked a bit.  I deleted accessing ‘movsl_mask’ every time, which 
+                                      ^
+
+CHECK:INVALID_UTF8: Invalid UTF-8, patch and commit message should be encoded in UTF-8
+#30: 
+If anybody finds a better copy routine, don’t have to touch uaccess.h.
+                                           ^
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#39: FILE: include/asm-i386/uaccess-intel.h:1:
++#ifndef __i386_UACCESS_INTEL_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#48: FILE: include/asm-i386/uaccess-intel.h:10:
++static inline int $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#57: FILE: include/asm-i386/uaccess-intel.h:19:
++#define __copy_user_rep_movsl(to,from,size)				\
+                                 ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#57: FILE: include/asm-i386/uaccess-intel.h:19:
++#define __copy_user_rep_movsl(to,from,size)				\
+                                      ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'size' - possible side-effects?
+#57: FILE: include/asm-i386/uaccess-intel.h:19:
++#define __copy_user_rep_movsl(to,from,size)				\
++do {									\
++	int __d0, __d1, __d2;						\
++	__asm__ __volatile__(						\
++		"	cmp  $7,%0\n"					\
++		"	jbe  1f\n"					\
++		"	movl %1,%0\n"					\
++		"	negl %0\n"					\
++		"	andl $7,%0\n"					\
++		"	subl %0,%3\n"					\
++		"4:	rep; movsb\n"					\
++		"	movl %3,%0\n"					\
++		"	shrl $2,%0\n"					\
++		"	andl $3,%3\n"					\
++		"	.align 2,0x90\n"				\
++		"0:	rep; movsl\n"					\
++		"	movl %3,%0\n"					\
++		"1:	rep; movsb\n"					\
++		"2:\n"							\
++		".section .fixup,\"ax\"\n"				\
++		"5:	addl %3,%0\n"					\
++		"	jmp 2b\n"					\
++		"3:	lea 0(%3,%0,4),%0\n"				\
++		"	jmp 2b\n"					\
++		".previous\n"						\
++		".section __ex_table,\"a\"\n"				\
++		"	.align 4\n"					\
++		"	.long 4b,5b\n"					\
++		"	.long 0b,3b\n"					\
++		"	.long 1b,2b\n"					\
++		".previous"						\
++		: "=&c"(size), "=&D" (__d0), "=&S" (__d1), "=r"(__d2)	\
++		: "3"(size), "0"(size), "1"(to), "2"(from)		\
++		: "memory");						\
++} while (0)
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#93: FILE: include/asm-i386/uaccess-intel.h:55:
++#define __copy_user_zeroing_rep_movsl(to,from,size)			\
+                                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#93: FILE: include/asm-i386/uaccess-intel.h:55:
++#define __copy_user_zeroing_rep_movsl(to,from,size)			\
+                                              ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'size' - possible side-effects?
+#93: FILE: include/asm-i386/uaccess-intel.h:55:
++#define __copy_user_zeroing_rep_movsl(to,from,size)			\
++do {									\
++	int __d0, __d1, __d2;						\
++	__asm__ __volatile__(						\
++		"	cmp  $7,%0\n"					\
++		"	jbe  1f\n"					\
++		"	movl %1,%0\n"					\
++		"	negl %0\n"					\
++		"	andl $7,%0\n"					\
++		"	subl %0,%3\n"					\
++		"4:	rep; movsb\n"					\
++		"	movl %3,%0\n"					\
++		"	shrl $2,%0\n"					\
++		"	andl $3,%3\n"					\
++		"	.align 2,0x90\n"				\
++		"0:	rep; movsl\n"					\
++		"	movl %3,%0\n"					\
++		"1:	rep; movsb\n"					\
++		"2:\n"							\
++		".section .fixup,\"ax\"\n"				\
++		"5:	addl %3,%0\n"					\
++		"	jmp 6f\n"					\
++		"3:	lea 0(%3,%0,4),%0\n"				\
++		"6:	pushl %0\n"					\
++		"	pushl %%eax\n"					\
++		"	xorl %%eax,%%eax\n"				\
++		"	rep; stosb\n"					\
++		"	popl %%eax\n"					\
++		"	popl %0\n"					\
++		"	jmp 2b\n"					\
++		".previous\n"						\
++		".section __ex_table,\"a\"\n"				\
++		"	.align 4\n"					\
++		"	.long 4b,5b\n"					\
++		"	.long 0b,3b\n"					\
++		"	.long 1b,6b\n"					\
++		".previous"						\
++		: "=&c"(size), "=&D" (__d0), "=&S" (__d1), "=r"(__d2)	\
++		: "3"(size), "0"(size), "1"(to), "2"(from)		\
++		: "memory");						\
++} while (0)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#135: FILE: include/asm-i386/uaccess-intel.h:97:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#137: FILE: include/asm-i386/uaccess-intel.h:99:
++#define __copy_user_movl(to,from,size)					\
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#137: FILE: include/asm-i386/uaccess-intel.h:99:
++#define __copy_user_movl(to,from,size)					\
+                                 ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'size' - possible side-effects?
+#137: FILE: include/asm-i386/uaccess-intel.h:99:
++#define __copy_user_movl(to,from,size)					\
++do {									\
++	int d0, d1;							\
++	__asm__ __volatile__(						\
++		       "       .align 2,0x90\n" 			\
++		       "0:     movl 32(%4), %%eax\n"			\
++		       "       cmpl $67, %0\n"     			\
++		       "       jbe 1f\n"            			\
++		       "       movl 64(%4), %%eax\n"			\
++		       "       .align 2,0x90\n"     			\
++		       "1:     movl 0(%4), %%eax\n" 			\
++		       "       movl 4(%4), %%edx\n" 			\
++		       "2:     movl %%eax, 0(%3)\n" 			\
++		       "21:    movl %%edx, 4(%3)\n" 			\
++		       "       movl 8(%4), %%eax\n" 			\
++		       "       movl 12(%4),%%edx\n" 			\
++		       "3:     movl %%eax, 8(%3)\n" 			\
++		       "31:    movl %%edx, 12(%3)\n"			\
++		       "       movl 16(%4), %%eax\n"			\
++		       "       movl 20(%4), %%edx\n"			\
++		       "4:     movl %%eax, 16(%3)\n"			\
++		       "41:    movl %%edx, 20(%3)\n"			\
++		       "       movl 24(%4), %%eax\n"			\
++		       "       movl 28(%4), %%edx\n"			\
++		       "10:    movl %%eax, 24(%3)\n"			\
++		       "51:    movl %%edx, 28(%3)\n"			\
++		       "       movl 32(%4), %%eax\n"			\
++		       "       movl 36(%4), %%edx\n"			\
++		       "11:    movl %%eax, 32(%3)\n"			\
++		       "61:    movl %%edx, 36(%3)\n"			\
++		       "       movl 40(%4), %%eax\n"			\
++		       "       movl 44(%4), %%edx\n"			\
++		       "12:    movl %%eax, 40(%3)\n"			\
++		       "71:    movl %%edx, 44(%3)\n"			\
++		       "       movl 48(%4), %%eax\n"			\
++		       "       movl 52(%4), %%edx\n"			\
++		       "13:    movl %%eax, 48(%3)\n"			\
++		       "81:    movl %%edx, 52(%3)\n"			\
++		       "       movl 56(%4), %%eax\n"			\
++		       "       movl 60(%4), %%edx\n"			\
++		       "14:    movl %%eax, 56(%3)\n"			\
++		       "91:    movl %%edx, 60(%3)\n"			\
++		       "       addl $-64, %0\n"     			\
++		       "       addl $64, %4\n"      			\
++		       "       addl $64, %3\n"      			\
++		       "       cmpl $63, %0\n"      			\
++		       "       ja  0b\n"            			\
++		       "5:     movl  %0, %%eax\n"   			\
++		       "       shrl  $2, %0\n"      			\
++		       "       andl  $3, %%eax\n"   			\
++		       "       cld\n"               			\
++		       "6:     rep; movsl\n"        			\
++		       "       movl %%eax, %0\n"    			\
++		       "7:     rep; movsb\n"				\
++		       "8:\n"						\
++		       ".section .fixup,\"ax\"\n"			\
++		       "9:     lea 0(%%eax,%0,4),%0\n"			\
++		       "       jmp 8b\n"				\
++		       ".previous\n"					\
++		       ".section __ex_table,\"a\"\n"			\
++		       "       .align 4\n"				\
++		       "       .long 2b,8b\n"				\
++		       "       .long 21b,8b\n"				\
++		       "       .long 3b,8b\n"				\
++		       "       .long 31b,8b\n"				\
++		       "       .long 4b,8b\n"				\
++		       "       .long 41b,8b\n"				\
++		       "       .long 10b,8b\n"				\
++		       "       .long 51b,8b\n"				\
++		       "       .long 11b,8b\n"				\
++		       "       .long 61b,8b\n"				\
++		       "       .long 12b,8b\n"				\
++		       "       .long 71b,8b\n"				\
++		       "       .long 13b,8b\n"				\
++		       "       .long 81b,8b\n"				\
++		       "       .long 14b,8b\n"				\
++		       "       .long 91b,8b\n"				\
++		       "       .long 6b,9b\n"				\
++		       "       .long 7b,8b\n"				\
++		       ".previous"					\
++		       : "=&c"(size), "=&D" (d0), "=&S" (d1)		\
++		       :  "1"(to), "2"(from), "0"(size)			\
++		       : "eax", "edx", "memory");			\
++} while (0)
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#141: FILE: include/asm-i386/uaccess-intel.h:103:
++^I^I       "       .align 2,0x90\n" ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#143: FILE: include/asm-i386/uaccess-intel.h:105:
++^I^I       "       cmpl $67, %0\n"     ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#144: FILE: include/asm-i386/uaccess-intel.h:106:
++^I^I       "       jbe 1f\n"            ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#146: FILE: include/asm-i386/uaccess-intel.h:108:
++^I^I       "       .align 2,0x90\n"     ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#147: FILE: include/asm-i386/uaccess-intel.h:109:
++^I^I       "1:     movl 0(%4), %%eax\n" ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#148: FILE: include/asm-i386/uaccess-intel.h:110:
++^I^I       "       movl 4(%4), %%edx\n" ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#149: FILE: include/asm-i386/uaccess-intel.h:111:
++^I^I       "2:     movl %%eax, 0(%3)\n" ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#150: FILE: include/asm-i386/uaccess-intel.h:112:
++^I^I       "21:    movl %%edx, 4(%3)\n" ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#151: FILE: include/asm-i386/uaccess-intel.h:113:
++^I^I       "       movl 8(%4), %%eax\n" ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#152: FILE: include/asm-i386/uaccess-intel.h:114:
++^I^I       "       movl 12(%4),%%edx\n" ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#153: FILE: include/asm-i386/uaccess-intel.h:115:
++^I^I       "3:     movl %%eax, 8(%3)\n" ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#179: FILE: include/asm-i386/uaccess-intel.h:141:
++^I^I       "       addl $-64, %0\n"     ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#180: FILE: include/asm-i386/uaccess-intel.h:142:
++^I^I       "       addl $64, %4\n"      ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#181: FILE: include/asm-i386/uaccess-intel.h:143:
++^I^I       "       addl $64, %3\n"      ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#182: FILE: include/asm-i386/uaccess-intel.h:144:
++^I^I       "       cmpl $63, %0\n"      ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#183: FILE: include/asm-i386/uaccess-intel.h:145:
++^I^I       "       ja  0b\n"            ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#184: FILE: include/asm-i386/uaccess-intel.h:146:
++^I^I       "5:     movl  %0, %%eax\n"   ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#185: FILE: include/asm-i386/uaccess-intel.h:147:
++^I^I       "       shrl  $2, %0\n"      ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#186: FILE: include/asm-i386/uaccess-intel.h:148:
++^I^I       "       andl  $3, %%eax\n"   ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#187: FILE: include/asm-i386/uaccess-intel.h:149:
++^I^I       "       cld\n"               ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#188: FILE: include/asm-i386/uaccess-intel.h:150:
++^I^I       "6:     rep; movsl\n"        ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#189: FILE: include/asm-i386/uaccess-intel.h:151:
++^I^I       "       movl %%eax, %0\n"    ^I^I^I\$
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#222: FILE: include/asm-i386/uaccess-intel.h:184:
++#define __copy_user_zeroing_movl(to,from,size)				\
+                                    ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#222: FILE: include/asm-i386/uaccess-intel.h:184:
++#define __copy_user_zeroing_movl(to,from,size)				\
+                                         ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'size' - possible side-effects?
+#222: FILE: include/asm-i386/uaccess-intel.h:184:
++#define __copy_user_zeroing_movl(to,from,size)				\
++do {									\
++	int d0, d1;							\
++	__asm__ __volatile__(						\
++		       "        .align 2,0x90\n"			\
++		       "0:      movl 32(%4), %%eax\n"			\
++		       "        cmpl $67, %0\n"      			\
++		       "        jbe 2f\n"            			\
++		       "1:      movl 64(%4), %%eax\n"			\
++		       "        .align 2,0x90\n"     			\
++		       "2:      movl 0(%4), %%eax\n" 			\
++		       "21:     movl 4(%4), %%edx\n" 			\
++		       "        movl %%eax, 0(%3)\n" 			\
++		       "        movl %%edx, 4(%3)\n" 			\
++		       "3:      movl 8(%4), %%eax\n" 			\
++		       "31:     movl 12(%4),%%edx\n" 			\
++		       "        movl %%eax, 8(%3)\n" 			\
++		       "        movl %%edx, 12(%3)\n"			\
++		       "4:      movl 16(%4), %%eax\n"			\
++		       "41:     movl 20(%4), %%edx\n"			\
++		       "        movl %%eax, 16(%3)\n"			\
++		       "        movl %%edx, 20(%3)\n"			\
++		       "10:     movl 24(%4), %%eax\n"			\
++		       "51:     movl 28(%4), %%edx\n"			\
++		       "        movl %%eax, 24(%3)\n"			\
++		       "        movl %%edx, 28(%3)\n"			\
++		       "11:     movl 32(%4), %%eax\n"			\
++		       "61:     movl 36(%4), %%edx\n"			\
++		       "        movl %%eax, 32(%3)\n"			\
++		       "        movl %%edx, 36(%3)\n"			\
++		       "12:     movl 40(%4), %%eax\n"			\
++		       "71:     movl 44(%4), %%edx\n"			\
++		       "        movl %%eax, 40(%3)\n"			\
++		       "        movl %%edx, 44(%3)\n"			\
++		       "13:     movl 48(%4), %%eax\n"			\
++		       "81:     movl 52(%4), %%edx\n"			\
++		       "        movl %%eax, 48(%3)\n"			\
++		       "        movl %%edx, 52(%3)\n"			\
++		       "14:     movl 56(%4), %%eax\n"			\
++		       "91:     movl 60(%4), %%edx\n"			\
++		       "        movl %%eax, 56(%3)\n"			\
++		       "        movl %%edx, 60(%3)\n"			\
++		       "        addl $-64, %0\n"     			\
++		       "        addl $64, %4\n"      			\
++		       "        addl $64, %3\n"      			\
++		       "        cmpl $63, %0\n"      			\
++		       "        ja  0b\n"            			\
++		       "5:      movl  %0, %%eax\n"   			\
++		       "        shrl  $2, %0\n"      			\
++		       "        andl $3, %%eax\n"    			\
++		       "        cld\n"               			\
++		       "6:      rep; movsl\n"   			\
++		       "        movl %%eax,%0\n"			\
++		       "7:      rep; movsb\n"				\
++		       "8:\n"						\
++		       ".section .fixup,\"ax\"\n"			\
++		       "9:      lea 0(%%eax,%0,4),%0\n"			\
++		       "16:     pushl %0\n"				\
++		       "        pushl %%eax\n"				\
++		       "        xorl %%eax,%%eax\n"			\
++		       "        rep; stosb\n"				\
++		       "        popl %%eax\n"				\
++		       "        popl %0\n"				\
++		       "        jmp 8b\n"				\
++		       ".previous\n"					\
++		       ".section __ex_table,\"a\"\n"			\
++		       "	.align 4\n"	   			\
++		       "	.long 0b,16b\n"	 			\
++		       "	.long 1b,16b\n"				\
++		       "	.long 2b,16b\n"				\
++		       "	.long 21b,16b\n"			\
++		       "	.long 3b,16b\n"				\
++		       "	.long 31b,16b\n"			\
++		       "	.long 4b,16b\n"				\
++		       "	.long 41b,16b\n"			\
++		       "	.long 10b,16b\n"			\
++		       "	.long 51b,16b\n"			\
++		       "	.long 11b,16b\n"			\
++		       "	.long 61b,16b\n"			\
++		       "	.long 12b,16b\n"			\
++		       "	.long 71b,16b\n"			\
++		       "	.long 13b,16b\n"			\
++		       "	.long 81b,16b\n"			\
++		       "	.long 14b,16b\n"			\
++		       "	.long 91b,16b\n"			\
++		       "	.long 6b,9b\n"				\
++		       "        .long 7b,16b\n" 			\
++		       ".previous"					\
++		       : "=&c"(size), "=&D" (d0), "=&S" (d1)		\
++		       :  "1"(to), "2"(from), "0"(size)			\
++		       : "eax", "edx", "memory");			\
++} while (0)
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#228: FILE: include/asm-i386/uaccess-intel.h:190:
++^I^I       "        cmpl $67, %0\n"      ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#229: FILE: include/asm-i386/uaccess-intel.h:191:
++^I^I       "        jbe 2f\n"            ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#231: FILE: include/asm-i386/uaccess-intel.h:193:
++^I^I       "        .align 2,0x90\n"     ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#232: FILE: include/asm-i386/uaccess-intel.h:194:
++^I^I       "2:      movl 0(%4), %%eax\n" ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#233: FILE: include/asm-i386/uaccess-intel.h:195:
++^I^I       "21:     movl 4(%4), %%edx\n" ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#234: FILE: include/asm-i386/uaccess-intel.h:196:
++^I^I       "        movl %%eax, 0(%3)\n" ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#235: FILE: include/asm-i386/uaccess-intel.h:197:
++^I^I       "        movl %%edx, 4(%3)\n" ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#236: FILE: include/asm-i386/uaccess-intel.h:198:
++^I^I       "3:      movl 8(%4), %%eax\n" ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#237: FILE: include/asm-i386/uaccess-intel.h:199:
++^I^I       "31:     movl 12(%4),%%edx\n" ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#238: FILE: include/asm-i386/uaccess-intel.h:200:
++^I^I       "        movl %%eax, 8(%3)\n" ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#264: FILE: include/asm-i386/uaccess-intel.h:226:
++^I^I       "        addl $-64, %0\n"     ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#265: FILE: include/asm-i386/uaccess-intel.h:227:
++^I^I       "        addl $64, %4\n"      ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#266: FILE: include/asm-i386/uaccess-intel.h:228:
++^I^I       "        addl $64, %3\n"      ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#267: FILE: include/asm-i386/uaccess-intel.h:229:
++^I^I       "        cmpl $63, %0\n"      ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#268: FILE: include/asm-i386/uaccess-intel.h:230:
++^I^I       "        ja  0b\n"            ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#269: FILE: include/asm-i386/uaccess-intel.h:231:
++^I^I       "5:      movl  %0, %%eax\n"   ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#270: FILE: include/asm-i386/uaccess-intel.h:232:
++^I^I       "        shrl  $2, %0\n"      ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#271: FILE: include/asm-i386/uaccess-intel.h:233:
++^I^I       "        andl $3, %%eax\n"    ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#272: FILE: include/asm-i386/uaccess-intel.h:234:
++^I^I       "        cld\n"               ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#273: FILE: include/asm-i386/uaccess-intel.h:235:
++^I^I       "6:      rep; movsl\n"   ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#288: FILE: include/asm-i386/uaccess-intel.h:250:
++^I^I       "^I.align 4\n"^I   ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#289: FILE: include/asm-i386/uaccess-intel.h:251:
++^I^I       "^I.long 0b,16b\n"^I ^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#308: FILE: include/asm-i386/uaccess-intel.h:270:
++^I^I       "        .long 7b,16b\n" ^I^I^I\$
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#316: FILE: include/asm-i386/uaccess-intel.h:278:
++#define __do_copy_user(to,from,n)					\
+                          ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#316: FILE: include/asm-i386/uaccess-intel.h:278:
++#define __do_copy_user(to,from,n)					\
+                               ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'to' - possible side-effects?
+#316: FILE: include/asm-i386/uaccess-intel.h:278:
++#define __do_copy_user(to,from,n)					\
++do {									\
++	if (is_rep_movsl_faster(to, from, n))				\
++		__copy_user_rep_movsl(to, from, n);			\
++	else								\
++		__copy_user_movl(to, from, n);				\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'from' - possible side-effects?
+#316: FILE: include/asm-i386/uaccess-intel.h:278:
++#define __do_copy_user(to,from,n)					\
++do {									\
++	if (is_rep_movsl_faster(to, from, n))				\
++		__copy_user_rep_movsl(to, from, n);			\
++	else								\
++		__copy_user_movl(to, from, n);				\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#316: FILE: include/asm-i386/uaccess-intel.h:278:
++#define __do_copy_user(to,from,n)					\
++do {									\
++	if (is_rep_movsl_faster(to, from, n))				\
++		__copy_user_rep_movsl(to, from, n);			\
++	else								\
++		__copy_user_movl(to, from, n);				\
++} while (0)
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#324: FILE: include/asm-i386/uaccess-intel.h:286:
++#define __do_copy_user_zeroing(to,from,n)				\
+                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#324: FILE: include/asm-i386/uaccess-intel.h:286:
++#define __do_copy_user_zeroing(to,from,n)				\
+                                       ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'to' - possible side-effects?
+#324: FILE: include/asm-i386/uaccess-intel.h:286:
++#define __do_copy_user_zeroing(to,from,n)				\
++do {									\
++	if (is_rep_movsl_faster(to, from, n))				\
++		__copy_user_zeroing_rep_movsl(to,from,n);		\
++	else								\
++		__copy_user_zeroing_movl(to, from, n);			\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'from' - possible side-effects?
+#324: FILE: include/asm-i386/uaccess-intel.h:286:
++#define __do_copy_user_zeroing(to,from,n)				\
++do {									\
++	if (is_rep_movsl_faster(to, from, n))				\
++		__copy_user_zeroing_rep_movsl(to,from,n);		\
++	else								\
++		__copy_user_zeroing_movl(to, from, n);			\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#324: FILE: include/asm-i386/uaccess-intel.h:286:
++#define __do_copy_user_zeroing(to,from,n)				\
++do {									\
++	if (is_rep_movsl_faster(to, from, n))				\
++		__copy_user_zeroing_rep_movsl(to,from,n);		\
++	else								\
++		__copy_user_zeroing_movl(to, from, n);			\
++} while (0)
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#327: FILE: include/asm-i386/uaccess-intel.h:289:
++		__copy_user_zeroing_rep_movsl(to,from,n);		\
+ 		                                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#327: FILE: include/asm-i386/uaccess-intel.h:289:
++		__copy_user_zeroing_rep_movsl(to,from,n);		\
+ 		                                     ^
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000417316.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 15 errors, 47 warnings, 13 checks, 294 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000417316.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

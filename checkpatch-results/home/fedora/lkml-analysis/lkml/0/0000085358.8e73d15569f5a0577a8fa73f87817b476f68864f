@@ -1,0 +1,88 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#36: 
+Work-in-progress.  It needs lots more suspend_report_result() calls sprinkled
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#83: FILE: drivers/base/power/suspend.c:178:
++		printk(KERN_ERR "%s(): ", function);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#85: FILE: drivers/base/power/suspend.c:180:
++		printk("%d\n", ret);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#117: FILE: drivers/pci/pci.c:310:
++	if (state != PCI_D0 && dev->current_state > state) {
+[...]
+-	else if (dev->current_state == state) 
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#118: FILE: drivers/pci/pci.c:311:
++		printk(KERN_ERR "%s(): %s: state=%d, current state=%d\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#119: FILE: drivers/pci/pci.c:312:
++		printk(KERN_ERR "%s(): %s: state=%d, current state=%d\n",
++			__FUNCTION__, pci_name(dev), state, dev->current_state);
+
+WARNING:USE_FUNC: __func__ should be used instead of gcc specific __FUNCTION__
+#119: FILE: drivers/pci/pci.c:312:
++			__FUNCTION__, pci_name(dev), state, dev->current_state);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#160: FILE: include/linux/pm.h:202:
++extern void __suspend_report_result(const char *function, void *fn, int ret);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#162: FILE: include/linux/pm.h:204:
++#define suspend_report_result(fn, ret)					\
++	do {								\
++		__suspend_report_result(__FUNCTION__, fn, ret);		\
++	} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:USE_FUNC: __func__ should be used instead of gcc specific __FUNCTION__
+#164: FILE: include/linux/pm.h:206:
++		__suspend_report_result(__FUNCTION__, fn, ret);		\
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000085358.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 0 errors, 7 warnings, 3 checks, 94 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000085358.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

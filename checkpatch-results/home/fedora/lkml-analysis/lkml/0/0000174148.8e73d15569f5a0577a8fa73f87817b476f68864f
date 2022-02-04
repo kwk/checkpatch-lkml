@@ -1,0 +1,834 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#81: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#85: FILE: drivers/i2c/chips/adm9240.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#87: FILE: drivers/i2c/chips/adm9240.c:3:
++ * ^I^Imonitoring$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#93: FILE: drivers/i2c/chips/adm9240.c:9:
++ * ^I^I^I^Iguidance from Jean Delvare$
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#124: FILE: drivers/i2c/chips/adm9240.c:40:
++ * along with this program; if not, write to the Free Software$
+
+Kernel maintainers reject new instances of the GPL boilerplate paragraph
+directing people to write to the FSF for a copy of the GPL, since the
+FSF has moved in the past and may do so again.
+So do not write paragraphs about writing to the Free Software Foundation's
+mailing address.
+
+See: https://lore.kernel.org/lkml/20131006222342.GT19510@leaf/
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#125: FILE: drivers/i2c/chips/adm9240.c:41:
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.$
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'value' may be better as '(value)' to avoid precedence issues
+#271: FILE: drivers/i2c/chips/adm9240.c:187:
++#define show_temp(value, scale)					\
++static ssize_t show_##value(struct device *dev, char *buf)	\
++{								\
++	struct adm9240_data *data = adm9240_update_device(dev);	\
++	return sprintf(buf, "%d\n", data->value * scale);	\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'scale' may be better as '(scale)' to avoid precedence issues
+#271: FILE: drivers/i2c/chips/adm9240.c:187:
++#define show_temp(value, scale)					\
++static ssize_t show_##value(struct device *dev, char *buf)	\
++{								\
++	struct adm9240_data *data = adm9240_update_device(dev);	\
++	return sprintf(buf, "%d\n", data->value * scale);	\
++}
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#277: FILE: drivers/i2c/chips/adm9240.c:193:
++}
++show_temp(temp_high, 1000);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'value' - possible side-effects?
+#281: FILE: drivers/i2c/chips/adm9240.c:197:
++#define set_temp(value, reg)					\
++static ssize_t set_##value(struct device *dev, const char *buf,	\
++		size_t count)					\
++{								\
++	struct i2c_client *client = to_i2c_client(dev);		\
++	struct adm9240_data *data = adm9240_update_device(dev);	\
++	long temp = simple_strtoul(buf, NULL, 10);		\
++								\
++	down(&data->update_lock);				\
++	data->value = TEMP_TO_REG(temp);			\
++	adm9240_write_value(client, reg, data->value);		\
++	up(&data->update_lock);					\
++	return count;						\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'value' may be better as '(value)' to avoid precedence issues
+#281: FILE: drivers/i2c/chips/adm9240.c:197:
++#define set_temp(value, reg)					\
++static ssize_t set_##value(struct device *dev, const char *buf,	\
++		size_t count)					\
++{								\
++	struct i2c_client *client = to_i2c_client(dev);		\
++	struct adm9240_data *data = adm9240_update_device(dev);	\
++	long temp = simple_strtoul(buf, NULL, 10);		\
++								\
++	down(&data->update_lock);				\
++	data->value = TEMP_TO_REG(temp);			\
++	adm9240_write_value(client, reg, data->value);		\
++	up(&data->update_lock);					\
++	return count;						\
++}
+
+WARNING:CONSIDER_KSTRTO: simple_strtoul is obsolete, use kstrtoul instead
+#287: FILE: drivers/i2c/chips/adm9240.c:203:
++	long temp = simple_strtoul(buf, NULL, 10);		\
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'show_temp_high' to 'temp1_max_show' 'set_temp_high' to 'temp1_max_store'
+#299: FILE: drivers/i2c/chips/adm9240.c:215:
++static DEVICE_ATTR(temp1_max, S_IWUSR | S_IRUGO,
+
+The function names used in DEVICE_ATTR is unusual.
+Typically, the store and show functions are used with <attr>_store and
+<attr>_show, where <attr> is a named attribute variable of the device.
+
+Consider the following examples::
+
+  static DEVICE_ATTR(type, 0444, type_show, NULL);
+  static DEVICE_ATTR(power, 0644, power_show, power_store);
+
+The function names should preferably follow the above pattern.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR | S_IRUGO' are not preferred. Consider using octal permissions '0644'.
+#299: FILE: drivers/i2c/chips/adm9240.c:215:
++static DEVICE_ATTR(temp1_max, S_IWUSR | S_IRUGO,
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'show_temp_hyst' to 'temp1_max_hyst_show' 'set_temp_hyst' to 'temp1_max_hyst_store'
+#301: FILE: drivers/i2c/chips/adm9240.c:217:
++static DEVICE_ATTR(temp1_max_hyst, S_IWUSR | S_IRUGO,
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR | S_IRUGO' are not preferred. Consider using octal permissions '0644'.
+#301: FILE: drivers/i2c/chips/adm9240.c:217:
++static DEVICE_ATTR(temp1_max_hyst, S_IWUSR | S_IRUGO,
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'show_temp' to 'temp1_input_show'
+#303: FILE: drivers/i2c/chips/adm9240.c:219:
++static DEVICE_ATTR(temp1_input, S_IRUGO, show_temp, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#303: FILE: drivers/i2c/chips/adm9240.c:219:
++static DEVICE_ATTR(temp1_input, S_IRUGO, show_temp, NULL);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#309: FILE: drivers/i2c/chips/adm9240.c:225:
++	struct adm9240_data *data = adm9240_update_device(dev);
++	return sprintf(buf, "%d\n", IN_FROM_REG(data->in[nr], nr));
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#315: FILE: drivers/i2c/chips/adm9240.c:231:
++	struct adm9240_data *data = adm9240_update_device(dev);
++	return sprintf(buf, "%d\n", IN_FROM_REG(data->in_min[nr], nr));
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#321: FILE: drivers/i2c/chips/adm9240.c:237:
++	struct adm9240_data *data = adm9240_update_device(dev);
++	return sprintf(buf, "%d\n", IN_FROM_REG(data->in_max[nr], nr));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#325: FILE: drivers/i2c/chips/adm9240.c:241:
++static ssize_t set_in_min(struct device *dev, const char *buf,
++		size_t count, int nr)
+
+WARNING:CONSIDER_KSTRTO: simple_strtoul is obsolete, use kstrtoul instead
+#329: FILE: drivers/i2c/chips/adm9240.c:245:
++	unsigned long val = simple_strtoul(buf, NULL, 10);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#339: FILE: drivers/i2c/chips/adm9240.c:255:
++static ssize_t set_in_max(struct device *dev, const char *buf,
++		size_t count, int nr)
+
+WARNING:CONSIDER_KSTRTO: simple_strtoul is obsolete, use kstrtoul instead
+#343: FILE: drivers/i2c/chips/adm9240.c:259:
++	unsigned long val = simple_strtoul(buf, NULL, 10);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'offset' - possible side-effects?
+#352: FILE: drivers/i2c/chips/adm9240.c:268:
++#define show_in_offset(offset)						\
++static ssize_t show_in##offset(struct device *dev, char *buf)		\
++{									\
++	return show_in(dev, buf, offset);				\
++}									\
++static DEVICE_ATTR(in##offset##_input, S_IRUGO, show_in##offset, NULL);	\
++static ssize_t show_in##offset##_min(struct device *dev, char *buf)	\
++{									\
++	return show_in_min(dev, buf, offset);				\
++}									\
++static ssize_t show_in##offset##_max(struct device *dev, char *buf)	\
++{									\
++	return show_in_max(dev, buf, offset);				\
++}									\
++static ssize_t								\
++set_in##offset##_min(struct device *dev, const char *buf, size_t count)	\
++{									\
++	return set_in_min(dev, buf, count, offset);			\
++}									\
++static ssize_t								\
++set_in##offset##_max(struct device *dev, const char *buf, size_t count)	\
++{									\
++	return set_in_max(dev, buf, count, offset);			\
++}									\
++static DEVICE_ATTR(in##offset##_min, S_IRUGO | S_IWUSR,			\
++		show_in##offset##_min, set_in##offset##_min);		\
++static DEVICE_ATTR(in##offset##_max, S_IRUGO | S_IWUSR,			\
++		show_in##offset##_max, set_in##offset##_max);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#352: FILE: drivers/i2c/chips/adm9240.c:268:
++#define show_in_offset(offset)						\
++static ssize_t show_in##offset(struct device *dev, char *buf)		\
++{									\
++	return show_in(dev, buf, offset);				\
++}									\
++static DEVICE_ATTR(in##offset##_input, S_IRUGO, show_in##offset, NULL);	\
++static ssize_t show_in##offset##_min(struct device *dev, char *buf)	\
++{									\
++	return show_in_min(dev, buf, offset);				\
++}									\
++static ssize_t show_in##offset##_max(struct device *dev, char *buf)	\
++{									\
++	return show_in_max(dev, buf, offset);				\
++}									\
++static ssize_t								\
++set_in##offset##_min(struct device *dev, const char *buf, size_t count)	\
++{									\
++	return set_in_min(dev, buf, count, offset);			\
++}									\
++static ssize_t								\
++set_in##offset##_max(struct device *dev, const char *buf, size_t count)	\
++{									\
++	return set_in_max(dev, buf, count, offset);			\
++}									\
++static DEVICE_ATTR(in##offset##_min, S_IRUGO | S_IWUSR,			\
++		show_in##offset##_min, set_in##offset##_min);		\
++static DEVICE_ATTR(in##offset##_max, S_IRUGO | S_IWUSR,			\
++		show_in##offset##_max, set_in##offset##_max);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#357: FILE: drivers/i2c/chips/adm9240.c:273:
++static DEVICE_ATTR(in##offset##_input, S_IRUGO, show_in##offset, NULL);	\
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#376: FILE: drivers/i2c/chips/adm9240.c:292:
++static DEVICE_ATTR(in##offset##_min, S_IRUGO | S_IWUSR,			\
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#378: FILE: drivers/i2c/chips/adm9240.c:294:
++static DEVICE_ATTR(in##offset##_max, S_IRUGO | S_IWUSR,			\
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#392: FILE: drivers/i2c/chips/adm9240.c:308:
++	struct adm9240_data *data = adm9240_update_device(dev);
++	return sprintf(buf, "%d\n", FAN_FROM_REG(data->fan[nr],
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#399: FILE: drivers/i2c/chips/adm9240.c:315:
++	struct adm9240_data *data = adm9240_update_device(dev);
++	return sprintf(buf, "%d\n", FAN_FROM_REG(data->fan_min[nr],
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#406: FILE: drivers/i2c/chips/adm9240.c:322:
++	struct adm9240_data *data = adm9240_update_device(dev);
++	return sprintf(buf, "%d\n", 1 << data->fan_div[nr]);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#411: FILE: drivers/i2c/chips/adm9240.c:327:
++static void adm9240_write_fan_div(struct i2c_client *client, int nr,
++		u8 fan_div)
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#421: FILE: drivers/i2c/chips/adm9240.c:337:
++	dev_dbg(&client->dev, "fan%d clock divider changed from %u "
++			"to %u\n", nr + 1, 1 << old, 1 << fan_div);
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#424: FILE: drivers/i2c/chips/adm9240.c:340:
++/* $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#436: FILE: drivers/i2c/chips/adm9240.c:352:
++static ssize_t set_fan_min(struct device *dev, const char *buf,
++		size_t count, int nr)
+
+WARNING:CONSIDER_KSTRTO: simple_strtoul is obsolete, use kstrtoul instead
+#440: FILE: drivers/i2c/chips/adm9240.c:356:
++	unsigned long val = simple_strtoul(buf, NULL, 10);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#450: FILE: drivers/i2c/chips/adm9240.c:366:
++		dev_dbg(&client->dev, "fan%u low limit set disabled\n",
++				nr + 1);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#457: FILE: drivers/i2c/chips/adm9240.c:373:
++		dev_dbg(&client->dev, "fan%u low limit set minimum %u\n",
++				nr + 1, FAN_FROM_REG(254, 1 << new_div));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#473: FILE: drivers/i2c/chips/adm9240.c:389:
++		dev_dbg(&client->dev, "fan%u low limit set fan speed %u\n",
++				nr + 1, FAN_FROM_REG(new_min, 1 << new_div));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#481: FILE: drivers/i2c/chips/adm9240.c:397:
++	adm9240_write_value(client, ADM9240_REG_FAN_MIN(nr),
++			data->fan_min[nr]);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'offset' - possible side-effects?
+#487: FILE: drivers/i2c/chips/adm9240.c:403:
++#define show_fan_offset(offset)						\
++static ssize_t show_fan_##offset (struct device *dev, char *buf)	\
++{									\
++return show_fan(dev, buf, offset - 1);					\
++}									\
++static ssize_t show_fan_##offset##_div (struct device *dev, char *buf)	\
++{									\
++return show_fan_div(dev, buf, offset - 1);				\
++}									\
++static ssize_t show_fan_##offset##_min (struct device *dev, char *buf)	\
++{									\
++return show_fan_min(dev, buf, offset - 1);				\
++}									\
++static ssize_t set_fan_##offset##_min (struct device *dev, 		\
++const char *buf, size_t count)						\
++{									\
++return set_fan_min(dev, buf, count, offset - 1);			\
++}									\
++static DEVICE_ATTR(fan##offset##_input, S_IRUGO, 			\
++		show_fan_##offset, NULL);				\
++static DEVICE_ATTR(fan##offset##_div, S_IRUGO, 				\
++		show_fan_##offset##_div, NULL);				\
++static DEVICE_ATTR(fan##offset##_min, S_IRUGO | S_IWUSR, 		\
++		show_fan_##offset##_min, set_fan_##offset##_min);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'offset' may be better as '(offset)' to avoid precedence issues
+#487: FILE: drivers/i2c/chips/adm9240.c:403:
++#define show_fan_offset(offset)						\
++static ssize_t show_fan_##offset (struct device *dev, char *buf)	\
++{									\
++return show_fan(dev, buf, offset - 1);					\
++}									\
++static ssize_t show_fan_##offset##_div (struct device *dev, char *buf)	\
++{									\
++return show_fan_div(dev, buf, offset - 1);				\
++}									\
++static ssize_t show_fan_##offset##_min (struct device *dev, char *buf)	\
++{									\
++return show_fan_min(dev, buf, offset - 1);				\
++}									\
++static ssize_t set_fan_##offset##_min (struct device *dev, 		\
++const char *buf, size_t count)						\
++{									\
++return set_fan_min(dev, buf, count, offset - 1);			\
++}									\
++static DEVICE_ATTR(fan##offset##_input, S_IRUGO, 			\
++		show_fan_##offset, NULL);				\
++static DEVICE_ATTR(fan##offset##_div, S_IRUGO, 				\
++		show_fan_##offset##_div, NULL);				\
++static DEVICE_ATTR(fan##offset##_min, S_IRUGO | S_IWUSR, 		\
++		show_fan_##offset##_min, set_fan_##offset##_min);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#487: FILE: drivers/i2c/chips/adm9240.c:403:
++#define show_fan_offset(offset)						\
++static ssize_t show_fan_##offset (struct device *dev, char *buf)	\
++{									\
++return show_fan(dev, buf, offset - 1);					\
++}									\
++static ssize_t show_fan_##offset##_div (struct device *dev, char *buf)	\
++{									\
++return show_fan_div(dev, buf, offset - 1);				\
++}									\
++static ssize_t show_fan_##offset##_min (struct device *dev, char *buf)	\
++{									\
++return show_fan_min(dev, buf, offset - 1);				\
++}									\
++static ssize_t set_fan_##offset##_min (struct device *dev, 		\
++const char *buf, size_t count)						\
++{									\
++return set_fan_min(dev, buf, count, offset - 1);			\
++}									\
++static DEVICE_ATTR(fan##offset##_input, S_IRUGO, 			\
++		show_fan_##offset, NULL);				\
++static DEVICE_ATTR(fan##offset##_div, S_IRUGO, 				\
++		show_fan_##offset##_div, NULL);				\
++static DEVICE_ATTR(fan##offset##_min, S_IRUGO | S_IWUSR, 		\
++		show_fan_##offset##_min, set_fan_##offset##_min);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#488: FILE: drivers/i2c/chips/adm9240.c:404:
++static ssize_t show_fan_##offset (struct device *dev, char *buf)	\
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#492: FILE: drivers/i2c/chips/adm9240.c:408:
++static ssize_t show_fan_##offset##_div (struct device *dev, char *buf)	\
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#496: FILE: drivers/i2c/chips/adm9240.c:412:
++static ssize_t show_fan_##offset##_min (struct device *dev, char *buf)	\
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#500: FILE: drivers/i2c/chips/adm9240.c:416:
++static ssize_t set_fan_##offset##_min (struct device *dev, ^I^I\$
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#500: FILE: drivers/i2c/chips/adm9240.c:416:
++static ssize_t set_fan_##offset##_min (struct device *dev, 		\
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#505: FILE: drivers/i2c/chips/adm9240.c:421:
++static DEVICE_ATTR(fan##offset##_input, S_IRUGO, ^I^I^I\$
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#505: FILE: drivers/i2c/chips/adm9240.c:421:
++static DEVICE_ATTR(fan##offset##_input, S_IRUGO, 			\
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#507: FILE: drivers/i2c/chips/adm9240.c:423:
++static DEVICE_ATTR(fan##offset##_div, S_IRUGO, ^I^I^I^I\$
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#507: FILE: drivers/i2c/chips/adm9240.c:423:
++static DEVICE_ATTR(fan##offset##_div, S_IRUGO, 				\
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#509: FILE: drivers/i2c/chips/adm9240.c:425:
++static DEVICE_ATTR(fan##offset##_min, S_IRUGO | S_IWUSR, ^I^I\$
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#509: FILE: drivers/i2c/chips/adm9240.c:425:
++static DEVICE_ATTR(fan##offset##_min, S_IRUGO | S_IWUSR, 		\
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#519: FILE: drivers/i2c/chips/adm9240.c:435:
++	struct adm9240_data *data = adm9240_update_device(dev);
++	return sprintf(buf, "%u\n", data->alarms);
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'show_alarms' to 'alarms_show'
+#520: FILE: drivers/i2c/chips/adm9240.c:436:
++}
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#521: FILE: drivers/i2c/chips/adm9240.c:437:
++static DEVICE_ATTR(alarms, S_IRUGO, show_alarms, NULL);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#527: FILE: drivers/i2c/chips/adm9240.c:443:
++	struct adm9240_data *data = adm9240_update_device(dev);
++	return sprintf(buf, "%d\n", vid_from_reg(data->vid, data->vrm));
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'show_vid' to 'cpu0_vid_show'
+#528: FILE: drivers/i2c/chips/adm9240.c:444:
++}
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#529: FILE: drivers/i2c/chips/adm9240.c:445:
++static DEVICE_ATTR(cpu0_vid, S_IRUGO, show_vid, NULL);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#535: FILE: drivers/i2c/chips/adm9240.c:451:
++	struct adm9240_data *data = adm9240_update_device(dev);
++	return sprintf(buf, "%d\n", AOUT_FROM_REG(data->aout));
+
+WARNING:CONSIDER_KSTRTO: simple_strtol is obsolete, use kstrtol instead
+#542: FILE: drivers/i2c/chips/adm9240.c:458:
++	unsigned long val = simple_strtol(buf, NULL, 10);
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'show_aout' to 'aout_output_show' 'set_aout' to 'aout_output_store'
+#549: FILE: drivers/i2c/chips/adm9240.c:465:
++}
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#550: FILE: drivers/i2c/chips/adm9240.c:466:
++static DEVICE_ATTR(aout_output, S_IRUGO | S_IWUSR, show_aout, set_aout);
+
+WARNING:CONSIDER_KSTRTO: simple_strtol is obsolete, use kstrtol instead
+#556: FILE: drivers/i2c/chips/adm9240.c:472:
++	unsigned long val = simple_strtol(buf, NULL, 10);
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'chassis_clear' to 'chassis_clear_store'
+#563: FILE: drivers/i2c/chips/adm9240.c:479:
++}
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR' are not preferred. Consider using octal permissions '0200'.
+#564: FILE: drivers/i2c/chips/adm9240.c:480:
++static DEVICE_ATTR(chassis_clear, S_IWUSR, NULL, chassis_clear);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#566: FILE: drivers/i2c/chips/adm9240.c:482:
++
++
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#580: FILE: drivers/i2c/chips/adm9240.c:496:
++	if (!(data = kmalloc(sizeof(struct adm9240_data), GFP_KERNEL))) {
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*data)...) over kmalloc(sizeof(struct adm9240_data)...)
+#580: FILE: drivers/i2c/chips/adm9240.c:496:
++	if (!(data = kmalloc(sizeof(struct adm9240_data), GFP_KERNEL))) {
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#593: FILE: drivers/i2c/chips/adm9240.c:509:
++	if (kind == 0) {
++		kind = adm9240;
++	}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#598: FILE: drivers/i2c/chips/adm9240.c:514:
++	if (kind < 0) {
++
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#603: FILE: drivers/i2c/chips/adm9240.c:519:
++			dev_err(&adapter->dev, "detect fail: address match, "
++					"0x%02x\n", address);
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#618: FILE: drivers/i2c/chips/adm9240.c:534:
++			dev_err(&adapter->dev, "detect fail: unknown manuf, "
++					"0x%02x\n", man_id);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#625: FILE: drivers/i2c/chips/adm9240.c:541:
++		dev_info(&adapter->dev, "found %s revision %u\n",
++				man_id == 0x23 ? "ADM9240" :
+
+WARNING:BRACES: braces {} are not necessary for any arm of this statement
+#630: FILE: drivers/i2c/chips/adm9240.c:546:
++	if (kind == adm9240) {
+[...]
++	} else if (kind == ds1780) {
+[...]
++	} else if (kind == lm81) {
+[...]
+
+WARNING:STRLCPY: Prefer strscpy over strlcpy - see: https://lore.kernel.org/r/CAHk-=wgfRnXz0W3D37d01q3JFkr_i_uTL=V6A6G1oUZcprmknw@mail.gmail.com/
+#639: FILE: drivers/i2c/chips/adm9240.c:555:
++	strlcpy(new_client->name, name, I2C_NAME_SIZE);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#643: FILE: drivers/i2c/chips/adm9240.c:559:
++	if ((err = i2c_attach_client(new_client)))
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#699: FILE: drivers/i2c/chips/adm9240.c:615:
++	if ((err = i2c_detach_client(client))) {
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#701: FILE: drivers/i2c/chips/adm9240.c:617:
++		dev_err(&client->dev, "Client deregistration failed, "
++				"client not detached.\n");
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#720: FILE: drivers/i2c/chips/adm9240.c:636:
++		dev_info(&client->dev, "status: config 0x%02x mode %u\n",
++				conf, mode);
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#725: FILE: drivers/i2c/chips/adm9240.c:641:
++		for (i = 0; i < 6; i++)
++		{
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#728: FILE: drivers/i2c/chips/adm9240.c:644:
++			adm9240_write_value(client,
++					ADM9240_REG_IN_MIN(i), 0);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#730: FILE: drivers/i2c/chips/adm9240.c:646:
++			adm9240_write_value(client,
++					ADM9240_REG_IN_MAX(i), 255);
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#741: FILE: drivers/i2c/chips/adm9240.c:657:
++		dev_info(&client->dev, "cold start: config was 0x%02x "
++				"mode %u\n", conf, mode);
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#755: FILE: drivers/i2c/chips/adm9240.c:671:
++	if (time_after(jiffies, data->last_updated_measure + (HZ * 7 / 4))
++			|| !data->valid) {
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#756: FILE: drivers/i2c/chips/adm9240.c:672:
++			|| !data->valid) {
++
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#757: FILE: drivers/i2c/chips/adm9240.c:673:
++		for (i = 0; i < 6; i++) /* read voltages */
++		{
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#760: FILE: drivers/i2c/chips/adm9240.c:676:
++			data->in[i] = adm9240_read_value(client,
++					ADM9240_REG_IN(i));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#763: FILE: drivers/i2c/chips/adm9240.c:679:
++		data->alarms = adm9240_read_value(client,
++					ADM9240_REG_INT(0)) |
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#765: FILE: drivers/i2c/chips/adm9240.c:681:
++					adm9240_read_value(client,
++					ADM9240_REG_INT(1)) << 8;
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#769: FILE: drivers/i2c/chips/adm9240.c:685:
++		 * but unlikely aliasing error on lsb reading. --Grant */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#773: FILE: drivers/i2c/chips/adm9240.c:689:
++					adm9240_read_value(client,
++					ADM9240_REG_TEMP_CONF)) / 128;
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#775: FILE: drivers/i2c/chips/adm9240.c:691:
++		for (i = 0; i < 2; i++) /* read fans */
++		{
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#778: FILE: drivers/i2c/chips/adm9240.c:694:
++			data->fan[i] = adm9240_read_value(client,
++					ADM9240_REG_FAN(i));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#782: FILE: drivers/i2c/chips/adm9240.c:698:
++			if (data->valid && data->fan[i] == 255 &&
++					data->fan_div[i] < 3) {
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#783: FILE: drivers/i2c/chips/adm9240.c:699:
++					data->fan_div[i] < 3) {
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#785: FILE: drivers/i2c/chips/adm9240.c:701:
++				adm9240_write_fan_div(client, i,
++						++data->fan_div[i]);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#789: FILE: drivers/i2c/chips/adm9240.c:705:
++				if (data->fan_min[i] < 255 &&
++						data->fan_min[i] >= 2)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#798: FILE: drivers/i2c/chips/adm9240.c:714:
++	if (time_after(jiffies, data->last_updated_config + (HZ * 300))
++			|| !data->valid) {
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#799: FILE: drivers/i2c/chips/adm9240.c:715:
++			|| !data->valid) {
++
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#800: FILE: drivers/i2c/chips/adm9240.c:716:
++		for (i = 0; i < 6; i++)
++		{
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#803: FILE: drivers/i2c/chips/adm9240.c:719:
++			data->in_min[i] = adm9240_read_value(client,
++					ADM9240_REG_IN_MIN(i));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#805: FILE: drivers/i2c/chips/adm9240.c:721:
++			data->in_max[i] = adm9240_read_value(client,
++					ADM9240_REG_IN_MAX(i));
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#807: FILE: drivers/i2c/chips/adm9240.c:723:
++		for (i = 0; i < 2; i++)
++		{
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#810: FILE: drivers/i2c/chips/adm9240.c:726:
++			data->fan_min[i] = adm9240_read_value(client,
++					ADM9240_REG_FAN_MIN(i));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#813: FILE: drivers/i2c/chips/adm9240.c:729:
++		data->temp_high = adm9240_read_value(client,
++				ADM9240_REG_TEMP_HIGH);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#815: FILE: drivers/i2c/chips/adm9240.c:731:
++		data->temp_hyst = adm9240_read_value(client,
++				ADM9240_REG_TEMP_HYST);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#826: FILE: drivers/i2c/chips/adm9240.c:742:
++		data->aout = adm9240_read_value(client,
++				ADM9240_REG_ANALOG_OUT);
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#846: FILE: drivers/i2c/chips/adm9240.c:762:
++MODULE_AUTHOR("Michiel Rook <michiel@grendelproject.nl>, "
++		"Grant Coady <gcoady@gmail.com> and others");
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000174148.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 11 errors, 59 warnings, 42 checks, 792 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000174148.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

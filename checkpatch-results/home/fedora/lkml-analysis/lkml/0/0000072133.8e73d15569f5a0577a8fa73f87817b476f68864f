@@ -1,0 +1,76 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'align_reg' - possible side-effects?
+#57: FILE: arch/i386/lib/memcpy.c:53:
++#define build_memcpy_io(dst, src, count, align_reg)	\
++({							\
++unsigned long d0, d1, d2, d3;				\
++asm volatile(						\
++	"jecxz	1f\n\t"					\
++							\
++	"testl	$1, " align_reg "\n\t"			\
++	"jz	2f\n\t"					\
++	"movsb\n\t"					\
++	"decl	%2\n"					\
++"2:\n\t"						\
++	"cmpl	$2, %2\n\t"				\
++	"jb	3f\n\t"					\
++	"testl	$2, " align_reg "\n\t"			\
++	"jz	4f\n\t"					\
++	"movsw\n\t"					\
++	"decl	%2\n\t"					\
++	"decl	%2\n"					\
++"4:\n\t"						\
++	"movl	%2, %3\n\t"				\
++	"shrl	$2, %2\n\t"				\
++	"jz	5f\n\t"					\
++	"rep ; movsl\n"					\
++"5:\n\t"						\
++	"movl	%3, %2\n\t"				\
++	"testb	$2, %b2\n\t"				\
++	"jz	3f\n\t"					\
++	"movsw\n"					\
++"3:\n\t"						\
++	"testb	$1, %b2\n\t"				\
++	"jz	1f\n\t"					\
++	"movsb\n"					\
++"1:"							\
++	: "=&D" (d0), "=&S" (d1), "=&c" (d2), "=&g" (d3)\
++	: "0" (dst), "1" (src), "2" (count)		\
++	: "memory");					\
++})
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#95: FILE: arch/i386/lib/memcpy.c:91:
++void memcpy_fromio(void *dst, const volatile void __iomem *src, int count)
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#101: FILE: arch/i386/lib/memcpy.c:97:
++void memcpy_toio(volatile void __iomem *dst, const void *src, int count)
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#121: FILE: include/asm-i386/io.h:204:
++extern void memcpy_fromio(void *dst, const volatile void __iomem *src, int count);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#121: FILE: include/asm-i386/io.h:204:
++extern void memcpy_fromio(void *dst, const volatile void __iomem *src, int count);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#122: FILE: include/asm-i386/io.h:205:
++extern void memcpy_toio(volatile void __iomem *dst, const void *src, int count);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#122: FILE: include/asm-i386/io.h:205:
++extern void memcpy_toio(volatile void __iomem *dst, const void *src, int count);
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000072133.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 0 errors, 4 warnings, 3 checks, 77 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000072133.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

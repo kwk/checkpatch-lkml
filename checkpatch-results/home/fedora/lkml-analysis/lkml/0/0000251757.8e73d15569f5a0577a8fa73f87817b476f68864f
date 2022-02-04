@@ -1,0 +1,699 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#35: 
+never included in the upstream kernel. SuSE did include the patch for mmtimer
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#68: FILE: drivers/char/Kconfig:984:
++config MMTIMER
++	tristate "MMTIMER Memory mapped RTC for SGI Altix"
++	depends on IA64_GENERIC || IA64_SGI_SN2
++	default y
++	help
++	  The mmtimer device allows direct userspace access to the
++	  Altix system timer.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#95: FILE: drivers/char/mmtimer.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:INCLUDE_LINUX: Use #include <linux/uaccess.h> instead of <asm/uaccess.h>
+#120: FILE: drivers/char/mmtimer.c:26:
++#include <asm/uaccess.h>
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#131: FILE: drivers/char/mmtimer.c:37:
++static int mmtimer_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg);
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+ERROR:INITIALISED_STATIC: do not initialise statics to 0
+#137: FILE: drivers/char/mmtimer.c:43:
++static unsigned long mmtimer_femtoperiod = 0;
+
+Static variables should not be initialized explicitly to zero.
+Your compiler (or rather your loader) automatically does
+it for you.
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#139: FILE: drivers/char/mmtimer.c:45:
++static struct file_operations mmtimer_fops = {
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+ERROR:SPACING: space required before the open parenthesis '('
+#205: FILE: drivers/char/mmtimer.c:111:
++		if(PAGE_SIZE <= (1 << 16))
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#206: FILE: drivers/char/mmtimer.c:112:
++			ret = (((long)RTC_COUNTER_ADDR) & (PAGE_SIZE-1)) / 8;
+ 			                                            ^
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#208: FILE: drivers/char/mmtimer.c:114:
++			ret = -ENOSYS;
+
+ENOSYS means that a nonexistent system call was called.
+Earlier, it was wrongly used for things like invalid operations on
+otherwise valid syscalls.  This should be avoided in new code.
+
+See: https://lore.kernel.org/lkml/5eb299021dec23c1a48fa7d9f2c8b794e967766d.1408730669.git.luto@amacapital.net/
+
+ERROR:SPACING: space required before the open parenthesis '('
+#212: FILE: drivers/char/mmtimer.c:118:
++		if(copy_to_user((unsigned long *)arg, &mmtimer_femtoperiod, sizeof(unsigned long)))
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#217: FILE: drivers/char/mmtimer.c:123:
++		if(copy_to_user((unsigned long *)arg, &sn_rtc_cycles_per_second, sizeof(unsigned long)))
+
+ERROR:SPACING: space required before the open parenthesis '('
+#217: FILE: drivers/char/mmtimer.c:123:
++		if(copy_to_user((unsigned long *)arg, &sn_rtc_cycles_per_second, sizeof(unsigned long)))
+
+ERROR:SPACING: space required before the open parenthesis '('
+#236: FILE: drivers/char/mmtimer.c:142:
++		if(copy_from_user(&alm, (mmtimer_alarm_t *)arg, sizeof(mmtimer_alarm_t)))
+
+ERROR:SPACING: space required before the open parenthesis '('
+#238: FILE: drivers/char/mmtimer.c:144:
++		if(alm.id < 0 || alm.id > NUM_COMPARATORS) {
+
+ERROR:SPACING: space required before the open parenthesis '('
+#239: FILE: drivers/char/mmtimer.c:145:
++			if(timers[alm.id].process) {
+
+ERROR:ELSE_AFTER_BRACE: else should follow close brace '}'
+#242: FILE: drivers/char/mmtimer.c:148:
++			}
++			else {
+
+`else {` should follow the closing block `}` on the same line.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#242: FILE: drivers/char/mmtimer.c:148:
++			else {
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around timers[alm.id].compare
+#245: FILE: drivers/char/mmtimer.c:151:
++				*(timers[alm.id].compare) = alm.value;
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+ERROR:ELSE_AFTER_BRACE: else should follow close brace '}'
+#252: FILE: drivers/char/mmtimer.c:158:
++		}
++		else
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#254: FILE: drivers/char/mmtimer.c:160:
++			ret = -ENOSYS;
+
+ERROR:SPACING: space required before the open parenthesis '('
+#259: FILE: drivers/char/mmtimer.c:165:
++		if(copy_from_user(&alm, (mmtimer_alarm_t *)arg, sizeof(mmtimer_alarm_t)))
+
+ERROR:SPACING: space required before the open parenthesis '('
+#261: FILE: drivers/char/mmtimer.c:167:
++		if(alm.id != 0 || alm.id != 1) {
+
+ERROR:SPACING: space required before the open parenthesis '('
+#262: FILE: drivers/char/mmtimer.c:168:
++			if(timers[alm.id].process) {
+
+ERROR:ELSE_AFTER_BRACE: else should follow close brace '}'
+#265: FILE: drivers/char/mmtimer.c:171:
++			}
++			else {
+
+CHECK:BRACES: Unbalanced braces around else statement
+#265: FILE: drivers/char/mmtimer.c:171:
++			else {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around timers[alm.id].compare
+#268: FILE: drivers/char/mmtimer.c:174:
++				*(timers[alm.id].compare) = alm.value;
+
+ERROR:ELSE_AFTER_BRACE: else should follow close brace '}'
+#275: FILE: drivers/char/mmtimer.c:181:
++		}
++		else
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#277: FILE: drivers/char/mmtimer.c:183:
++			ret = -ENOSYS;
+
+ERROR:SPACING: space required before the open parenthesis '('
+#281: FILE: drivers/char/mmtimer.c:187:
++		if(copy_to_user((unsigned long *)arg, RTC_COUNTER_ADDR, sizeof(unsigned long)))
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#285: FILE: drivers/char/mmtimer.c:191:
++		ret = -ENOSYS;
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#312: FILE: drivers/char/mmtimer.c:218:
++		return -ENOSYS;
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#314: FILE: drivers/char/mmtimer.c:220:
++	vma->vm_flags |= (VM_IO | VM_SHM | VM_LOCKED );
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#322: FILE: drivers/char/mmtimer.c:228:
++		printk(KERN_ERR "remap_page_range failed in mmtimer.c\n");
+
+WARNING:TYPO_SPELLING: 'comarators' may be misspelled - perhaps 'comparators'?
+#336: FILE: drivers/char/mmtimer.c:242:
++ * Called when one of the comarators matches the counter, this
+                           ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+ERROR:SPACING: space required before the open parenthesis '('
+#349: FILE: drivers/char/mmtimer.c:255:
++	for(i = 0; i < NUM_COMPARATORS; i++) {
+
+ERROR:SPACING: space required before the open parenthesis '('
+#350: FILE: drivers/char/mmtimer.c:256:
++		if(MMTIMER_INT_PENDING(i)) {
+
+ERROR:SPACING: space required before the open parenthesis '('
+#353: FILE: drivers/char/mmtimer.c:259:
++			if(timers[i].periodic)
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#353: FILE: drivers/char/mmtimer.c:259:
++			if(timers[i].periodic)
+[...]
++			else {
+[...]
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around timers[i].compare
+#354: FILE: drivers/char/mmtimer.c:260:
++				*(timers[i].compare) += timers[i].periodic;
+
+CHECK:BRACES: Unbalanced braces around else statement
+#355: FILE: drivers/char/mmtimer.c:261:
++			else {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#387: FILE: drivers/char/mmtimer.c:293:
++		printk(KERN_ERR "%s: unable to determine clock frequency\n", MMTIMER_NAME);
+
+ERROR:SPACING: space required before the open parenthesis '('
+#392: FILE: drivers/char/mmtimer.c:298:
++	if(request_irq(irq, mmtimer_interrupt, SA_INTERRUPT, MMTIMER_NAME, NULL))
+
+WARNING:TYPECAST_INT_CONSTANT: Unnecessary typecast of c90 int constant - '(unsigned long)1E15' could be '1E15UL'
+#396: FILE: drivers/char/mmtimer.c:302:
++	mmtimer_femtoperiod = ((unsigned long)1E15 + sn_rtc_cycles_per_second / 2) /
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#401: FILE: drivers/char/mmtimer.c:307:
++		printk(KERN_ERR "%s: failed to register device\n", MMTIMER_NAME);
+
+WARNING:LONG_LINE: line length of 123 exceeds 100 columns
+#405: FILE: drivers/char/mmtimer.c:311:
++	printk(KERN_INFO "%s: v%s, %ld MHz\n", MMTIMER_DESC, MMTIMER_VERSION, sn_rtc_cycles_per_second/(unsigned long)1E6);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#405: FILE: drivers/char/mmtimer.c:311:
++	printk(KERN_INFO "%s: v%s, %ld MHz\n", MMTIMER_DESC, MMTIMER_VERSION, sn_rtc_cycles_per_second/(unsigned long)1E6);
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#405: FILE: drivers/char/mmtimer.c:311:
++	printk(KERN_INFO "%s: v%s, %ld MHz\n", MMTIMER_DESC, MMTIMER_VERSION, sn_rtc_cycles_per_second/(unsigned long)1E6);
+ 	                                                                                              ^
+
+WARNING:TYPECAST_INT_CONSTANT: Unnecessary typecast of c90 int constant - '(unsigned long)1E6' could be '1E6UL'
+#405: FILE: drivers/char/mmtimer.c:311:
++	printk(KERN_INFO "%s: v%s, %ld MHz\n", MMTIMER_DESC, MMTIMER_VERSION, sn_rtc_cycles_per_second/(unsigned long)1E6);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#417: FILE: include/asm-ia64/sn/mmtimer_private.h:1:
++/*
+
+WARNING:LONG_LINE: line length of 134 exceeds 100 columns
+#445: FILE: include/asm-ia64/sn/mmtimer_private.h:29:
++#define MMTIMER_SET_INT(x,v) (x ? (*(RTC_INT_ENABLED_B_ADDR) = (unsigned long)(v)) : (*(RTC_INT_ENABLED_A_ADDR) = (unsigned long)(v)))
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#445: FILE: include/asm-ia64/sn/mmtimer_private.h:29:
++#define MMTIMER_SET_INT(x,v) (x ? (*(RTC_INT_ENABLED_B_ADDR) = (unsigned long)(v)) : (*(RTC_INT_ENABLED_A_ADDR) = (unsigned long)(v)))
+                          ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'v' - possible side-effects?
+#445: FILE: include/asm-ia64/sn/mmtimer_private.h:29:
++#define MMTIMER_SET_INT(x,v) (x ? (*(RTC_INT_ENABLED_B_ADDR) = (unsigned long)(v)) : (*(RTC_INT_ENABLED_A_ADDR) = (unsigned long)(v)))
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#450: FILE: include/asm-ia64/sn/mmtimer_private.h:34:
++typedef struct mmtimer {
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#451: FILE: include/asm-ia64/sn/mmtimer_private.h:35:
++	spinlock_t timer_lock;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#454: FILE: include/asm-ia64/sn/mmtimer_private.h:38:
++	volatile unsigned long *compare;
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#476: FILE: include/linux/mmtimer.h:1:
++/*
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#505: FILE: include/linux/mmtimer.h:30:
++typedef struct mmtimer_alarm {
+
+ERROR:SPACING: space required before the open parenthesis '('
+#581: FILE: include/linux/mmtimer.h:106:
++	if((fd = open("/dev/"MMTIMER_NAME, O_RDONLY)) == -1) {
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#581: FILE: include/linux/mmtimer.h:106:
++	if((fd = open("/dev/"MMTIMER_NAME, O_RDONLY)) == -1) {
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#581: FILE: include/linux/mmtimer.h:106:
++	if((fd = open("/dev/"MMTIMER_NAME, O_RDONLY)) == -1) {
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#586: FILE: include/linux/mmtimer.h:111:
++        /*$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#587: FILE: include/linux/mmtimer.h:112:
++         * How many comparators are there?$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#588: FILE: include/linux/mmtimer.h:113:
++         */$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#589: FILE: include/linux/mmtimer.h:114:
++        if((result = ioctl(fd, MMTIMER_GETNUM, 0)) != -ENOSYS)$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#589: FILE: include/linux/mmtimer.h:114:
++        if((result = ioctl(fd, MMTIMER_GETNUM, 0)) != -ENOSYS)$
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#589: FILE: include/linux/mmtimer.h:114:
++        if((result = ioctl(fd, MMTIMER_GETNUM, 0)) != -ENOSYS)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#589: FILE: include/linux/mmtimer.h:114:
++        if((result = ioctl(fd, MMTIMER_GETNUM, 0)) != -ENOSYS)
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#589: FILE: include/linux/mmtimer.h:114:
++        if((result = ioctl(fd, MMTIMER_GETNUM, 0)) != -ENOSYS)
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#590: FILE: include/linux/mmtimer.h:115:
++                printf("comparators available: %d\n", result);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#590: FILE: include/linux/mmtimer.h:115:
++                printf("comparators available: %d\n", result);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#591: FILE: include/linux/mmtimer.h:116:
++        else$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#591: FILE: include/linux/mmtimer.h:116:
++        else$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#592: FILE: include/linux/mmtimer.h:117:
++                printf("ERROR: no comparators available\n");$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#592: FILE: include/linux/mmtimer.h:117:
++                printf("ERROR: no comparators available\n");$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#594: FILE: include/linux/mmtimer.h:119:
++        /*$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#595: FILE: include/linux/mmtimer.h:120:
++         * Can we mmap in the counter?$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#596: FILE: include/linux/mmtimer.h:121:
++         */$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#597: FILE: include/linux/mmtimer.h:122:
++        if((result = ioctl(fd, MMTIMER_MMAPAVAIL, 0)) == 1) {$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#597: FILE: include/linux/mmtimer.h:122:
++        if((result = ioctl(fd, MMTIMER_MMAPAVAIL, 0)) == 1) {$
+
+ERROR:SPACING: space required before the open parenthesis '('
+#597: FILE: include/linux/mmtimer.h:122:
++        if((result = ioctl(fd, MMTIMER_MMAPAVAIL, 0)) == 1) {
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#597: FILE: include/linux/mmtimer.h:122:
++        if((result = ioctl(fd, MMTIMER_MMAPAVAIL, 0)) == 1) {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#597: FILE: include/linux/mmtimer.h:122:
++        if((result = ioctl(fd, MMTIMER_MMAPAVAIL, 0)) == 1) {
+[...]
++        else
+[...]
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#598: FILE: include/linux/mmtimer.h:123:
++                printf("mmap available\n");$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#598: FILE: include/linux/mmtimer.h:123:
++                printf("mmap available\n");$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#599: FILE: include/linux/mmtimer.h:124:
++^I        /* ... so try getting the offset for each clock */$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#600: FILE: include/linux/mmtimer.h:125:
++^I        if((result = ioctl(fd, MMTIMER_GETOFFSET, 0)) != -ENOSYS)$
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#600: FILE: include/linux/mmtimer.h:125:
++	        if((result = ioctl(fd, MMTIMER_GETOFFSET, 0)) != -ENOSYS)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#600: FILE: include/linux/mmtimer.h:125:
++	        if((result = ioctl(fd, MMTIMER_GETOFFSET, 0)) != -ENOSYS)
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#600: FILE: include/linux/mmtimer.h:125:
++	        if((result = ioctl(fd, MMTIMER_GETOFFSET, 0)) != -ENOSYS)
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#601: FILE: include/linux/mmtimer.h:126:
++^I                printf("offset: %d\n", result);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#602: FILE: include/linux/mmtimer.h:127:
++^I        else$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#603: FILE: include/linux/mmtimer.h:128:
++^I                printf("WARNING: offset unavailable for clock\n");$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#605: FILE: include/linux/mmtimer.h:130:
++        else$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#605: FILE: include/linux/mmtimer.h:130:
++        else$
+
+ERROR:ELSE_AFTER_BRACE: else should follow close brace '}'
+#605: FILE: include/linux/mmtimer.h:130:
++	}
++        else
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#606: FILE: include/linux/mmtimer.h:131:
++                printf("WARNING: mmap unavailable\n");$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#606: FILE: include/linux/mmtimer.h:131:
++                printf("WARNING: mmap unavailable\n");$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#611: FILE: include/linux/mmtimer.h:136:
++        if((result = ioctl(fd, MMTIMER_GETRES, &val)) != -ENOSYS)$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#611: FILE: include/linux/mmtimer.h:136:
++        if((result = ioctl(fd, MMTIMER_GETRES, &val)) != -ENOSYS)$
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#611: FILE: include/linux/mmtimer.h:136:
++        if((result = ioctl(fd, MMTIMER_GETRES, &val)) != -ENOSYS)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#611: FILE: include/linux/mmtimer.h:136:
++        if((result = ioctl(fd, MMTIMER_GETRES, &val)) != -ENOSYS)
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#611: FILE: include/linux/mmtimer.h:136:
++        if((result = ioctl(fd, MMTIMER_GETRES, &val)) != -ENOSYS)
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#612: FILE: include/linux/mmtimer.h:137:
++                printf("resolution: %ld femtoseconds\n", val);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#612: FILE: include/linux/mmtimer.h:137:
++                printf("resolution: %ld femtoseconds\n", val);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#613: FILE: include/linux/mmtimer.h:138:
++        else$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#613: FILE: include/linux/mmtimer.h:138:
++        else$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#614: FILE: include/linux/mmtimer.h:139:
++                printf("ERROR: failed to get resolution\n");$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#614: FILE: include/linux/mmtimer.h:139:
++                printf("ERROR: failed to get resolution\n");$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#619: FILE: include/linux/mmtimer.h:144:
++        if((result = ioctl(fd, MMTIMER_GETFREQ, &val)) != -ENOSYS)$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#619: FILE: include/linux/mmtimer.h:144:
++        if((result = ioctl(fd, MMTIMER_GETFREQ, &val)) != -ENOSYS)$
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#619: FILE: include/linux/mmtimer.h:144:
++        if((result = ioctl(fd, MMTIMER_GETFREQ, &val)) != -ENOSYS)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#619: FILE: include/linux/mmtimer.h:144:
++        if((result = ioctl(fd, MMTIMER_GETFREQ, &val)) != -ENOSYS)
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#619: FILE: include/linux/mmtimer.h:144:
++        if((result = ioctl(fd, MMTIMER_GETFREQ, &val)) != -ENOSYS)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#620: FILE: include/linux/mmtimer.h:145:
++		if(val < 10000000) /* less than 10 MHz? */
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#621: FILE: include/linux/mmtimer.h:146:
++			printf("ERROR: frequency only %ld MHz, should be >= 10 MHz\n", val/1000000);
+ 			                                                                  ^
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#623: FILE: include/linux/mmtimer.h:148:
++			printf("frequency: %ld MHz\n", val/1000000);
+ 			                                  ^
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#624: FILE: include/linux/mmtimer.h:149:
++        else$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#624: FILE: include/linux/mmtimer.h:149:
++        else$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#625: FILE: include/linux/mmtimer.h:150:
++                printf("ERROR: failed to get frequency\n");$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#625: FILE: include/linux/mmtimer.h:150:
++                printf("ERROR: failed to get frequency\n");$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#630: FILE: include/linux/mmtimer.h:155:
++        if((result = ioctl(fd, MMTIMER_GETBITS, 0)) != -ENOSYS)$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#630: FILE: include/linux/mmtimer.h:155:
++        if((result = ioctl(fd, MMTIMER_GETBITS, 0)) != -ENOSYS)$
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#630: FILE: include/linux/mmtimer.h:155:
++        if((result = ioctl(fd, MMTIMER_GETBITS, 0)) != -ENOSYS)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#630: FILE: include/linux/mmtimer.h:155:
++        if((result = ioctl(fd, MMTIMER_GETBITS, 0)) != -ENOSYS)
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#630: FILE: include/linux/mmtimer.h:155:
++        if((result = ioctl(fd, MMTIMER_GETBITS, 0)) != -ENOSYS)
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#631: FILE: include/linux/mmtimer.h:156:
++                printf("bits in counter: %d\n", result);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#631: FILE: include/linux/mmtimer.h:156:
++                printf("bits in counter: %d\n", result);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#632: FILE: include/linux/mmtimer.h:157:
++        else$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#632: FILE: include/linux/mmtimer.h:157:
++        else$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#633: FILE: include/linux/mmtimer.h:158:
++                printf("ERROR: can't get number of bits in counter\n");$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#633: FILE: include/linux/mmtimer.h:158:
++                printf("ERROR: can't get number of bits in counter\n");$
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#635: FILE: include/linux/mmtimer.h:160:
++	if((result = ioctl(fd, MMTIMER_GETCOUNTER, &val)) != -ENOSYS)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#635: FILE: include/linux/mmtimer.h:160:
++	if((result = ioctl(fd, MMTIMER_GETCOUNTER, &val)) != -ENOSYS)
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#635: FILE: include/linux/mmtimer.h:160:
++	if((result = ioctl(fd, MMTIMER_GETCOUNTER, &val)) != -ENOSYS)
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000251757.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 69 errors, 51 warnings, 15 checks, 564 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000251757.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,499 @@
+ERROR:DIFF_IN_COMMIT_MSG: Avoid using diff content in the commit message - patch(1) might not work
+#26: 
+--- a/arch/ppc/Kconfig	Wed May 12 06:18:07 2004
+
+Avoid having diff content in commit message.
+This causes problems when one tries to apply a file containing both
+the changelog and the diff because patch(1) tries to apply the diff
+which it found in the changelog.
+
+See: https://lore.kernel.org/lkml/20150611134006.9df79a893e3636019ad2759e@linux-foundation.org/
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#67: FILE: arch/ppc/kernel/setup.c:690:
++	if ( ppc_md.progress ) ppc_md.progress("ocp: exit", 0x3eab);
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#67: FILE: arch/ppc/kernel/setup.c:690:
++	if ( ppc_md.progress ) ppc_md.progress("ocp: exit", 0x3eab);
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#67: FILE: arch/ppc/kernel/setup.c:690:
++	if ( ppc_md.progress ) ppc_md.progress("ocp: exit", 0x3eab);
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#526: FILE: arch/ppc/syslib/ocp.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:REPEATED_WORD: Possible repeated word: 'an'
+#553: FILE: arch/ppc/syslib/ocp.c:28:
++ *  device model.  The devices on the OCP bus are seeded by an
++ *  an initial OCP device array created by the arch-specific
+
+WARNING:TYPO_SPELLING: 'accomodate' may be misspelled - perhaps 'accommodate'?
+#555: FILE: arch/ppc/syslib/ocp.c:30:
++ *  helper functions to accomodate system and  board-specific
+                         ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/io.h> instead of <asm/io.h>
+#574: FILE: arch/ppc/syslib/ocp.c:49:
++#include <asm/io.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#583: FILE: arch/ppc/syslib/ocp.c:58:
++extern int mem_init_done;
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#585: FILE: arch/ppc/syslib/ocp.c:60:
++extern struct ocp_def core_ocp[];	/* Static list of devices, provided by
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#586: FILE: arch/ppc/syslib/ocp.c:61:
++extern struct ocp_def core_ocp[];	/* Static list of devices, provided by
++					   CPU core */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#586: FILE: arch/ppc/syslib/ocp.c:61:
++					   CPU core */
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#594: FILE: arch/ppc/syslib/ocp.c:69:
++#define OCP_DEF_ATTR(field, format_string)				\
++static ssize_t								\
++show_##field(struct device *dev, char *buf)				\
++{									\
++	struct ocp_device *odev = to_ocp_dev(dev);			\
++									\
++	return sprintf(buf, format_string, odev->def->field);		\
++}									\
++static DEVICE_ATTR(field, S_IRUGO, show_##field, NULL);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#594: FILE: arch/ppc/syslib/ocp.c:69:
++#define OCP_DEF_ATTR(field, format_string)				\
++static ssize_t								\
++show_##field(struct device *dev, char *buf)				\
++{									\
++	struct ocp_device *odev = to_ocp_dev(dev);			\
++									\
++	return sprintf(buf, format_string, odev->def->field);		\
++}									\
++static DEVICE_ATTR(field, S_IRUGO, show_##field, NULL);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#594: FILE: arch/ppc/syslib/ocp.c:69:
++#define OCP_DEF_ATTR(field, format_string)				\
++static ssize_t								\
++show_##field(struct device *dev, char *buf)				\
++{									\
++	struct ocp_device *odev = to_ocp_dev(dev);			\
++									\
++	return sprintf(buf, format_string, odev->def->field);		\
++}									\
++static DEVICE_ATTR(field, S_IRUGO, show_##field, NULL);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#602: FILE: arch/ppc/syslib/ocp.c:77:
++static DEVICE_ATTR(field, S_IRUGO, show_##field, NULL);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:PRINTF_L: %Lx is non-standard C, use %llx
+#608: FILE: arch/ppc/syslib/ocp.c:83:
++OCP_DEF_ATTR(paddr, "0x%16Lx\n");
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#650: FILE: arch/ppc/syslib/ocp.c:125:
++		if ((ids->vendor == OCP_ANY_ID
++		     || ids->vendor == ocp_dev->def->vendor)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#651: FILE: arch/ppc/syslib/ocp.c:126:
++		     || ids->vendor == ocp_dev->def->vendor)
++		    && (ids->function == OCP_ANY_ID
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#652: FILE: arch/ppc/syslib/ocp.c:127:
++		    && (ids->function == OCP_ANY_ID
++			|| ids->function == ocp_dev->def->function))
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#653: FILE: arch/ppc/syslib/ocp.c:128:
++^I^I        return 1;$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ocp_unregister_driver', this function's name, in a string
+#763: FILE: arch/ppc/syslib/ocp.c:238:
++	DBG(("ocp: ocp_unregister_driver(%s)...\n", drv->name));
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ocp_unregister_driver', this function's name, in a string
+#767: FILE: arch/ppc/syslib/ocp.c:242:
++	DBG(("ocp: ocp_unregister_driver(%s)... done.\n", drv->name));
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#777: FILE: arch/ppc/syslib/ocp.c:252:
++	DBG(("ocp: __ocp_find_device(vendor: %x, function: %x, index: %d)...\n", vendor, function, index));
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using '__ocp_find_device', this function's name, in a string
+#777: FILE: arch/ppc/syslib/ocp.c:252:
++	DBG(("ocp: __ocp_find_device(vendor: %x, function: %x, index: %d)...\n", vendor, function, index));
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#791: FILE: arch/ppc/syslib/ocp.c:266:
++	DBG(("ocp: __ocp_find_device(vendor: %x, function: %x, index: %d)... done\n", vendor, function, index));
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using '__ocp_find_device', this function's name, in a string
+#791: FILE: arch/ppc/syslib/ocp.c:266:
++	DBG(("ocp: __ocp_find_device(vendor: %x, function: %x, index: %d)... done\n", vendor, function, index));
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ocp_get_one_device', this function's name, in a string
+#835: FILE: arch/ppc/syslib/ocp.c:310:
++	DBG(("ocp: ocp_get_one_device(vendor: %x, function: %x, index: %d)...\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#836: FILE: arch/ppc/syslib/ocp.c:311:
++	DBG(("ocp: ocp_get_one_device(vendor: %x, function: %x, index: %d)...\n",
++		vendor, function, index));
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#840: FILE: arch/ppc/syslib/ocp.c:315:
++^Iif (dev) $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ocp_get_one_device', this function's name, in a string
+#843: FILE: arch/ppc/syslib/ocp.c:318:
++	DBG(("ocp: ocp_get_one_device(vendor: %x, function: %x, index: %d)... done.\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#844: FILE: arch/ppc/syslib/ocp.c:319:
++	DBG(("ocp: ocp_get_one_device(vendor: %x, function: %x, index: %d)... done.\n",
++		vendor, function, index));
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ocp_add_one_device', this function's name, in a string
+#863: FILE: arch/ppc/syslib/ocp.c:338:
++	DBG(("ocp: ocp_add_one_device()...\n"));
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!dev"
+#874: FILE: arch/ppc/syslib/ocp.c:349:
++	if (dev == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ocp_add_one_device', this function's name, in a string
+#885: FILE: arch/ppc/syslib/ocp.c:360:
++	DBG(("ocp: ocp_add_one_device()...done\n"));
+
+WARNING:LONG_LINE: line length of 111 exceeds 100 columns
+#905: FILE: arch/ppc/syslib/ocp.c:380:
++	DBG(("ocp: ocp_remove_one_device(vendor: %x, function: %x, index: %d)...\n", vendor, function, index));
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ocp_remove_one_device', this function's name, in a string
+#905: FILE: arch/ppc/syslib/ocp.c:380:
++	DBG(("ocp: ocp_remove_one_device(vendor: %x, function: %x, index: %d)...\n", vendor, function, index));
+
+WARNING:LONG_LINE: line length of 117 exceeds 100 columns
+#916: FILE: arch/ppc/syslib/ocp.c:391:
++	DBG(("ocp: ocp_remove_one_device(vendor: %x, function: %x, index: %d)... done.\n", vendor, function, index));
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ocp_remove_one_device', this function's name, in a string
+#916: FILE: arch/ppc/syslib/ocp.c:391:
++	DBG(("ocp: ocp_remove_one_device(vendor: %x, function: %x, index: %d)... done.\n", vendor, function, index));
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#930: FILE: arch/ppc/syslib/ocp.c:405:
++ocp_for_each_device(void(*callback)(struct ocp_device *, void *arg), void *arg)
++{
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#938: FILE: arch/ppc/syslib/ocp.c:413:
++			callback(list_entry(entry, struct ocp_device, link),
++				arg);
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#946: FILE: arch/ppc/syslib/ocp.c:421:
++ *^IThis function builds the list of devices before setup_arch. $
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ocp_early_init', this function's name, in a string
+#956: FILE: arch/ppc/syslib/ocp.c:431:
++	DBG(("ocp: ocp_early_init()...\n"));
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ocp_early_init', this function's name, in a string
+#962: FILE: arch/ppc/syslib/ocp.c:437:
++	DBG(("ocp: ocp_early_init()... done.\n"));
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ocp_driver_init', this function's name, in a string
+#984: FILE: arch/ppc/syslib/ocp.c:459:
++	DBG(("ocp: ocp_driver_init()...\n"));
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*ocp_bus)...) over kmalloc(sizeof(struct device)...)
+#987: FILE: arch/ppc/syslib/ocp.c:462:
++	ocp_bus = kmalloc(sizeof(struct device), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!ocp_bus"
+#988: FILE: arch/ppc/syslib/ocp.c:463:
++	if (ocp_bus == NULL)
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ocp_driver_init', this function's name, in a string
+#1008: FILE: arch/ppc/syslib/ocp.c:483:
++	DBG(("ocp: ocp_driver_init()... done.\n"));
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#1015: FILE: arch/ppc/syslib/ocp.c:490:
++EXPORT_SYMBOL(ocp_bus_type);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#1016: FILE: arch/ppc/syslib/ocp.c:491:
++EXPORT_SYMBOL(ocp_find_device);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#1017: FILE: arch/ppc/syslib/ocp.c:492:
++EXPORT_SYMBOL(ocp_register_driver);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#1018: FILE: arch/ppc/syslib/ocp.c:493:
++EXPORT_SYMBOL(ocp_unregister_driver);
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1109: FILE: include/asm-ppc/ocp.h:49:
++extern struct list_head ^Iocp_devices;$
+
+WARNING:TYPO_SPELLING: 'informations' may be misspelled - perhaps 'information'?
+#1151: FILE: include/asm-ppc/ocp.h:83:
++ *             providing additional informations for a given device
+                                     ^^^^^^^^^^^^
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1167: FILE: include/asm-ppc/ocp.h:94:
++^Iint^I  ^Iirq;$
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct device *' should also have an identifier name
+#1170: FILE: include/asm-ppc/ocp.h:97:
++	void		(*show)(struct device *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#1197: FILE: include/asm-ppc/ocp.h:109:
++	u32			current_state;	/* Current operating state. In ACPI-speak,
++						   this is D0-D3, D0 being fully functional,
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1198: FILE: include/asm-ppc/ocp.h:110:
++						   and D3 being off. */
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1301: FILE: include/asm-ppc/ocp.h:166:
++extern int ocp_register_driver(struct ocp_driver *drv);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1302: FILE: include/asm-ppc/ocp.h:167:
++extern void ocp_unregister_driver(struct ocp_driver *drv);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1305: FILE: include/asm-ppc/ocp.h:170:
++extern int ocp_early_init(void) __init;
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1310: FILE: include/asm-ppc/ocp.h:173:
++extern struct ocp_device *ocp_find_device(unsigned int vendor, unsigned int function, int index);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1313: FILE: include/asm-ppc/ocp.h:176:
++extern struct ocp_def *ocp_get_one_device(unsigned int vendor, unsigned int function, int index);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1316: FILE: include/asm-ppc/ocp.h:179:
++extern int ocp_add_one_device(struct ocp_def *def);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1319: FILE: include/asm-ppc/ocp.h:182:
++extern int ocp_remove_one_device(unsigned int vendor, unsigned int function, int index);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1322: FILE: include/asm-ppc/ocp.h:185:
++extern void ocp_for_each_device(void(*callback)(struct ocp_device *, void *arg), void *arg);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#1325: FILE: include/asm-ppc/ocp.h:188:
++#define OCP_SYSFS_ADDTL(type, format, name, field)			\
++static ssize_t								\
++show_##name##_##field(struct device *dev, char *buf)			\
++{									\
++	struct ocp_device *odev = to_ocp_dev(dev);			\
++	type *add = odev->def->additions;				\
++									\
++	return sprintf(buf, format, add->field);			\
++}									\
++static DEVICE_ATTR(name##_##field, S_IRUGO, show_##name##_##field, NULL);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#1325: FILE: include/asm-ppc/ocp.h:188:
++#define OCP_SYSFS_ADDTL(type, format, name, field)			\
++static ssize_t								\
++show_##name##_##field(struct device *dev, char *buf)			\
++{									\
++	struct ocp_device *odev = to_ocp_dev(dev);			\
++	type *add = odev->def->additions;				\
++									\
++	return sprintf(buf, format, add->field);			\
++}									\
++static DEVICE_ATTR(name##_##field, S_IRUGO, show_##name##_##field, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#1334: FILE: include/asm-ppc/ocp.h:197:
++static DEVICE_ATTR(name##_##field, S_IRUGO, show_##name##_##field, NULL);
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000282382.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 8 errors, 40 warnings, 21 checks, 959 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000282382.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

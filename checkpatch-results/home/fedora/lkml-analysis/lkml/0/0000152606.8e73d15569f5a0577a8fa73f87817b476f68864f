@@ -1,0 +1,273 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#111: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#115: FILE: drivers/input/mouse/trackpoint.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:INCLUDE_LINUX: Use #include <linux/uaccess.h> instead of <asm/uaccess.h>
+#132: FILE: drivers/input/mouse/trackpoint.c:18:
++#include <asm/uaccess.h>
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_item' may be better as '(_item)' to avoid precedence issues
+#150: FILE: drivers/input/mouse/trackpoint.c:36:
++#define MAKE_ATTR_READ(_item) \
++	static ssize_t psmouse_attr_show_##_item(struct psmouse *psmouse, char *buf) \
++	{ \
++		struct trackpoint_data *tp = psmouse->private; \
++		return sprintf(buf, "%lu\n", (unsigned long)tp->_item); \
++	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_item' - possible side-effects?
+#157: FILE: drivers/input/mouse/trackpoint.c:43:
++#define MAKE_ATTR_WRITE(_item, command) \
++	static ssize_t psmouse_attr_set_##_item(struct psmouse *psmouse, const char *buf, size_t count) \
++	{ \
++		char *rest; \
++		unsigned long value; \
++		struct trackpoint_data *tp = psmouse->private; \
++		value = simple_strtoul(buf, &rest, 10); \
++		if (*rest) \
++			return -EINVAL; \
++		tp->_item = value; \
++		trackpoint_write(&psmouse->ps2dev, command, tp->_item); \
++		return count; \
++	}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_item' may be better as '(_item)' to avoid precedence issues
+#157: FILE: drivers/input/mouse/trackpoint.c:43:
++#define MAKE_ATTR_WRITE(_item, command) \
++	static ssize_t psmouse_attr_set_##_item(struct psmouse *psmouse, const char *buf, size_t count) \
++	{ \
++		char *rest; \
++		unsigned long value; \
++		struct trackpoint_data *tp = psmouse->private; \
++		value = simple_strtoul(buf, &rest, 10); \
++		if (*rest) \
++			return -EINVAL; \
++		tp->_item = value; \
++		trackpoint_write(&psmouse->ps2dev, command, tp->_item); \
++		return count; \
++	}
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#158: FILE: drivers/input/mouse/trackpoint.c:44:
++	static ssize_t psmouse_attr_set_##_item(struct psmouse *psmouse, const char *buf, size_t count) \
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:CONSIDER_KSTRTO: simple_strtoul is obsolete, use kstrtoul instead
+#163: FILE: drivers/input/mouse/trackpoint.c:49:
++		value = simple_strtoul(buf, &rest, 10); \
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_item' - possible side-effects?
+#171: FILE: drivers/input/mouse/trackpoint.c:57:
++#define MAKE_ATTR_TOGGLE(_item, command, mask) \
++	static ssize_t psmouse_attr_set_##_item(struct psmouse *psmouse, const char *buf, size_t count) \
++	{ \
++		unsigned char toggle; \
++		struct trackpoint_data *tp = psmouse->private; \
++		toggle = (buf[0] == '1') ? 1 : 0; \
++		if (toggle != tp->_item) { \
++			tp->_item = toggle; \
++			trackpoint_toggle_bit(&psmouse->ps2dev, command, mask); \
++		} \
++		return count; \
++	}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_item' may be better as '(_item)' to avoid precedence issues
+#171: FILE: drivers/input/mouse/trackpoint.c:57:
++#define MAKE_ATTR_TOGGLE(_item, command, mask) \
++	static ssize_t psmouse_attr_set_##_item(struct psmouse *psmouse, const char *buf, size_t count) \
++	{ \
++		unsigned char toggle; \
++		struct trackpoint_data *tp = psmouse->private; \
++		toggle = (buf[0] == '1') ? 1 : 0; \
++		if (toggle != tp->_item) { \
++			tp->_item = toggle; \
++			trackpoint_toggle_bit(&psmouse->ps2dev, command, mask); \
++		} \
++		return count; \
++	}
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#172: FILE: drivers/input/mouse/trackpoint.c:58:
++	static ssize_t psmouse_attr_set_##_item(struct psmouse *psmouse, const char *buf, size_t count) \
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 17)
+#330: FILE: drivers/input/mouse/trackpoint.c:216:
++	if (((toggle & TP_MASK_PTSON) == TP_MASK_PTSON) != tp->press_to_select)
++		 trackpoint_toggle_bit(&psmouse->ps2dev, TP_TOGGLE_PTSON, TP_MASK_PTSON);
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#373: FILE: drivers/input/mouse/trackpoint.c:259:
++	param[0] = param[1] = 0;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#387: FILE: drivers/input/mouse/trackpoint.c:273:
++		printk(KERN_WARNING "trackpoint.c: failed to get extended button data\n");
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#391: FILE: drivers/input/mouse/trackpoint.c:277:
++	psmouse->private = priv = kcalloc(1, sizeof(struct trackpoint_data), GFP_KERNEL);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#406: FILE: drivers/input/mouse/trackpoint.c:292:
++	printk(KERN_INFO "IBM TrackPoint firmware: 0x%02x, buttons: %d/%d\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#407: FILE: drivers/input/mouse/trackpoint.c:293:
++	printk(KERN_INFO "IBM TrackPoint firmware: 0x%02x, buttons: %d/%d\n",
++		firmware_id, (button_info & 0xf0) >> 4, button_info & 0x0f);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#417: FILE: drivers/input/mouse/trackpoint.h:1:
++/*
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#443: FILE: drivers/input/mouse/trackpoint.h:27:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#463: FILE: drivers/input/mouse/trackpoint.h:47:
++
++
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments should align the * on each line
+#471: FILE: drivers/input/mouse/trackpoint.h:55:
++/*
++* RAM Locations for properties
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments should align the * on each line
+#472: FILE: drivers/input/mouse/trackpoint.h:56:
++* RAM Locations for properties
++ */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#514: FILE: drivers/input/mouse/trackpoint.h:98:
++#define TP_TOGGLE_SOURCE_TAG	0x20	/* Bit 3 of the first packet will be set to
++					   to the origin of the packet (external or TP) */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#514: FILE: drivers/input/mouse/trackpoint.h:98:
++					   to the origin of the packet (external or TP) */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#517: FILE: drivers/input/mouse/trackpoint.h:101:
++#define TP_TOGGLE_EXT_TAG	0x22	/* Bit 3 of the first packet coming from the
++					   external device will be forced to 1 */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#517: FILE: drivers/input/mouse/trackpoint.h:101:
++					   external device will be forced to 1 */
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#520: FILE: drivers/input/mouse/trackpoint.h:104:
++
++
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#546: FILE: drivers/input/mouse/trackpoint.h:130:
++#define MAKE_PS2_CMD(params, results, cmd) ((params<<12) | (results<<8) | (cmd))
+                                                    ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#546: FILE: drivers/input/mouse/trackpoint.h:130:
++#define MAKE_PS2_CMD(params, results, cmd) ((params<<12) | (results<<8) | (cmd))
+                                                                    ^
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'params' may be better as '(params)' to avoid precedence issues
+#546: FILE: drivers/input/mouse/trackpoint.h:130:
++#define MAKE_PS2_CMD(params, results, cmd) ((params<<12) | (results<<8) | (cmd))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'results' may be better as '(results)' to avoid precedence issues
+#546: FILE: drivers/input/mouse/trackpoint.h:130:
++#define MAKE_PS2_CMD(params, results, cmd) ((params<<12) | (results<<8) | (cmd))
+
+ERROR:OPEN_BRACE: open brace '{' following struct go on the same line
+#549: FILE: drivers/input/mouse/trackpoint.h:133:
++struct trackpoint_data
++{
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#561: FILE: drivers/input/mouse/trackpoint.h:145:
++extern int trackpoint_detect(struct psmouse *psmouse, int set_properties);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000152606.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 1 errors, 16 warnings, 16 checks, 495 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000152606.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

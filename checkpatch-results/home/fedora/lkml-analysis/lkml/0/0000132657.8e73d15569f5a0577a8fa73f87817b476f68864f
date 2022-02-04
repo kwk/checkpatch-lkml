@@ -1,0 +1,155 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#28: 
+to page_state fields. Callers must provide their own locking (either disable
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#46: FILE: include/linux/page-flags.h:139:
++extern unsigned long read_page_state_offset(unsigned long offset);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#47: FILE: include/linux/page-flags.h:140:
++extern void mod_page_state_offset(unsigned long offset, unsigned long delta);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#48: FILE: include/linux/page-flags.h:141:
++extern void __mod_page_state_offset(unsigned long offset, unsigned long delta);
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#79: FILE: include/linux/page-flags.h:154:
++#define add_page_state(member,delta)	mod_page_state(member, (delta))
+                              ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#80: FILE: include/linux/page-flags.h:155:
++#define sub_page_state(member,delta)	mod_page_state(member, 0UL - (delta))
+                              ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#84: FILE: include/linux/page-flags.h:159:
++#define __add_page_state(member,delta)	__mod_page_state(member, (delta))
+                                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#85: FILE: include/linux/page-flags.h:160:
++#define __sub_page_state(member,delta)	__mod_page_state(member, 0UL - (delta))
+                                ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'zone' - possible side-effects?
+#89: FILE: include/linux/page-flags.h:164:
++#define state_zone_offset(zone, member)					\
++({									\
++	unsigned offset;						\
++	if (is_highmem(zone))						\
++		offset = offsetof(struct page_state, member##_high);	\
++	else if (is_normal(zone))					\
++		offset = offsetof(struct page_state, member##_normal);	\
++	else								\
++		offset = offsetof(struct page_state, member##_dma);	\
++	offset;								\
++})
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#91: FILE: include/linux/page-flags.h:166:
++	unsigned offset;						\
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#101: FILE: include/linux/page-flags.h:176:
++#define __mod_page_state_zone(zone, member, delta)			\
++ do {									\
++	__mod_page_state_offset(state_zone_offset(zone, member), (delta)); \
++ } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#102: FILE: include/linux/page-flags.h:177:
++ do {^I^I^I^I^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#104: FILE: include/linux/page-flags.h:179:
++ } while (0)$
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#106: FILE: include/linux/page-flags.h:181:
++#define mod_page_state_zone(zone, member, delta)			\
++ do {									\
++	mod_page_state_offset(state_zone_offset(zone, member), (delta)); \
++ } while (0)
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#107: FILE: include/linux/page-flags.h:182:
++ do {^I^I^I^I^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#109: FILE: include/linux/page-flags.h:184:
++ } while (0)$
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#184: FILE: mm/page_alloc.c:705:
++static struct page *buffered_rmqueue(struct zonelist *zonelist,
++			struct zone *zone, int order, gfp_t gfp_flags)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#234: FILE: mm/page_alloc.c:739:
++	BUG_ON(bad_range(zone, page));
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#327: FILE: mm/vmscan.c:648:
++		if (current_is_kswapd()) {
+[...]
++		} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#330: FILE: mm/vmscan.c:651:
++		} else
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000132657.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 4 errors, 9 warnings, 7 checks, 324 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000132657.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

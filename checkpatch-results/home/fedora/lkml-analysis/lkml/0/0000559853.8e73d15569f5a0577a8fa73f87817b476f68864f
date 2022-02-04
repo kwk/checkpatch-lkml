@@ -1,0 +1,239 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#29: 
+> Not a big deal but still I'd prefer the CONFIG_SMP #ifdef though, it looks even
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#87: FILE: include/linux/sched.h:548:
++extern int FASTCALL(wake_up_process(struct task_struct * tsk));
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#87: FILE: include/linux/sched.h:548:
++extern int FASTCALL(wake_up_process(struct task_struct * tsk));
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#129: FILE: include/linux/wait.h:82:
+ 
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#135: FILE: include/linux/wait.h:88:
++#define WQ_BUG()	BUG()
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#136: FILE: include/linux/wait.h:89:
++#define CHECK_MAGIC(x)							\
++	do {									\
++		if ((x) != (long)&(x)) {					\
++			printk("bad magic %lx (should be %lx), ",		\
++				(long)x, (long)&(x));				\
++			WQ_BUG();						\
++		}								\
++	} while (0)
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#139: FILE: include/linux/wait.h:92:
++			printk("bad magic %lx (should be %lx), ",		\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#144: FILE: include/linux/wait.h:97:
++#define CHECK_MAGIC_WQHEAD(x)							\
++	do {									\
++		if ((x)->__magic != (long)&((x)->__magic)) {			\
++			printk("bad magic %lx (should be %lx, creator %lx), ",	\
++			(x)->__magic, (long)&((x)->__magic), (x)->__creator);	\
++			WQ_BUG();						\
++		}								\
++	} while (0)
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#147: FILE: include/linux/wait.h:100:
++			printk("bad magic %lx (should be %lx, creator %lx), ",	\
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#152: FILE: include/linux/wait.h:105:
++#define WQ_CHECK_LIST_HEAD(list) ^I^I^I^I^I^I\$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'list' - possible side-effects?
+#152: FILE: include/linux/wait.h:105:
++#define WQ_CHECK_LIST_HEAD(list) 						\
++	do {									\
++		if (!list->next || !list->prev)					\
++			WQ_BUG();						\
++	} while(0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'list' may be better as '(list)' to avoid precedence issues
+#152: FILE: include/linux/wait.h:105:
++#define WQ_CHECK_LIST_HEAD(list) 						\
++	do {									\
++		if (!list->next || !list->prev)					\
++			WQ_BUG();						\
++	} while(0)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#156: FILE: include/linux/wait.h:109:
++	} while(0)
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'tsk' may be better as '(tsk)' to avoid precedence issues
+#157: FILE: include/linux/wait.h:110:
++#define WQ_NOTE_WAKER(tsk)							\
++	do {									\
++		tsk->__waker = (long)__builtin_return_address(0);		\
++	} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#157: FILE: include/linux/wait.h:110:
++#define WQ_NOTE_WAKER(tsk)							\
++	do {									\
++		tsk->__waker = (long)__builtin_return_address(0);		\
++	} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#178: FILE: include/linux/wait.h:127:
++# define __WAITQUEUE_DEBUG_INIT(name) (long)&(name).__magic, 0
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#179: FILE: include/linux/wait.h:128:
++# define __WAITQUEUE_HEAD_DEBUG_INIT(name) (long)&(name).__magic, (long)&(name).__magic
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#179: FILE: include/linux/wait.h:128:
++# define __WAITQUEUE_HEAD_DEBUG_INIT(name) (long)&(name).__magic, (long)&(name).__magic
+
+WARNING:INDENTED_LABEL: labels should not be indented
+#194: FILE: include/linux/wait.h:135:
++	task:		tsk,						\
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxW)
+#195: FILE: include/linux/wait.h:136:
++	task_list:	{ NULL, NULL },					\
+ 	         ^
+
+WARNING:INDENTED_LABEL: labels should not be indented
+#195: FILE: include/linux/wait.h:136:
++	task_list:	{ NULL, NULL },					\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#198: FILE: include/linux/wait.h:139:
++#define DECLARE_WAITQUEUE(name, tsk)					\
++	wait_queue_t name = __WAITQUEUE_INITIALIZER(name, tsk)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#201: FILE: include/linux/wait.h:142:
++#define __WAIT_QUEUE_HEAD_INITIALIZER(name) {				\
++	lock:		WAITQUEUE_RW_LOCK_UNLOCKED,			\
++	task_list:	{ &(name).task_list, &(name).task_list },	\
++			__WAITQUEUE_HEAD_DEBUG_INIT(name)}
+
+WARNING:INDENTED_LABEL: labels should not be indented
+#202: FILE: include/linux/wait.h:143:
++	lock:		WAITQUEUE_RW_LOCK_UNLOCKED,			\
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxW)
+#203: FILE: include/linux/wait.h:144:
++	task_list:	{ &(name).task_list, &(name).task_list },	\
+ 	         ^
+
+WARNING:INDENTED_LABEL: labels should not be indented
+#203: FILE: include/linux/wait.h:144:
++	task_list:	{ &(name).task_list, &(name).task_list },	\
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#225: FILE: kernel/sched.c:329:
++static inline int try_to_wake_up(struct task_struct * p, int synchronous)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#246: FILE: kernel/sched.c:350:
++inline int wake_up_process(struct task_struct * p)
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#326: FILE: kernel/sched.c:725:
++                wait_queue_t *curr = list_entry(curr_sleeper, wait_queue_t, task_list);$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#326: FILE: kernel/sched.c:725:
++                wait_queue_t *curr = list_entry(curr_sleeper, wait_queue_t, task_list);$
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (24, 40)
+#342: FILE: kernel/sched.c:733:
++			if (do_affine && p->processor != best_cpu &&
+[...]
++					if (first_nonaffine_exclusive == NULL)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#343: FILE: kernel/sched.c:734:
++			if (do_affine && p->processor != best_cpu &&
++				(curr->flags & wq_mode & WQ_FLAG_EXCLUSIVE)) {
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!first_nonaffine_exclusive"
+#344: FILE: kernel/sched.c:735:
++					if (first_nonaffine_exclusive == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+ERROR:ELSE_AFTER_BRACE: else should follow close brace '}'
+#347: FILE: kernel/sched.c:738:
++			}
++			else
+
+`else {` should follow the closing block `}` on the same line.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000559853.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 10 errors, 12 warnings, 12 checks, 310 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000559853.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

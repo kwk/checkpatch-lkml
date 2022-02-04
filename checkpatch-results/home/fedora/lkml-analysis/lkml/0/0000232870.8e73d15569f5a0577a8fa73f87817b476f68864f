@@ -1,0 +1,1858 @@
+WARNING:BAD_SIGN_OFF: 'Signed-off-by:' is the preferred signature form
+#26: 
+Signed-Off-By: dhowells@redhat.com
+
+The signed-off-by line does not fall in line with the standards
+specified by the community.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#41: FILE: include/asm-frv/unaligned.h:1:
++/* unaligned.h: unaligned access handler
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#74: FILE: include/asm-frv/unaligned.h:34:
++#define get_unaligned(ptr) ({				\
++	typeof((*(ptr))) __x;				\
++	void *__ptrcopy;				\
++	asm("" : "=r" (__ptrcopy) : "0" (ptr));		\
++	memcpy(&__x, __ptrcopy, sizeof(*(ptr)));	\
++	__x;						\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#82: FILE: include/asm-frv/unaligned.h:42:
++#define put_unaligned(val, ptr) ({			\
++	typeof((*(ptr))) __x = (val);			\
++	void *__ptrcopy;				\
++	asm("" : "=r" (__ptrcopy) : "0" (ptr));		\
++	memcpy(__ptrcopy, &__x, sizeof(*(ptr)));	\
++})
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#89: FILE: include/asm-frv/unaligned.h:49:
++extern int handle_misalignment(unsigned long esr0, unsigned long ear0, unsigned long epcr0);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#93: FILE: include/asm-frv/unaligned.h:53:
++#define get_unaligned(ptr)							\
++({										\
++	typeof(*(ptr)) x;							\
++	const char *__p = (const char *) (ptr);					\
++										\
++	switch (sizeof(x)) {							\
++	case 1:									\
++		x = *(ptr);							\
++		break;								\
++	case 2:									\
++	{									\
++		uint8_t a;							\
++		asm("	ldub%I2		%M2,%0		\n"			\
++		    "	ldub%I3.p	%M3,%1		\n"			\
++		    "	slli		%0,#8,%0	\n"			\
++		    "	or		%0,%1,%0	\n"			\
++		    : "=&r"(x), "=&r"(a)					\
++		    : "m"(__p[0]),  "m"(__p[1])					\
++		    );								\
++		break;								\
++	}									\
++										\
++	case 4:									\
++	{									\
++		uint8_t a;							\
++		asm("	ldub%I2		%M2,%0		\n"			\
++		    "	ldub%I3.p	%M3,%1		\n"			\
++		    "	slli		%0,#8,%0	\n"			\
++		    "	or		%0,%1,%0	\n"			\
++		    "	ldub%I4.p	%M4,%1		\n"			\
++		    "	slli		%0,#8,%0	\n"			\
++		    "	or		%0,%1,%0	\n"			\
++		    "	ldub%I5.p	%M5,%1		\n"			\
++		    "	slli		%0,#8,%0	\n"			\
++		    "	or		%0,%1,%0	\n"			\
++		    : "=&r"(x), "=&r"(a)					\
++		    : "m"(__p[0]),  "m"(__p[1]), "m"(__p[2]), "m"(__p[3])	\
++		    );								\
++		break;								\
++	}									\
++										\
++	case 8:									\
++	{									\
++		union { uint64_t x; u32 y[2]; } z;				\
++		uint8_t a;							\
++		asm("	ldub%I3		%M3,%0		\n"			\
++		    "	ldub%I4.p	%M4,%2		\n"			\
++		    "	slli		%0,#8,%0	\n"			\
++		    "	or		%0,%2,%0	\n"			\
++		    "	ldub%I5.p	%M5,%2		\n"			\
++		    "	slli		%0,#8,%0	\n"			\
++		    "	or		%0,%2,%0	\n"			\
++		    "	ldub%I6.p	%M6,%2		\n"			\
++		    "	slli		%0,#8,%0	\n"			\
++		    "	or		%0,%2,%0	\n"			\
++		    "	ldub%I7		%M7,%1		\n"			\
++		    "	ldub%I8.p	%M8,%2		\n"			\
++		    "	slli		%1,#8,%1	\n"			\
++		    "	or		%1,%2,%1	\n"			\
++		    "	ldub%I9.p	%M9,%2		\n"			\
++		    "	slli		%1,#8,%1	\n"			\
++		    "	or		%1,%2,%1	\n"			\
++		    "	ldub%I10.p	%M10,%2		\n"			\
++		    "	slli		%1,#8,%1	\n"			\
++		    "	or		%1,%2,%1	\n"			\
++		    : "=&r"(z.y[0]), "=&r"(z.y[1]), "=&r"(a)			\
++		    : "m"(__p[0]), "m"(__p[1]), "m"(__p[2]), "m"(__p[3]),	\
++		      "m"(__p[4]), "m"(__p[5]), "m"(__p[6]), "m"(__p[7])	\
++		    );								\
++		x = z.x;							\
++		break;								\
++	}									\
++										\
++	default:								\
++		x = 0;								\
++		BUG();								\
++		break;								\
++	}									\
++										\
++	x;									\
++})
+
+CHECK:SPACING: No space is necessary after a cast
+#96: FILE: include/asm-frv/unaligned.h:56:
++	const char *__p = (const char *) (ptr);					\
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#104: FILE: include/asm-frv/unaligned.h:64:
++		uint8_t a;							\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#105: FILE: include/asm-frv/unaligned.h:65:
++		asm("	ldub%I2		%M2,%0		\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#106: FILE: include/asm-frv/unaligned.h:66:
++		    "	ldub%I3.p	%M3,%1		\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#107: FILE: include/asm-frv/unaligned.h:67:
++		    "	slli		%0,#8,%0	\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#108: FILE: include/asm-frv/unaligned.h:68:
++		    "	or		%0,%1,%0	\n"			\
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#117: FILE: include/asm-frv/unaligned.h:77:
++		uint8_t a;							\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#118: FILE: include/asm-frv/unaligned.h:78:
++		asm("	ldub%I2		%M2,%0		\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#119: FILE: include/asm-frv/unaligned.h:79:
++		    "	ldub%I3.p	%M3,%1		\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#120: FILE: include/asm-frv/unaligned.h:80:
++		    "	slli		%0,#8,%0	\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#121: FILE: include/asm-frv/unaligned.h:81:
++		    "	or		%0,%1,%0	\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#122: FILE: include/asm-frv/unaligned.h:82:
++		    "	ldub%I4.p	%M4,%1		\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#123: FILE: include/asm-frv/unaligned.h:83:
++		    "	slli		%0,#8,%0	\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#124: FILE: include/asm-frv/unaligned.h:84:
++		    "	or		%0,%1,%0	\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#125: FILE: include/asm-frv/unaligned.h:85:
++		    "	ldub%I5.p	%M5,%1		\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#126: FILE: include/asm-frv/unaligned.h:86:
++		    "	slli		%0,#8,%0	\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#127: FILE: include/asm-frv/unaligned.h:87:
++		    "	or		%0,%1,%0	\n"			\
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#136: FILE: include/asm-frv/unaligned.h:96:
++		union { uint64_t x; u32 y[2]; } z;				\
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#137: FILE: include/asm-frv/unaligned.h:97:
++		uint8_t a;							\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#138: FILE: include/asm-frv/unaligned.h:98:
++		asm("	ldub%I3		%M3,%0		\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#139: FILE: include/asm-frv/unaligned.h:99:
++		    "	ldub%I4.p	%M4,%2		\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#140: FILE: include/asm-frv/unaligned.h:100:
++		    "	slli		%0,#8,%0	\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#141: FILE: include/asm-frv/unaligned.h:101:
++		    "	or		%0,%2,%0	\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#142: FILE: include/asm-frv/unaligned.h:102:
++		    "	ldub%I5.p	%M5,%2		\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#143: FILE: include/asm-frv/unaligned.h:103:
++		    "	slli		%0,#8,%0	\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#144: FILE: include/asm-frv/unaligned.h:104:
++		    "	or		%0,%2,%0	\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#145: FILE: include/asm-frv/unaligned.h:105:
++		    "	ldub%I6.p	%M6,%2		\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#146: FILE: include/asm-frv/unaligned.h:106:
++		    "	slli		%0,#8,%0	\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#147: FILE: include/asm-frv/unaligned.h:107:
++		    "	or		%0,%2,%0	\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#148: FILE: include/asm-frv/unaligned.h:108:
++		    "	ldub%I7		%M7,%1		\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#149: FILE: include/asm-frv/unaligned.h:109:
++		    "	ldub%I8.p	%M8,%2		\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#150: FILE: include/asm-frv/unaligned.h:110:
++		    "	slli		%1,#8,%1	\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#151: FILE: include/asm-frv/unaligned.h:111:
++		    "	or		%1,%2,%1	\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#152: FILE: include/asm-frv/unaligned.h:112:
++		    "	ldub%I9.p	%M9,%2		\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#153: FILE: include/asm-frv/unaligned.h:113:
++		    "	slli		%1,#8,%1	\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#154: FILE: include/asm-frv/unaligned.h:114:
++		    "	or		%1,%2,%1	\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#155: FILE: include/asm-frv/unaligned.h:115:
++		    "	ldub%I10.p	%M10,%2		\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#156: FILE: include/asm-frv/unaligned.h:116:
++		    "	slli		%1,#8,%1	\n"			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#157: FILE: include/asm-frv/unaligned.h:117:
++		    "	or		%1,%2,%1	\n"			\
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#168: FILE: include/asm-frv/unaligned.h:128:
++		BUG();								\
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'val' - possible side-effects?
+#175: FILE: include/asm-frv/unaligned.h:135:
++#define put_unaligned(val, ptr)								\
++do {											\
++	char *__p = (char *) (ptr);							\
++	int x;										\
++											\
++	switch (sizeof(*ptr)) {								\
++	case 2:										\
++	{										\
++		asm("	stb%I1.p	%0,%M1		\n"				\
++		    "	srli		%0,#8,%0	\n"				\
++		    "	stb%I2		%0,%M2		\n"				\
++		    : "=r"(x), "=m"(__p[1]),  "=m"(__p[0])				\
++		    : "0"(val)								\
++		    );									\
++		break;									\
++	}										\
++											\
++	case 4:										\
++	{										\
++		asm("	stb%I1.p	%0,%M1		\n"				\
++		    "	srli		%0,#8,%0	\n"				\
++		    "	stb%I2.p	%0,%M2		\n"				\
++		    "	srli		%0,#8,%0	\n"				\
++		    "	stb%I3.p	%0,%M3		\n"				\
++		    "	srli		%0,#8,%0	\n"				\
++		    "	stb%I4		%0,%M4		\n"				\
++		    : "=r"(x), "=m"(__p[3]),  "=m"(__p[2]), "=m"(__p[1]), "=m"(__p[0])	\
++		    : "0"(val)								\
++		    );									\
++		break;									\
++	}										\
++											\
++	case 8:										\
++	{										\
++		uint32_t __high, __low;							\
++		__high = (uint64_t)val >> 32;						\
++		__low = val & 0xffffffff;						\
++		asm("	stb%I2.p	%0,%M2		\n"				\
++		    "	srli		%0,#8,%0	\n"				\
++		    "	stb%I3.p	%0,%M3		\n"				\
++		    "	srli		%0,#8,%0	\n"				\
++		    "	stb%I4.p	%0,%M4		\n"				\
++		    "	srli		%0,#8,%0	\n"				\
++		    "	stb%I5.p	%0,%M5		\n"				\
++		    "	srli		%0,#8,%0	\n"				\
++		    "	stb%I6.p	%1,%M6		\n"				\
++		    "	srli		%1,#8,%1	\n"				\
++		    "	stb%I7.p	%1,%M7		\n"				\
++		    "	srli		%1,#8,%1	\n"				\
++		    "	stb%I8.p	%1,%M8		\n"				\
++		    "	srli		%1,#8,%1	\n"				\
++		    "	stb%I9		%1,%M9		\n"				\
++		    : "=&r"(__low), "=&r"(__high), "=m"(__p[7]), "=m"(__p[6]), 		\
++		      "=m"(__p[5]), "=m"(__p[4]), "=m"(__p[3]), "=m"(__p[2]), 		\
++		      "=m"(__p[1]), "=m"(__p[0])					\
++		    : "0"(__low), "1"(__high)						\
++		    );									\
++		break;									\
++	}										\
++											\
++        default:									\
++		*(ptr) = (val);								\
++		break;									\
++	}										\
++} while(0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#175: FILE: include/asm-frv/unaligned.h:135:
++#define put_unaligned(val, ptr)								\
++do {											\
++	char *__p = (char *) (ptr);							\
++	int x;										\
++											\
++	switch (sizeof(*ptr)) {								\
++	case 2:										\
++	{										\
++		asm("	stb%I1.p	%0,%M1		\n"				\
++		    "	srli		%0,#8,%0	\n"				\
++		    "	stb%I2		%0,%M2		\n"				\
++		    : "=r"(x), "=m"(__p[1]),  "=m"(__p[0])				\
++		    : "0"(val)								\
++		    );									\
++		break;									\
++	}										\
++											\
++	case 4:										\
++	{										\
++		asm("	stb%I1.p	%0,%M1		\n"				\
++		    "	srli		%0,#8,%0	\n"				\
++		    "	stb%I2.p	%0,%M2		\n"				\
++		    "	srli		%0,#8,%0	\n"				\
++		    "	stb%I3.p	%0,%M3		\n"				\
++		    "	srli		%0,#8,%0	\n"				\
++		    "	stb%I4		%0,%M4		\n"				\
++		    : "=r"(x), "=m"(__p[3]),  "=m"(__p[2]), "=m"(__p[1]), "=m"(__p[0])	\
++		    : "0"(val)								\
++		    );									\
++		break;									\
++	}										\
++											\
++	case 8:										\
++	{										\
++		uint32_t __high, __low;							\
++		__high = (uint64_t)val >> 32;						\
++		__low = val & 0xffffffff;						\
++		asm("	stb%I2.p	%0,%M2		\n"				\
++		    "	srli		%0,#8,%0	\n"				\
++		    "	stb%I3.p	%0,%M3		\n"				\
++		    "	srli		%0,#8,%0	\n"				\
++		    "	stb%I4.p	%0,%M4		\n"				\
++		    "	srli		%0,#8,%0	\n"				\
++		    "	stb%I5.p	%0,%M5		\n"				\
++		    "	srli		%0,#8,%0	\n"				\
++		    "	stb%I6.p	%1,%M6		\n"				\
++		    "	srli		%1,#8,%1	\n"				\
++		    "	stb%I7.p	%1,%M7		\n"				\
++		    "	srli		%1,#8,%1	\n"				\
++		    "	stb%I8.p	%1,%M8		\n"				\
++		    "	srli		%1,#8,%1	\n"				\
++		    "	stb%I9		%1,%M9		\n"				\
++		    : "=&r"(__low), "=&r"(__high), "=m"(__p[7]), "=m"(__p[6]), 		\
++		      "=m"(__p[5]), "=m"(__p[4]), "=m"(__p[3]), "=m"(__p[2]), 		\
++		      "=m"(__p[1]), "=m"(__p[0])					\
++		    : "0"(__low), "1"(__high)						\
++		    );									\
++		break;									\
++	}										\
++											\
++        default:									\
++		*(ptr) = (val);								\
++		break;									\
++	}										\
++} while(0)
+
+CHECK:SPACING: No space is necessary after a cast
+#177: FILE: include/asm-frv/unaligned.h:137:
++	char *__p = (char *) (ptr);							\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#183: FILE: include/asm-frv/unaligned.h:143:
++		asm("	stb%I1.p	%0,%M1		\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#184: FILE: include/asm-frv/unaligned.h:144:
++		    "	srli		%0,#8,%0	\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#185: FILE: include/asm-frv/unaligned.h:145:
++		    "	stb%I2		%0,%M2		\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#194: FILE: include/asm-frv/unaligned.h:154:
++		asm("	stb%I1.p	%0,%M1		\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#195: FILE: include/asm-frv/unaligned.h:155:
++		    "	srli		%0,#8,%0	\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#196: FILE: include/asm-frv/unaligned.h:156:
++		    "	stb%I2.p	%0,%M2		\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#197: FILE: include/asm-frv/unaligned.h:157:
++		    "	srli		%0,#8,%0	\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#198: FILE: include/asm-frv/unaligned.h:158:
++		    "	stb%I3.p	%0,%M3		\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#199: FILE: include/asm-frv/unaligned.h:159:
++		    "	srli		%0,#8,%0	\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#200: FILE: include/asm-frv/unaligned.h:160:
++		    "	stb%I4		%0,%M4		\n"				\
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#209: FILE: include/asm-frv/unaligned.h:169:
++		uint32_t __high, __low;							\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#212: FILE: include/asm-frv/unaligned.h:172:
++		asm("	stb%I2.p	%0,%M2		\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#213: FILE: include/asm-frv/unaligned.h:173:
++		    "	srli		%0,#8,%0	\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#214: FILE: include/asm-frv/unaligned.h:174:
++		    "	stb%I3.p	%0,%M3		\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#215: FILE: include/asm-frv/unaligned.h:175:
++		    "	srli		%0,#8,%0	\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#216: FILE: include/asm-frv/unaligned.h:176:
++		    "	stb%I4.p	%0,%M4		\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#217: FILE: include/asm-frv/unaligned.h:177:
++		    "	srli		%0,#8,%0	\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#218: FILE: include/asm-frv/unaligned.h:178:
++		    "	stb%I5.p	%0,%M5		\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#219: FILE: include/asm-frv/unaligned.h:179:
++		    "	srli		%0,#8,%0	\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#220: FILE: include/asm-frv/unaligned.h:180:
++		    "	stb%I6.p	%1,%M6		\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#221: FILE: include/asm-frv/unaligned.h:181:
++		    "	srli		%1,#8,%1	\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#222: FILE: include/asm-frv/unaligned.h:182:
++		    "	stb%I7.p	%1,%M7		\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#223: FILE: include/asm-frv/unaligned.h:183:
++		    "	srli		%1,#8,%1	\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#224: FILE: include/asm-frv/unaligned.h:184:
++		    "	stb%I8.p	%1,%M8		\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#225: FILE: include/asm-frv/unaligned.h:185:
++		    "	srli		%1,#8,%1	\n"				\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#226: FILE: include/asm-frv/unaligned.h:186:
++		    "	stb%I9		%1,%M9		\n"				\
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#227: FILE: include/asm-frv/unaligned.h:187:
++^I^I    : "=&r"(__low), "=&r"(__high), "=m"(__p[7]), "=m"(__p[6]), ^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#228: FILE: include/asm-frv/unaligned.h:188:
++^I^I      "=m"(__p[5]), "=m"(__p[4]), "=m"(__p[3]), "=m"(__p[2]), ^I^I\$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#235: FILE: include/asm-frv/unaligned.h:195:
++        default:^I^I^I^I^I^I^I^I^I\$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+ERROR:SPACING: space required before the open parenthesis '('
+#239: FILE: include/asm-frv/unaligned.h:199:
++} while(0)
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#248: FILE: include/asm-frv/unistd.h:1:
++#ifndef _ASM_UNISTD_H_
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#315: FILE: include/asm-frv/unistd.h:68:
++// #define __NR_oldolduname	 /* 59 */ obsolete
++#define __NR_umask		 60
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#354: FILE: include/asm-frv/unistd.h:107:
++// #define __NR_profil		 /* 98 */ obsolete
++#define __NR_statfs		 99
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#357: FILE: include/asm-frv/unistd.h:110:
++// #define __NR_ioperm		/* 101 */ not supported
++#define __NR_socketcall		102
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#365: FILE: include/asm-frv/unistd.h:118:
++// #define __NR_olduname		/* 109 */ obsolete
++// #define __NR_iopl		/* 110 */ not supported
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#366: FILE: include/asm-frv/unistd.h:119:
++// #define __NR_iopl		/* 110 */ not supported
++#define __NR_vhangup		111
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#368: FILE: include/asm-frv/unistd.h:121:
++// #define __NR_idle		/* 112 */ Obsolete
++// #define __NR_vm86old		/* 113 */ not supported
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#369: FILE: include/asm-frv/unistd.h:122:
++// #define __NR_vm86old		/* 113 */ not supported
++#define __NR_wait4		114
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#379: FILE: include/asm-frv/unistd.h:132:
++// #define __NR_modify_ldt	/* 123 */ not supported
++#define __NR_cacheflush		123
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#423: FILE: include/asm-frv/unistd.h:176:
++// #define __NR_vm86		/* 166 */ not supported
++#define __NR_query_module	167
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#516: FILE: include/asm-frv/unistd.h:269:
++#define __NR_timer_settime	(__NR_timer_create+1)
+                           	                  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#517: FILE: include/asm-frv/unistd.h:270:
++#define __NR_timer_gettime	(__NR_timer_create+2)
+                           	                  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#518: FILE: include/asm-frv/unistd.h:271:
++#define __NR_timer_getoverrun	(__NR_timer_create+3)
+                              	                  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#519: FILE: include/asm-frv/unistd.h:272:
++#define __NR_timer_delete	(__NR_timer_create+4)
+                          	                  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#520: FILE: include/asm-frv/unistd.h:273:
++#define __NR_clock_settime	(__NR_timer_create+5)
+                           	                  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#521: FILE: include/asm-frv/unistd.h:274:
++#define __NR_clock_gettime	(__NR_timer_create+6)
+                           	                  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#522: FILE: include/asm-frv/unistd.h:275:
++#define __NR_clock_getres	(__NR_timer_create+7)
+                          	                  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#523: FILE: include/asm-frv/unistd.h:276:
++#define __NR_clock_nanosleep	(__NR_timer_create+8)
+                             	                  ^
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#533: FILE: include/asm-frv/unistd.h:286:
++#define __NR_mq_open ^I^I277$
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#534: FILE: include/asm-frv/unistd.h:287:
++#define __NR_mq_unlink		(__NR_mq_open+1)
+                       		             ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#535: FILE: include/asm-frv/unistd.h:288:
++#define __NR_mq_timedsend	(__NR_mq_open+2)
+                          	             ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#536: FILE: include/asm-frv/unistd.h:289:
++#define __NR_mq_timedreceive	(__NR_mq_open+3)
+                             	             ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#537: FILE: include/asm-frv/unistd.h:290:
++#define __NR_mq_notify		(__NR_mq_open+4)
+                       		             ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#538: FILE: include/asm-frv/unistd.h:291:
++#define __NR_mq_getsetattr	(__NR_mq_open+5)
+                           	             ^
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#548: FILE: include/asm-frv/unistd.h:301:
++#define __syscall_return(type, res)					\
++do {									\
++        unsigned long __sr2 = (res);					\
++	if (__builtin_expect(__sr2 >= (unsigned long)(-4095), 0)) {	\
++		errno = (-__sr2);					\
++		__sr2 = ULONG_MAX;					\
++	}								\
++	return (type) __sr2;						\
++} while (0)
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#550: FILE: include/asm-frv/unistd.h:303:
++        unsigned long __sr2 = (res);^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#550: FILE: include/asm-frv/unistd.h:303:
++        unsigned long __sr2 = (res);^I^I^I^I^I\$
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#561: FILE: include/asm-frv/unistd.h:314:
++#define _syscall0(type,name)						\
+                       ^
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#561: FILE: include/asm-frv/unistd.h:314:
++#define _syscall0(type,name)						\
++type name(void)								\
++{									\
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);	\
++	register unsigned long __sc0 __asm__ ("gr8");			\
++	__asm__ __volatile__ ("tira gr0,#0"				\
++			      : "=r" (__sc0)				\
++			      : "r" (__scnum));				\
++	__syscall_return(type, __sc0);					\
++}
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#573: FILE: include/asm-frv/unistd.h:326:
++#define _syscall1(type,name,type1,arg1)						\
+                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#573: FILE: include/asm-frv/unistd.h:326:
++#define _syscall1(type,name,type1,arg1)						\
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#573: FILE: include/asm-frv/unistd.h:326:
++#define _syscall1(type,name,type1,arg1)						\
+                                  ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg1' - possible side-effects?
+#573: FILE: include/asm-frv/unistd.h:326:
++#define _syscall1(type,name,type1,arg1)						\
++type name(type1 arg1)								\
++{										\
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);		\
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;	\
++	__asm__ __volatile__ ("tira gr0,#0"					\
++			      : "+r" (__sc0)					\
++			      : "r" (__scnum));					\
++	__syscall_return(type, __sc0);						\
++}
+
+CHECK:SPACING: No space is necessary after a cast
+#577: FILE: include/asm-frv/unistd.h:330:
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;	\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#585: FILE: include/asm-frv/unistd.h:338:
++#define _syscall2(type,name,type1,arg1,type2,arg2)				\
+                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#585: FILE: include/asm-frv/unistd.h:338:
++#define _syscall2(type,name,type1,arg1,type2,arg2)				\
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#585: FILE: include/asm-frv/unistd.h:338:
++#define _syscall2(type,name,type1,arg1,type2,arg2)				\
+                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#585: FILE: include/asm-frv/unistd.h:338:
++#define _syscall2(type,name,type1,arg1,type2,arg2)				\
+                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#585: FILE: include/asm-frv/unistd.h:338:
++#define _syscall2(type,name,type1,arg1,type2,arg2)				\
+                                             ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg1' - possible side-effects?
+#585: FILE: include/asm-frv/unistd.h:338:
++#define _syscall2(type,name,type1,arg1,type2,arg2)				\
++type name(type1 arg1,type2 arg2)						\
++{										\
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);		\
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;	\
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;	\
++	__asm__ __volatile__ ("tira gr0,#0"					\
++			      : "+r" (__sc0)					\
++			      : "r" (__scnum), "r" (__sc1));			\
++	__syscall_return(type, __sc0);						\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg2' - possible side-effects?
+#585: FILE: include/asm-frv/unistd.h:338:
++#define _syscall2(type,name,type1,arg1,type2,arg2)				\
++type name(type1 arg1,type2 arg2)						\
++{										\
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);		\
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;	\
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;	\
++	__asm__ __volatile__ ("tira gr0,#0"					\
++			      : "+r" (__sc0)					\
++			      : "r" (__scnum), "r" (__sc1));			\
++	__syscall_return(type, __sc0);						\
++}
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#586: FILE: include/asm-frv/unistd.h:339:
++type name(type1 arg1,type2 arg2)						\
+                     ^
+
+CHECK:SPACING: No space is necessary after a cast
+#589: FILE: include/asm-frv/unistd.h:342:
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;	\
+
+CHECK:SPACING: No space is necessary after a cast
+#590: FILE: include/asm-frv/unistd.h:343:
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;	\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#598: FILE: include/asm-frv/unistd.h:351:
++#define _syscall3(type,name,type1,arg1,type2,arg2,type3,arg3)			\
+                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#598: FILE: include/asm-frv/unistd.h:351:
++#define _syscall3(type,name,type1,arg1,type2,arg2,type3,arg3)			\
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#598: FILE: include/asm-frv/unistd.h:351:
++#define _syscall3(type,name,type1,arg1,type2,arg2,type3,arg3)			\
+                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#598: FILE: include/asm-frv/unistd.h:351:
++#define _syscall3(type,name,type1,arg1,type2,arg2,type3,arg3)			\
+                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#598: FILE: include/asm-frv/unistd.h:351:
++#define _syscall3(type,name,type1,arg1,type2,arg2,type3,arg3)			\
+                                             ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#598: FILE: include/asm-frv/unistd.h:351:
++#define _syscall3(type,name,type1,arg1,type2,arg2,type3,arg3)			\
+                                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#598: FILE: include/asm-frv/unistd.h:351:
++#define _syscall3(type,name,type1,arg1,type2,arg2,type3,arg3)			\
+                                                        ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg1' - possible side-effects?
+#598: FILE: include/asm-frv/unistd.h:351:
++#define _syscall3(type,name,type1,arg1,type2,arg2,type3,arg3)			\
++type name(type1 arg1,type2 arg2,type3 arg3)					\
++{										\
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);		\
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;	\
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;	\
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;	\
++	__asm__ __volatile__ ("tira gr0,#0"					\
++			      : "+r" (__sc0)					\
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2));	\
++	__syscall_return(type, __sc0);						\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg2' - possible side-effects?
+#598: FILE: include/asm-frv/unistd.h:351:
++#define _syscall3(type,name,type1,arg1,type2,arg2,type3,arg3)			\
++type name(type1 arg1,type2 arg2,type3 arg3)					\
++{										\
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);		\
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;	\
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;	\
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;	\
++	__asm__ __volatile__ ("tira gr0,#0"					\
++			      : "+r" (__sc0)					\
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2));	\
++	__syscall_return(type, __sc0);						\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg3' - possible side-effects?
+#598: FILE: include/asm-frv/unistd.h:351:
++#define _syscall3(type,name,type1,arg1,type2,arg2,type3,arg3)			\
++type name(type1 arg1,type2 arg2,type3 arg3)					\
++{										\
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);		\
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;	\
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;	\
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;	\
++	__asm__ __volatile__ ("tira gr0,#0"					\
++			      : "+r" (__sc0)					\
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2));	\
++	__syscall_return(type, __sc0);						\
++}
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#599: FILE: include/asm-frv/unistd.h:352:
++type name(type1 arg1,type2 arg2,type3 arg3)					\
+                     ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#599: FILE: include/asm-frv/unistd.h:352:
++type name(type1 arg1,type2 arg2,type3 arg3)					\
+                                ^
+
+CHECK:SPACING: No space is necessary after a cast
+#602: FILE: include/asm-frv/unistd.h:355:
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;	\
+
+CHECK:SPACING: No space is necessary after a cast
+#603: FILE: include/asm-frv/unistd.h:356:
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;	\
+
+CHECK:SPACING: No space is necessary after a cast
+#604: FILE: include/asm-frv/unistd.h:357:
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;	\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#612: FILE: include/asm-frv/unistd.h:365:
++#define _syscall4(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4)		\
+                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#612: FILE: include/asm-frv/unistd.h:365:
++#define _syscall4(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4)		\
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#612: FILE: include/asm-frv/unistd.h:365:
++#define _syscall4(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4)		\
+                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#612: FILE: include/asm-frv/unistd.h:365:
++#define _syscall4(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4)		\
+                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#612: FILE: include/asm-frv/unistd.h:365:
++#define _syscall4(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4)		\
+                                             ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#612: FILE: include/asm-frv/unistd.h:365:
++#define _syscall4(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4)		\
+                                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#612: FILE: include/asm-frv/unistd.h:365:
++#define _syscall4(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4)		\
+                                                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#612: FILE: include/asm-frv/unistd.h:365:
++#define _syscall4(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4)		\
+                                                             ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#612: FILE: include/asm-frv/unistd.h:365:
++#define _syscall4(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4)		\
+                                                                   ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg1' - possible side-effects?
+#612: FILE: include/asm-frv/unistd.h:365:
++#define _syscall4(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4)		\
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4)				\
++{											\
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);			\
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;		\
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;		\
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;		\
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;		\
++	__asm__ __volatile__ ("tira gr0,#0"						\
++			      : "+r" (__sc0)						\
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2), "r" (__sc3));	\
++	__syscall_return(type, __sc0);							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg2' - possible side-effects?
+#612: FILE: include/asm-frv/unistd.h:365:
++#define _syscall4(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4)		\
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4)				\
++{											\
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);			\
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;		\
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;		\
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;		\
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;		\
++	__asm__ __volatile__ ("tira gr0,#0"						\
++			      : "+r" (__sc0)						\
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2), "r" (__sc3));	\
++	__syscall_return(type, __sc0);							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg3' - possible side-effects?
+#612: FILE: include/asm-frv/unistd.h:365:
++#define _syscall4(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4)		\
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4)				\
++{											\
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);			\
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;		\
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;		\
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;		\
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;		\
++	__asm__ __volatile__ ("tira gr0,#0"						\
++			      : "+r" (__sc0)						\
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2), "r" (__sc3));	\
++	__syscall_return(type, __sc0);							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg4' - possible side-effects?
+#612: FILE: include/asm-frv/unistd.h:365:
++#define _syscall4(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4)		\
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4)				\
++{											\
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);			\
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;		\
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;		\
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;		\
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;		\
++	__asm__ __volatile__ ("tira gr0,#0"						\
++			      : "+r" (__sc0)						\
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2), "r" (__sc3));	\
++	__syscall_return(type, __sc0);							\
++}
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#613: FILE: include/asm-frv/unistd.h:366:
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4)				\
+
+CHECK:SPACING: No space is necessary after a cast
+#616: FILE: include/asm-frv/unistd.h:369:
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;		\
+
+CHECK:SPACING: No space is necessary after a cast
+#617: FILE: include/asm-frv/unistd.h:370:
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;		\
+
+CHECK:SPACING: No space is necessary after a cast
+#618: FILE: include/asm-frv/unistd.h:371:
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;		\
+
+CHECK:SPACING: No space is necessary after a cast
+#619: FILE: include/asm-frv/unistd.h:372:
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;		\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#627: FILE: include/asm-frv/unistd.h:380:
++#define _syscall5(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5)	\
+                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#627: FILE: include/asm-frv/unistd.h:380:
++#define _syscall5(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5)	\
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#627: FILE: include/asm-frv/unistd.h:380:
++#define _syscall5(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5)	\
+                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#627: FILE: include/asm-frv/unistd.h:380:
++#define _syscall5(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5)	\
+                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#627: FILE: include/asm-frv/unistd.h:380:
++#define _syscall5(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5)	\
+                                             ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#627: FILE: include/asm-frv/unistd.h:380:
++#define _syscall5(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5)	\
+                                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#627: FILE: include/asm-frv/unistd.h:380:
++#define _syscall5(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5)	\
+                                                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#627: FILE: include/asm-frv/unistd.h:380:
++#define _syscall5(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5)	\
+                                                             ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#627: FILE: include/asm-frv/unistd.h:380:
++#define _syscall5(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5)	\
+                                                                   ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#627: FILE: include/asm-frv/unistd.h:380:
++#define _syscall5(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5)	\
+                                                                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#627: FILE: include/asm-frv/unistd.h:380:
++#define _syscall5(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5)	\
+                                                                              ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg1' - possible side-effects?
+#627: FILE: include/asm-frv/unistd.h:380:
++#define _syscall5(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5)	\
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5)			\
++{											\
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);			\
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;		\
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;		\
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;		\
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;		\
++	register unsigned long __sc4 __asm__ ("gr12") = (unsigned long) arg5;		\
++	__asm__ __volatile__ ("tira gr0,#0"						\
++			      : "+r" (__sc0)						\
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2),		\
++			      "r" (__sc3), "r" (__sc4));				\
++	__syscall_return(type, __sc0);							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg2' - possible side-effects?
+#627: FILE: include/asm-frv/unistd.h:380:
++#define _syscall5(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5)	\
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5)			\
++{											\
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);			\
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;		\
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;		\
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;		\
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;		\
++	register unsigned long __sc4 __asm__ ("gr12") = (unsigned long) arg5;		\
++	__asm__ __volatile__ ("tira gr0,#0"						\
++			      : "+r" (__sc0)						\
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2),		\
++			      "r" (__sc3), "r" (__sc4));				\
++	__syscall_return(type, __sc0);							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg3' - possible side-effects?
+#627: FILE: include/asm-frv/unistd.h:380:
++#define _syscall5(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5)	\
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5)			\
++{											\
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);			\
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;		\
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;		\
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;		\
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;		\
++	register unsigned long __sc4 __asm__ ("gr12") = (unsigned long) arg5;		\
++	__asm__ __volatile__ ("tira gr0,#0"						\
++			      : "+r" (__sc0)						\
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2),		\
++			      "r" (__sc3), "r" (__sc4));				\
++	__syscall_return(type, __sc0);							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg4' - possible side-effects?
+#627: FILE: include/asm-frv/unistd.h:380:
++#define _syscall5(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5)	\
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5)			\
++{											\
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);			\
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;		\
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;		\
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;		\
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;		\
++	register unsigned long __sc4 __asm__ ("gr12") = (unsigned long) arg5;		\
++	__asm__ __volatile__ ("tira gr0,#0"						\
++			      : "+r" (__sc0)						\
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2),		\
++			      "r" (__sc3), "r" (__sc4));				\
++	__syscall_return(type, __sc0);							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg5' - possible side-effects?
+#627: FILE: include/asm-frv/unistd.h:380:
++#define _syscall5(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5)	\
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5)			\
++{											\
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);			\
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;		\
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;		\
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;		\
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;		\
++	register unsigned long __sc4 __asm__ ("gr12") = (unsigned long) arg5;		\
++	__asm__ __volatile__ ("tira gr0,#0"						\
++			      : "+r" (__sc0)						\
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2),		\
++			      "r" (__sc3), "r" (__sc4));				\
++	__syscall_return(type, __sc0);							\
++}
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#628: FILE: include/asm-frv/unistd.h:381:
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5)			\
+
+CHECK:SPACING: No space is necessary after a cast
+#631: FILE: include/asm-frv/unistd.h:384:
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;		\
+
+CHECK:SPACING: No space is necessary after a cast
+#632: FILE: include/asm-frv/unistd.h:385:
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;		\
+
+CHECK:SPACING: No space is necessary after a cast
+#633: FILE: include/asm-frv/unistd.h:386:
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;		\
+
+CHECK:SPACING: No space is necessary after a cast
+#634: FILE: include/asm-frv/unistd.h:387:
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;		\
+
+CHECK:SPACING: No space is necessary after a cast
+#635: FILE: include/asm-frv/unistd.h:388:
++	register unsigned long __sc4 __asm__ ("gr12") = (unsigned long) arg5;		\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#644: FILE: include/asm-frv/unistd.h:397:
++#define _syscall6(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5, type6, arg6) \
+                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#644: FILE: include/asm-frv/unistd.h:397:
++#define _syscall6(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5, type6, arg6) \
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#644: FILE: include/asm-frv/unistd.h:397:
++#define _syscall6(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5, type6, arg6) \
+                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#644: FILE: include/asm-frv/unistd.h:397:
++#define _syscall6(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5, type6, arg6) \
+                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#644: FILE: include/asm-frv/unistd.h:397:
++#define _syscall6(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5, type6, arg6) \
+                                             ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#644: FILE: include/asm-frv/unistd.h:397:
++#define _syscall6(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5, type6, arg6) \
+                                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#644: FILE: include/asm-frv/unistd.h:397:
++#define _syscall6(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5, type6, arg6) \
+                                                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#644: FILE: include/asm-frv/unistd.h:397:
++#define _syscall6(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5, type6, arg6) \
+                                                             ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#644: FILE: include/asm-frv/unistd.h:397:
++#define _syscall6(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5, type6, arg6) \
+                                                                   ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#644: FILE: include/asm-frv/unistd.h:397:
++#define _syscall6(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5, type6, arg6) \
+                                                                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#644: FILE: include/asm-frv/unistd.h:397:
++#define _syscall6(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5, type6, arg6) \
+                                                                              ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg1' - possible side-effects?
+#644: FILE: include/asm-frv/unistd.h:397:
++#define _syscall6(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5, type6, arg6) \
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5, type6 arg6)		 \
++{												 \
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);				 \
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;			 \
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;			 \
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;			 \
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;			 \
++	register unsigned long __sc4 __asm__ ("gr12") = (unsigned long) arg5;			 \
++	register unsigned long __sc5 __asm__ ("gr13") = (unsigned long) arg6;			 \
++	__asm__ __volatile__ ("tira gr0,#0"							 \
++			      : "+r" (__sc0)							 \
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2),			 \
++			      "r" (__sc3), "r" (__sc4), "r" (__sc5));				 \
++	__syscall_return(type, __sc0);								 \
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg2' - possible side-effects?
+#644: FILE: include/asm-frv/unistd.h:397:
++#define _syscall6(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5, type6, arg6) \
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5, type6 arg6)		 \
++{												 \
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);				 \
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;			 \
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;			 \
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;			 \
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;			 \
++	register unsigned long __sc4 __asm__ ("gr12") = (unsigned long) arg5;			 \
++	register unsigned long __sc5 __asm__ ("gr13") = (unsigned long) arg6;			 \
++	__asm__ __volatile__ ("tira gr0,#0"							 \
++			      : "+r" (__sc0)							 \
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2),			 \
++			      "r" (__sc3), "r" (__sc4), "r" (__sc5));				 \
++	__syscall_return(type, __sc0);								 \
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg3' - possible side-effects?
+#644: FILE: include/asm-frv/unistd.h:397:
++#define _syscall6(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5, type6, arg6) \
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5, type6 arg6)		 \
++{												 \
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);				 \
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;			 \
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;			 \
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;			 \
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;			 \
++	register unsigned long __sc4 __asm__ ("gr12") = (unsigned long) arg5;			 \
++	register unsigned long __sc5 __asm__ ("gr13") = (unsigned long) arg6;			 \
++	__asm__ __volatile__ ("tira gr0,#0"							 \
++			      : "+r" (__sc0)							 \
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2),			 \
++			      "r" (__sc3), "r" (__sc4), "r" (__sc5));				 \
++	__syscall_return(type, __sc0);								 \
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg4' - possible side-effects?
+#644: FILE: include/asm-frv/unistd.h:397:
++#define _syscall6(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5, type6, arg6) \
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5, type6 arg6)		 \
++{												 \
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);				 \
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;			 \
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;			 \
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;			 \
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;			 \
++	register unsigned long __sc4 __asm__ ("gr12") = (unsigned long) arg5;			 \
++	register unsigned long __sc5 __asm__ ("gr13") = (unsigned long) arg6;			 \
++	__asm__ __volatile__ ("tira gr0,#0"							 \
++			      : "+r" (__sc0)							 \
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2),			 \
++			      "r" (__sc3), "r" (__sc4), "r" (__sc5));				 \
++	__syscall_return(type, __sc0);								 \
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg5' - possible side-effects?
+#644: FILE: include/asm-frv/unistd.h:397:
++#define _syscall6(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5, type6, arg6) \
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5, type6 arg6)		 \
++{												 \
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);				 \
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;			 \
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;			 \
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;			 \
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;			 \
++	register unsigned long __sc4 __asm__ ("gr12") = (unsigned long) arg5;			 \
++	register unsigned long __sc5 __asm__ ("gr13") = (unsigned long) arg6;			 \
++	__asm__ __volatile__ ("tira gr0,#0"							 \
++			      : "+r" (__sc0)							 \
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2),			 \
++			      "r" (__sc3), "r" (__sc4), "r" (__sc5));				 \
++	__syscall_return(type, __sc0);								 \
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg6' - possible side-effects?
+#644: FILE: include/asm-frv/unistd.h:397:
++#define _syscall6(type,name,type1,arg1,type2,arg2,type3,arg3,type4,arg4,type5,arg5, type6, arg6) \
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5, type6 arg6)		 \
++{												 \
++	register unsigned long __scnum __asm__ ("gr7") = (__NR_##name);				 \
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;			 \
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;			 \
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;			 \
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;			 \
++	register unsigned long __sc4 __asm__ ("gr12") = (unsigned long) arg5;			 \
++	register unsigned long __sc5 __asm__ ("gr13") = (unsigned long) arg6;			 \
++	__asm__ __volatile__ ("tira gr0,#0"							 \
++			      : "+r" (__sc0)							 \
++			      : "r" (__scnum), "r" (__sc1), "r" (__sc2),			 \
++			      "r" (__sc3), "r" (__sc4), "r" (__sc5));				 \
++	__syscall_return(type, __sc0);								 \
++}
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#645: FILE: include/asm-frv/unistd.h:398:
++type name (type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5, type6 arg6)		 \
+
+CHECK:SPACING: No space is necessary after a cast
+#648: FILE: include/asm-frv/unistd.h:401:
++	register unsigned long __sc0 __asm__ ("gr8") = (unsigned long) arg1;			 \
+
+CHECK:SPACING: No space is necessary after a cast
+#649: FILE: include/asm-frv/unistd.h:402:
++	register unsigned long __sc1 __asm__ ("gr9") = (unsigned long) arg2;			 \
+
+CHECK:SPACING: No space is necessary after a cast
+#650: FILE: include/asm-frv/unistd.h:403:
++	register unsigned long __sc2 __asm__ ("gr10") = (unsigned long) arg3;			 \
+
+CHECK:SPACING: No space is necessary after a cast
+#651: FILE: include/asm-frv/unistd.h:404:
++	register unsigned long __sc3 __asm__ ("gr11") = (unsigned long) arg4;			 \
+
+CHECK:SPACING: No space is necessary after a cast
+#652: FILE: include/asm-frv/unistd.h:405:
++	register unsigned long __sc4 __asm__ ("gr12") = (unsigned long) arg5;			 \
+
+CHECK:SPACING: No space is necessary after a cast
+#653: FILE: include/asm-frv/unistd.h:406:
++	register unsigned long __sc5 __asm__ ("gr13") = (unsigned long) arg6;			 \
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#660: FILE: include/asm-frv/unistd.h:413:
++^I^I$
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#661: FILE: include/asm-frv/unistd.h:414:
++		
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#682: FILE: include/asm-frv/unistd.h:435:
++static inline _syscall0(int,pause)
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#683: FILE: include/asm-frv/unistd.h:436:
++static inline _syscall0(int,sync)
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#684: FILE: include/asm-frv/unistd.h:437:
++static inline _syscall0(pid_t,setsid)
+                              ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#685: FILE: include/asm-frv/unistd.h:438:
++static inline _syscall3(int,write,int,fd,const char *,buf,off_t,count)
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#685: FILE: include/asm-frv/unistd.h:438:
++static inline _syscall3(int,write,int,fd,const char *,buf,off_t,count)
+                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#685: FILE: include/asm-frv/unistd.h:438:
++static inline _syscall3(int,write,int,fd,const char *,buf,off_t,count)
+                                      ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#685: FILE: include/asm-frv/unistd.h:438:
++static inline _syscall3(int,write,int,fd,const char *,buf,off_t,count)
+                                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxV)
+#685: FILE: include/asm-frv/unistd.h:438:
++static inline _syscall3(int,write,int,fd,const char *,buf,off_t,count)
+                                                      ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#685: FILE: include/asm-frv/unistd.h:438:
++static inline _syscall3(int,write,int,fd,const char *,buf,off_t,count)
+                                                          ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#685: FILE: include/asm-frv/unistd.h:438:
++static inline _syscall3(int,write,int,fd,const char *,buf,off_t,count)
+                                                                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#686: FILE: include/asm-frv/unistd.h:439:
++static inline _syscall3(int,read,int,fd,char *,buf,off_t,count)
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#686: FILE: include/asm-frv/unistd.h:439:
++static inline _syscall3(int,read,int,fd,char *,buf,off_t,count)
+                                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#686: FILE: include/asm-frv/unistd.h:439:
++static inline _syscall3(int,read,int,fd,char *,buf,off_t,count)
+                                     ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#686: FILE: include/asm-frv/unistd.h:439:
++static inline _syscall3(int,read,int,fd,char *,buf,off_t,count)
+                                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxV)
+#686: FILE: include/asm-frv/unistd.h:439:
++static inline _syscall3(int,read,int,fd,char *,buf,off_t,count)
+                                               ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#686: FILE: include/asm-frv/unistd.h:439:
++static inline _syscall3(int,read,int,fd,char *,buf,off_t,count)
+                                                   ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#686: FILE: include/asm-frv/unistd.h:439:
++static inline _syscall3(int,read,int,fd,char *,buf,off_t,count)
+                                                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#687: FILE: include/asm-frv/unistd.h:440:
++static inline _syscall3(off_t,lseek,int,fd,off_t,offset,int,count)
+                              ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#687: FILE: include/asm-frv/unistd.h:440:
++static inline _syscall3(off_t,lseek,int,fd,off_t,offset,int,count)
+                                    ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#687: FILE: include/asm-frv/unistd.h:440:
++static inline _syscall3(off_t,lseek,int,fd,off_t,offset,int,count)
+                                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#687: FILE: include/asm-frv/unistd.h:440:
++static inline _syscall3(off_t,lseek,int,fd,off_t,offset,int,count)
+                                           ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#687: FILE: include/asm-frv/unistd.h:440:
++static inline _syscall3(off_t,lseek,int,fd,off_t,offset,int,count)
+                                                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#687: FILE: include/asm-frv/unistd.h:440:
++static inline _syscall3(off_t,lseek,int,fd,off_t,offset,int,count)
+                                                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#687: FILE: include/asm-frv/unistd.h:440:
++static inline _syscall3(off_t,lseek,int,fd,off_t,offset,int,count)
+                                                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#688: FILE: include/asm-frv/unistd.h:441:
++static inline _syscall1(int,dup,int,fd)
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#688: FILE: include/asm-frv/unistd.h:441:
++static inline _syscall1(int,dup,int,fd)
+                                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#688: FILE: include/asm-frv/unistd.h:441:
++static inline _syscall1(int,dup,int,fd)
+                                    ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#689: FILE: include/asm-frv/unistd.h:442:
++static inline _syscall3(int,execve,const char *,file,char **,argv,char **,envp)
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#689: FILE: include/asm-frv/unistd.h:442:
++static inline _syscall3(int,execve,const char *,file,char **,argv,char **,envp)
+                                   ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxV)
+#689: FILE: include/asm-frv/unistd.h:442:
++static inline _syscall3(int,execve,const char *,file,char **,argv,char **,envp)
+                                                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#689: FILE: include/asm-frv/unistd.h:442:
++static inline _syscall3(int,execve,const char *,file,char **,argv,char **,envp)
+                                                     ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxV)
+#689: FILE: include/asm-frv/unistd.h:442:
++static inline _syscall3(int,execve,const char *,file,char **,argv,char **,envp)
+                                                             ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#689: FILE: include/asm-frv/unistd.h:442:
++static inline _syscall3(int,execve,const char *,file,char **,argv,char **,envp)
+                                                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxV)
+#689: FILE: include/asm-frv/unistd.h:442:
++static inline _syscall3(int,execve,const char *,file,char **,argv,char **,envp)
+                                                                          ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#690: FILE: include/asm-frv/unistd.h:443:
++static inline _syscall3(int,open,const char *,file,int,flag,int,mode)
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#690: FILE: include/asm-frv/unistd.h:443:
++static inline _syscall3(int,open,const char *,file,int,flag,int,mode)
+                                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxV)
+#690: FILE: include/asm-frv/unistd.h:443:
++static inline _syscall3(int,open,const char *,file,int,flag,int,mode)
+                                              ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#690: FILE: include/asm-frv/unistd.h:443:
++static inline _syscall3(int,open,const char *,file,int,flag,int,mode)
+                                                   ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#690: FILE: include/asm-frv/unistd.h:443:
++static inline _syscall3(int,open,const char *,file,int,flag,int,mode)
+                                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#690: FILE: include/asm-frv/unistd.h:443:
++static inline _syscall3(int,open,const char *,file,int,flag,int,mode)
+                                                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#690: FILE: include/asm-frv/unistd.h:443:
++static inline _syscall3(int,open,const char *,file,int,flag,int,mode)
+                                                                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#691: FILE: include/asm-frv/unistd.h:444:
++static inline _syscall1(int,close,int,fd)
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#691: FILE: include/asm-frv/unistd.h:444:
++static inline _syscall1(int,close,int,fd)
+                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#691: FILE: include/asm-frv/unistd.h:444:
++static inline _syscall1(int,close,int,fd)
+                                      ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#692: FILE: include/asm-frv/unistd.h:445:
++static inline _syscall1(int,_exit,int,exitcode)
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#692: FILE: include/asm-frv/unistd.h:445:
++static inline _syscall1(int,_exit,int,exitcode)
+                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#692: FILE: include/asm-frv/unistd.h:445:
++static inline _syscall1(int,_exit,int,exitcode)
+                                      ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#693: FILE: include/asm-frv/unistd.h:446:
++static inline _syscall3(pid_t,waitpid,pid_t,pid,int *,wait_stat,int,options)
+                              ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#693: FILE: include/asm-frv/unistd.h:446:
++static inline _syscall3(pid_t,waitpid,pid_t,pid,int *,wait_stat,int,options)
+                                      ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#693: FILE: include/asm-frv/unistd.h:446:
++static inline _syscall3(pid_t,waitpid,pid_t,pid,int *,wait_stat,int,options)
+                                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#693: FILE: include/asm-frv/unistd.h:446:
++static inline _syscall3(pid_t,waitpid,pid_t,pid,int *,wait_stat,int,options)
+                                                ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxV)
+#693: FILE: include/asm-frv/unistd.h:446:
++static inline _syscall3(pid_t,waitpid,pid_t,pid,int *,wait_stat,int,options)
+                                                      ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#693: FILE: include/asm-frv/unistd.h:446:
++static inline _syscall3(pid_t,waitpid,pid_t,pid,int *,wait_stat,int,options)
+                                                                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#693: FILE: include/asm-frv/unistd.h:446:
++static inline _syscall3(pid_t,waitpid,pid_t,pid,int *,wait_stat,int,options)
+                                                                    ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#694: FILE: include/asm-frv/unistd.h:447:
++static inline _syscall1(int,delete_module,const char *,name)
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#694: FILE: include/asm-frv/unistd.h:447:
++static inline _syscall1(int,delete_module,const char *,name)
+                                          ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxV)
+#694: FILE: include/asm-frv/unistd.h:447:
++static inline _syscall1(int,delete_module,const char *,name)
+                                                       ^
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#696: FILE: include/asm-frv/unistd.h:449:
++static inline pid_t wait(int * wait_stat)
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#698: FILE: include/asm-frv/unistd.h:451:
++	return waitpid(-1,wait_stat,0);
+ 	                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#698: FILE: include/asm-frv/unistd.h:451:
++	return waitpid(-1,wait_stat,0);
+ 	                           ^
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __weak over __attribute__((weak))
+#731: FILE: include/asm-frv/unistd.h:484:
++ * What we want is __attribute__((weak,alias("sys_ni_syscall"))),
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __alias("sys_ni_syscall") over __attribute__((alias("sys_ni_syscall")))
+#731: FILE: include/asm-frv/unistd.h:484:
++ * What we want is __attribute__((weak,alias("sys_ni_syscall"))),
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#735: FILE: include/asm-frv/unistd.h:488:
++#define cond_syscall(x) asm(".weak\t" #x "\n\t.set\t" #x ",sys_ni_syscall");
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#743: FILE: include/asm-frv/user.h:1:
++/* user.h: FR-V core file format stuff
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#767: FILE: include/asm-frv/user.h:25:
++ * $
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#792: FILE: include/asm-frv/user.h:50:
++^I$
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#799: FILE: include/asm-frv/user.h:57:
++	 * from the ptrace(3,...) function.  */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#810: FILE: include/asm-frv/user.h:68:
++						 * esp register.  */
+
+WARNING:UNNECESSARY_INT: Prefer 'long' over 'long int' as the int is unnecessary
+#811: FILE: include/asm-frv/user.h:69:
++	long int		signal;		/* Signal that caused the core dump. */
+
+WARNING:TYPO_SPELLING: 'convertion' may be misspelled - perhaps 'conversion'?
+#827: FILE: include/asm-frv/virtconvert.h:1:
++/* virtconvert.h: virtual/physical/page address convertion
+                                                 ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#827: FILE: include/asm-frv/virtconvert.h:1:
++/* virtconvert.h: virtual/physical/page address convertion
+
+CHECK:SPACING: No space is necessary after a cast
+#851: FILE: include/asm-frv/virtconvert.h:25:
++#define phys_to_virt(vaddr)	((void *) ((unsigned long)(vaddr) + PAGE_OFFSET))
+
+CHECK:SPACING: No space is necessary after a cast
+#852: FILE: include/asm-frv/virtconvert.h:26:
++#define virt_to_phys(vaddr)	((unsigned long) (vaddr) - PAGE_OFFSET)
+
+CHECK:SPACING: No space is necessary after a cast
+#856: FILE: include/asm-frv/virtconvert.h:30:
++#define phys_to_virt(vaddr)	((void *) (vaddr))
+
+CHECK:SPACING: No space is necessary after a cast
+#857: FILE: include/asm-frv/virtconvert.h:31:
++#define virt_to_phys(vaddr)	((unsigned long) (vaddr))
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000232870.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 117 errors, 89 warnings, 73 checks, 843 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000232870.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,171 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#62: 
+Content-Disposition: attachment; filename="02-numa-sched-ilb-2.5.53-21.patch"
+
+ERROR:DIFF_IN_COMMIT_MSG: Avoid using diff content in the commit message - patch(1) might not work
+#65: 
+--- a/fs/exec.c	2002-12-24 06:20:03.000000000 +0100
+
+Avoid having diff content in commit message.
+This causes problems when one tries to apply a file containing both
+the changelog and the diff because patch(1) tries to apply the diff
+which it found in the changelog.
+
+See: https://lore.kernel.org/lkml/20150611134006.9df79a893e3636019ad2759e@linux-foundation.org/
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#91: FILE: include/linux/sched.h:449:
++extern void sched_balance_exec(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#92: FILE: include/linux/sched.h:450:
++extern void node_nr_running_init(void);
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#93: FILE: include/linux/sched.h:451:
++#define nr_running_inc(rq) atomic_inc(rq->node_ptr); \
++	rq->nr_running++
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'rq' - possible side-effects?
+#93: FILE: include/linux/sched.h:451:
++#define nr_running_inc(rq) atomic_inc(rq->node_ptr); \
++	rq->nr_running++
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'rq' may be better as '(rq)' to avoid precedence issues
+#93: FILE: include/linux/sched.h:451:
++#define nr_running_inc(rq) atomic_inc(rq->node_ptr); \
++	rq->nr_running++
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#95: FILE: include/linux/sched.h:453:
++#define nr_running_dec(rq) atomic_dec(rq->node_ptr); \
++	rq->nr_running--
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'rq' - possible side-effects?
+#95: FILE: include/linux/sched.h:453:
++#define nr_running_dec(rq) atomic_dec(rq->node_ptr); \
++	rq->nr_running--
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'rq' may be better as '(rq)' to avoid precedence issues
+#95: FILE: include/linux/sched.h:453:
++#define nr_running_dec(rq) atomic_dec(rq->node_ptr); \
++	rq->nr_running--
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#101: FILE: include/linux/sched.h:459:
++#define nr_running_inc(rq) rq->nr_running++
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'rq' may be better as '(rq)' to avoid precedence issues
+#101: FILE: include/linux/sched.h:459:
++#define nr_running_inc(rq) rq->nr_running++
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#102: FILE: include/linux/sched.h:460:
++#define nr_running_dec(rq) rq->nr_running--
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'rq' may be better as '(rq)' to avoid precedence issues
+#102: FILE: include/linux/sched.h:460:
++#define nr_running_dec(rq) rq->nr_running--
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#124: FILE: kernel/sched.c:156:
++	atomic_t * node_ptr;
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LONG_LINE: line length of 121 exceeds 100 columns
+#163: FILE: kernel/sched.c:2298:
++static atomic_t node_nr_running[MAX_NUMNODES] ____cacheline_maxaligned_in_smp = {[0 ...MAX_NUMNODES-1] = ATOMIC_INIT(0)};
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#163: FILE: kernel/sched.c:2298:
++static atomic_t node_nr_running[MAX_NUMNODES] ____cacheline_maxaligned_in_smp = {[0 ...MAX_NUMNODES-1] = ATOMIC_INIT(0)};
+                                                                                                    ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#169: FILE: kernel/sched.c:2304:
++	for (i = 0; i < NR_CPUS; i++) {
++		cpu_rq(i)->node_ptr = &node_nr_running[__cpu_to_node(i)];
++	}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:NR_CPUS: usage of NR_CPUS is often wrong - consider using cpu_possible(), num_possible_cpus(), for_each_possible_cpu(), etc
+#169: FILE: kernel/sched.c:2304:
++	for (i = 0; i < NR_CPUS; i++) {
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#173: FILE: kernel/sched.c:2308:
++	return;
++}
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#216: FILE: kernel/sched.c:2351:
++	loop_over_node(i,node) {
+ 	                ^
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000404062.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 7 errors, 5 warnings, 9 checks, 167 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000404062.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

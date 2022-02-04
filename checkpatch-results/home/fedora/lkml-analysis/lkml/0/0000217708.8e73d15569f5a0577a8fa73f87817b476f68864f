@@ -1,0 +1,433 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#29: 
+debugfs is a filesystem that is just for debug data.  Start moving stuff out of proc and sysfs now :)
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#53: FILE: Documentation/DocBook/kernel-api.tmpl:110:
++ $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#83: FILE: fs/debugfs/file.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#111: FILE: fs/debugfs/file.c:29:
++static ssize_t default_write_file(struct file *file, const char __user *buf,
++				   size_t count, loff_t *ppos)
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#124: FILE: fs/debugfs/file.c:42:
++struct file_operations debugfs_file_operations = {
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#130: FILE: fs/debugfs/file.c:48:
++#define simple_type(type, format, temptype, strtolfn)				\
++static ssize_t read_file_##type(struct file *file, char __user *user_buf,	\
++				size_t count, loff_t *ppos)			\
++{										\
++	char buf[32];								\
++	type *val = file->private_data;						\
++										\
++	snprintf(buf, sizeof(buf), format, *val);				\
++	return simple_read_from_buffer(user_buf, count, ppos, buf, strlen(buf));\
++}										\
++static ssize_t write_file_##type(struct file *file, const char __user *user_buf,\
++				 size_t count, loff_t *ppos)			\
++{										\
++	char *endp;								\
++	char buf[32];								\
++	int buf_size;								\
++	type *val = file->private_data;						\
++	temptype tmp;								\
++										\
++	memset(buf, 0x00, sizeof(buf));						\
++	buf_size = min(count, (sizeof(buf)-1));					\
++	if (copy_from_user(buf, user_buf, buf_size))				\
++		return -EFAULT;							\
++										\
++	tmp = strtolfn(buf, &endp, 0);						\
++	if ((endp == buf) || ((type)tmp != tmp))				\
++		return -EINVAL;							\
++	*val = tmp;								\
++	return count;								\
++}										\
++static struct file_operations fops_##type = {					\
++	.read =		read_file_##type,					\
++	.write =	write_file_##type,					\
++	.open =		default_open,						\
++};
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#150: FILE: fs/debugfs/file.c:68:
++	buf_size = min(count, (sizeof(buf)-1));					\
+ 	                                  ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'endp == buf'
+#155: FILE: fs/debugfs/file.c:73:
++	if ((endp == buf) || ((type)tmp != tmp))				\
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#160: FILE: fs/debugfs/file.c:78:
++static struct file_operations fops_##type = {					\
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#165: FILE: fs/debugfs/file.c:83:
++};
++simple_type(u8, "%c", unsigned long, simple_strtoul);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LONG_LINE_COMMENT: line length of 117 exceeds 100 columns
+#170: FILE: fs/debugfs/file.c:88:
++ * debugfs_create_u8 - create a file in the debugfs filesystem that is used to read and write a unsigned 8 bit value.
+
+A comment starts before but extends beyond the maximum line length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:TYPO_SPELLING: 'paramater' may be misspelled - perhaps 'parameter'?
+#175: FILE: fs/debugfs/file.c:93:
++ *          directory dentry if set.  If this paramater is NULL, then the
+                                               ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:LONG_LINE_COMMENT: line length of 118 exceeds 100 columns
+#202: FILE: fs/debugfs/file.c:120:
++ * debugfs_create_u16 - create a file in the debugfs filesystem that is used to read and write a unsigned 8 bit value.
+
+WARNING:TYPO_SPELLING: 'paramater' may be misspelled - perhaps 'parameter'?
+#207: FILE: fs/debugfs/file.c:125:
++ *          directory dentry if set.  If this paramater is NULL, then the
+                                               ^^^^^^^^^
+
+WARNING:LONG_LINE_COMMENT: line length of 118 exceeds 100 columns
+#234: FILE: fs/debugfs/file.c:152:
++ * debugfs_create_u32 - create a file in the debugfs filesystem that is used to read and write a unsigned 8 bit value.
+
+WARNING:TYPO_SPELLING: 'paramater' may be misspelled - perhaps 'parameter'?
+#239: FILE: fs/debugfs/file.c:157:
++ *          directory dentry if set.  If this paramater is NULL, then the
+                                               ^^^^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#259: FILE: fs/debugfs/file.c:177:
++struct dentry *debugfs_create_u32(const char *name, mode_t mode,
++				 struct dentry *parent, u32 *value)
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#270: FILE: fs/debugfs/file.c:188:
++^I$
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#287: FILE: fs/debugfs/file.c:205:
++	buf_size = min(count, (sizeof(buf)-1));
+ 	                                  ^
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#303: FILE: fs/debugfs/file.c:221:
++^I$
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#307: FILE: fs/debugfs/file.c:225:
++static struct file_operations fops_bool = {
+
+WARNING:LONG_LINE_COMMENT: line length of 112 exceeds 100 columns
+#314: FILE: fs/debugfs/file.c:232:
++ * debugfs_create_bool - create a file in the debugfs filesystem that is used to read and write a boolean value.
+
+WARNING:TYPO_SPELLING: 'paramater' may be misspelled - perhaps 'parameter'?
+#319: FILE: fs/debugfs/file.c:237:
++ *          directory dentry if set.  If this paramater is NULL, then the
+                                               ^^^^^^^^^
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#349: FILE: fs/debugfs/inode.c:1:
++/*
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#379: FILE: fs/debugfs/inode.c:31:
++extern struct file_operations debugfs_file_operations;
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#379: FILE: fs/debugfs/inode.c:31:
++extern struct file_operations debugfs_file_operations;
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#394: FILE: fs/debugfs/inode.c:46:
++		inode->i_atime = inode->i_mtime = inode->i_ctime = CURRENT_TIME;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#411: FILE: fs/debugfs/inode.c:63:
++^Ireturn inode; $
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRWXUGO' are not preferred. Consider using octal permissions '0777'.
+#436: FILE: fs/debugfs/inode.c:88:
++	mode = (mode & (S_IRWXUGO | S_ISVTX)) | S_IFDIR;
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#461: FILE: fs/debugfs/inode.c:113:
++static struct dentry * get_dentry(struct dentry *parent, const char *name)
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#462: FILE: fs/debugfs/inode.c:114:
++{               $
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#467: FILE: fs/debugfs/inode.c:119:
++	qstr.hash = full_name_hash(name,qstr.len);
+ 	                               ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#468: FILE: fs/debugfs/inode.c:120:
++	return lookup_hash(&qstr,parent);
+ 	                        ^
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#469: FILE: fs/debugfs/inode.c:121:
++}               $
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#472: FILE: fs/debugfs/inode.c:124:
++^I^I^I^I        int flags, const char *dev_name,$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#472: FILE: fs/debugfs/inode.c:124:
++static struct super_block *debug_get_sb(struct file_system_type *fs_type,
++				        int flags, const char *dev_name,
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#492: FILE: fs/debugfs/inode.c:144:
++^I * We need the root dentry to do this, which is in the super $
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#496: FILE: fs/debugfs/inode.c:148:
++	if (!parent ) {
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#497: FILE: fs/debugfs/inode.c:149:
++		if (debugfs_mount && debugfs_mount->mnt_sb) {
++			parent = debugfs_mount->mnt_sb->s_root;
++		}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#508: FILE: fs/debugfs/inode.c:160:
++	*dentry = get_dentry (parent, name);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#509: FILE: fs/debugfs/inode.c:161:
++	if (!IS_ERR(dentry)) {
+[...]
++	} else
+[...]
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#512: FILE: fs/debugfs/inode.c:164:
++^I^Ielse $
+
+CHECK:BRACES: Unbalanced braces around else statement
+#514: FILE: fs/debugfs/inode.c:166:
++	} else
+
+WARNING:TYPO_SPELLING: 'paramater' may be misspelled - perhaps 'parameter'?
+#527: FILE: fs/debugfs/inode.c:179:
++ *          directory dentry if set.  If this paramater is NULL, then the
+                                               ^^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'createing' may be misspelled - perhaps 'creating'?
+#536: FILE: fs/debugfs/inode.c:188:
++ * wide range of flexibility in createing a file, or a directory (if you
+                                 ^^^^^^^^^
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#552: FILE: fs/debugfs/inode.c:204:
++				   struct file_operations *fops)
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#557: FILE: fs/debugfs/inode.c:209:
++	pr_debug("debugfs: creating file '%s'\n",name);
+ 	                                        ^
+
+WARNING:TYPO_SPELLING: 'paramater' may be misspelled - perhaps 'parameter'?
+#586: FILE: fs/debugfs/inode.c:238:
++ *          directory dentry if set.  If this paramater is NULL, then the
+                                               ^^^^^^^^^
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#603: FILE: fs/debugfs/inode.c:255:
++^Ireturn debugfs_create_file(name, $
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRWXU | S_IRUGO | S_IXUGO' are not preferred. Consider using octal permissions '0755'.
+#604: FILE: fs/debugfs/inode.c:256:
++				   S_IFDIR | S_IRWXU | S_IRUGO | S_IXUGO,
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#626: FILE: fs/debugfs/inode.c:278:
++^I$
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#668: FILE: include/linux/debugfs.h:1:
++/*
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#688: FILE: include/linux/debugfs.h:21:
++				   struct file_operations *fops);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#701: FILE: include/linux/debugfs.h:34:
++struct dentry *debugfs_create_bool(const char *name, mode_t mode,
++				  struct dentry *parent, u32 *value);
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#704: FILE: include/linux/debugfs.h:37:
++/* $
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#713: FILE: include/linux/debugfs.h:46:
++						 struct file_operations *fops)
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000217708.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 17 errors, 28 warnings, 11 checks, 706 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000217708.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

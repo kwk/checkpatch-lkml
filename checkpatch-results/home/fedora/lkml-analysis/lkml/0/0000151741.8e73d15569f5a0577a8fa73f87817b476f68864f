@@ -1,0 +1,111 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#36: 
+Following patch changes the alloc_percpu interface to accept gfp_flags as an
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#51: FILE: include/linux/percpu.h:32:
++extern void *__alloc_percpu(size_t size, size_t align, unsigned int gfpflags);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#73: FILE: include/linux/percpu.h:55:
++#define alloc_percpu(type, gfpflags) ^I^I^I^I^I\$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'gfpflags' - possible side-effects?
+#73: FILE: include/linux/percpu.h:55:
++#define alloc_percpu(type, gfpflags) 					\
++({									\
++	BUG_ON(~(GFP_ATOMIC|GFP_KERNEL) & gfpflags);			\
++	((type *)(__alloc_percpu(ALIGN(sizeof (type), PCPU_CURR_SIZE), 	\
++		   __alignof__(type), gfpflags)));			\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'gfpflags' may be better as '(gfpflags)' to avoid precedence issues
+#73: FILE: include/linux/percpu.h:55:
++#define alloc_percpu(type, gfpflags) 					\
++({									\
++	BUG_ON(~(GFP_ATOMIC|GFP_KERNEL) & gfpflags);			\
++	((type *)(__alloc_percpu(ALIGN(sizeof (type), PCPU_CURR_SIZE), 	\
++		   __alignof__(type), gfpflags)));			\
++})
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#75: FILE: include/linux/percpu.h:57:
++	BUG_ON(~(GFP_ATOMIC|GFP_KERNEL) & gfpflags);			\
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#75: FILE: include/linux/percpu.h:57:
++	BUG_ON(~(GFP_ATOMIC|GFP_KERNEL) & gfpflags);			\
+ 	                   ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#76: FILE: include/linux/percpu.h:58:
++^I((type *)(__alloc_percpu(ALIGN(sizeof (type), PCPU_CURR_SIZE), ^I\$
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#76: FILE: include/linux/percpu.h:58:
++	((type *)(__alloc_percpu(ALIGN(sizeof (type), PCPU_CURR_SIZE), 	\
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#106: FILE: mm/percpu.c:129:
++		flags = GFP_KERNEL|__GFP_HIGHMEM|__GFP_ZERO;
+ 		                  ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#106: FILE: mm/percpu.c:129:
++		flags = GFP_KERNEL|__GFP_HIGHMEM|__GFP_ZERO;
+ 		                                ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#108: FILE: mm/percpu.c:131:
++		flags = GFP_ATOMIC|__GFP_ZERO;
+ 		                  ^
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#109: FILE: mm/percpu.c:132:
++^I$
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#135: FILE: mm/percpu.c:166:
++^I^I^Iblkp->pages[j] = alloc_pages_node(cpu_to_node(i) , $
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#135: FILE: mm/percpu.c:166:
++			blkp->pages[j] = alloc_pages_node(cpu_to_node(i) , 
+ 			                                                 ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#136: FILE: mm/percpu.c:167:
++			blkp->pages[j] = alloc_pages_node(cpu_to_node(i) , 
++						flags, 0);
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000151741.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 3 errors, 5 warnings, 8 checks, 115 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000151741.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

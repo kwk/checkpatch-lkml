@@ -1,0 +1,526 @@
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#238: FILE: fs/fat/dir.c:302:
++EXPORT_SYMBOL(fat_search_long);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#274: FILE: fs/fat/dir.c:670:
++struct file_operations fat_dir_operations = {
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#304: FILE: fs/fat/dir.c:700:
++		if (strncmp(de->name, MSDOS_DOT   , MSDOS_NAME) &&
+ 		                                  ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#314: FILE: fs/fat/dir.c:710:
++EXPORT_SYMBOL(fat_dir_empty);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#356: FILE: fs/fat/dir.c:752:
++EXPORT_SYMBOL(fat_scan);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#377: FILE: fs/fat/dir.c:773:
++		if ((bh = sb_getblk(sb, sector))) {
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!res"
+#387: FILE: fs/fat/dir.c:783:
++	if (res == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'dir->i_ino == MSDOS_ROOT_INO'
+#408: FILE: fs/fat/dir.c:824:
++	if ((dir->i_ino == MSDOS_ROOT_INO) && (MSDOS_SB(sb)->fat_bits != 32))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#513: FILE: fs/fat/file.c:21:
++	retval = generic_file_write(filp, buf, count, ppos);
+ 	                            ^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#515: FILE: fs/fat/file.c:23:
++		inode->i_mtime = inode->i_ctime = CURRENT_TIME_SEC;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'attr->ia_uid != sbi->options.fs_uid'
+#578: FILE: fs/fat/file.c:63:
++	if (((attr->ia_valid & ATTR_UID) &&
++	     (attr->ia_uid != sbi->options.fs_uid)) ||
++	    ((attr->ia_valid & ATTR_GID) &&
++	     (attr->ia_gid != sbi->options.fs_gid)) ||
++	    ((attr->ia_valid & ATTR_MODE) &&
++	     (attr->ia_mode & ~MSDOS_VALID_MODE)))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'attr->ia_gid != sbi->options.fs_gid'
+#578: FILE: fs/fat/file.c:63:
++	if (((attr->ia_valid & ATTR_UID) &&
++	     (attr->ia_uid != sbi->options.fs_uid)) ||
++	    ((attr->ia_valid & ATTR_GID) &&
++	     (attr->ia_gid != sbi->options.fs_gid)) ||
++	    ((attr->ia_valid & ATTR_MODE) &&
++	     (attr->ia_mode & ~MSDOS_VALID_MODE)))
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRWXUGO' are not preferred. Consider using octal permissions '0777'.
+#608: FILE: fs/fat/file.c:84:
++	inode->i_mode &= S_IFMT | (S_IRWXUGO & ~mask);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#616: FILE: fs/fat/file.c:90:
++EXPORT_SYMBOL(fat_notify_change);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#641: FILE: fs/fat/file.c:109:
++		if (nr == FAT_ENT_EOF)
+[...]
++		else if (nr > 0) {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#667: FILE: fs/fat/file.c:134:
++		if (nr < 0)
+[...]
++		else if (nr == FAT_ENT_FREE) {
+[...]
+
+WARNING:USE_FUNC: __func__ should be used instead of gcc specific __FUNCTION__
+#671: FILE: fs/fat/file.c:138:
++				     __FUNCTION__, MSDOS_I(inode)->i_pos);
+
+WARNING:CONST_STRUCT: struct inode_operations should normally be const
+#702: FILE: fs/fat/file.c:177:
++struct inode_operations fat_file_inode_operations = {
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#724: FILE: fs/fat/inode.c:35:
+ 
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#758: FILE: fs/fat/inode.c:69:
++		BUG();
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#775: FILE: fs/fat/inode.c:86:
++			     unsigned from, unsigned to)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#775: FILE: fs/fat/inode.c:86:
++			     unsigned from, unsigned to)
+
+WARNING:CONST_STRUCT: struct address_space_operations should normally be const
+#786: FILE: fs/fat/inode.c:97:
++static struct address_space_operations fat_aops = {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#845: FILE: fs/fat/inode.c:236:
++		inode->i_mode = MSDOS_MKMODE(de->attr,
++			S_IRWXUGO & ~sbi->options.fs_dmask) | S_IFDIR;
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRWXUGO' are not preferred. Consider using octal permissions '0777'.
+#845: FILE: fs/fat/inode.c:236:
++			S_IRWXUGO & ~sbi->options.fs_dmask) | S_IFDIR;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#863: FILE: fs/fat/inode.c:254:
++		inode->i_mode = MSDOS_MKMODE(de->attr,
++		    ((sbi->options.showexec &&
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#865: FILE: fs/fat/inode.c:256:
++			? S_IRUGO|S_IWUGO : S_IRWXUGO)
+ 			         ^
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO|S_IWUGO' are not preferred. Consider using octal permissions '0666'.
+#865: FILE: fs/fat/inode.c:256:
++			? S_IRUGO|S_IWUGO : S_IRWXUGO)
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRWXUGO' are not preferred. Consider using octal permissions '0777'.
+#865: FILE: fs/fat/inode.c:256:
++			? S_IRUGO|S_IWUGO : S_IRWXUGO)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#878: FILE: fs/fat/inode.c:269:
++	if(de->attr & ATTR_SYS)
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#886: FILE: fs/fat/inode.c:277:
++	inode->i_mtime.tv_sec = inode->i_atime.tv_sec =
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#888: FILE: fs/fat/inode.c:279:
++	inode->i_mtime.tv_nsec = inode->i_atime.tv_nsec = 0;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#934: FILE: fs/fat/inode.c:371:
++	struct msdos_inode_info *ei;
++	ei = kmem_cache_alloc(fat_inode_cachep, SLAB_KERNEL);
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#945: FILE: fs/fat/inode.c:382:
++static void init_once(void * foo, kmem_cache_t * cachep, unsigned long flags)
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#945: FILE: fs/fat/inode.c:382:
++static void init_once(void * foo, kmem_cache_t * cachep, unsigned long flags)
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#949: FILE: fs/fat/inode.c:386:
++	if ((flags & (SLAB_CTOR_VERIFY|SLAB_CTOR_CONSTRUCTOR)) ==
+ 	                              ^
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!fat_inode_cachep"
+#966: FILE: fs/fat/inode.c:403:
++	if (fat_inode_cachep == NULL)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#974: FILE: fs/fat/inode.c:411:
++		printk(KERN_INFO "fat_inode_cache: not all structures were freed\n");
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#987: FILE: fs/fat/inode.c:424:
++	if (MSDOS_SB(sb)->free_clusters != -1)
+[...]
++	else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#989: FILE: fs/fat/inode.c:426:
++	else {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#991: FILE: fs/fat/inode.c:428:
++		if (MSDOS_SB(sb)->free_clusters != -1)
+[...]
++		else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#993: FILE: fs/fat/inode.c:430:
++		else {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#997: FILE: fs/fat/inode.c:434:
++				if (ret < 0) {
+[...]
++				} else if (ret == FAT_ENT_FREE)
+[...]
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1028: FILE: fs/fat/inode.c:465:
++	if (inode->i_ino == MSDOS_ROOT_INO || !i_pos) {
++		return 0;
++	}
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1032: FILE: fs/fat/inode.c:469:
++	if (!(bh = sb_bread(sb, i_pos >> sbi->dir_per_block_bits))) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#1033: FILE: fs/fat/inode.c:470:
++		printk(KERN_ERR "FAT: unable to read inode block "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1034: FILE: fs/fat/inode.c:471:
++		printk(KERN_ERR "FAT: unable to read inode block "
++		       "for updating (i_pos %lld)\n", i_pos);
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:SPACING: No space is necessary after a cast
+#1046: FILE: fs/fat/inode.c:483:
++	raw_entry = &((struct msdos_dir_entry *) (bh->b_data))
+
+ERROR:ELSE_AFTER_BRACE: else should follow close brace '}'
+#1052: FILE: fs/fat/inode.c:489:
++	}
++	else {
+
+`else {` should follow the closing block `}` on the same line.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1052: FILE: fs/fat/inode.c:489:
++	else {
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#1062: FILE: fs/fat/inode.c:499:
++		fat_date_unix2dos(inode->i_ctime.tv_sec,&raw_entry->ctime,&raw_entry->cdate);
+ 		                                       ^
+
+ERROR:SPACING: space required before that '&' (ctx:OxV)
+#1062: FILE: fs/fat/inode.c:499:
++		fat_date_unix2dos(inode->i_ctime.tv_sec,&raw_entry->ctime,&raw_entry->cdate);
+ 		                                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#1062: FILE: fs/fat/inode.c:499:
++		fat_date_unix2dos(inode->i_ctime.tv_sec,&raw_entry->ctime,&raw_entry->cdate);
+ 		                                                         ^
+
+ERROR:SPACING: space required before that '&' (ctx:OxV)
+#1062: FILE: fs/fat/inode.c:499:
++		fat_date_unix2dos(inode->i_ctime.tv_sec,&raw_entry->ctime,&raw_entry->cdate);
+ 		                                                          ^
+
+WARNING:TYPO_SPELLING: 'iput' may be misspelled - perhaps 'input'?
+#1124: FILE: fs/fat/inode.c:561:
++			iput(inode);
+ 			^^^^
+
+WARNING:TYPO_SPELLING: 'iput' may be misspelled - perhaps 'input'?
+#1141: FILE: fs/fat/inode.c:578:
++			iput(inode);
+ 			^^^^
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1162: FILE: fs/fat/inode.c:599:
++
++
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!result"
+#1167: FILE: fs/fat/inode.c:604:
++	if (result == NULL) {
+
+WARNING:TYPO_SPELLING: 'iput' may be misspelled - perhaps 'input'?
+#1168: FILE: fs/fat/inode.c:605:
++		iput(inode);
+ 		^^^^
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#1201: FILE: fs/fat/inode.c:638:
++	struct buffer_head *bh=NULL;
+ 	                      ^
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1230: FILE: fs/fat/inode.c:653:
++	if (!inode)
+[...]
++	else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1232: FILE: fs/fat/inode.c:655:
++	else {
+
+WARNING:TYPO_SPELLING: 'iput' may be misspelled - perhaps 'input'?
+#1235: FILE: fs/fat/inode.c:658:
++			iput(inode);
+ 			^^^^
+
+ERROR:SPACING: space required before the open parenthesis '('
+#1243: FILE: fs/fat/inode.c:664:
++	if(bh)
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#1506: FILE: fs/fat/inode.c:1030:
++	inode->i_mtime.tv_sec = inode->i_atime.tv_sec = inode->i_ctime.tv_sec = 0;
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#1507: FILE: fs/fat/inode.c:1031:
++	inode->i_mtime.tv_nsec = inode->i_atime.tv_nsec = inode->i_ctime.tv_nsec = 0;
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1509: FILE: fs/fat/inode.c:1033:
++	inode->i_nlink = fat_subdirs(inode)+2;
+ 	                                   ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1940: FILE: fs/fat/misc.c:214:
++	if ((year+3)/4+365*year > day)
+ 	         ^
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#1940: FILE: fs/fat/misc.c:214:
++	if ((year+3)/4+365*year > day)
+ 	            ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1940: FILE: fs/fat/misc.c:214:
++	if ((year+3)/4+365*year > day)
+ 	              ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1940: FILE: fs/fat/misc.c:214:
++	if ((year+3)/4+365*year > day)
+ 	                  ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#2020: FILE: include/linux/msdos_fs.h:47:
++#define IS_FREE(n)	(!*(n) || *(n) == DELETED_FLAG)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'm' may be better as '(m)' to avoid precedence issues
+#2028: FILE: include/linux/msdos_fs.h:54:
++#define MSDOS_MKATTR(m)	((m & S_IWUGO) ? ATTR_NONE : ATTR_RO)
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUGO' are not preferred. Consider using octal permissions '0222'.
+#2028: FILE: include/linux/msdos_fs.h:54:
++#define MSDOS_MKATTR(m)	((m & S_IWUGO) ? ATTR_NONE : ATTR_RO)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#2054: FILE: include/linux/msdos_fs.h:71:
++#define MAX_FAT(s)	(MSDOS_SB(s)->fat_bits == 32 ? MAX_FAT32 : \
+ 	MSDOS_SB(s)->fat_bits == 16 ? MAX_FAT16 : MAX_FAT12)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#2065: FILE: include/linux/msdos_fs.h:78:
++#define BAD_FAT(s)	(MSDOS_SB(s)->fat_bits == 32 ? BAD_FAT32 : \
+ 	MSDOS_SB(s)->fat_bits == 16 ? BAD_FAT16 : BAD_FAT12)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#2076: FILE: include/linux/msdos_fs.h:85:
++#define EOF_FAT(s)	(MSDOS_SB(s)->fat_bits == 32 ? EOF_FAT32 : \
+ 	MSDOS_SB(s)->fat_bits == 16 ? EOF_FAT16 : EOF_FAT12)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2154: FILE: include/linux/msdos_fs.h:301:
++extern int fat_access(struct super_block *sb, int nr, int new_value);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2158: FILE: include/linux/msdos_fs.h:304:
++extern int fat_bmap(struct inode *inode, sector_t sector, sector_t *phys);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2167: FILE: include/linux/msdos_fs.h:311:
++extern int fat_add_entries(struct inode *dir, int slots,
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#2179: FILE: include/linux/msdos_fs.h:324:
++extern int fat_notify_change(struct dentry * dentry, struct iattr * attr);
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#2179: FILE: include/linux/msdos_fs.h:324:
++extern int fat_notify_change(struct dentry * dentry, struct iattr * attr);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2179: FILE: include/linux/msdos_fs.h:324:
++extern int fat_notify_change(struct dentry * dentry, struct iattr * attr);
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000214655.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 15 errors, 26 warnings, 42 checks, 1944 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000214655.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

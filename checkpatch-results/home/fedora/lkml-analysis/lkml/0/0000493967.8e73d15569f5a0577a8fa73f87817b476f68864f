@@ -1,0 +1,461 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#49: 
+    __scsi_insert_special, and scsi_queue_next_request for concurrent queueing 
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#90: FILE: include/linux/blkdev.h:190:
++#define blkdev_free_rq(list) list_entry((list)->next, struct request, queue);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'q' - possible side-effects?
+#99: FILE: include/linux/blkdev.h:211:
++#define xrq_lock_irq(q)						\
++	{if (q->concurrent) spin_lock_irq(&q->queue_lock);	\
++		else spin_lock_irq(&io_request_lock);}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'q' may be better as '(q)' to avoid precedence issues
+#99: FILE: include/linux/blkdev.h:211:
++#define xrq_lock_irq(q)						\
++	{if (q->concurrent) spin_lock_irq(&q->queue_lock);	\
++		else spin_lock_irq(&io_request_lock);}
+
+ERROR:SPACING: space required after that ';' (ctx:VxV)
+#101: FILE: include/linux/blkdev.h:213:
++		else spin_lock_irq(&io_request_lock);}
+ 		                                    ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#101: FILE: include/linux/blkdev.h:213:
++		else spin_lock_irq(&io_request_lock);}
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'q' - possible side-effects?
+#103: FILE: include/linux/blkdev.h:215:
++#define xrq_unlock_irq(q)					\
++	{if (q->concurrent) spin_unlock_irq(&q->queue_lock);	\
++		else spin_unlock_irq(&io_request_lock);}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'q' may be better as '(q)' to avoid precedence issues
+#103: FILE: include/linux/blkdev.h:215:
++#define xrq_unlock_irq(q)					\
++	{if (q->concurrent) spin_unlock_irq(&q->queue_lock);	\
++		else spin_unlock_irq(&io_request_lock);}
+
+ERROR:SPACING: space required after that ';' (ctx:VxV)
+#105: FILE: include/linux/blkdev.h:217:
++		else spin_unlock_irq(&io_request_lock);}
+ 		                                      ^
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#105: FILE: include/linux/blkdev.h:217:
++		else spin_unlock_irq(&io_request_lock);}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'q' - possible side-effects?
+#107: FILE: include/linux/blkdev.h:219:
++#define rq_lock(q)						\
++	{if (q->concurrent) spin_lock(&q->queue_lock);}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'q' may be better as '(q)' to avoid precedence issues
+#107: FILE: include/linux/blkdev.h:219:
++#define rq_lock(q)						\
++	{if (q->concurrent) spin_lock(&q->queue_lock);}
+
+ERROR:SPACING: space required after that ';' (ctx:VxV)
+#108: FILE: include/linux/blkdev.h:220:
++	{if (q->concurrent) spin_lock(&q->queue_lock);}
+ 	                                             ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'q' - possible side-effects?
+#110: FILE: include/linux/blkdev.h:222:
++#define rq_unlock(q)						\
++	{if (q->concurrent) spin_unlock(&q->queue_lock);}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'q' may be better as '(q)' to avoid precedence issues
+#110: FILE: include/linux/blkdev.h:222:
++#define rq_unlock(q)						\
++	{if (q->concurrent) spin_unlock(&q->queue_lock);}
+
+ERROR:SPACING: space required after that ';' (ctx:VxV)
+#111: FILE: include/linux/blkdev.h:223:
++	{if (q->concurrent) spin_unlock(&q->queue_lock);}
+ 	                                               ^
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#152: FILE: drivers/block/ll_rw_blk.c:603:
++inline void attempt_back_merge(request_queue_t * q,
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#161: FILE: drivers/block/ll_rw_blk.c:613:
++inline void attempt_front_merge(request_queue_t * q,
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#171: FILE: drivers/scsi/hosts.h:299:
++    unsigned concurrent_queue:1;$
+
+CHECK:CAMELCASE: Avoid CamelCase: <SDpnt>
+#184: FILE: drivers/scsi/scsi.c:190:
++	scsi_init_queue(&SDpnt->request_queue, SHpnt->hostt->concurrent_queue);
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:CAMELCASE: Avoid CamelCase: <SHpnt>
+#184: FILE: drivers/scsi/scsi.c:190:
++	scsi_init_queue(&SDpnt->request_queue, SHpnt->hostt->concurrent_queue);
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#251: FILE: drivers/scsi/scsi_lib.c:832:
++extern int get_max_sectors(kdev_t);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'kdev_t' should also have an identifier name
+#251: FILE: drivers/scsi/scsi_lib.c:832:
++extern int get_max_sectors(kdev_t);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#252: FILE: drivers/scsi/scsi_lib.c:833:
++extern void attempt_back_merge(request_queue_t *, struct request *, int, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'request_queue_t *' should also have an identifier name
+#252: FILE: drivers/scsi/scsi_lib.c:833:
++extern void attempt_back_merge(request_queue_t *, struct request *, int, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request *' should also have an identifier name
+#252: FILE: drivers/scsi/scsi_lib.c:833:
++extern void attempt_back_merge(request_queue_t *, struct request *, int, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#252: FILE: drivers/scsi/scsi_lib.c:833:
++extern void attempt_back_merge(request_queue_t *, struct request *, int, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#252: FILE: drivers/scsi/scsi_lib.c:833:
++extern void attempt_back_merge(request_queue_t *, struct request *, int, int);
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#253: FILE: drivers/scsi/scsi_lib.c:834:
++extern void attempt_front_merge(request_queue_t *, struct list_head *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'request_queue_t *' should also have an identifier name
+#253: FILE: drivers/scsi/scsi_lib.c:834:
++extern void attempt_front_merge(request_queue_t *, struct list_head *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct list_head *' should also have an identifier name
+#253: FILE: drivers/scsi/scsi_lib.c:834:
++extern void attempt_front_merge(request_queue_t *, struct list_head *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request *' should also have an identifier name
+#253: FILE: drivers/scsi/scsi_lib.c:834:
++extern void attempt_front_merge(request_queue_t *, struct list_head *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#253: FILE: drivers/scsi/scsi_lib.c:834:
++extern void attempt_front_merge(request_queue_t *, struct list_head *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#253: FILE: drivers/scsi/scsi_lib.c:834:
++extern void attempt_front_merge(request_queue_t *, struct list_head *,
+
+CHECK:SPACING: No space is necessary after a cast
+#270: FILE: drivers/scsi/scsi_lib.c:851:
++	request_queue_t *q = (request_queue_t *) data;
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!rq"
+#315: FILE: drivers/scsi/scsi_lib.c:896:
++	} while (rq == NULL);
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#321: FILE: drivers/scsi/scsi_lib.c:902:
++static int scsi_make_request(request_queue_t * q, int rw, $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#321: FILE: drivers/scsi/scsi_lib.c:902:
++static int scsi_make_request(request_queue_t * q, int rw, 
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#322: FILE: drivers/scsi/scsi_lib.c:903:
++static int scsi_make_request(request_queue_t * q, int rw, 
++				struct buffer_head * bh)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#322: FILE: drivers/scsi/scsi_lib.c:903:
++				struct buffer_head * bh)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#326: FILE: drivers/scsi/scsi_lib.c:907:
++	struct request * req, *freereq = NULL;
+
+ERROR:SWITCH_CASE_INDENT_LEVEL: switch and case should be at the same indent
+#336: FILE: drivers/scsi/scsi_lib.c:917:
++	switch (rw) {
++		case READA:
+[...]
++		case READ:
++		case WRITE:
+[...]
++		default:
+
+switch should be at the same indent as case.
+Example::
+
+  switch (suffix) {
+  case 'G':
+  case 'g':
+          mem <<= 30;
+          break;
+  case 'M':
+  case 'm':
+          mem <<= 20;
+          break;
+  case 'K':
+  case 'k':
+          mem <<= 10;
+          fallthrough;
+  default:
+          break;
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#345: FILE: drivers/scsi/scsi_lib.c:926:
++			BUG();
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#350: FILE: drivers/scsi/scsi_lib.c:931:
++	/* We'd better have a real physical mapping!
++	   Check this bit only if the buffer was dirty and just locked
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#352: FILE: drivers/scsi/scsi_lib.c:933:
++	   won't clear the mapped bit under us. */
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#354: FILE: drivers/scsi/scsi_lib.c:935:
++		BUG();
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#384: FILE: drivers/scsi/scsi_lib.c:965:
++^I} $
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#386: FILE: drivers/scsi/scsi_lib.c:967:
++	el_ret = elevator->elevator_merge_fn(q, &req, head, bh, rw,max_sectors);
+ 	                                                          ^
+
+ERROR:SWITCH_CASE_INDENT_LEVEL: switch and case should be at the same indent
+#387: FILE: drivers/scsi/scsi_lib.c:968:
++	switch (el_ret) {
+[...]
++		case ELEVATOR_BACK_MERGE:
+[...]
++		case ELEVATOR_FRONT_MERGE:
+[...]
++		case ELEVATOR_NO_MERGE:
+[...]
++		default:
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#388: FILE: drivers/scsi/scsi_lib.c:969:
++	switch (el_ret) {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#409: FILE: drivers/scsi/scsi_lib.c:990:
++			req->sector = req->hard_sector = sector;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#430: FILE: drivers/scsi/scsi_lib.c:1011:
++			printk("elevator returned crap (%d)\n", el_ret);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#431: FILE: drivers/scsi/scsi_lib.c:1012:
++			BUG();
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#433: FILE: drivers/scsi/scsi_lib.c:1014:
++^I^I$
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#443: FILE: drivers/scsi/scsi_lib.c:1024:
++	} else if ((req = scsi_get_request(q, rw)) == NULL) {
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#456: FILE: drivers/scsi/scsi_lib.c:1037:
++	req->hard_sector = req->sector = sector;
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#457: FILE: drivers/scsi/scsi_lib.c:1038:
++	req->hard_nr_sectors = req->nr_sectors = count;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#538: FILE: drivers/scsi/scsi_lib.c:1337:
++void scsi_init_queue(request_queue_t * q, unsigned concurrent_queue)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#538: FILE: drivers/scsi/scsi_lib.c:1337:
++void scsi_init_queue(request_queue_t * q, unsigned concurrent_queue)
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#543: FILE: drivers/scsi/scsi_lib.c:1342:
++^Iq->request_fn     ^I= scsi_request_fn;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#548: FILE: drivers/scsi/scsi_lib.c:1347:
++^Iq->plugged        ^I= 0;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#549: FILE: drivers/scsi/scsi_lib.c:1348:
++^Iq->plug_device_fn ^I= scsi_plug_device;$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#550: FILE: drivers/scsi/scsi_lib.c:1349:
++^Iq->head_active    ^I= 0;$
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#551: FILE: drivers/scsi/scsi_lib.c:1350:
++^Iq->concurrent^I^I= concurrent_queue;^I^I$
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000493967.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 20 errors, 27 warnings, 17 checks, 450 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000493967.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

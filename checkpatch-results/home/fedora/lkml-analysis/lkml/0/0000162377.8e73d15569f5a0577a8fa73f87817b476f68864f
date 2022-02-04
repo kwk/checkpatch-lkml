@@ -1,0 +1,89 @@
+WARNING:CONSTANT_CONVERSION: __constant_cpu_to_le32 should be cpu_to_le32
+#87: FILE: drivers/usb/host/ehci-q.c:225:
++		if ((qh->hw_info2 & __constant_cpu_to_le32 (QH_SMASK)) != 0) {
+
+Use of __constant_<foo> form is discouraged for the following functions::
+
+  __constant_cpu_to_be[x]
+  __constant_cpu_to_le[x]
+  __constant_be[x]_to_cpu
+  __constant_le[x]_to_cpu
+  __constant_htons
+  __constant_ntohs
+
+Using any of these outside of include/uapi/ is not preferred as using the
+function without __constant_ is identical when the argument is a
+constant.
+
+In big endian systems, the macros like __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to the same expression::
+
+  #define __constant_cpu_to_be32(x) ((__force __be32)(__u32)(x))
+  #define __cpu_to_be32(x)          ((__force __be32)(__u32)(x))
+
+In little endian systems, the macros __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to __constant_swab32 and __swab32.  __swab32
+has a __builtin_constant_p check::
+
+  #define __swab32(x)				\
+    (__builtin_constant_p((__u32)(x)) ?	\
+    ___constant_swab32(x) :			\
+    __fswab32(x))
+
+So ultimately they have a special case for constants.
+Similar is the case with all of the macros in the list.  Thus
+using the __constant_... forms are unnecessarily verbose and
+not preferred outside of include/uapi.
+
+See: https://lore.kernel.org/lkml/1400106425.12666.6.camel@joe-AO725/
+
+WARNING:CONSTANT_CONVERSION: __constant_cpu_to_le32 should be cpu_to_le32
+#96: FILE: drivers/usb/host/ehci-q.c:431:
++			if ((__constant_cpu_to_le32 (QH_SMASK)
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#108: FILE: drivers/usb/host/ehci-sched.c:304:
++		period, le32_to_cpup (&qh->hw_info2) & (QH_CMASK | QH_SMASK),
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#118: FILE: drivers/usb/host/ehci-sched.c:389:
++		le32_to_cpup (&qh->hw_info2) & (QH_CMASK | QH_SMASK),
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#127: FILE: drivers/usb/host/ehci-sched.c:415:
+ 	if (list_empty (&qh->qtd_list)
++			|| (__constant_cpu_to_le32 (QH_CMASK)
+
+WARNING:CONSTANT_CONVERSION: __constant_cpu_to_le32 should be cpu_to_le32
+#127: FILE: drivers/usb/host/ehci-sched.c:415:
++			|| (__constant_cpu_to_le32 (QH_CMASK)
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#136: FILE: drivers/usb/host/ehci-sched.c:537:
++		uframe = ffs (le32_to_cpup (&qh->hw_info2) & QH_SMASK);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#136: FILE: drivers/usb/host/ehci-sched.c:537:
++		uframe = ffs (le32_to_cpup (&qh->hw_info2) & QH_SMASK);
+
+WARNING:CONSTANT_CONVERSION: __constant_cpu_to_le32 should be cpu_to_le32
+#145: FILE: drivers/usb/host/ehci-sched.c:573:
++		qh->hw_info2 &= __constant_cpu_to_le32(~(QH_CMASK | QH_SMASK));
+
+WARNING:CONSTANT_CONVERSION: __constant_cpu_to_le32 should be cpu_to_le32
+#149: FILE: drivers/usb/host/ehci-sched.c:576:
++			: __constant_cpu_to_le32 (QH_SMASK);
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000162377.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 0 errors, 9 warnings, 1 checks, 81 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000162377.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

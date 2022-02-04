@@ -1,0 +1,627 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#26: 
+diff -X /home/ysato/.exclude-diff -Nru linux-2.6.2/include/asm-h8300/bitops.h linux-2.6.2-h8300/include/asm-h8300/bitops.h
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#42: FILE: include/asm-h8300/bitops.h:38:
++#define H8300_GEN_BITOP_CONST(OP,BIT)			    \
+                                 ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#42: FILE: include/asm-h8300/bitops.h:38:
++#define H8300_GEN_BITOP_CONST(OP,BIT)			    \
++	case BIT:					    \
++	__asm__(OP " #" #BIT ",@%0"::"r"(b_addr):"memory"); \
++	break;
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#42: FILE: include/asm-h8300/bitops.h:38:
++#define H8300_GEN_BITOP_CONST(OP,BIT)			    \
++	case BIT:					    \
++	__asm__(OP " #" #BIT ",@%0"::"r"(b_addr):"memory"); \
++	break;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:SPACING: spaces required around that ':' (ctx:VxV)
+#44: FILE: include/asm-h8300/bitops.h:40:
++	__asm__(OP " #" #BIT ",@%0"::"r"(b_addr):"memory"); \
+ 	                                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#47: FILE: include/asm-h8300/bitops.h:43:
++#define H8300_GEN_BITOP(FNAME,OP)				      \
+                              ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'OP' - possible side-effects?
+#47: FILE: include/asm-h8300/bitops.h:43:
++#define H8300_GEN_BITOP(FNAME,OP)				      \
++static __inline__ void FNAME(int nr, volatile unsigned long* addr)    \
++{								      \
++	volatile unsigned char *b_addr;				      \
++	b_addr = (volatile unsigned char *)addr + ((nr >> 3) ^ 3);    \
++	if (__builtin_constant_p(nr)) {				      \
++		switch(nr & 7) {				      \
++			H8300_GEN_BITOP_CONST(OP,0)		      \
++			H8300_GEN_BITOP_CONST(OP,1)		      \
++			H8300_GEN_BITOP_CONST(OP,2)		      \
++			H8300_GEN_BITOP_CONST(OP,3)		      \
++			H8300_GEN_BITOP_CONST(OP,4)		      \
++			H8300_GEN_BITOP_CONST(OP,5)		      \
++			H8300_GEN_BITOP_CONST(OP,6)		      \
++			H8300_GEN_BITOP_CONST(OP,7)		      \
++		}						      \
++	} else {						      \
++		__asm__(OP " %w0,@%1"::"r"(nr),"r"(b_addr):"memory"); \
++	}							      \
+ }
+
+ERROR:POINTER_LOCATION: "foo* bar" should be "foo *bar"
+#48: FILE: include/asm-h8300/bitops.h:44:
++static __inline__ void FNAME(int nr, volatile unsigned long* addr)    \
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#48: FILE: include/asm-h8300/bitops.h:44:
++static __inline__ void FNAME(int nr, volatile unsigned long* addr)    \
+
+WARNING:INLINE: plain inline is preferred over __inline__
+#48: FILE: include/asm-h8300/bitops.h:44:
++static __inline__ void FNAME(int nr, volatile unsigned long* addr)    \
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#50: FILE: include/asm-h8300/bitops.h:46:
++	volatile unsigned char *b_addr;				      \
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#51: FILE: include/asm-h8300/bitops.h:47:
++	b_addr = (volatile unsigned char *)addr + ((nr >> 3) ^ 3);    \
+
+ERROR:SPACING: space required before the open parenthesis '('
+#53: FILE: include/asm-h8300/bitops.h:49:
++		switch(nr & 7) {				      \
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#54: FILE: include/asm-h8300/bitops.h:50:
++			H8300_GEN_BITOP_CONST(OP,0)		      \
+ 			                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#55: FILE: include/asm-h8300/bitops.h:51:
++			H8300_GEN_BITOP_CONST(OP,1)		      \
+ 			                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#56: FILE: include/asm-h8300/bitops.h:52:
++			H8300_GEN_BITOP_CONST(OP,2)		      \
+ 			                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#57: FILE: include/asm-h8300/bitops.h:53:
++			H8300_GEN_BITOP_CONST(OP,3)		      \
+ 			                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#58: FILE: include/asm-h8300/bitops.h:54:
++			H8300_GEN_BITOP_CONST(OP,4)		      \
+ 			                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#59: FILE: include/asm-h8300/bitops.h:55:
++			H8300_GEN_BITOP_CONST(OP,5)		      \
+ 			                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#60: FILE: include/asm-h8300/bitops.h:56:
++			H8300_GEN_BITOP_CONST(OP,6)		      \
+ 			                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#61: FILE: include/asm-h8300/bitops.h:57:
++			H8300_GEN_BITOP_CONST(OP,7)		      \
+ 			                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#64: FILE: include/asm-h8300/bitops.h:60:
++		__asm__(OP " %w0,@%1"::"r"(nr),"r"(b_addr):"memory"); \
+ 		                              ^
+
+CHECK:SPACING: spaces required around that ':' (ctx:VxV)
+#64: FILE: include/asm-h8300/bitops.h:60:
++		__asm__(OP " %w0,@%1"::"r"(nr),"r"(b_addr):"memory"); \
+ 		                                          ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxV)
+#89: FILE: include/asm-h8300/bitops.h:70:
++H8300_GEN_BITOP(set_bit	  ,"bset")
+                        	  ^
+
+ERROR:SPACING: space required after that ',' (ctx:WxV)
+#89: FILE: include/asm-h8300/bitops.h:70:
++H8300_GEN_BITOP(set_bit	  ,"bset")
+                        	  ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxV)
+#90: FILE: include/asm-h8300/bitops.h:71:
++H8300_GEN_BITOP(clear_bit ,"bclr")
+                           ^
+
+ERROR:SPACING: space required after that ',' (ctx:WxV)
+#90: FILE: include/asm-h8300/bitops.h:71:
++H8300_GEN_BITOP(clear_bit ,"bclr")
+                           ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#91: FILE: include/asm-h8300/bitops.h:72:
++H8300_GEN_BITOP(change_bit,"bnot")
+                           ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#92: FILE: include/asm-h8300/bitops.h:73:
++#define __set_bit(nr,addr)    set_bit((nr),(addr))
+                     ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#92: FILE: include/asm-h8300/bitops.h:73:
++#define __set_bit(nr,addr)    set_bit((nr),(addr))
+                                           ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#93: FILE: include/asm-h8300/bitops.h:74:
++#define __clear_bit(nr,addr)  clear_bit((nr),(addr))
+                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#93: FILE: include/asm-h8300/bitops.h:74:
++#define __clear_bit(nr,addr)  clear_bit((nr),(addr))
+                                             ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#94: FILE: include/asm-h8300/bitops.h:75:
++#define __change_bit(nr,addr) change_bit((nr),(addr))
+                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#94: FILE: include/asm-h8300/bitops.h:75:
++#define __change_bit(nr,addr) change_bit((nr),(addr))
+                                              ^
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#114: FILE: include/asm-h8300/bitops.h:82:
++^Ireturn (*((volatile unsigned char *)addr + $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#114: FILE: include/asm-h8300/bitops.h:82:
++	return (*((volatile unsigned char *)addr + 
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#115: FILE: include/asm-h8300/bitops.h:83:
++               ((nr >> 3) ^ 3)) & (1UL << (nr & 7))) != 0;$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#115: FILE: include/asm-h8300/bitops.h:83:
++               ((nr >> 3) ^ 3)) & (1UL << (nr & 7))) != 0;$
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#230: FILE: include/asm-h8300/bitops.h:88:
++#define H8300_GEN_TEST_BITOP_CONST_INT(OP,BIT)			     \
+                                          ^
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#230: FILE: include/asm-h8300/bitops.h:88:
++#define H8300_GEN_TEST_BITOP_CONST_INT(OP,BIT)			     \
++	case BIT:						     \
++	__asm__("stc ccr,%w1\n\t"				     \
++		"orc #0x80,ccr\n\t"				     \
++		"bld #" #BIT ",@%3\n\t"				     \
++		OP " #" #BIT ",@%3\n\t"				     \
++		"rotxl.l %0\n\t"				     \
++		"ldc %w1,ccr"					     \
++		: "=r"(retval),"=&r"(ccrsave)			     \
++		: "0" (retval),"r" (b_addr)			     \
++		: "memory");                                         \
++        break;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#230: FILE: include/asm-h8300/bitops.h:88:
++#define H8300_GEN_TEST_BITOP_CONST_INT(OP,BIT)			     \
++	case BIT:						     \
++	__asm__("stc ccr,%w1\n\t"				     \
++		"orc #0x80,ccr\n\t"				     \
++		"bld #" #BIT ",@%3\n\t"				     \
++		OP " #" #BIT ",@%3\n\t"				     \
++		"rotxl.l %0\n\t"				     \
++		"ldc %w1,ccr"					     \
++		: "=r"(retval),"=&r"(ccrsave)			     \
++		: "0" (retval),"r" (b_addr)			     \
++		: "memory");                                         \
++        break;
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#238: FILE: include/asm-h8300/bitops.h:96:
++		: "=r"(retval),"=&r"(ccrsave)			     \
+ 		              ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#239: FILE: include/asm-h8300/bitops.h:97:
++		: "0" (retval),"r" (b_addr)			     \
+ 		              ^
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#241: FILE: include/asm-h8300/bitops.h:99:
++        break;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#241: FILE: include/asm-h8300/bitops.h:99:
++        break;$
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#243: FILE: include/asm-h8300/bitops.h:101:
++#define H8300_GEN_TEST_BITOP_CONST(OP,BIT)			     \
+                                      ^
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#243: FILE: include/asm-h8300/bitops.h:101:
++#define H8300_GEN_TEST_BITOP_CONST(OP,BIT)			     \
++	case BIT:						     \
++	__asm__("bld #" #BIT ",@%2\n\t"				     \
++		OP " #" #BIT ",@%2\n\t"				     \
++		"rotxl.l %0\n\t"				     \
++		: "=r"(retval)					     \
++		: "0" (retval),"r" (b_addr)			     \
++		: "memory");                                         \
++        break;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#243: FILE: include/asm-h8300/bitops.h:101:
++#define H8300_GEN_TEST_BITOP_CONST(OP,BIT)			     \
++	case BIT:						     \
++	__asm__("bld #" #BIT ",@%2\n\t"				     \
++		OP " #" #BIT ",@%2\n\t"				     \
++		"rotxl.l %0\n\t"				     \
++		: "=r"(retval)					     \
++		: "0" (retval),"r" (b_addr)			     \
++		: "memory");                                         \
++        break;
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#249: FILE: include/asm-h8300/bitops.h:107:
++		: "0" (retval),"r" (b_addr)			     \
+ 		              ^
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#251: FILE: include/asm-h8300/bitops.h:109:
++        break;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#251: FILE: include/asm-h8300/bitops.h:109:
++        break;$
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#253: FILE: include/asm-h8300/bitops.h:111:
++#define H8300_GEN_TEST_BITOP(FNNAME,OP)				     \
+                                    ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'OP' - possible side-effects?
+#253: FILE: include/asm-h8300/bitops.h:111:
++#define H8300_GEN_TEST_BITOP(FNNAME,OP)				     \
++static __inline__ int FNNAME(int nr, volatile void * addr)	     \
++{								     \
++	int retval = 0;						     \
++	char ccrsave;						     \
++	volatile unsigned char *b_addr;				     \
++	b_addr = (volatile unsigned char *)addr + ((nr >> 3) ^ 3);   \
++	if (__builtin_constant_p(nr)) {				     \
++		switch(nr & 7) {				     \
++			H8300_GEN_TEST_BITOP_CONST_INT(OP,0)	     \
++			H8300_GEN_TEST_BITOP_CONST_INT(OP,1)	     \
++			H8300_GEN_TEST_BITOP_CONST_INT(OP,2)	     \
++			H8300_GEN_TEST_BITOP_CONST_INT(OP,3)	     \
++			H8300_GEN_TEST_BITOP_CONST_INT(OP,4)	     \
++			H8300_GEN_TEST_BITOP_CONST_INT(OP,5)	     \
++			H8300_GEN_TEST_BITOP_CONST_INT(OP,6)	     \
++			H8300_GEN_TEST_BITOP_CONST_INT(OP,7)	     \
++		}						     \
++	} else {						     \
++		__asm__("stc ccr,%w1\n\t"			     \
++			"orc #0x80,ccr\n\t"			     \
++			"btst %w4,@%3\n\t"			     \
++			OP " %w4,@%3\n\t"			     \
++			"beq 1f\n\t"				     \
++			"inc.l #1,%0\n"				     \
++			"1:\n\t"				     \
++			"ldc %w1,ccr"				     \
++			: "=r"(retval),"=&r"(ccrsave)		     \
++			: "0" (retval),"r" (b_addr),"r"(nr)	     \
++			: "memory");				     \
++	}							     \
++	return retval;						     \
++}								     \
++								     \
++static __inline__ int __ ## FNNAME(int nr, volatile void * addr)     \
++{								     \
++	int retval = 0;						     \
++	volatile unsigned char *b_addr;				     \
++	b_addr = (volatile unsigned char *)addr + ((nr >> 3) ^ 3);   \
++	if (__builtin_constant_p(nr)) {				     \
++		switch(nr & 7) {				     \
++			H8300_GEN_TEST_BITOP_CONST(OP,0) 	     \
++			H8300_GEN_TEST_BITOP_CONST(OP,1) 	     \
++			H8300_GEN_TEST_BITOP_CONST(OP,2) 	     \
++			H8300_GEN_TEST_BITOP_CONST(OP,3) 	     \
++			H8300_GEN_TEST_BITOP_CONST(OP,4) 	     \
++			H8300_GEN_TEST_BITOP_CONST(OP,5) 	     \
++			H8300_GEN_TEST_BITOP_CONST(OP,6) 	     \
++			H8300_GEN_TEST_BITOP_CONST(OP,7) 	     \
++		}						     \
++	} else {						     \
++		__asm__("btst %w3,@%2\n\t"			     \
++			OP " %w3,@%2\n\t"			     \
++			"beq 1f\n\t"				     \
++			"inc.l #1,%0\n"				     \
++			"1:"					     \
++			: "=r"(retval)				     \
++			: "0" (retval),"r" (b_addr),"r"(nr)	     \
++			: "memory");				     \
++	}							     \
++	return retval;						     \
++}
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#254: FILE: include/asm-h8300/bitops.h:112:
++static __inline__ int FNNAME(int nr, volatile void * addr)	     \
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#254: FILE: include/asm-h8300/bitops.h:112:
++static __inline__ int FNNAME(int nr, volatile void * addr)	     \
+
+WARNING:INLINE: plain inline is preferred over __inline__
+#254: FILE: include/asm-h8300/bitops.h:112:
++static __inline__ int FNNAME(int nr, volatile void * addr)	     \
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#258: FILE: include/asm-h8300/bitops.h:116:
++	volatile unsigned char *b_addr;				     \
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#259: FILE: include/asm-h8300/bitops.h:117:
++	b_addr = (volatile unsigned char *)addr + ((nr >> 3) ^ 3);   \
+
+ERROR:SPACING: space required before the open parenthesis '('
+#261: FILE: include/asm-h8300/bitops.h:119:
++		switch(nr & 7) {				     \
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#262: FILE: include/asm-h8300/bitops.h:120:
++			H8300_GEN_TEST_BITOP_CONST_INT(OP,0)	     \
+ 			                                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#263: FILE: include/asm-h8300/bitops.h:121:
++			H8300_GEN_TEST_BITOP_CONST_INT(OP,1)	     \
+ 			                                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#264: FILE: include/asm-h8300/bitops.h:122:
++			H8300_GEN_TEST_BITOP_CONST_INT(OP,2)	     \
+ 			                                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#265: FILE: include/asm-h8300/bitops.h:123:
++			H8300_GEN_TEST_BITOP_CONST_INT(OP,3)	     \
+ 			                                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#266: FILE: include/asm-h8300/bitops.h:124:
++			H8300_GEN_TEST_BITOP_CONST_INT(OP,4)	     \
+ 			                                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#267: FILE: include/asm-h8300/bitops.h:125:
++			H8300_GEN_TEST_BITOP_CONST_INT(OP,5)	     \
+ 			                                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#268: FILE: include/asm-h8300/bitops.h:126:
++			H8300_GEN_TEST_BITOP_CONST_INT(OP,6)	     \
+ 			                                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#269: FILE: include/asm-h8300/bitops.h:127:
++			H8300_GEN_TEST_BITOP_CONST_INT(OP,7)	     \
+ 			                                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#280: FILE: include/asm-h8300/bitops.h:138:
++			: "=r"(retval),"=&r"(ccrsave)		     \
+ 			              ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#281: FILE: include/asm-h8300/bitops.h:139:
++			: "0" (retval),"r" (b_addr),"r"(nr)	     \
+ 			              ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#281: FILE: include/asm-h8300/bitops.h:139:
++			: "0" (retval),"r" (b_addr),"r"(nr)	     \
+ 			                           ^
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#287: FILE: include/asm-h8300/bitops.h:145:
++static __inline__ int __ ## FNNAME(int nr, volatile void * addr)     \
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#287: FILE: include/asm-h8300/bitops.h:145:
++static __inline__ int __ ## FNNAME(int nr, volatile void * addr)     \
+
+WARNING:INLINE: plain inline is preferred over __inline__
+#287: FILE: include/asm-h8300/bitops.h:145:
++static __inline__ int __ ## FNNAME(int nr, volatile void * addr)     \
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#290: FILE: include/asm-h8300/bitops.h:148:
++	volatile unsigned char *b_addr;				     \
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#291: FILE: include/asm-h8300/bitops.h:149:
++	b_addr = (volatile unsigned char *)addr + ((nr >> 3) ^ 3);   \
+
+ERROR:SPACING: space required before the open parenthesis '('
+#293: FILE: include/asm-h8300/bitops.h:151:
++		switch(nr & 7) {				     \
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#294: FILE: include/asm-h8300/bitops.h:152:
++^I^I^IH8300_GEN_TEST_BITOP_CONST(OP,0) ^I     \$
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#294: FILE: include/asm-h8300/bitops.h:152:
++			H8300_GEN_TEST_BITOP_CONST(OP,0) 	     \
+ 			                             ^
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#295: FILE: include/asm-h8300/bitops.h:153:
++^I^I^IH8300_GEN_TEST_BITOP_CONST(OP,1) ^I     \$
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#295: FILE: include/asm-h8300/bitops.h:153:
++			H8300_GEN_TEST_BITOP_CONST(OP,1) 	     \
+ 			                             ^
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#296: FILE: include/asm-h8300/bitops.h:154:
++^I^I^IH8300_GEN_TEST_BITOP_CONST(OP,2) ^I     \$
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#296: FILE: include/asm-h8300/bitops.h:154:
++			H8300_GEN_TEST_BITOP_CONST(OP,2) 	     \
+ 			                             ^
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#297: FILE: include/asm-h8300/bitops.h:155:
++^I^I^IH8300_GEN_TEST_BITOP_CONST(OP,3) ^I     \$
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#297: FILE: include/asm-h8300/bitops.h:155:
++			H8300_GEN_TEST_BITOP_CONST(OP,3) 	     \
+ 			                             ^
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#298: FILE: include/asm-h8300/bitops.h:156:
++^I^I^IH8300_GEN_TEST_BITOP_CONST(OP,4) ^I     \$
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#298: FILE: include/asm-h8300/bitops.h:156:
++			H8300_GEN_TEST_BITOP_CONST(OP,4) 	     \
+ 			                             ^
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#299: FILE: include/asm-h8300/bitops.h:157:
++^I^I^IH8300_GEN_TEST_BITOP_CONST(OP,5) ^I     \$
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#299: FILE: include/asm-h8300/bitops.h:157:
++			H8300_GEN_TEST_BITOP_CONST(OP,5) 	     \
+ 			                             ^
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#300: FILE: include/asm-h8300/bitops.h:158:
++^I^I^IH8300_GEN_TEST_BITOP_CONST(OP,6) ^I     \$
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#300: FILE: include/asm-h8300/bitops.h:158:
++			H8300_GEN_TEST_BITOP_CONST(OP,6) 	     \
+ 			                             ^
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#301: FILE: include/asm-h8300/bitops.h:159:
++^I^I^IH8300_GEN_TEST_BITOP_CONST(OP,7) ^I     \$
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#301: FILE: include/asm-h8300/bitops.h:159:
++			H8300_GEN_TEST_BITOP_CONST(OP,7) 	     \
+ 			                             ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#310: FILE: include/asm-h8300/bitops.h:168:
++			: "0" (retval),"r" (b_addr),"r"(nr)	     \
+ 			              ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#310: FILE: include/asm-h8300/bitops.h:168:
++			: "0" (retval),"r" (b_addr),"r"(nr)	     \
+ 			                           ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#318: FILE: include/asm-h8300/bitops.h:176:
++H8300_GEN_TEST_BITOP(test_and_change_bit,"bnot")
+                                         ^
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000306631.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 63 errors, 28 warnings, 4 checks, 307 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000306631.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

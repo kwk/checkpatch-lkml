@@ -1,0 +1,106 @@
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#308: FILE: arch/s390/kernel/setup.c:691:
++#define DEFINE_IPL_ATTR(_name, _format, _value)			\
++static ssize_t ipl_##_name##_show(struct subsystem *subsys,	\
++		char *page)					\
++{								\
++	return sprintf(page, _format, _value);			\
++}								\
++static struct subsys_attribute ipl_##_name##_attr =		\
++	__ATTR(_name, S_IRUGO, ipl_##_name##_show, NULL);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#315: FILE: arch/s390/kernel/setup.c:698:
++	__ATTR(_name, S_IRUGO, ipl_##_name##_show, NULL);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#379: FILE: arch/s390/kernel/setup.c:762:
++	__ATTR(device, S_IRUGO, ipl_device_show, NULL);
+
+CHECK:SPACING: No space is necessary after a cast
+#424: FILE: arch/s390/kernel/setup.c:807:
++	memcpy(buf, (void *) IPL_PARMBLOCK_START + off, count);
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#431: FILE: arch/s390/kernel/setup.c:814:
++		.mode = S_IRUGO,
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#456: FILE: arch/s390/kernel/setup.c:839:
++		.mode = S_IRUGO,
+
+ERROR:OPEN_BRACE: open brace '{' following function definitions go on the next line
+#465: FILE: arch/s390/kernel/setup.c:848:
++static int __init
++ipl_device_sysfs_register(void) {
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:USE_DEVICE_INITCALL: please use device_initcall() or more appropriate function instead of __initcall() (see include/linux/init.h)
+#494: FILE: arch/s390/kernel/setup.c:877:
++__initcall(ipl_device_sysfs_register);
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __packed over __attribute__((packed))
+#523: FILE: include/asm-s390/setup.h:74:
++} __attribute__((packed));
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#528: FILE: include/asm-s390/setup.h:79:
++	u8  reserved1[322-1];
+ 	                 ^
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __packed over __attribute__((packed))
+#539: FILE: include/asm-s390/setup.h:90:
++} __attribute__((packed));
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __packed over __attribute__((packed))
+#547: FILE: include/asm-s390/setup.h:98:
++} __attribute__((packed));
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000148745.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 1 errors, 9 warnings, 2 checks, 469 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000148745.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

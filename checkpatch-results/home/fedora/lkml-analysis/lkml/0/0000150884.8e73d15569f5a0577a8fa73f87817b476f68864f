@@ -1,0 +1,330 @@
+WARNING:COMMIT_COMMENT_SYMBOL: Commit log lines starting with '#' are dropped by git as comments
+#84: 
+#define VM_MAX_READAHEAD        1024    /* kbytes */
+
+Commit log lines starting with a '#' are ignored by git as
+comments.  To solve this problem addition of a single space
+infront of the log line is enough.
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#249: FILE: include/linux/mm.h:894:
++			struct file_ra_state *ra, struct file *filp,
+ 			                                       ^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#249: FILE: include/linux/mm.h:894:
++page_cache_readahead_adaptive(struct address_space *mapping,
++			struct file_ra_state *ra, struct file *filp,
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#262: FILE: include/linux/sysctl.h:183:
++	VM_READAHEAD_RATIO=29, /* ratio of readahead request size to backward-looking size */
+ 	                  ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#273: FILE: kernel/sysctl.c:69:
++extern int readahead_ratio;
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:DUPLICATED_SYSCTL_CONST: duplicated sysctl range checking value 'zero', consider using the shared one in include/linux/sysctl.h
+#289: FILE: kernel/sysctl.c:863:
++		.extra1		= &zero,
+
+Commit d91bff3011cf ("proc/sysctl: add shared variables for range
+check") added some shared const variables to be used instead of a local
+copy in each source file.
+
+Consider replacing the sysctl range checking value with the shared
+one in include/linux/sysctl.h.  The following conversion scheme may
+be used::
+
+  &zero     ->  SYSCTL_ZERO
+  &one      ->  SYSCTL_ONE
+  &int_max  ->  SYSCTL_INT_MAX
+
+See:
+
+  1. https://lore.kernel.org/lkml/20190430180111.10688-1-mcroce@redhat.com/
+  2. https://lore.kernel.org/lkml/20190531131422.14970-1-mcroce@redhat.com/
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#301: FILE: mm/filemap.c:702:
++extern int readahead_ratio;
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#324: FILE: mm/filemap.c:765:
++^I^I$
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!page"
+#331: FILE: mm/filemap.c:772:
++		if (unlikely(page == NULL) && readahead_ratio > 9) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#333: FILE: mm/filemap.c:774:
++						filp, prev_page,
+ 						^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#333: FILE: mm/filemap.c:774:
++			page_cache_readahead_adaptive(mapping, &ra,
++						filp, prev_page,
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#425: FILE: mm/filemap.c:1231:
+ 
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#433: FILE: mm/filemap.c:1239:
++		page_cache_readahead_adaptive(mapping, ra,
++						file, NULL,
+
+ERROR:GLOBAL_INITIALISERS: do not initialise globals to 0
+#454: FILE: mm/readahead.c:18:
++int readahead_ratio = 0;
+
+Global variables should not be initialized explicitly to
+0 (or NULL, false, etc.).  Your compiler (or rather your
+loader, which is responsible for zeroing out the relevant
+sections) automatically does it for you.
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#507: FILE: mm/readahead.c:412:
++		printk(KERN_DEBUG
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#521: FILE: mm/readahead.c:578:
++
++
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#523: FILE: mm/readahead.c:580:
++ *  ___ ^I0^I^Inonexist$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#524: FILE: mm/readahead.c:581:
++ *  L__ ^I1^I^Ifresh$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#525: FILE: mm/readahead.c:582:
++ *  L_R ^I2^I^Istale$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#526: FILE: mm/readahead.c:583:
++ *  LA_ ^I4^I^Idisturbed once$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#527: FILE: mm/readahead.c:584:
++ *  LAR ^I8^I^Idisturbed twice$
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#531: FILE: mm/readahead.c:588:
++	if (page && PageLRU(page)) {
+[...]
++	else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#535: FILE: mm/readahead.c:592:
++			return 4 + 4*PageReferenced(page);
+ 			            ^
+
+ERROR:ELSE_AFTER_BRACE: else should follow close brace '}'
+#537: FILE: mm/readahead.c:594:
++	}
++	else
+
+`else {` should follow the closing block `}` on the same line.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#549: FILE: mm/readahead.c:606:
++static int count_sequential_pages(struct address_space *mapping,
++			unsigned long offset, unsigned long nr_lookback,
+
+ERROR:SPACING: space required before the open parenthesis '('
+#562: FILE: mm/readahead.c:619:
++	for(step = (offset - index + 3) / 4, count = 0;
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#579: FILE: mm/readahead.c:636:
++
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#585: FILE: mm/readahead.c:642:
++static void rotate_old_pages(struct address_space *mapping,
++			unsigned long offset, unsigned long nr_scan)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#606: FILE: mm/readahead.c:663:
++
++
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#624: FILE: mm/readahead.c:681:
++#define KB(size)	(((size) * (1<<10)) / PAGE_CACHE_SIZE)
+                 	             ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#625: FILE: mm/readahead.c:682:
++	mem_mb = max_sane_readahead(KB(1024*1024)) * 2 *
+ 	                                   ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#628: FILE: mm/readahead.c:685:
++	*ra_max = min(min(KB(64 + mem_mb*8), KB(2048)),
+ 	                                ^
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#629: FILE: mm/readahead.c:686:
++^I^I^Imapping->backing_dev_info->ra_pages); $
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#629: FILE: mm/readahead.c:686:
++	*ra_max = min(min(KB(64 + mem_mb*8), KB(2048)),
++			mapping->backing_dev_info->ra_pages); 
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#631: FILE: mm/readahead.c:688:
++	*ra_min = min(min(KB(32 + mem_mb/4), KB(128)), *ra_max);
+ 	                                ^
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#635: FILE: mm/readahead.c:692:
++/* $
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#640: FILE: mm/readahead.c:697:
++			struct file_ra_state *ra, struct file *filp,
+ 			                                       ^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#640: FILE: mm/readahead.c:697:
++page_cache_readahead_adaptive(struct address_space *mapping,
++			struct file_ra_state *ra, struct file *filp,
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#657: FILE: mm/readahead.c:714:
++		unsigned long eof_index;
++		eof_index = ((i_size_read(mapping->host) - 1)
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#681: FILE: mm/readahead.c:738:
++^I/* $
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#683: FILE: mm/readahead.c:740:
++^I */ $
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#684: FILE: mm/readahead.c:741:
++	if (last_index - first_index > ra_max)
+[...]
++	else if (prev_page)
+[...]
++	else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#688: FILE: mm/readahead.c:745:
++	else {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#697: FILE: mm/readahead.c:754:
++		ra_size = count_sequential_pages(mapping, index,
++				ra_max * 100 / readahead_ratio,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#713: FILE: mm/readahead.c:770:
++	if (!prev_page && first_index == index &&
++			last_index - index < ra_min) {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#717: FILE: mm/readahead.c:774:
++		if (get_sequential_type(page) == 2) {
+[...]
++		} else if (page)
+[...]
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#729: FILE: mm/readahead.c:786:
++readit: $
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#730: FILE: mm/readahead.c:787:
++	ret = __do_page_cache_readahead(mapping, filp, ra_index, ra_size);
+ 	                                         ^^^^
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#732: FILE: mm/readahead.c:789:
++^I/* $
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#739: FILE: mm/readahead.c:796:
++		printk(KERN_DEBUG "readahead(ino=%lu, index=%lu-%lu-%lu, "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#740: FILE: mm/readahead.c:797:
++		printk(KERN_DEBUG "readahead(ino=%lu, index=%lu-%lu-%lu, "
++				"ra=%lu+%lu) = %d\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000150884.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 11 errors, 17 warnings, 23 checks, 478 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000150884.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

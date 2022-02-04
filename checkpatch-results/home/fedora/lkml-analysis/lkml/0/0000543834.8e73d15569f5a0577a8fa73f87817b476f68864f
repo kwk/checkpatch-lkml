@@ -1,0 +1,176 @@
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#58: FILE: arch/ppc/mm/init.c:128:
++int map_page(unsigned long va, unsigned long pa, int flags);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#102: FILE: arch/ppc/mm/init.c:214:
++                        if (pgd_quicklist) {$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#102: FILE: arch/ppc/mm/init.c:214:
++                        if (pgd_quicklist) {$
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#135: FILE: arch/ppc/mm/init.c:442:
++		err = map_page(v+i, p+i, flags);
+ 		                ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#135: FILE: arch/ppc/mm/init.c:442:
++		err = map_page(v+i, p+i, flags);
+ 		                     ^
+
+WARNING:BRACES: braces {} are not necessary for any arm of this statement
+#184: FILE: arch/ppc/mm/init.c:831:
++	if (init_bootmem_done) {
+[...]
+ 	} else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#246: FILE: include/asm-ppc/pgalloc.h:59:
++	if ((ret = (pgd_t *)__get_free_page(GFP_KERNEL)) != NULL)
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#263: FILE: include/asm-ppc/pgalloc.h:96:
++#define pmd_alloc_one_fast()            ({ BUG(); ((pmd_t *)1); })
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#264: FILE: include/asm-ppc/pgalloc.h:97:
++#define pmd_alloc_one()                 ({ BUG(); ((pmd_t *)2); })
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#266: FILE: include/asm-ppc/pgalloc.h:99:
++#define pgd_populate(pmd, pte)          BUG()
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#272: FILE: include/asm-ppc/pgalloc.h:105:
++	extern int mem_init_done;
++	extern void *early_get_page(void);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#272: FILE: include/asm-ppc/pgalloc.h:105:
++	extern void *early_get_page(void);
+
+CHECK:SPACING: No space is necessary after a cast
+#275: FILE: include/asm-ppc/pgalloc.h:108:
++		pte = (pte_t *) __get_free_page(GFP_KERNEL);
+
+CHECK:SPACING: No space is necessary after a cast
+#277: FILE: include/asm-ppc/pgalloc.h:110:
++		pte = (pte_t *) early_get_page();
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "pte"
+#278: FILE: include/asm-ppc/pgalloc.h:111:
++	if (pte != NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:INLINE: plain inline is preferred over __inline__
+#293: FILE: include/asm-ppc/pgalloc.h:128:
++extern __inline__ void pte_free_fast(pte_t *pte)
+
+WARNING:INLINE: plain inline is preferred over __inline__
+#301: FILE: include/asm-ppc/pgalloc.h:135:
++extern __inline__ void pte_free_slow(pte_t *pte)
+
+CHECK:SPACING: No space is necessary after a cast
+#330: FILE: include/asm-ppc/pgalloc.h:142:
++#define pmd_populate(pmd, pte)	(pmd_val(*(pmd)) = (unsigned long) (pte))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#343: FILE: include/asm-ppc/semaphore.h:123:
++#define __RWSEM_INITIALIZER(name, count)		\
+ {							\
+ 	SPIN_LOCK_UNLOCKED,				\
++	(count) == 1, (count) == 0,			\
+ 	__WAIT_QUEUE_HEAD_INITIALIZER((name).wait)	\
+ 	__SEM_DEBUG_INIT(name)				\
+ }
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'count' - possible side-effects?
+#343: FILE: include/asm-ppc/semaphore.h:123:
++#define __RWSEM_INITIALIZER(name, count)		\
+ {							\
+ 	SPIN_LOCK_UNLOCKED,				\
++	(count) == 1, (count) == 0,			\
+ 	__WAIT_QUEUE_HEAD_INITIALIZER((name).wait)	\
+ 	__SEM_DEBUG_INIT(name)				\
+ }
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#354: FILE: include/asm-ppc/semaphore.h:131:
++#define __DECLARE_RWSEM_GENERIC(name, count)		\
++	struct rw_semaphore name = __RWSEM_INITIALIZER(name, count)
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#361: FILE: include/asm-ppc/semaphore.h:135:
++#define DECLARE_RWSEM_READ_LOCKED(name) __DECLARE_RWSEM_GENERIC(name, RW_LOCK_BIAS-1)
+                                                                                   ^
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000543834.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 2 errors, 9 warnings, 11 checks, 304 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000543834.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

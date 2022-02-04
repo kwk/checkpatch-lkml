@@ -1,0 +1,85 @@
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#54: FILE: include/linux/proc_fs.h:130:
++extern struct file_operations proc_dead_mounts_operations;
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#66: FILE: fs/proc/proc_misc.c:655:
++	entry = create_proc_entry("dead_mounts", S_IRUSR, &proc_root);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#147: FILE: fs/namespace.c:312:
++	struct vfsmount *curr = v;
++	mntput(curr);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:CONST_STRUCT: struct seq_operations should normally be const
+#150: FILE: fs/namespace.c:315:
++static struct seq_operations dead_mounts_op = {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#160: FILE: fs/namespace.c:325:
++	int ret = seq_open(file, &dead_mounts_op);
++	if (!ret) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#162: FILE: fs/namespace.c:327:
++		struct seq_file *m = file->private_data;
++		m->private = dead_mounts;
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#167: FILE: fs/namespace.c:332:
++struct file_operations proc_dead_mounts_operations = {
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*dead_mounts)...) over kmalloc(sizeof(struct namespace)...)
+#219: FILE: fs/namespace.c:1460:
++	dead_mounts = kmalloc(sizeof(struct namespace), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#221: FILE: fs/namespace.c:1462:
++	if (!dead_mounts)
++		panic("Can't allocate dead_mounts namespace");
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000181852.commit.8e73d15569f5a0577a8fa73f87817b476f68864f total: 0 errors, 8 warnings, 1 checks, 182 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.EfiDkiSq0Q//home/fedora/lkml-analysis/lkml/0/patch.offset.0000181852.commit.8e73d15569f5a0577a8fa73f87817b476f68864f has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.
