@@ -114,7 +114,7 @@ EOF
         # Get the n-th message from the mailing list (aka the patch message) and save it
         # as a patchfile to be checked by checkpatch.pl
         sha1=$(git -C $(realpath $opt_lkml_path) log --format="%H" -n1 HEAD~$offset)
-        patchfile=$tempdir/patch.offset.$(printf "%05d" $offset).commit.$sha1
+        patchfile=$tempdir/patch.offset.$(printf "%010d" $offset).commit.$sha1
         git -C $opt_lkml_path show HEAD~$offset:m > $patchfile
         
         # Run checkpatch on the patchfile and if it found something,
@@ -122,7 +122,7 @@ EOF
         rm -f $tmplogfile
         $opt_linux_tree_root/scripts/checkpatch.pl --root=$opt_linux_tree_root $fixed_checkpatch_opts $opt_checkpatch_opts $patchfile 2>&1 | tee $tmplogfile
         if [ -s $tmplogfile ]; then
-            mv -v $tmplogfile $logdir/$(printf "%05d" $offset).$sha1;
+            mv -v $tmplogfile $logdir/$(printf "%010d" $offset).$sha1;
         fi
     done
 }
