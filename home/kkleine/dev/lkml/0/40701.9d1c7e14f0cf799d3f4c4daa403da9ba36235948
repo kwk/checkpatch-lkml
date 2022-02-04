@@ -1,0 +1,190 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#33: 
+The swapfile method will be used to communicate to the address_space that the
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#65: FILE: include/linux/swap.h:216:
++extern void swap_sync_page(struct page *page);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#66: FILE: include/linux/swap.h:217:
++extern int swap_set_page_dirty(struct page *page);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#67: FILE: include/linux/swap.h:218:
++extern int swap_releasepage(struct page *page, gfp_t gfp_mask);
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#79: FILE: init/Kconfig:103:
++config SWAP_FILE
++	bool "Support for paging to/from non block device files"
++	depends on SWAP
++	default n
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#106: FILE: mm/page_io.c:98:
++		struct swap_info_struct *sis = page_swap_info(page);
++		if (sis->flags & SWP_FILE)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'sis->swap_file->f_mapping->a_ops->writepage'
+#108: FILE: mm/page_io.c:100:
++			return sis->swap_file->f_mapping->
++				a_ops->writepage(page, wbc);
+
+A single dereferencing identifier spanned on multiple lines like::
+
+  struct_identifier->member[index].
+  member = <foo>;
+
+is generally hard to follow. It can easily lead to typos and so makes
+the code vulnerable to bugs.
+
+If fixing the multiple line dereferencing leads to an 80 column
+violation, then either rewrite the code in a more simple way or if the
+starting part of the dereferencing identifier is the same and used at
+multiple places then store it in a temporary variable, and use that
+temporary variable only at all the places. For example, if there are
+two dereferencing identifiers::
+
+  member1->member2->member3.foo1;
+  member1->member2->member3.foo2;
+
+then store the member1->member2->member3 part in a temporary variable.
+It not only helps to avoid the 80 column violation but also reduces
+the program size by removing the unnecessary dereferences.
+
+But if none of the above methods work then ignore the 80 column
+violation because it is much easier to read a dereferencing identifier
+on a single line.
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#121: FILE: mm/page_io.c:131:
++		struct swap_info_struct *sis = page_swap_info(page);
++		if (sis->flags & SWP_FILE)
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'sis->swap_file->f_mapping->a_ops->readpage'
+#123: FILE: mm/page_io.c:133:
++			return sis->swap_file->f_mapping->
++				a_ops->readpage(sis->swap_file, page);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#138: FILE: mm/page_io.c:154:
++	if (sis->flags & SWP_FILE) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#139: FILE: mm/page_io.c:155:
++		const struct address_space_operations * a_ops =
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#143: FILE: mm/page_io.c:159:
++	} else
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#152: FILE: mm/page_io.c:168:
++		const struct address_space_operations * a_ops =
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#165: FILE: mm/page_io.c:181:
++	const struct address_space_operations * a_ops =
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#171: FILE: mm/page_io.c:187:
++	BUG();
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'sis->swap_file->f_mapping->a_ops->swapfile'
+#223: FILE: mm/swapfile.c:956:
++		sis->swap_file->f_mapping->a_ops->
++			swapfile(sis->swap_file->f_mapping, 0);
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'sis->swap_file->f_mapping->a_ops->swapfile'
+#236: FILE: mm/swapfile.c:1054:
++		ret = sis->swap_file->f_mapping->a_ops->
++			swapfile(sis->swap_file->f_mapping, 1);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct address_space *' should also have an identifier name
+#266: FILE: include/linux/fs.h:385:
++	int (*swapfile)(struct address_space *, int);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#266: FILE: include/linux/fs.h:385:
++	int (*swapfile)(struct address_space *, int);
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.40701.commit.9d1c7e14f0cf799d3f4c4daa403da9ba36235948 total: 3 errors, 11 warnings, 5 checks, 192 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.40701.commit.9d1c7e14f0cf799d3f4c4daa403da9ba36235948 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,458 @@
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#98: FILE: arch/s390/kernel/ipl.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:EMBEDDED_FILENAME: It's generally not useful to have the filename in the file
+#99: FILE: arch/s390/kernel/ipl.c:2:
++ *  arch/s390/kernel/ipl.c
+
+Embedding the complete filename path inside the file isn't particularly
+useful as often the path is moved around and becomes incorrect.
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/smp.h> instead of <asm/smp.h>
+#113: FILE: arch/s390/kernel/ipl.c:16:
++#include <asm/smp.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#177: FILE: arch/s390/kernel/ipl.c:80:
++		BUG();
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+ERROR:INITIALISED_STATIC: do not initialise statics to 0
+#202: FILE: arch/s390/kernel/ipl.c:105:
++static int diag308_set_works = 0;
+
+Static variables should not be initialized explicitly to zero.
+Your compiler (or rather your loader) automatically does
+it for you.
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#223: FILE: arch/s390/kernel/ipl.c:126:
++	asm volatile (
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#225: FILE: arch/s390/kernel/ipl.c:128:
++		"0: \n"
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#236: FILE: arch/s390/kernel/ipl.c:139:
++		: "d" (subcode) : "cc", "memory" );
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#243: FILE: arch/s390/kernel/ipl.c:146:
++#define DEFINE_IPL_ATTR_RO(_prefix, _name, _format, _value)		\
++static ssize_t sys_##_prefix##_##_name##_show(struct subsystem *subsys,	\
++		char *page)						\
++{									\
++	return sprintf(page, _format, _value);				\
++}									\
++static struct subsys_attribute sys_##_prefix##_##_name##_attr =		\
++	__ATTR(_name, S_IRUGO, sys_##_prefix##_##_name##_show, NULL);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#250: FILE: arch/s390/kernel/ipl.c:153:
++	__ATTR(_name, S_IRUGO, sys_##_prefix##_##_name##_show, NULL);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_value' - possible side-effects?
+#252: FILE: arch/s390/kernel/ipl.c:155:
++#define DEFINE_IPL_ATTR_RW(_prefix, _name, _fmt_out, _fmt_in, _value)	\
++static ssize_t sys_##_prefix##_##_name##_show(struct subsystem *subsys,	\
++		char *page)						\
++{									\
++	return sprintf(page, _fmt_out,					\
++			(unsigned long long) _value);			\
++}									\
++static ssize_t sys_##_prefix##_##_name##_store(struct subsystem *subsys,\
++		const char *buf, size_t len)				\
++{									\
++	unsigned long long value;					\
++	if (sscanf(buf, _fmt_in, &value) != 1)				\
++		return -EINVAL;						\
++	_value = value;							\
++	return len;							\
++}									\
++static struct subsys_attribute sys_##_prefix##_##_name##_attr =		\
++	__ATTR(_name,(S_IRUGO | S_IWUSR),				\
++			sys_##_prefix##_##_name##_show,			\
++			sys_##_prefix##_##_name##_store);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#252: FILE: arch/s390/kernel/ipl.c:155:
++#define DEFINE_IPL_ATTR_RW(_prefix, _name, _fmt_out, _fmt_in, _value)	\
++static ssize_t sys_##_prefix##_##_name##_show(struct subsystem *subsys,	\
++		char *page)						\
++{									\
++	return sprintf(page, _fmt_out,					\
++			(unsigned long long) _value);			\
++}									\
++static ssize_t sys_##_prefix##_##_name##_store(struct subsystem *subsys,\
++		const char *buf, size_t len)				\
++{									\
++	unsigned long long value;					\
++	if (sscanf(buf, _fmt_in, &value) != 1)				\
++		return -EINVAL;						\
++	_value = value;							\
++	return len;							\
++}									\
++static struct subsys_attribute sys_##_prefix##_##_name##_attr =		\
++	__ATTR(_name,(S_IRUGO | S_IWUSR),				\
++			sys_##_prefix##_##_name##_show,			\
++			sys_##_prefix##_##_name##_store);
+
+CHECK:SPACING: No space is necessary after a cast
+#257: FILE: arch/s390/kernel/ipl.c:160:
++			(unsigned long long) _value);			\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#269: FILE: arch/s390/kernel/ipl.c:172:
++	__ATTR(_name,(S_IRUGO | S_IWUSR),				\
+ 	            ^
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#269: FILE: arch/s390/kernel/ipl.c:172:
++	__ATTR(_name,(S_IRUGO | S_IWUSR),				\
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#276: FILE: arch/s390/kernel/ipl.c:179:
++		(*attrs)->mode = S_IRUGO;
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#322: FILE: arch/s390/kernel/ipl.c:225:
++	__ATTR(device, S_IRUGO, sys_ipl_device_show, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#340: FILE: arch/s390/kernel/ipl.c:243:
++		.mode = S_IRUGO,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#348: FILE: arch/s390/kernel/ipl.c:251:
++static ssize_t ipl_scp_data_read(struct kobject *kobj, char *buf, loff_t off,
++	size_t count)
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#364: FILE: arch/s390/kernel/ipl.c:267:
++		.mode = S_IRUGO,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#455: FILE: arch/s390/kernel/ipl.c:358:
++DEFINE_IPL_ATTR_RW(reipl_ccw, device, "0.0.%04llx\n", "0.0.%llx\n",
++	reipl_block_ccw->ipl_info.ccw.devno);
+
+ERROR:SPACING: space required before the open parenthesis '('
+#474: FILE: arch/s390/kernel/ipl.c:377:
++	switch(type) {
+
+ERROR:SPACING: space required before the open parenthesis '('
+#570: FILE: arch/s390/kernel/ipl.c:473:
++	switch(type) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#615: FILE: arch/s390/kernel/ipl.c:518:
++	int cpu;
++	preempt_disable();
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:USLEEP_RANGE: usleep_range is preferred over udelay; see Documentation/timers/timers-howto.rst
+#620: FILE: arch/s390/kernel/ipl.c:523:
++			udelay(10);
+
+usleep_range() should be preferred over udelay(). The proper way of
+using usleep_range() is mentioned in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/timers/timers-howto.html#delays-information-on-the-various-kernel-delay-sleep-mechanisms
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_emerg([subsystem]dev, ... then dev_emerg(dev, ... then pr_emerg(...  to printk(KERN_EMERG ...
+#663: FILE: arch/s390/kernel/ipl.c:566:
++	printk(KERN_EMERG "wwpn:      %016llx\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#664: FILE: arch/s390/kernel/ipl.c:567:
++	printk(KERN_EMERG "wwpn:      %016llx\n",
++		(unsigned long long)fcp_block->ipl_info.fcp.wwpn);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_emerg([subsystem]dev, ... then dev_emerg(dev, ... then pr_emerg(...  to printk(KERN_EMERG ...
+#665: FILE: arch/s390/kernel/ipl.c:568:
++	printk(KERN_EMERG "lun:       %016llx\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#666: FILE: arch/s390/kernel/ipl.c:569:
++	printk(KERN_EMERG "lun:       %016llx\n",
++		(unsigned long long)fcp_block->ipl_info.fcp.lun);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_emerg([subsystem]dev, ... then dev_emerg(dev, ... then pr_emerg(...  to printk(KERN_EMERG ...
+#667: FILE: arch/s390/kernel/ipl.c:570:
++	printk(KERN_EMERG "bootprog:  %lld\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#668: FILE: arch/s390/kernel/ipl.c:571:
++	printk(KERN_EMERG "bootprog:  %lld\n",
++		(unsigned long long)fcp_block->ipl_info.fcp.bootprog);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_emerg([subsystem]dev, ... then dev_emerg(dev, ... then pr_emerg(...  to printk(KERN_EMERG ...
+#669: FILE: arch/s390/kernel/ipl.c:572:
++	printk(KERN_EMERG "br_lba:    %lld\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#670: FILE: arch/s390/kernel/ipl.c:573:
++	printk(KERN_EMERG "br_lba:    %lld\n",
++		(unsigned long long)fcp_block->ipl_info.fcp.br_lba);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_emerg([subsystem]dev, ... then dev_emerg(dev, ... then pr_emerg(...  to printk(KERN_EMERG ...
+#671: FILE: arch/s390/kernel/ipl.c:574:
++	printk(KERN_EMERG "device:    %llx\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#672: FILE: arch/s390/kernel/ipl.c:575:
++	printk(KERN_EMERG "device:    %llx\n",
++		(unsigned long long)fcp_block->ipl_info.fcp.devno);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_emerg([subsystem]dev, ... then dev_emerg(dev, ... then pr_emerg(...  to printk(KERN_EMERG ...
+#673: FILE: arch/s390/kernel/ipl.c:576:
++	printk(KERN_EMERG "opt:       %x\n", fcp_block->ipl_info.fcp.opt);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_emerg([subsystem]dev, ... then dev_emerg(dev, ... then pr_emerg(...  to printk(KERN_EMERG ...
+#683: FILE: arch/s390/kernel/ipl.c:586:
++		printk(KERN_EMERG "reboot on ccw device: 0.0.%04x\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#684: FILE: arch/s390/kernel/ipl.c:587:
++		printk(KERN_EMERG "reboot on ccw device: 0.0.%04x\n",
++			reipl_block_ccw->ipl_info.ccw.devno);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_emerg([subsystem]dev, ... then dev_emerg(dev, ... then pr_emerg(...  to printk(KERN_EMERG ...
+#687: FILE: arch/s390/kernel/ipl.c:590:
++		printk(KERN_EMERG "reboot on fcp device:\n");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_emerg([subsystem]dev, ... then dev_emerg(dev, ... then pr_emerg(...  to printk(KERN_EMERG ...
+#735: FILE: arch/s390/kernel/ipl.c:638:
++		printk(KERN_EMERG "Automatic dump on ccw device: 0.0.%04x\n",
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_emerg([subsystem]dev, ... then dev_emerg(dev, ... then pr_emerg(...  to printk(KERN_EMERG ...
+#739: FILE: arch/s390/kernel/ipl.c:642:
++		printk(KERN_EMERG "Automatic dump on fcp device:\n");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_emerg([subsystem]dev, ... then dev_emerg(dev, ... then pr_emerg(...  to printk(KERN_EMERG ...
+#772: FILE: arch/s390/kernel/ipl.c:675:
++	printk(KERN_EMERG "Dump failed!\n");
+
+CHECK:SPACING: No space is necessary after a cast
+#831: FILE: arch/s390/kernel/ipl.c:734:
++	buffer = (void*) get_zeroed_page(GFP_KERNEL);
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#831: FILE: arch/s390/kernel/ipl.c:734:
++	buffer = (void*) get_zeroed_page(GFP_KERNEL);
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#843: FILE: arch/s390/kernel/ipl.c:746:
++	reipl_block_ccw = (void*) get_zeroed_page(GFP_KERNEL);
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#843: FILE: arch/s390/kernel/ipl.c:746:
++	reipl_block_ccw = (void*) get_zeroed_page(GFP_KERNEL);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around '!diag308_set_works'
+#865: FILE: arch/s390/kernel/ipl.c:768:
++	if ((!diag308_set_works) && (ipl_get_type() != IPL_TYPE_FCP))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around '!diag308_set_works'
+#867: FILE: arch/s390/kernel/ipl.c:770:
++	if ((!diag308_set_works) && (ipl_get_type() == IPL_TYPE_FCP))
+
+CHECK:SPACING: No space is necessary after a cast
+#870: FILE: arch/s390/kernel/ipl.c:773:
++	reipl_block_fcp = (void*) get_zeroed_page(GFP_KERNEL);
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#870: FILE: arch/s390/kernel/ipl.c:773:
++	reipl_block_fcp = (void*) get_zeroed_page(GFP_KERNEL);
+
+CHECK:SPACING: No space is necessary after a cast
+#920: FILE: arch/s390/kernel/ipl.c:823:
++	dump_block_ccw = (void*) get_zeroed_page(GFP_KERNEL);
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#920: FILE: arch/s390/kernel/ipl.c:823:
++	dump_block_ccw = (void*) get_zeroed_page(GFP_KERNEL);
+
+ERROR:SPACING: space required before the open parenthesis '('
+#942: FILE: arch/s390/kernel/ipl.c:845:
++	if(!(s390_readinfo_sccb[91] & 0x2))
+
+CHECK:SPACING: No space is necessary after a cast
+#946: FILE: arch/s390/kernel/ipl.c:849:
++	dump_block_fcp = (void*) get_zeroed_page(GFP_KERNEL);
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#946: FILE: arch/s390/kernel/ipl.c:849:
++	dump_block_fcp = (void*) get_zeroed_page(GFP_KERNEL);
+
+WARNING:USE_DEVICE_INITCALL: please use device_initcall() or more appropriate function instead of __initcall() (see include/linux/init.h)
+#1039: FILE: arch/s390/kernel/ipl.c:942:
++__initcall(s390_ipl_init);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1485: FILE: drivers/s390/cio/cio.c:851:
++static int __shutdown_subchannel_easy_and_match(struct subchannel_id schid,
++	void *data)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'schib.pmcw.dev == match_id->devid.devno'
+#1492: FILE: drivers/s390/cio/cio.c:858:
++	if (match_id && schib.pmcw.dnv &&
++		(schib.pmcw.dev == match_id->devid.devno) &&
++		(schid.ssid == match_id->devid.ssid)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'schid.ssid == match_id->devid.ssid'
+#1492: FILE: drivers/s390/cio/cio.c:858:
++	if (match_id && schib.pmcw.dnv &&
++		(schib.pmcw.dev == match_id->devid.devno) &&
++		(schid.ssid == match_id->devid.ssid)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1493: FILE: drivers/s390/cio/cio.c:859:
++	if (match_id && schib.pmcw.dnv &&
++		(schib.pmcw.dev == match_id->devid.devno) &&
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1508: FILE: drivers/s390/cio/cio.c:880:
++static int clear_all_subchannels_and_match(struct ccw_dev_id *devid,
++	struct subchannel_id *schid)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1521: FILE: drivers/s390/cio/cio.c:893:
++
++
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#1529: FILE: drivers/s390/cio/cio.c:900:
++extern void do_reipl_asm(__u32 schid);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#1543: FILE: drivers/s390/cio/cio.c:909:
++	do_reipl_asm(*((__u32*)&schid));
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1564: FILE: include/asm-s390/cio.h:288:
++extern void reipl_ccw_dev(struct ccw_dev_id *id);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1620: FILE: include/asm-s390/setup.h:71:
+ 
++
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#1635: FILE: include/asm-s390/setup.h:83:
++	u8  reserved1[313-1];
+ 	                 ^
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __packed over __attribute__((packed))
+#1662: FILE: include/asm-s390/setup.h:107:
++} __attribute__((packed));
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.49815.commit.b3cab3030d12484c83ee13b3888668dc48b0db50 total: 12 errors, 27 warnings, 29 checks, 1335 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.49815.commit.b3cab3030d12484c83ee13b3888668dc48b0db50 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

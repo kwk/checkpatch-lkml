@@ -1,0 +1,555 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#45: 
+Still thinking about Frank's comment about type checking, I came up with this
+
+ERROR:DIFF_IN_COMMIT_MSG: Avoid using diff content in the commit message - patch(1) might not work
+#60: 
+--- a/arch/i386/Kconfig
+
+Avoid having diff content in commit message.
+This causes problems when one tries to apply a file containing both
+the changelog and the diff because patch(1) tries to apply the diff
+which it found in the changelog.
+
+See: https://lore.kernel.org/lkml/20150611134006.9df79a893e3636019ad2759e@linux-foundation.org/
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#74: FILE: include/linux/marker.h:1:
++/*****************************************************************************
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:INDENTED_LABEL: labels should not be indented
+#115: FILE: include/linux/marker.h:42:
++		here: asm volatile \
+
+ERROR:SPACING: space required before the open parenthesis '('
+#117: FILE: include/linux/marker.h:44:
++	} while(0)
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#118: FILE: include/linux/marker.h:45:
++#else $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#123: FILE: include/linux/marker.h:50:
++#define MARK_JUMP_CALL_PROTOTYPE(name) \
++	static marker_probe_func *__mark_call_##name \
++			asm (MARK_CALL_PREFIX#name) = \
++			__mark_empty_function
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#124: FILE: include/linux/marker.h:51:
++	static marker_probe_func *__mark_call_##name \
+ 	                         ^
+
+ERROR:SPACING: space required before the open parenthesis '('
+#132: FILE: include/linux/marker.h:59:
++	} while(0)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#139: FILE: include/linux/marker.h:66:
++#define MARK_JUMP_INLINE(name, format, args...) \
++		(void) (__mark_inline_##name(format, ## args))
+
+CHECK:SPACING: No space is necessary after a cast
+#140: FILE: include/linux/marker.h:67:
++		(void) (__mark_inline_##name(format, ## args))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#145: FILE: include/linux/marker.h:72:
++#define MARK_JUMP(name, format, args...) \
++	do { \
++		__label__ over_label, call_label, inline_label; \
++		volatile static void *__mark_jump_select_##name \
++				asm (MARK_JUMP_SELECT_PREFIX#name) = \
++					&&over_label; \
++		volatile static void *__mark_jump_call_##name \
++				asm (MARK_JUMP_CALL_PREFIX#name) \
++				__attribute__((unused)) =  \
++					&&call_label; \
++		volatile static void *__mark_jump_inline_##name \
++				asm (MARK_JUMP_INLINE_PREFIX#name) \
++				__attribute__((unused)) =  \
++					&&inline_label; \
++		volatile static void *__mark_jump_over_##name \
++				asm (MARK_JUMP_OVER_PREFIX#name) \
++				__attribute__((unused)) =  \
++					&&over_label; \
++		static const char *__mark_format_##name \
++				asm (MARK_FORMAT_PREFIX#name) \
++				__attribute__((unused)) = \
++					format; \
++		MARK_JUMP_CALL_PROTOTYPE(name); \
++		goto *__mark_jump_select_##name; \
++call_label: \
++		MARK_JUMP_CALL(name, format, ## args); \
++		goto over_label; \
++inline_label: \
++		MARK_JUMP_INLINE(name, format, ## args); \
++over_label: \
++		do {} while(0); \
++	} while(0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'format' - possible side-effects?
+#145: FILE: include/linux/marker.h:72:
++#define MARK_JUMP(name, format, args...) \
++	do { \
++		__label__ over_label, call_label, inline_label; \
++		volatile static void *__mark_jump_select_##name \
++				asm (MARK_JUMP_SELECT_PREFIX#name) = \
++					&&over_label; \
++		volatile static void *__mark_jump_call_##name \
++				asm (MARK_JUMP_CALL_PREFIX#name) \
++				__attribute__((unused)) =  \
++					&&call_label; \
++		volatile static void *__mark_jump_inline_##name \
++				asm (MARK_JUMP_INLINE_PREFIX#name) \
++				__attribute__((unused)) =  \
++					&&inline_label; \
++		volatile static void *__mark_jump_over_##name \
++				asm (MARK_JUMP_OVER_PREFIX#name) \
++				__attribute__((unused)) =  \
++					&&over_label; \
++		static const char *__mark_format_##name \
++				asm (MARK_FORMAT_PREFIX#name) \
++				__attribute__((unused)) = \
++					format; \
++		MARK_JUMP_CALL_PROTOTYPE(name); \
++		goto *__mark_jump_select_##name; \
++call_label: \
++		MARK_JUMP_CALL(name, format, ## args); \
++		goto over_label; \
++inline_label: \
++		MARK_JUMP_INLINE(name, format, ## args); \
++over_label: \
++		do {} while(0); \
++	} while(0)
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#145: FILE: include/linux/marker.h:72:
++#define MARK_JUMP(name, format, args...) \
++	do { \
++		__label__ over_label, call_label, inline_label; \
++		volatile static void *__mark_jump_select_##name \
++				asm (MARK_JUMP_SELECT_PREFIX#name) = \
++					&&over_label; \
++		volatile static void *__mark_jump_call_##name \
++				asm (MARK_JUMP_CALL_PREFIX#name) \
++				__attribute__((unused)) =  \
++					&&call_label; \
++		volatile static void *__mark_jump_inline_##name \
++				asm (MARK_JUMP_INLINE_PREFIX#name) \
++				__attribute__((unused)) =  \
++					&&inline_label; \
++		volatile static void *__mark_jump_over_##name \
++				asm (MARK_JUMP_OVER_PREFIX#name) \
++				__attribute__((unused)) =  \
++					&&over_label; \
++		static const char *__mark_format_##name \
++				asm (MARK_FORMAT_PREFIX#name) \
++				__attribute__((unused)) = \
++					format; \
++		MARK_JUMP_CALL_PROTOTYPE(name); \
++		goto *__mark_jump_select_##name; \
++call_label: \
++		MARK_JUMP_CALL(name, format, ## args); \
++		goto over_label; \
++inline_label: \
++		MARK_JUMP_INLINE(name, format, ## args); \
++over_label: \
++		do {} while(0); \
++	} while(0)
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#148: FILE: include/linux/marker.h:75:
++		volatile static void *__mark_jump_select_##name \
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#150: FILE: include/linux/marker.h:77:
++				asm (MARK_JUMP_SELECT_PREFIX#name) = \
++					&&over_label; \
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#151: FILE: include/linux/marker.h:78:
++		volatile static void *__mark_jump_call_##name \
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: __always_unused or __maybe_unused is preferred over __attribute__((__unused__))
+#153: FILE: include/linux/marker.h:80:
++				__attribute__((unused)) =  \
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#154: FILE: include/linux/marker.h:81:
++				__attribute__((unused)) =  \
++					&&call_label; \
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#155: FILE: include/linux/marker.h:82:
++		volatile static void *__mark_jump_inline_##name \
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: __always_unused or __maybe_unused is preferred over __attribute__((__unused__))
+#157: FILE: include/linux/marker.h:84:
++				__attribute__((unused)) =  \
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#158: FILE: include/linux/marker.h:85:
++				__attribute__((unused)) =  \
++					&&inline_label; \
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#159: FILE: include/linux/marker.h:86:
++		volatile static void *__mark_jump_over_##name \
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: __always_unused or __maybe_unused is preferred over __attribute__((__unused__))
+#161: FILE: include/linux/marker.h:88:
++				__attribute__((unused)) =  \
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#162: FILE: include/linux/marker.h:89:
++				__attribute__((unused)) =  \
++					&&over_label; \
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: __always_unused or __maybe_unused is preferred over __attribute__((__unused__))
+#165: FILE: include/linux/marker.h:92:
++				__attribute__((unused)) = \
+
+ERROR:SPACING: space required before the open parenthesis '('
+#175: FILE: include/linux/marker.h:102:
++		do {} while(0); \
+
+ERROR:SPACING: space required before the open parenthesis '('
+#176: FILE: include/linux/marker.h:103:
++	} while(0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#178: FILE: include/linux/marker.h:105:
++#define MARK(name, format, args...) \
++	do { \
++		__mark_check_format(format, ## args); \
++		MARK_SYM(name); \
++		MARK_JUMP(name, format, ## args); \
++	} while(0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'format' - possible side-effects?
+#178: FILE: include/linux/marker.h:105:
++#define MARK(name, format, args...) \
++	do { \
++		__mark_check_format(format, ## args); \
++		MARK_SYM(name); \
++		MARK_JUMP(name, format, ## args); \
++	} while(0)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#183: FILE: include/linux/marker.h:110:
++	} while(0)
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#187: FILE: include/linux/marker.h:114:
++typedef asmlinkage void marker_probe_func(const char *fmt, ...);
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __printf(1, 2) over __attribute__((format(printf, 1, 2)))
+#189: FILE: include/linux/marker.h:116:
++static inline __attribute__ ((format (printf, 1, 2)))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#196: FILE: include/linux/marker.h:123:
++int marker_set_probe(const char *name, const char *format,
++			marker_probe_func *probe,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#200: FILE: include/linux/marker.h:127:
++void marker_disable_probe(const char *name, marker_probe_func *probe,
++			enum marker_type type);
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#209: FILE: kernel/Kconfig.marker:6:
++config MARK_SYMBOL
++	bool "Replace markers with symbols"
++	default n
++	help
++	  Put symbols in place of markers, useful for kprobe.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#215: FILE: kernel/Kconfig.marker:12:
++config MARK_JUMP_CALL
++	bool "Replace markers with a jump over an inactive function call"
++	default n
++	help
++	  Put a jump over a call in place of markers.
++
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#221: FILE: kernel/Kconfig.marker:18:
++config MARK_JUMP_INLINE
++	bool "Replace markers with a jump over an inline function"
++	default n
++	help
++	  Put a jump over an inline function.
++
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#227: FILE: kernel/Kconfig.marker:24:
++config MARK_JUMP
++	bool "Jump marker probes set/disable infrastructure"
++	select KALLSYMS
++	default n
++	help
++	  Install or remove probes from markers.
++
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#248: FILE: kernel/marker.c:1:
++/*****************************************************************************
+
+WARNING:EMBEDDED_FILENAME: It's generally not useful to have the filename in the file
+#259: FILE: kernel/marker.c:12:
++ * kernel/marker.c deals with all marker activation from a centralized,
+
+Embedding the complete filename path inside the file isn't particularly
+useful as often the path is moved around and becomes incorrect.
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#272: FILE: kernel/marker.c:25:
++ * $
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#280: FILE: kernel/marker.c:33:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#305: FILE: kernel/marker.c:58:
++static int marker_get_pointers(const char *name,
++	struct marker_pointers *ptrs)
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#320: FILE: kernel/marker.c:73:
++	strncat(call_sym, name, KSYM_NAME_LEN-call_sym_len);
+ 	                                     ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#321: FILE: kernel/marker.c:74:
++	strncat(jmpselect_sym, name, KSYM_NAME_LEN-jmpselect_sym_len);
+ 	                                          ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#322: FILE: kernel/marker.c:75:
++	strncat(jmpcall_sym, name, KSYM_NAME_LEN-jmpcall_sym_len);
+ 	                                        ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#323: FILE: kernel/marker.c:76:
++	strncat(jmpinline_sym, name, KSYM_NAME_LEN-jmpinline_sym_len);
+ 	                                          ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#324: FILE: kernel/marker.c:77:
++	strncat(jmpover_sym, name, KSYM_NAME_LEN-jmpover_sym_len);
+ 	                                        ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#325: FILE: kernel/marker.c:78:
++	strncat(format_sym, name, KSYM_NAME_LEN-format_sym_len);
+ 	                                       ^
+
+ERROR:POINTER_LOCATION: "(foo**)" should be "(foo **)"
+#327: FILE: kernel/marker.c:80:
++	ptrs->call = (void**)kallsyms_lookup_name(call_sym);
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:POINTER_LOCATION: "(foo**)" should be "(foo **)"
+#328: FILE: kernel/marker.c:81:
++	ptrs->jmpselect = (void**)kallsyms_lookup_name(jmpselect_sym);
+
+ERROR:POINTER_LOCATION: "(foo**)" should be "(foo **)"
+#329: FILE: kernel/marker.c:82:
++	ptrs->jmpcall = (void**)kallsyms_lookup_name(jmpcall_sym);
+
+ERROR:POINTER_LOCATION: "(foo**)" should be "(foo **)"
+#330: FILE: kernel/marker.c:83:
++	ptrs->jmpinline = (void**)kallsyms_lookup_name(jmpinline_sym);
+
+ERROR:POINTER_LOCATION: "(foo**)" should be "(foo **)"
+#331: FILE: kernel/marker.c:84:
++	ptrs->jmpover = (void**)kallsyms_lookup_name(jmpover_sym);
+
+ERROR:POINTER_LOCATION: "(foo**)" should be "(foo **)"
+#332: FILE: kernel/marker.c:85:
++	ptrs->format = (void**)kallsyms_lookup_name(format_sym);
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#335: FILE: kernel/marker.c:88:
++	if (!(ptrs->call && ptrs->jmpselect && ptrs->jmpcall
++		&& ptrs->jmpinline && ptrs->jmpover && ptrs->format)) {
+
+WARNING:USE_NEGATIVE_ERRNO: return of an errno should typically be negative (ie: return -ENOENT)
+#336: FILE: kernel/marker.c:89:
++		return ENOENT;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#342: FILE: kernel/marker.c:95:
++int marker_set_probe(const char *name, const char *format,
++		marker_probe_func *probe,
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#351: FILE: kernel/marker.c:104:
++		printk(KERN_NOTICE
+
+ERROR:SWITCH_CASE_INDENT_LEVEL: switch and case should be at the same indent
+#357: FILE: kernel/marker.c:110:
++	switch(type) {
++		case MARKER_CALL:
+[...]
++		case MARKER_INLINE:
+[...]
++		default:
+
+switch should be at the same indent as case.
+Example::
+
+  switch (suffix) {
+  case 'G':
+  case 'g':
+          mem <<= 30;
+          break;
+  case 'M':
+  case 'm':
+          mem <<= 20;
+          break;
+  case 'K':
+  case 'k':
+          mem <<= 10;
+          fallthrough;
+  default:
+          break;
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+ERROR:SPACING: space required before the open parenthesis '('
+#357: FILE: kernel/marker.c:110:
++	switch(type) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#361: FILE: kernel/marker.c:114:
++				printk(KERN_NOTICE
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#363: FILE: kernel/marker.c:116:
++					"Probe already installed on "
++					"marker in %s\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#369: FILE: kernel/marker.c:122:
++			if (format && strncmp(format, *ptrs.format,
++					MARK_MAX_FORMAT_LEN)) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#371: FILE: kernel/marker.c:124:
++				printk(KERN_NOTICE
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#373: FILE: kernel/marker.c:126:
++					"Format mismatch for probe %s "
++					"(%s), marker (%s)\n",
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#376: FILE: kernel/marker.c:129:
++					(const char*)*ptrs.format);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#387: FILE: kernel/marker.c:140:
++				printk(KERN_NOTICE
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#389: FILE: kernel/marker.c:142:
++					"No inline probe exists "
++					"for marker in %s\n",
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#400: FILE: kernel/marker.c:153:
++			printk(KERN_ERR
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#411: FILE: kernel/marker.c:164:
++void marker_disable_probe(const char *name, marker_probe_func *probe,
++		enum marker_type type)
+
+ERROR:SWITCH_CASE_INDENT_LEVEL: switch and case should be at the same indent
+#421: FILE: kernel/marker.c:174:
++	switch(type) {
++		case MARKER_CALL:
+[...]
++		case MARKER_INLINE:
+[...]
++		default:
+
+ERROR:SPACING: space required before the open parenthesis '('
+#421: FILE: kernel/marker.c:174:
++	switch(type) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#434: FILE: kernel/marker.c:187:
++			printk(KERN_ERR
+
+WARNING:DEPRECATED_API: Deprecated use of 'synchronize_sched', prefer 'synchronize_rcu' instead
+#441: FILE: kernel/marker.c:194:
++		synchronize_sched();
+
+Usage of a deprecated RCU API is detected.  It is recommended to replace
+old flavourful RCU APIs by their new vanilla-RCU counterparts.
+
+The full list of available RCU APIs can be viewed from the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/RCU/whatisRCU.html#full-list-of-rcu-apis
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.36135.commit.a30ef67916b7b0cb7bd544577a29a299d8d651f3 total: 21 errors, 31 warnings, 24 checks, 369 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.36135.commit.a30ef67916b7b0cb7bd544577a29a299d8d651f3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

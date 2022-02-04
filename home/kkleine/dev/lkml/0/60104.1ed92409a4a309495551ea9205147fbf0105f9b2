@@ -1,0 +1,236 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#79: FILE: include/linux/sched.h:634:
++extern void add_sched_domain(const cpumask_t *cpu_map);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#80: FILE: include/linux/sched.h:635:
++extern void destroy_sched_domain(const cpumask_t *cpu_map);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#118: FILE: kernel/sched.c:5686:
++static void build_node_sched_groups(
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#144: FILE: kernel/sched.c:5712:
++		BUG_ON(!sd);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc_node(sizeof(*sg)...) over kmalloc_node(sizeof(struct sched_group)...)
+#147: FILE: kernel/sched.c:5715:
++		sg = kmalloc_node(sizeof(struct sched_group), GFP_KERNEL, node);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#159: FILE: kernel/sched.c:5727:
++			printk(KERN_WARNING
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc_node(sizeof(*sg)...) over kmalloc_node(sizeof(struct sched_group)...)
+#183: FILE: kernel/sched.c:5751:
++			sg = kmalloc_node(sizeof(struct sched_group),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#184: FILE: kernel/sched.c:5752:
++			sg = kmalloc_node(sizeof(struct sched_group),
++					GFP_KERNEL, node);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#186: FILE: kernel/sched.c:5754:
++				printk(KERN_WARNING
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#186: FILE: kernel/sched.c:5754:
++			if (!sg) {
++				printk(KERN_WARNING
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#200: FILE: kernel/sched.c:5768:
++static void free_node_sched_groups(
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!sg"
+#214: FILE: kernel/sched.c:5782:
++		if (sg == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#234: FILE: kernel/sched.c:5802:
++};
++#define SCHED_DOMAIN_CPUSET_MAX	8	/* power of 2 */
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:WxV)
+#235: FILE: kernel/sched.c:5803:
++static DEFINE_PER_CPU(long, sd_cpusets_used) = { 1UL <<SCHED_DOMAIN_CPUSET_MAX};
+                                                      ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#283: FILE: kernel/sched.c:5851:
++		printk(KERN_WARNING
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#283: FILE: kernel/sched.c:5851:
++	if (!sched_groups_by_node) {
++		printk(KERN_WARNING
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#296: FILE: kernel/sched.c:5864:
++		if ((sd_idx = find_existing_sched_domain(cpu, cpu_map))
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#299: FILE: kernel/sched.c:5867:
++			sd_cpuset_bundle
++				= &per_cpu(sd_cpusets_bundle[sd_idx], cpu);
+
+Assignment operators should not be written at the start of a
+line but should follow the operand at the previous line.
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#302: FILE: kernel/sched.c:5870:
++			sched_domain_per_cpu[cpu]
++				= &sd_cpuset_bundle->sd_cpuset;
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#316: FILE: kernel/sched.c:5884:
++		sd_cpuset_bundle->sg_cpuset_nodes
++		   = (cpu == first_cpu_in_cpumap) ? sched_groups_by_node : NULL;
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#324: FILE: kernel/sched.c:5892:
++		sd->max_interval = 8*(min(new_sd_span, 32));
+ 		                    ^
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#339: FILE: kernel/sched.c:5907:
++			init_numa_sched_groups_power(
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#352: FILE: kernel/sched.c:5920:
++				struct sched_domain *sd_next = sd->parent;
++				if (!sd_next) {
+
+WARNING:UNNECESSARY_ELSE: else is not generally useful after a break or return
+#355: FILE: kernel/sched.c:5923:
++					break;
++				} else {
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#359: FILE: kernel/sched.c:5927:
++						wmb();
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#390: FILE: kernel/sched.c:5958:
++			struct sched_domain_bundle *sd_bundle
++				= &per_cpu(sd_cpusets_bundle[sd_idx], cpu);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#400: FILE: kernel/sched.c:5968:
++				struct sched_domain *sd_next = sd_list->parent;
++				BUG_ON(!sd_next);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#400: FILE: kernel/sched.c:5968:
++				BUG_ON(!sd_next);
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#402: FILE: kernel/sched.c:5970:
++				    cpus_equal(sd_next->span,sd->span)){
+ 				                            ^
+
+ERROR:SPACING: space required before the open brace '{'
+#402: FILE: kernel/sched.c:5970:
++				    cpus_equal(sd_next->span,sd->span)){
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#443: FILE: kernel/sched.c:6012:
++	sched_group_nodes = kmalloc_node(
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#444: FILE: kernel/sched.c:6013:
++				sizeof(struct sched_group*)*MAX_NUMNODES,
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#444: FILE: kernel/sched.c:6013:
++				sizeof(struct sched_group*)*MAX_NUMNODES,
+ 				                           ^
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#463: FILE: kernel/sched.c:6036:
++				sched_group_allnodes = kmalloc_node(
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#464: FILE: kernel/sched.c:6037:
++				    MAX_NUMNODES*sizeof(struct sched_group),
+ 				                ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#472: FILE: kernel/sched.c:6045:
++				       MAX_NUMNODES*sizeof(struct sched_group));
+ 				                   ^
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '['
+#566: FILE: kernel/sched.c:6186:
++		init_numa_sched_groups_power(&sched_group_allnodes[
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#618: FILE: kernel/sched.c:6253:
++			struct sched_domain_bundle *sd_bundle;
++			if (!test_bit(sd_idx, &per_cpu(sd_cpusets_used, cpu)))
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.60104.commit.1ed92409a4a309495551ea9205147fbf0105f9b2 total: 4 errors, 12 warnings, 22 checks, 584 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.60104.commit.1ed92409a4a309495551ea9205147fbf0105f9b2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

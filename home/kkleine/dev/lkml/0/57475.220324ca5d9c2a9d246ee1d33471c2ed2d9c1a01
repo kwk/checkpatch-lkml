@@ -1,0 +1,94 @@
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#756: FILE: block/elevator.c:49:
++#define ELV_HASH_ENTRIES	(1 << elv_hash_shift)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'rq' - possible side-effects?
+#757: FILE: block/elevator.c:50:
++#define rq_hash_key(rq)		((rq)->sector + (rq)->nr_sectors)
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*eq->hash)...) over kmalloc(sizeof(struct hlist_head)...)
+#795: FILE: block/elevator.c:182:
++	eq->hash = kmalloc(sizeof(struct hlist_head) * ELV_HASH_ENTRIES, GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#837: FILE: block/elevator.c:268:
++	BUG_ON(ELV_ON_HASH(rq));
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#855: FILE: block/elevator.c:286:
++		BUG_ON(!ELV_ON_HASH(rq));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#972: FILE: block/elevator.c:676:
++	BUG_ON(ELV_ON_HASH(rq));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#992: FILE: block/ll_rw_blk.c:2669:
++		BUG_ON(!hlist_unhashed(&req->hash));
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1046: FILE: include/linux/elevator.h:92:
++extern void elv_dispatch_add_tail(request_queue_t *, struct request *);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'request_queue_t *' should also have an identifier name
+#1046: FILE: include/linux/elevator.h:92:
++extern void elv_dispatch_add_tail(request_queue_t *, struct request *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request *' should also have an identifier name
+#1046: FILE: include/linux/elevator.h:92:
++extern void elv_dispatch_add_tail(request_queue_t *, struct request *);
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.57475.commit.220324ca5d9c2a9d246ee1d33471c2ed2d9c1a01 total: 0 errors, 6 warnings, 4 checks, 924 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.57475.commit.220324ca5d9c2a9d246ee1d33471c2ed2d9c1a01 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,203 @@
+WARNING:REPEATED_WORD: Possible repeated word: 'very'
+#44: 
+I made a much simplified, yet very very low impact, version of markers.
+
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#86: 
+So, Frank's approach seems to add a 3.44 cycles each time the sleeping probe is
+
+ERROR:DIFF_IN_COMMIT_MSG: Avoid using diff content in the commit message - patch(1) might not work
+#93: 
+--- a/arch/i386/Kconfig
+
+Avoid having diff content in commit message.
+This causes problems when one tries to apply a file containing both
+the changelog and the diff because patch(1) tries to apply the diff
+which it found in the changelog.
+
+See: https://lore.kernel.org/lkml/20150611134006.9df79a893e3636019ad2759e@linux-foundation.org/
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#107: FILE: include/linux/marker.h:1:
++/*****************************************************************************
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#138: FILE: include/linux/marker.h:32:
++#define MARK_SYM(name)	__asm__ ("__mark_kprobe_" #name ":")
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#139: FILE: include/linux/marker.h:33:
++#else $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#143: FILE: include/linux/marker.h:37:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#145: FILE: include/linux/marker.h:39:
++#define MARK_JUMP(name, format, args...) \
++	do {\
++		__label__ call_label, over_label; \
++		volatile static void *__mark_##name##_jump_over \
++				asm ("__mark_"#name"_jump_over") = \
++					&&over_label; \
++		volatile static void *__mark_##name##_jump_call \
++				asm ("__mark_"#name"_jump_call") \
++				__attribute__((unused)) =  \
++					&&call_label; \
++		static void \
++				(*__mark_##name##_call)(const char *fmt, ...) \
++				asm ("__mark_"#name"_call") = \
++					__mark_empty_function; \
++		goto *__mark_##name##_jump_over; \
++call_label: \
++		preempt_disable(); \
++		(void) (__mark_##name##_call(format, ## args)); \
++		preempt_enable_no_resched(); \
++over_label: \
++		do {} while(0); \
++	} while(0)
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#148: FILE: include/linux/marker.h:42:
++		volatile static void *__mark_##name##_jump_over \
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#149: FILE: include/linux/marker.h:43:
++				asm ("__mark_"#name"_jump_over") = \
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#150: FILE: include/linux/marker.h:44:
++				asm ("__mark_"#name"_jump_over") = \
++					&&over_label; \
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#151: FILE: include/linux/marker.h:45:
++		volatile static void *__mark_##name##_jump_call \
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#152: FILE: include/linux/marker.h:46:
++				asm ("__mark_"#name"_jump_call") \
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: __always_unused or __maybe_unused is preferred over __attribute__((__unused__))
+#153: FILE: include/linux/marker.h:47:
++				__attribute__((unused)) =  \
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#154: FILE: include/linux/marker.h:48:
++				__attribute__((unused)) =  \
++					&&call_label; \
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#157: FILE: include/linux/marker.h:51:
++				asm ("__mark_"#name"_call") = \
+
+CHECK:SPACING: No space is necessary after a cast
+#162: FILE: include/linux/marker.h:56:
++		(void) (__mark_##name##_call(format, ## args)); \
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required before the open parenthesis '('
+#165: FILE: include/linux/marker.h:59:
++		do {} while(0); \
+
+ERROR:SPACING: space required before the open parenthesis '('
+#166: FILE: include/linux/marker.h:60:
++	} while(0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#171: FILE: include/linux/marker.h:65:
++#define MARK(name, format, args...) \
++	do { \
++		__mark_check_format(format, ## args); \
++		MARK_SYM(name); \
++		MARK_JUMP(name, format, ## args); \
++	} while(0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'format' - possible side-effects?
+#171: FILE: include/linux/marker.h:65:
++#define MARK(name, format, args...) \
++	do { \
++		__mark_check_format(format, ## args); \
++		MARK_SYM(name); \
++		MARK_JUMP(name, format, ## args); \
++	} while(0)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#176: FILE: include/linux/marker.h:70:
++	} while(0)
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __printf(1, 2) over __attribute__((format(printf, 1, 2)))
+#178: FILE: include/linux/marker.h:72:
++static inline __attribute__ ((format (printf, 1, 2)))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#182: FILE: include/linux/marker.h:76:
++extern void __mark_empty_function(const char *fmt, ...);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#204: FILE: kernel/Kconfig.marker:6:
++config MARK_SYMBOL
++	bool "Replace markers with symbols"
++	default n
++	help
++	  Put symbols in place of markers, useful for kprobe.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#210: FILE: kernel/Kconfig.marker:12:
++config MARK_JUMP
++	bool "Replace markers with a jump over an inactive function call"
++	default n
++	help
++	  Put a jump over a call in place of markers.
++
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.36572.commit.7ed1978285f6cc8593b37691572171c8c1f30f88 total: 6 errors, 10 warnings, 10 checks, 112 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.36572.commit.7ed1978285f6cc8593b37691572171c8c1f30f88 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

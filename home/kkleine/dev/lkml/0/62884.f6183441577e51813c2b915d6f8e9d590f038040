@@ -1,0 +1,60 @@
+WARNING:CONSTANT_CONVERSION: __constant_htons should be htons
+#158: FILE: drivers/infiniband/hw/ipath/ipath_mad.c:616:
++#define IB_PMA_SEL_LOCAL_LINK_INTEGRITY_ERRORS	__constant_htons(0x0200)
+
+Use of __constant_<foo> form is discouraged for the following functions::
+
+  __constant_cpu_to_be[x]
+  __constant_cpu_to_le[x]
+  __constant_be[x]_to_cpu
+  __constant_le[x]_to_cpu
+  __constant_htons
+  __constant_ntohs
+
+Using any of these outside of include/uapi/ is not preferred as using the
+function without __constant_ is identical when the argument is a
+constant.
+
+In big endian systems, the macros like __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to the same expression::
+
+  #define __constant_cpu_to_be32(x) ((__force __be32)(__u32)(x))
+  #define __cpu_to_be32(x)          ((__force __be32)(__u32)(x))
+
+In little endian systems, the macros __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to __constant_swab32 and __swab32.  __swab32
+has a __builtin_constant_p check::
+
+  #define __swab32(x)				\
+    (__builtin_constant_p((__u32)(x)) ?	\
+    ___constant_swab32(x) :			\
+    __fswab32(x))
+
+So ultimately they have a special case for constants.
+Similar is the case with all of the macros in the list.  Thus
+using the __constant_... forms are unnecessarily verbose and
+not preferred outside of include/uapi.
+
+See: https://lore.kernel.org/lkml/1400106425.12666.6.camel@joe-AO725/
+
+WARNING:CONSTANT_CONVERSION: __constant_htons should be htons
+#159: FILE: drivers/infiniband/hw/ipath/ipath_mad.c:617:
++#define IB_PMA_SEL_EXCESSIVE_BUFFER_OVERRUNS	__constant_htons(0x0400)
+
+WARNING:CONSTANT_CONVERSION: __constant_htons should be htons
+#160: FILE: drivers/infiniband/hw/ipath/ipath_mad.c:618:
++#define IB_PMA_SEL_PORT_VL15_DROPPED		__constant_htons(0x0800)
+
+WARNING:CONSTANT_CONVERSION: __constant_cpu_to_be16 should be cpu_to_be16
+#186: FILE: drivers/infiniband/hw/ipath/ipath_mad.c:913:
++		p->vl15_dropped = __constant_cpu_to_be16(0xFFFF);
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.62884.commit.f6183441577e51813c2b915d6f8e9d590f038040 total: 0 errors, 4 warnings, 0 checks, 241 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.62884.commit.f6183441577e51813c2b915d6f8e9d590f038040 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

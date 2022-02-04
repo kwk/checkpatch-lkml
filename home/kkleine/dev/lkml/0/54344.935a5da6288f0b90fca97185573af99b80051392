@@ -1,0 +1,143 @@
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#81: FILE: ipc/msg.c:55:
++	volatile struct msg_msg	*r_msg;
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'msq' may be better as '(msq)' to avoid precedence issues
+#114: FILE: ipc/msg.c:77:
++#define msg_checkid(msq, msgid)	ipc_checkid(&msg_ids, &msq->q_perm, msgid)
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRWXUGO' are not preferred. Consider using octal permissions '0777'.
+#151: FILE: ipc/msg.c:104:
++	msq->q_perm.mode = msgflg & S_IRWXUGO;
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "mss->list.next"
+#190: FILE: ipc/msg.c:144:
++	if (mss->list.next != NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#288: FILE: ipc/msg.c:228:
++		BUG_ON(msq == NULL);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!msq"
+#288: FILE: ipc/msg.c:228:
++		BUG_ON(msq == NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#495: FILE: ipc/msg.c:416:
++		if (ipcperms(&msq->q_perm, S_IRUGO))
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRWXUGO' are not preferred. Consider using octal permissions '0777'.
+#549: FILE: ipc/msg.c:491:
++		ipcp->mode = (ipcp->mode & ~S_IRWXUGO) |
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRWXUGO' are not preferred. Consider using octal permissions '0777'.
+#550: FILE: ipc/msg.c:492:
++			     (S_IRWXUGO & setbuf.mode);
+
+ERROR:SPACING: spaces required around that '<=' (ctx:WxV)
+#584: FILE: ipc/msg.c:528:
++			if (msg->m_type <=type)
+ 			                ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#620: FILE: ipc/msg.c:556:
++					       msr->r_msgtype, msr->r_mode)) {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!msq"
+#669: FILE: ipc/msg.c:602:
++	if (msq == NULL)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#691: FILE: ipc/msg.c:621:
++		if (msgsz + msq->q_cbytes <= msq->q_qbytes &&
+ 				1 + msq->q_qnum <= msq->q_qbytes) {
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "msg"
+#739: FILE: ipc/msg.c:667:
++	if (msg != NULL)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!msq"
+#786: FILE: ipc/msg.c:703:
++	if (msq == NULL)
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#801: FILE: ipc/msg.c:715:
++		if (ipcperms(&msq->q_perm, S_IRUGO))
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#816: FILE: ipc/msg.c:727:
++						       msgtyp, mode)) {
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#822: FILE: ipc/msg.c:730:
++				if (mode == SEARCH_LESSEQUAL &&
++						walk_msg->m_type != 1) {
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#877: FILE: ipc/msg.c:796:
++		msg = (struct msg_msg*)msr_d.r_msg;
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.54344.commit.935a5da6288f0b90fca97185573af99b80051392 total: 2 errors, 7 warnings, 10 checks, 875 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.54344.commit.935a5da6288f0b90fca97185573af99b80051392 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,161 @@
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#83: FILE: include/linux/percpu.h:27:
++#define __percpu_disguise(pdata) (struct percpu_data *)~(unsigned long)(pdata)
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#97: FILE: include/linux/percpu.h:35:
++        struct percpu_data *__p = __percpu_disguise(ptr); \$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#97: FILE: include/linux/percpu.h:35:
++        struct percpu_data *__p = __percpu_disguise(ptr); \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#98: FILE: include/linux/percpu.h:36:
++        (__typeof__(ptr))__p->ptrs[(cpu)];^I          \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#98: FILE: include/linux/percpu.h:36:
++        (__typeof__(ptr))__p->ptrs[(cpu)];^I          \$
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#103: FILE: include/linux/percpu.h:39:
++extern void *percpu_populate(void *__pdata, size_t size, gfp_t gfp, int cpu);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#104: FILE: include/linux/percpu.h:40:
++extern void percpu_depopulate(void *__pdata, int cpu);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#105: FILE: include/linux/percpu.h:41:
++extern int percpu_populate_mask(void *__pdata, size_t size, gfp_t gfp,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#107: FILE: include/linux/percpu.h:43:
++extern void percpu_depopulate_mask(void *__pdata, cpumask_t mask);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#108: FILE: include/linux/percpu.h:44:
++extern void *percpu_alloc_mask(size_t size, gfp_t gfp, cpumask_t map);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#109: FILE: include/linux/percpu.h:45:
++extern void percpu_free(void *__pdata);
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#165: FILE: include/linux/percpu.h:89:
++#define alloc_percpu(type)	(type *)__alloc_percpu(sizeof(type))
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#194: FILE: mm/slab.c:3387:
++	struct percpu_data *pdata = __percpu_disguise(__pdata);
++	if (pdata->ptrs[cpu]) {
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:NEEDLESS_IF: kfree(NULL) is safe and this check is probably not required
+#195: FILE: mm/slab.c:3388:
++	if (pdata->ptrs[cpu]) {
++		kfree(pdata->ptrs[cpu]);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#211: FILE: mm/slab.c:3402:
++	int cpu;
++	for_each_cpu_mask(cpu, mask)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#243: FILE: mm/slab.c:3423:
++	BUG_ON(pdata->ptrs[cpu]);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#244: FILE: mm/slab.c:3424:
++	if (node_online(node)) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#249: FILE: mm/slab.c:3429:
++	} else
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#276: FILE: mm/slab.c:3450:
++		if (unlikely(!percpu_populate(__pdata, size, gfp, cpu))) {
+[...]
++		} else
+[...]
+
+WARNING:UNNECESSARY_ELSE: else is not generally useful after a break or return
+#279: FILE: mm/slab.c:3453:
++			return -ENOMEM;
++		} else
+
+CHECK:BRACES: Unbalanced braces around else statement
+#279: FILE: mm/slab.c:3453:
++		} else
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*pdata)...) over kzalloc(sizeof(struct percpu_data)...)
+#303: FILE: mm/slab.c:3471:
++	void *pdata = kzalloc(sizeof(struct percpu_data), gfp);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.55351.commit.1c712923a94ebea90a2f9de7ae0c058feddacb06 total: 4 errors, 7 warnings, 11 checks, 291 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.55351.commit.1c712923a94ebea90a2f9de7ae0c058feddacb06 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

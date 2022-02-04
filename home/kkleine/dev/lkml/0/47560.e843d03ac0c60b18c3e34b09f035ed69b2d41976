@@ -1,0 +1,101 @@
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#46: FILE: include/linux/pid.h:121:
++#define do_each_pid_task(pid, type, task)				\
++	if ((task = pid_task(pid, type))) {				\
++		prefetch(pid_next(task, type));				\
++		do {
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'task' - possible side-effects?
+#46: FILE: include/linux/pid.h:121:
++#define do_each_pid_task(pid, type, task)				\
++	if ((task = pid_task(pid, type))) {				\
++		prefetch(pid_next(task, type));				\
++		do {
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#47: FILE: include/linux/pid.h:122:
++	if ((task = pid_task(pid, type))) {				\
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#50: FILE: include/linux/pid.h:125:
++		do {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#51: FILE: include/linux/pid.h:126:
++#define while_each_pid_task(pid, type, task)				\
++		} while (pid_next(task, type) &&  ({			\
++				task = pid_next_task(task, type);	\
++				rcu_dereference(task);			\
++				prefetch(pid_next(task, type));		\
++				1; }) );				\
++	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'task' - possible side-effects?
+#51: FILE: include/linux/pid.h:126:
++#define while_each_pid_task(pid, type, task)				\
++		} while (pid_next(task, type) &&  ({			\
++				task = pid_next_task(task, type);	\
++				rcu_dereference(task);			\
++				prefetch(pid_next(task, type));		\
++				1; }) );				\
++	}
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#56: FILE: include/linux/pid.h:131:
++				1; }) );				\
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.47560.commit.e843d03ac0c60b18c3e34b09f035ed69b2d41976 total: 4 errors, 0 warnings, 3 checks, 17 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.47560.commit.e843d03ac0c60b18c3e34b09f035ed69b2d41976 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

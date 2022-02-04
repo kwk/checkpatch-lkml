@@ -1,0 +1,64 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#46: 
+ block/as-iosched.c       |  125 ---------------------------------------------
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#710: FILE: block/elevator.c:49:
++#define ELV_HASH_ENTRIES	(1 << elv_hash_shift)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'rq' - possible side-effects?
+#711: FILE: block/elevator.c:50:
++#define rq_hash_key(rq)		((rq)->sector + (rq)->nr_sectors)
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc_node(sizeof(*eq->hash)...) over kmalloc_node(sizeof(struct hlist_head)...)
+#731: FILE: block/elevator.c:216:
++	eq->hash = kmalloc_node(sizeof(struct hlist_head) * ELV_HASH_ENTRIES,
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#773: FILE: block/elevator.c:264:
++	BUG_ON(ELV_ON_HASH(rq));
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#791: FILE: block/elevator.c:282:
++		BUG_ON(!ELV_ON_HASH(rq));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#883: FILE: block/elevator.c:652:
++	BUG_ON(ELV_ON_HASH(rq));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#903: FILE: block/ll_rw_blk.c:2669:
++		BUG_ON(!hlist_unhashed(&req->hash));
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.58499.commit.565f2c5e4f006c5d20934b83a188131ed8bd52bf total: 0 errors, 5 warnings, 3 checks, 794 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.58499.commit.565f2c5e4f006c5d20934b83a188131ed8bd52bf has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

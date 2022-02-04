@@ -1,0 +1,294 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#44: 
+I thought about it a little more, and here is still another enhanced version of
+
+ERROR:DIFF_IN_COMMIT_MSG: Avoid using diff content in the commit message - patch(1) might not work
+#61: 
+--- a/arch/i386/Kconfig
+
+Avoid having diff content in commit message.
+This causes problems when one tries to apply a file containing both
+the changelog and the diff because patch(1) tries to apply the diff
+which it found in the changelog.
+
+See: https://lore.kernel.org/lkml/20150611134006.9df79a893e3636019ad2759e@linux-foundation.org/
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#75: FILE: include/linux/marker.h:1:
++/*****************************************************************************
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#106: FILE: include/linux/marker.h:32:
++#define MARK_SYM(name)	__asm__ ("__mark_kprobe_" #name ":")
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#107: FILE: include/linux/marker.h:33:
++#else $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#111: FILE: include/linux/marker.h:37:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#116: FILE: include/linux/marker.h:42:
++		asm ("__mark_"#name"_call") = \
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:SPACING: No space is necessary after a cast
+#121: FILE: include/linux/marker.h:47:
++		(void) (__mark_##name##_call(format, ## args)); \
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required before the open parenthesis '('
+#123: FILE: include/linux/marker.h:49:
++	} while(0)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#130: FILE: include/linux/marker.h:56:
++#define MARK_JUMP_INLINE(name, format, args...) \
++		(void) (__mark_##name##_inline(format, ## args))
+
+CHECK:SPACING: No space is necessary after a cast
+#131: FILE: include/linux/marker.h:57:
++		(void) (__mark_##name##_inline(format, ## args))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#136: FILE: include/linux/marker.h:62:
++#define MARK_JUMP(name, format, args...) \
++	do { \
++		__label__ over_label, call_label, inline_label; \
++		volatile static void *__mark_##name##_jump_over \
++				asm ("__mark_"#name"_jump_over") = \
++					&&over_label; \
++		volatile static void *__mark_##name##_jump_call \
++				asm ("__mark_"#name"_jump_call") \
++				__attribute__((unused)) =  \
++					&&call_label; \
++		volatile static void *__mark_##name##_jump_inline \
++				asm ("__mark_"#name"_jump_inline") \
++				__attribute__((unused)) =  \
++					&&inline_label; \
++		MARK_JUMP_CALL_PROTOTYPE(name); \
++		goto *__mark_##name##_jump_over; \
++call_label: \
++		MARK_JUMP_CALL(name, format, ## args); \
++		goto over_label; \
++inline_label: \
++		MARK_JUMP_INLINE(name, format, ## args); \
++over_label: \
++		do {} while(0); \
++	} while(0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'format' - possible side-effects?
+#136: FILE: include/linux/marker.h:62:
++#define MARK_JUMP(name, format, args...) \
++	do { \
++		__label__ over_label, call_label, inline_label; \
++		volatile static void *__mark_##name##_jump_over \
++				asm ("__mark_"#name"_jump_over") = \
++					&&over_label; \
++		volatile static void *__mark_##name##_jump_call \
++				asm ("__mark_"#name"_jump_call") \
++				__attribute__((unused)) =  \
++					&&call_label; \
++		volatile static void *__mark_##name##_jump_inline \
++				asm ("__mark_"#name"_jump_inline") \
++				__attribute__((unused)) =  \
++					&&inline_label; \
++		MARK_JUMP_CALL_PROTOTYPE(name); \
++		goto *__mark_##name##_jump_over; \
++call_label: \
++		MARK_JUMP_CALL(name, format, ## args); \
++		goto over_label; \
++inline_label: \
++		MARK_JUMP_INLINE(name, format, ## args); \
++over_label: \
++		do {} while(0); \
++	} while(0)
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#136: FILE: include/linux/marker.h:62:
++#define MARK_JUMP(name, format, args...) \
++	do { \
++		__label__ over_label, call_label, inline_label; \
++		volatile static void *__mark_##name##_jump_over \
++				asm ("__mark_"#name"_jump_over") = \
++					&&over_label; \
++		volatile static void *__mark_##name##_jump_call \
++				asm ("__mark_"#name"_jump_call") \
++				__attribute__((unused)) =  \
++					&&call_label; \
++		volatile static void *__mark_##name##_jump_inline \
++				asm ("__mark_"#name"_jump_inline") \
++				__attribute__((unused)) =  \
++					&&inline_label; \
++		MARK_JUMP_CALL_PROTOTYPE(name); \
++		goto *__mark_##name##_jump_over; \
++call_label: \
++		MARK_JUMP_CALL(name, format, ## args); \
++		goto over_label; \
++inline_label: \
++		MARK_JUMP_INLINE(name, format, ## args); \
++over_label: \
++		do {} while(0); \
++	} while(0)
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#139: FILE: include/linux/marker.h:65:
++		volatile static void *__mark_##name##_jump_over \
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#140: FILE: include/linux/marker.h:66:
++				asm ("__mark_"#name"_jump_over") = \
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#141: FILE: include/linux/marker.h:67:
++				asm ("__mark_"#name"_jump_over") = \
++					&&over_label; \
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#142: FILE: include/linux/marker.h:68:
++		volatile static void *__mark_##name##_jump_call \
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#143: FILE: include/linux/marker.h:69:
++				asm ("__mark_"#name"_jump_call") \
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: __always_unused or __maybe_unused is preferred over __attribute__((__unused__))
+#144: FILE: include/linux/marker.h:70:
++				__attribute__((unused)) =  \
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#145: FILE: include/linux/marker.h:71:
++				__attribute__((unused)) =  \
++					&&call_label; \
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#146: FILE: include/linux/marker.h:72:
++		volatile static void *__mark_##name##_jump_inline \
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#147: FILE: include/linux/marker.h:73:
++				asm ("__mark_"#name"_jump_inline") \
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: __always_unused or __maybe_unused is preferred over __attribute__((__unused__))
+#148: FILE: include/linux/marker.h:74:
++				__attribute__((unused)) =  \
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#149: FILE: include/linux/marker.h:75:
++				__attribute__((unused)) =  \
++					&&inline_label; \
+
+ERROR:SPACING: space required before the open parenthesis '('
+#158: FILE: include/linux/marker.h:84:
++		do {} while(0); \
+
+ERROR:SPACING: space required before the open parenthesis '('
+#159: FILE: include/linux/marker.h:85:
++	} while(0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#161: FILE: include/linux/marker.h:87:
++#define MARK(name, format, args...) \
++	do { \
++		__mark_check_format(format, ## args); \
++		MARK_SYM(name); \
++		MARK_JUMP(name, format, ## args); \
++	} while(0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'format' - possible side-effects?
+#161: FILE: include/linux/marker.h:87:
++#define MARK(name, format, args...) \
++	do { \
++		__mark_check_format(format, ## args); \
++		MARK_SYM(name); \
++		MARK_JUMP(name, format, ## args); \
++	} while(0)
+
+ERROR:SPACING: space required before the open parenthesis '('
+#166: FILE: include/linux/marker.h:92:
++	} while(0)
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __printf(1, 2) over __attribute__((format(printf, 1, 2)))
+#168: FILE: include/linux/marker.h:94:
++static inline __attribute__ ((format (printf, 1, 2)))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#172: FILE: include/linux/marker.h:98:
++extern void __mark_empty_function(const char *fmt, ...);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#194: FILE: kernel/Kconfig.marker:6:
++config MARK_SYMBOL
++	bool "Replace markers with symbols"
++	default n
++	help
++	  Put symbols in place of markers, useful for kprobe.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#200: FILE: kernel/Kconfig.marker:12:
++config MARK_JUMP_CALL
++	bool "Replace markers with a jump over an inactive function call"
++	default n
++	help
++	  Put a jump over a call in place of markers.
++
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#206: FILE: kernel/Kconfig.marker:18:
++config MARK_JUMP_INLINE
++	bool "Replace markers with a jump over an inline function"
++	default n
++	help
++	  Put a jump over an inline function.
++
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.36489.commit.37e6ff08fd980b31c4e65592c7465508d2447dcc total: 8 errors, 12 warnings, 15 checks, 140 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.36489.commit.37e6ff08fd980b31c4e65592c7465508d2447dcc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,126 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#24: 
+Adds a generic sched_clock, along with a boot time override for the scheduler 
+
+WARNING:BAD_SIGN_OFF: 'Signed-off-by:' is the preferred signature form
+#28: 
+Signed-Off-By: Daniel Walker <dwalker@mvista.com>
+
+The signed-off-by line does not fall in line with the standards
+specified by the community.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
+
+WARNING:MISPLACED_INIT: __initdata should be placed after sched_clock_override[32]
+#163: FILE: kernel/sched.c:6916:
++static char __initdata sched_clock_override[32];
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+ERROR:POINTER_LOCATION: "foo* bar" should be "foo *bar"
+#170: FILE: kernel/sched.c:6923:
++static int __init boot_override_sched_clocksource(char* str)
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:STRLCPY: Prefer strscpy over strlcpy - see: https://lore.kernel.org/r/CAHk-=wgfRnXz0W3D37d01q3JFkr_i_uTL=V6A6G1oUZcprmknw@mail.gmail.com/
+#173: FILE: kernel/sched.c:6926:
++		strlcpy(sched_clock_override, str,
+
+CHECK:UNDOCUMENTED_SETUP: __setup appears un-documented -- check Documentation/admin-guide/kernel-parameters.txt
+#178: FILE: kernel/sched.c:6931:
++__setup("sched_clocksource=", boot_override_sched_clocksource);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#202: FILE: kernel/sched.c:6955:
++	if (*sched_clock_override != 0) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!sched_clocksource"
+#204: FILE: kernel/sched.c:6957:
++		if (unlikely(sched_clocksource == NULL)) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#206: FILE: kernel/sched.c:6959:
++			printk(KERN_ERR "Warning: "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#207: FILE: kernel/sched.c:6960:
++			printk(KERN_ERR "Warning: "
++			       "Invalid scheduler clock override.\n");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#211: FILE: kernel/sched.c:6964:
++		printk(KERN_INFO "Scheduler: %s clocksource has been "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#212: FILE: kernel/sched.c:6965:
++		printk(KERN_INFO "Scheduler: %s clocksource has been "
++		       "installed.\n", sched_clocksource->name);
+
+CHECK:BRACES: Unbalanced braces around else statement
+#213: FILE: kernel/sched.c:6966:
++	} else
+
+WARNING:USE_DEVICE_INITCALL: please use device_initcall() or more appropriate function instead of __initcall() (see include/linux/init.h)
+#218: FILE: kernel/sched.c:6971:
++__initcall(sched_clock_init);
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.30742.commit.27d28eb9f02248e6977cff8faa3f494173701374 total: 1 errors, 9 warnings, 4 checks, 169 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+/tmp/tmp.gGZ8aIRHtl//home/kkleine/dev/lkml/0/patch.offset.30742.commit.27d28eb9f02248e6977cff8faa3f494173701374 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.
