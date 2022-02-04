@@ -3,10 +3,10 @@
 set -e
 
 fixed_checkpatch_opts="--show-types --summary-file"
-opt_lkml_path=$(realpath ~/dev/lkml/0)
-opt_linux_tree_root=$(realpath ~/dev/linux)
+opt_lkml_path=$(realpath ../lkml/0)
+opt_linux_tree_root=$(realpath ../linux)
 opt_checkpatch_opts="--no-signoff --verbose --subjective --mailback --codespell"
-opt_log_dir=$(realpath ~/checkpatch-logs/)
+opt_log_dir=$(realpath ../checkpatch-results/)
 opt_start_offset=0
 opt_num_messages=-1
 
