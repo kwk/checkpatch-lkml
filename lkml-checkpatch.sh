@@ -134,9 +134,11 @@ EOF
         git -C $opt_lkml_path show HEAD~{}:m > \$patchfile;
         tmplogfile=$tempdir/checkpatch.log.\$BASHPID;
         $opt_linux_tree_root/scripts/checkpatch.pl --root=$opt_linux_tree_root $fixed_checkpatch_opts $opt_checkpatch_opts \$patchfile 2>&1 | tee \$tmplogfile;
+        rm -f \$patchfile;
         if [ -s \$tmplogfile ]; then
             mv -v \$tmplogfile $logdir/\$offset_str.\$sha1;
-        fi"
+        fi;
+        rm -f \$tmplogfile;"
 }
 
 run_checkpath_against_lkml
