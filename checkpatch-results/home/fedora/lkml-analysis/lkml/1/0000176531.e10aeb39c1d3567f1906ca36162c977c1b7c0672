@@ -1,0 +1,218 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#34: 
+Introduce {get|put}_user_try and {get|put}_user_catch as new uaccess exception
+
+WARNING:TYPO_SPELLING: 'occured' may be misspelled - perhaps 'occurred'?
+#37: 
+the block and gets err if an exception occured in {get|put}_user_ex() in the
+                                       ^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#84: FILE: arch/x86/include/asm/uaccess.h:202:
++#define __put_user_asm_ex_u64(x, addr)					\
++	asm volatile("1:	movl %%eax,0(%1)\n"			\
++		     "2:	movl %%edx,4(%1)\n"			\
++		     "3:\n"						\
++		     _ASM_EXTABLE(1b, 2b - 1b)				\
++		     _ASM_EXTABLE(2b, 3b - 2b)				\
++		     : : "A" (x), "r" (addr))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#107: FILE: arch/x86/include/asm/uaccess.h:299:
++#define __put_user_size_ex(x, ptr, size)				\
++do {									\
++	__chk_user_ptr(ptr);						\
++	switch (size) {							\
++	case 1:								\
++		__put_user_asm_ex(x, ptr, "b", "b", "iq");		\
++		break;							\
++	case 2:								\
++		__put_user_asm_ex(x, ptr, "w", "w", "ir");		\
++		break;							\
++	case 4:								\
++		__put_user_asm_ex(x, ptr, "l", "k", "ir");		\
++		break;							\
++	case 8:								\
++		__put_user_asm_ex_u64((__typeof__(*ptr))(x), ptr);	\
++		break;							\
++	default:							\
++		__put_user_bad();					\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#107: FILE: arch/x86/include/asm/uaccess.h:299:
++#define __put_user_size_ex(x, ptr, size)				\
++do {									\
++	__chk_user_ptr(ptr);						\
++	switch (size) {							\
++	case 1:								\
++		__put_user_asm_ex(x, ptr, "b", "b", "iq");		\
++		break;							\
++	case 2:								\
++		__put_user_asm_ex(x, ptr, "w", "w", "ir");		\
++		break;							\
++	case 4:								\
++		__put_user_asm_ex(x, ptr, "l", "k", "ir");		\
++		break;							\
++	case 8:								\
++		__put_user_asm_ex_u64((__typeof__(*ptr))(x), ptr);	\
++		break;							\
++	default:							\
++		__put_user_bad();					\
++	}								\
++} while (0)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#135: FILE: arch/x86/include/asm/uaccess.h:345:
++#define __get_user_asm_ex_u64(x, ptr)			(x) = __get_user_bad()
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#148: FILE: arch/x86/include/asm/uaccess.h:387:
++#define __get_user_size_ex(x, ptr, size)				\
++do {									\
++	__chk_user_ptr(ptr);						\
++	switch (size) {							\
++	case 1:								\
++		__get_user_asm_ex(x, ptr, "b", "b", "=q");		\
++		break;							\
++	case 2:								\
++		__get_user_asm_ex(x, ptr, "w", "w", "=r");		\
++		break;							\
++	case 4:								\
++		__get_user_asm_ex(x, ptr, "l", "k", "=r");		\
++		break;							\
++	case 8:								\
++		__get_user_asm_ex_u64(x, ptr);				\
++		break;							\
++	default:							\
++		(x) = __get_user_bad();					\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#148: FILE: arch/x86/include/asm/uaccess.h:387:
++#define __get_user_size_ex(x, ptr, size)				\
++do {									\
++	__chk_user_ptr(ptr);						\
++	switch (size) {							\
++	case 1:								\
++		__get_user_asm_ex(x, ptr, "b", "b", "=q");		\
++		break;							\
++	case 2:								\
++		__get_user_asm_ex(x, ptr, "w", "w", "=r");		\
++		break;							\
++	case 4:								\
++		__get_user_asm_ex(x, ptr, "l", "k", "=r");		\
++		break;							\
++	case 8:								\
++		__get_user_asm_ex_u64(x, ptr);				\
++		break;							\
++	default:							\
++		(x) = __get_user_bad();					\
++	}								\
++} while (0)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#169: FILE: arch/x86/include/asm/uaccess.h:408:
++#define __get_user_asm_ex(x, addr, itype, rtype, ltype)			\
++	asm volatile("1:	mov"itype" %1,%"rtype"0\n"		\
++		     "2:\n"						\
++		     _ASM_EXTABLE(1b, 2b - 1b)				\
++		     : ltype(x) : "m" (__m(addr)))
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#170: FILE: arch/x86/include/asm/uaccess.h:409:
++	asm volatile("1:	mov"itype" %1,%"rtype"0\n"		\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#183: FILE: arch/x86/include/asm/uaccess.h:450:
++#define __put_user_asm_ex(x, addr, itype, rtype, ltype)			\
++	asm volatile("1:	mov"itype" %"rtype"0,%1\n"		\
++		     "2:\n"						\
++		     _ASM_EXTABLE(1b, 2b - 1b)				\
++		     : : ltype(x), "m" (__m(addr)))
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#184: FILE: arch/x86/include/asm/uaccess.h:451:
++	asm volatile("1:	mov"itype" %"rtype"0,%1\n"		\
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#192: FILE: arch/x86/include/asm/uaccess.h:459:
++#define uaccess_try	do {						\
++	int prev_err = current_thread_info()->uaccess_err;		\
++	current_thread_info()->uaccess_err = 0;				\
++	barrier();
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#197: FILE: arch/x86/include/asm/uaccess.h:464:
++#define uaccess_catch(err)						\
++	(err) |= current_thread_info()->uaccess_err;			\
++	current_thread_info()->uaccess_err = prev_err;			\
++} while (0)
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#228: FILE: arch/x86/include/asm/uaccess.h:531:
++#define get_user_ex(x, ptr)	do {					\
++	unsigned long __gue_val;					\
++	__get_user_size_ex((__gue_val), (ptr), (sizeof(*(ptr))));	\
++	(x) = (__force __typeof__(*(ptr)))__gue_val;			\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#234: FILE: arch/x86/include/asm/uaccess.h:537:
++#define put_user_ex(x, ptr)						\
++	__put_user_size_ex((__typeof__(*(ptr)))(x), (ptr), sizeof(*(ptr)))
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000176531.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 5 errors, 3 warnings, 8 checks, 173 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000176531.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

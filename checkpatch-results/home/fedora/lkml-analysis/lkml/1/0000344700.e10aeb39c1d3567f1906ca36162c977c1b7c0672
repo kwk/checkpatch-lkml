@@ -1,0 +1,410 @@
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*device)...) over kzalloc(sizeof(struct dasd_device)...)
+#73: FILE: drivers/s390/block/dasd.c:74:
++	device = kzalloc(sizeof(struct dasd_device), GFP_ATOMIC);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!block"
+#115: FILE: drivers/s390/block/dasd.c:127:
++	if (block == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#121: FILE: drivers/s390/block/dasd.c:133:
++	atomic_set (&block->tasklet_scheduled, 0);
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#124: FILE: drivers/s390/block/dasd.c:136:
++		     (unsigned long) block);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "block->base->discipline->do_analysis"
+#276: FILE: drivers/s390/block/dasd.c:274:
++		if (block->base->discipline->do_analysis != NULL)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#317: FILE: drivers/s390/block/dasd.c:306:
++		struct dasd_block *block = device->block;
++		rc = dasd_flush_block_queue(block);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'value' may be better as '(value)' to avoid precedence issues
+#458: FILE: drivers/s390/block/dasd.c:527:
++#define dasd_profile_counter(value, counter, block) \
+ { \
+ 	int index; \
+ 	for (index = 0; index < 31 && value >> (2+index); index++); \
+ 	dasd_global_profile.counter[index]++; \
++	block->profile.counter[index]++; \
+ }
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'counter' - possible side-effects?
+#458: FILE: drivers/s390/block/dasd.c:527:
++#define dasd_profile_counter(value, counter, block) \
+ { \
+ 	int index; \
+ 	for (index = 0; index < 31 && value >> (2+index); index++); \
+ 	dasd_global_profile.counter[index]++; \
++	block->profile.counter[index]++; \
+ }
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'block' may be better as '(block)' to avoid precedence issues
+#458: FILE: drivers/s390/block/dasd.c:527:
++#define dasd_profile_counter(value, counter, block) \
+ { \
+ 	int index; \
+ 	for (index = 0; index < 31 && value >> (2+index); index++); \
+ 	dasd_global_profile.counter[index]++; \
++	block->profile.counter[index]++; \
+ }
+
+CHECK:SPACING: No space is necessary after a cast
+#626: FILE: drivers/s390/block/dasd.c:765:
++	device = (struct dasd_device *) cqr->startdev;
+
+CHECK:SPACING: No space is necessary after a cast
+#661: FILE: drivers/s390/block/dasd.c:818:
++	device = (struct dasd_device *) cqr->startdev;
+
+CHECK:SPACING: No space is necessary after a cast
+#731: FILE: drivers/s390/block/dasd.c:937:
++	device = (struct dasd_device *) cqr->startdev;
+
+CHECK:SPACING: No space is necessary after a cast
+#796: FILE: drivers/s390/block/dasd.c:1012:
++	cqr = (struct dasd_ccw_req *) intparm;
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!cqr"
+#797: FILE: drivers/s390/block/dasd.c:1013:
++	if (cqr == NULL) {
+
+CHECK:SPACING: No space is necessary after a cast
+#819: FILE: drivers/s390/block/dasd.c:1023:
++	device = (struct dasd_device *) cqr->startdev;
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#902: FILE: drivers/s390/block/dasd.c:1071:
++		if (!(cqr->irb.esw.esw0.erw.cons &&
+[...]
++		} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#911: FILE: drivers/s390/block/dasd.c:1080:
++		} else
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'next->status == DASD_CQR_QUEUED'
+#918: FILE: drivers/s390/block/dasd.c:1083:
++	if (next && (next->status == DASD_CQR_QUEUED) &&
++	    (!device->stopped)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around '!device->stopped'
+#918: FILE: drivers/s390/block/dasd.c:1083:
++	if (next && (next->status == DASD_CQR_QUEUED) &&
++	    (!device->stopped)) {
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#925: FILE: drivers/s390/block/dasd.c:1090:
++				    "Interrupt fastpath "
++				    "failed!");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1171: FILE: drivers/s390/block/dasd.c:1179:
++				    "wrong cqr status in __dasd_process_final_queue "
++				    "for cqr %p, status %x",
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1173: FILE: drivers/s390/block/dasd.c:1181:
++			BUG();
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "cqr->callback"
+#1184: FILE: drivers/s390/block/dasd.c:1185:
++		if (cqr->callback != NULL)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around function pointer (cqr->callback)
+#1185: FILE: drivers/s390/block/dasd.c:1186:
++			(cqr->callback)(cqr, cqr->callback_data);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1189: FILE: drivers/s390/block/dasd.c:1190:
+ 
++
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1210: FILE: drivers/s390/block/dasd.c:1207:
++			dasd_device_set_timer(device, 5*HZ);
+ 			                               ^
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'dasd_cancel_req', this function's name, in a string
+#1718: FILE: drivers/s390/block/dasd.c:1533:
++				    "dasd_cancel_req is unable "
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1719: FILE: drivers/s390/block/dasd.c:1534:
++				    "dasd_cancel_req is unable "
++				    " to terminate request %p, rc = %d",
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1741: FILE: drivers/s390/block/dasd.c:1549:
++
++
+
+CHECK:SPACING: No space is necessary after a cast
+#1756: FILE: drivers/s390/block/dasd.c:1564:
++	block = (struct dasd_block *) ptr;
+
+CHECK:SPACING: No space is necessary after a cast
+#1779: FILE: drivers/s390/block/dasd.c:1587:
++	block->timer.data = (unsigned long) block;
+
+WARNING:TYPO_SPELLING: 'uptodate' may be misspelled - perhaps 'up-to-date'?
+#1796: FILE: drivers/s390/block/dasd.c:1604:
++static inline void dasd_end_request(struct request *req, int uptodate)
+                                                              ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:TYPO_SPELLING: 'uptodate' may be misspelled - perhaps 'up-to-date'?
+#1798: FILE: drivers/s390/block/dasd.c:1606:
++	if (end_that_request_first(req, uptodate, req->hard_nr_sectors))
+ 	                                ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'uptodate' may be misspelled - perhaps 'up-to-date'?
+#1801: FILE: drivers/s390/block/dasd.c:1609:
++	end_that_request_last(req, uptodate);
+ 	                           ^^^^^^^^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1831: FILE: drivers/s390/block/dasd.c:1639:
++	unsigned long flags;
++	queue = block->request_queue;
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!queue"
+#1834: FILE: drivers/s390/block/dasd.c:1642:
++	if (queue == NULL)
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#1849: FILE: drivers/s390/block/dasd.c:1657:
++	       elv_next_request(queue)) {
++
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#1879: FILE: drivers/s390/block/dasd.c:1687:
++				dasd_block_set_timer(block, HZ/2);
+ 				                              ^
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1884: FILE: drivers/s390/block/dasd.c:1692:
++				      "CCW creation failed (rc=%ld) "
++				      "on request %p",
+
+CHECK:SPACING: No space is necessary after a cast
+#1894: FILE: drivers/s390/block/dasd.c:1702:
++		cqr->callback_data = (void *) req;
+
+CHECK:SPACING: No space is necessary after a cast
+#1907: FILE: drivers/s390/block/dasd.c:1715:
++	req = (struct request *) cqr->callback_data;
+
+WARNING:TYPO_SPELLING: 'allways' may be misspelled - perhaps 'always'?
+#1989: FILE: drivers/s390/block/dasd.c:1797:
++	/* We allways begin with the first requests on the queue, as some
+ 	      ^^^^^^^
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "cqr"
+#2085: FILE: drivers/s390/block/dasd.c:1893:
++		for (i = 0; cqr != NULL; cqr = cqr->refers, i++)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2100: FILE: drivers/s390/block/dasd.c:1908:
++			 * might remove multiple elements */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#2127: FILE: drivers/s390/block/dasd.c:1932:
++
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2170: FILE: drivers/s390/block/dasd.c:1962:
++	block->request_queue = blk_init_queue(do_dasd_request,
++					       &block->request_queue_lock);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!block->request_queue"
+#2171: FILE: drivers/s390/block/dasd.c:1963:
++	if (block->request_queue == NULL)
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#2257: FILE: drivers/s390/block/dasd.c:2023:
++static int dasd_open(struct inode *inp, struct file *filp)
+                                                      ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#2308: FILE: drivers/s390/block/dasd.c:2064:
++static int dasd_release(struct inode *inp, struct file *filp)
+                                                         ^^^^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#2466: FILE: drivers/s390/block/dasd.c:2312:
++		struct dasd_block *block = device->block;
++		max_count = block->bdev ? 0 : -1;
+
+CHECK:SPACING: No space is necessary after a cast
+#2467: FILE: drivers/s390/block/dasd.c:2313:
++		open_count = (int) atomic_read(&block->open_count);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#2470: FILE: drivers/s390/block/dasd.c:2316:
++				printk(KERN_WARNING "Can't offline dasd "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#2471: FILE: drivers/s390/block/dasd.c:2317:
++				printk(KERN_WARNING "Can't offline dasd "
++				       "device with open count = %i.\n",
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#2474: FILE: drivers/s390/block/dasd.c:2320:
++				printk(KERN_WARNING "%s",
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#2476: FILE: drivers/s390/block/dasd.c:2322:
++				       "Can't offline dasd device due "
++				       "to internal use\n");
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#2584: FILE: drivers/s390/block/dasd.c:2491:
++EXPORT_SYMBOL(dasd_block_clear_timer);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#2592: FILE: drivers/s390/block/dasd.c:2498:
++EXPORT_SYMBOL(dasd_schedule_block_bh);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#2596: FILE: drivers/s390/block/dasd.c:2501:
++EXPORT_SYMBOL(dasd_block_set_timer);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#2606: FILE: drivers/s390/block/dasd.c:2516:
++EXPORT_SYMBOL_GPL(dasd_flush_device_queue);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#2607: FILE: drivers/s390/block/dasd.c:2517:
++EXPORT_SYMBOL_GPL(dasd_alloc_block);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#2608: FILE: drivers/s390/block/dasd.c:2518:
++EXPORT_SYMBOL_GPL(dasd_free_block);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000344700.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 27 warnings, 34 checks, 2504 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000344700.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

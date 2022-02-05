@@ -1,0 +1,80 @@
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#68: FILE: kernel/trace/trace_events.c:451:
++#define FIELD(type, name)						\
++	#type, #name, (unsigned int)offsetof(typeof(field), name),	\
++		(unsigned int)sizeof(field.name)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#68: FILE: kernel/trace/trace_events.c:451:
++#define FIELD(type, name)						\
++	#type, #name, (unsigned int)offsetof(typeof(field), name),	\
++		(unsigned int)sizeof(field.name)
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#104: FILE: kernel/trace/trace_export.c:21:
++#define TRACE_FIELD_ZERO_CHAR(item)					\
++	ret = trace_seq_printf(s, "\tfield: char " #item ";\t"		\
++			       "offset:%u;\tsize:0;\n",			\
++			       (unsigned int)offsetof(typeof(field), item)); \
++	if (!ret)							\
+ 		return 0;
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#104: FILE: kernel/trace/trace_export.c:21:
++#define TRACE_FIELD_ZERO_CHAR(item)					\
++	ret = trace_seq_printf(s, "\tfield: char " #item ";\t"		\
++			       "offset:%u;\tsize:0;\n",			\
++			       (unsigned int)offsetof(typeof(field), item)); \
++	if (!ret)							\
+ 		return 0;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#104: FILE: kernel/trace/trace_export.c:21:
++#define TRACE_FIELD_ZERO_CHAR(item)					\
++	ret = trace_seq_printf(s, "\tfield: char " #item ";\t"		\
++			       "offset:%u;\tsize:0;\n",			\
++			       (unsigned int)offsetof(typeof(field), item)); \
++	if (!ret)							\
+ 		return 0;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000157245.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 2 errors, 2 warnings, 1 checks, 67 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000157245.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

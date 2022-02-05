@@ -1,0 +1,188 @@
+WARNING:TYPO_SPELLING: 'connexion' may be misspelled - perhaps 'connection'?
+#40: 
+- Verification of flag compatibility at probe connexion
+                                              ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#119: FILE: include/linux/marker.h:40:
++#define _MF_OPTIMIZED (1 << MF_OPTIMIZED)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#120: FILE: include/linux/marker.h:41:
++#define _MF_LOCKDEP (1 << MF_LOCKDEP)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#121: FILE: include/linux/marker.h:42:
++#define _MF_PRINTK (1 << MF_PRINTK)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'format' - possible side-effects?
+#123: FILE: include/linux/marker.h:44:
++#define MARK_GENERIC(flags, name, format, args...) \
++	do { \
++		static marker_probe_func *__mark_call_##name = \
++					__mark_empty_function; \
++		static char __marker_enable_##name = 0; \
++		static const struct __mark_marker_c __mark_c_##name \
++			__attribute__((section(".markers.c"))) = \
++			{ #name, &__mark_call_##name, format, \
++			(flags) | ~_MF_OPTIMIZED } ; \
++		static const struct __mark_marker __mark_##name \
++			__attribute__((section(".markers"))) = \
++			{ &__mark_c_##name, &__marker_enable_##name } ; \
++		asm volatile ( "" : : "i" (&__mark_##name)); \
++		__mark_check_format(format, ## args); \
++		if (unlikely(__marker_enable_##name)) { \
++			preempt_disable(); \
++			(*__mark_call_##name)(format, ## args); \
++			preempt_enable(); \
++		} \
++	} while (0)
+
+ERROR:INITIALISED_STATIC: do not initialise statics to 0
+#127: FILE: include/linux/marker.h:48:
++		static char __marker_enable_##name = 0; \
+
+Static variables should not be initialized explicitly to zero.
+Your compiler (or rather your loader) automatically does
+it for you.
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section(".markers.c") over __attribute__((section(".markers.c")))
+#129: FILE: include/linux/marker.h:50:
++			__attribute__((section(".markers.c"))) = \
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section(".markers") over __attribute__((section(".markers")))
+#133: FILE: include/linux/marker.h:54:
++			__attribute__((section(".markers"))) = \
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#135: FILE: include/linux/marker.h:56:
++		asm volatile ( "" : : "i" (&__mark_##name)); \
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#147: FILE: include/linux/marker.h:68:
++#define MARK_GENERIC_ENABLE(a) \
++	*(MARK_GENERIC_ENABLE_TYPE*) \
++		((char*)a+MARK_GENERIC_ENABLE_IMMEDIATE_OFFSET)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'a' may be better as '(a)' to avoid precedence issues
+#147: FILE: include/linux/marker.h:68:
++#define MARK_GENERIC_ENABLE(a) \
++	*(MARK_GENERIC_ENABLE_TYPE*) \
++		((char*)a+MARK_GENERIC_ENABLE_IMMEDIATE_OFFSET)
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#148: FILE: include/linux/marker.h:69:
++	*(MARK_GENERIC_ENABLE_TYPE*) \
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#149: FILE: include/linux/marker.h:70:
++		((char*)a+MARK_GENERIC_ENABLE_IMMEDIATE_OFFSET)
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#149: FILE: include/linux/marker.h:70:
++		((char*)a+MARK_GENERIC_ENABLE_IMMEDIATE_OFFSET)
+ 		         ^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#189: FILE: include/linux/marker.h:98:
++extern int _marker_set_probe(int flags, const char *name, const char *format,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#190: FILE: include/linux/marker.h:99:
++extern int _marker_set_probe(int flags, const char *name, const char *format,
+ 				marker_probe_func *probe);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#252: FILE: kernel/module.c:321:
++static int _marker_set_probe_range(int flags, const char *name,
+ 	const char *format,
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (24, 40)
+#259: FILE: kernel/module.c:341:
++			if (flags & _MF_LOCKDEP
+[...]
++					printk(KERN_NOTICE
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#260: FILE: kernel/module.c:342:
++			if (flags & _MF_LOCKDEP
++				&& !(iter->cmark->flags & _MF_LOCKDEP)) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#261: FILE: kernel/module.c:343:
++					printk(KERN_NOTICE
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#263: FILE: kernel/module.c:345:
++					"Incompatible lockdep flags for "
++					"probe %s\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (24, 40)
+#267: FILE: kernel/module.c:349:
++			if (flags & _MF_PRINTK
+[...]
++					printk(KERN_NOTICE
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#268: FILE: kernel/module.c:350:
++			if (flags & _MF_PRINTK
++				&& !(iter->cmark->flags & _MF_PRINTK)) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#269: FILE: kernel/module.c:351:
++					printk(KERN_NOTICE
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#271: FILE: kernel/module.c:353:
++					"Incompatible printk flags for "
++					"probe %s\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#327: FILE: kernel/module.c:434:
++int _marker_set_probe(int flags, const char *name, const char *format,
+ 				marker_probe_func *probe)
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#343: FILE: kernel/module.c:447:
++			probe, mod->markers, mod->markers+mod->num_markers);
+ 			                                 ^
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000462140.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 5 errors, 9 warnings, 13 checks, 293 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000462140.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,279 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#39: 
+   git://git.kernel.org/pub/scm/linux/kernel/git/tip/linux-2.6-tip.git locking-for-linus
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#244: FILE: include/linux/lockdep.h:26:
++#define XXX_LOCK_USAGE_STATES		(1+3*4)
+                              		  ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#244: FILE: include/linux/lockdep.h:26:
++#define XXX_LOCK_USAGE_STATES		(1+3*4)
+                              		    ^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#262: FILE: include/linux/lockdep.h:294:
++extern void lockdep_set_current_reclaim_state(gfp_t gfp_mask);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#263: FILE: include/linux/lockdep.h:295:
++extern void lockdep_clear_current_reclaim_state(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#264: FILE: include/linux/lockdep.h:296:
++extern void lockdep_trace_alloc(gfp_t mask);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#314: FILE: include/linux/sched.h:336:
++extern int mutex_spin_on_owner(struct mutex *lock, struct thread_info *owner);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_kn' - possible side-effects?
+#356: FILE: include/linux/timer.h:39:
++#define __TIMER_LOCKDEP_MAP_INITIALIZER(_kn)				\
++	.lockdep_map = STATIC_LOCKDEP_MAP_INIT(_kn, &_kn),
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#431: FILE: include/linux/timer.h:111:
++extern void init_timer_on_stack_key(struct timer_list *timer,
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#448: FILE: include/linux/timer.h:125:
++static inline void setup_timer_key(struct timer_list * timer,
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#449: FILE: include/linux/timer.h:126:
++static inline void setup_timer_key(struct timer_list * timer,
++				const char *name,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#462: FILE: include/linux/timer.h:137:
++static inline void setup_timer_on_stack_key(struct timer_list *timer,
++					const char *name,
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#507: FILE: kernel/lockdep.c:450:
++	[LOCK_USED_IN_##__STATE] = "IN-"__stringify(__STATE)"-W",	\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#509: FILE: kernel/lockdep.c:452:
++	[LOCK_USED_IN_##__STATE##_READ] = "IN-"__stringify(__STATE)"-R",\
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#585: FILE: kernel/lockdep.c:492:
++#define LOCKDEP_STATE(__STATE) ^I^I^I^I^I^I\$
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#585: FILE: kernel/lockdep.c:492:
++#define LOCKDEP_STATE(__STATE) 						\
++	usage[i++] = get_usage_char(class, LOCK_USED_IN_##__STATE);	\
++	usage[i++] = get_usage_char(class, LOCK_USED_IN_##__STATE##_READ);
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#585: FILE: kernel/lockdep.c:492:
++#define LOCKDEP_STATE(__STATE) 						\
++	usage[i++] = get_usage_char(class, LOCK_USED_IN_##__STATE);	\
++	usage[i++] = get_usage_char(class, LOCK_USED_IN_##__STATE##_READ);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#610: FILE: kernel/lockdep.c:519:
++	printk("){%s}", usage);
+
+WARNING:STATIC_CONST_CHAR_ARRAY: static const char * array should probably be static const char * const
+#621: FILE: kernel/lockdep.c:1269:
++static const char *state_names[] = {
+
+WARNING:STATIC_CONST_CHAR_ARRAY: static const char * array should probably be static const char * const
+#628: FILE: kernel/lockdep.c:1276:
++static const char *state_rnames[] = {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#674: FILE: kernel/lockdep.c:1320:
++	if (!check_usage(curr, prev, next, bit,
++			   exclusive_bit(bit), state_name(bit)))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#688: FILE: kernel/lockdep.c:1332:
++	if (!check_usage(curr, prev, next, bit,
++			   exclusive_bit(bit), state_name(bit)))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#713: FILE: kernel/lockdep.c:1340:
++check_prev_add_irq(struct task_struct *curr, struct held_lock *prev,
++		struct held_lock *next)
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#715: FILE: kernel/lockdep.c:1342:
++#define LOCKDEP_STATE(__STATE)						\
++	if (!check_irq_usage(curr, prev, next, LOCK_USED_IN_##__STATE))	\
+ 		return 0;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#715: FILE: kernel/lockdep.c:1342:
++#define LOCKDEP_STATE(__STATE)						\
++	if (!check_irq_usage(curr, prev, next, LOCK_USED_IN_##__STATE))	\
+ 		return 0;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#949: FILE: kernel/lockdep.c:2046:
++	if ((!read || !dir || STRICT_READ_CHECKS) &&
++			!usage(curr, this, excl_bit, state_name(new_bit)))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#967: FILE: kernel/lockdep.c:2057:
++		if (STRICT_READ_CHECKS &&
++			!usage(curr, this, excl_bit + 1,
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1020: FILE: kernel/lockdep.c:2091:
++		BUG_ON(usage_bit >= LOCK_USAGE_STATES);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (24, 40)
+#1134: FILE: kernel/lockdep.c:2358:
++			if (!mark_lock(curr, hlock, LOCK_USED_IN_RECLAIM_FS_READ))
++					return 0;
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (24, 40)
+#1137: FILE: kernel/lockdep.c:2361:
++			if (!mark_lock(curr, hlock, LOCK_USED_IN_RECLAIM_FS))
+ 					return 0;
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#1164: FILE: kernel/lockdep.c:2453:
++#define LOCKDEP_STATE(__STATE)			\
++	case LOCK_USED_IN_##__STATE:		\
++	case LOCK_USED_IN_##__STATE##_READ:	\
++	case LOCK_ENABLED_##__STATE:		\
++	case LOCK_ENABLED_##__STATE##_READ:
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#1202: FILE: kernel/lockdep_internals.h:13:
++#define LOCKDEP_STATE(__STATE)		\
++	LOCK_USED_IN_##__STATE,		\
++	LOCK_USED_IN_##__STATE##_READ,	\
++	LOCK_ENABLED_##__STATE,		\
++	LOCK_ENABLED_##__STATE##_READ,
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#1216: FILE: kernel/lockdep_internals.h:27:
++#define __LOCKF(__STATE)	LOCKF_##__STATE = (1 << LOCK_##__STATE),
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#1219: FILE: kernel/lockdep_internals.h:30:
++#define LOCKDEP_STATE(__STATE)						\
++	__LOCKF(USED_IN_##__STATE)					\
++	__LOCKF(USED_IN_##__STATE##_READ)				\
++	__LOCKF(ENABLED_##__STATE)					\
++	__LOCKF(ENABLED_##__STATE##_READ)
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1247: FILE: kernel/lockdep_internals.h:73:
++#define LOCK_USAGE_CHARS (1+LOCK_USAGE_STATES/2)
+                            ^
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#1247: FILE: kernel/lockdep_internals.h:73:
++#define LOCK_USAGE_CHARS (1+LOCK_USAGE_STATES/2)
+                                              ^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1249: FILE: kernel/lockdep_internals.h:75:
++extern void get_usage_chars(struct lock_class *class,
+
+WARNING:PREFER_SEQ_PUTS: Prefer seq_puts to seq_printf
+#1318: FILE: kernel/lockdep_proc.c:606:
++		seq_printf(m, "*WARNING* lock debugging disabled!! - possibly due to a lockdep warning\n");
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#1324: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1329: FILE: kernel/lockdep_states.h:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000147130.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 7 errors, 13 warnings, 20 checks, 1728 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000147130.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

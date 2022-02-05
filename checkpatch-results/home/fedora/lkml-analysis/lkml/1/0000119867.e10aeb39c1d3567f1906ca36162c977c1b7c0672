@@ -1,0 +1,124 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#39: 
+rid of the two most frequent false positives, so automatic testing should be
+
+WARNING:UNKNOWN_COMMIT_ID: Unknown commit id '12d77a12affc8310e09598fb5a35605549eb9730', maybe rebased or not pulled?
+#42: 
+The following changes since commit 12d77a12affc8310e09598fb5a35605549eb9730:
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#107: FILE: drivers/ieee1394/nodemgr.c:46:
++	unsigned int speed_unverified:1;
++	kmemcheck_bitfield_end(flags);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#152: FILE: include/linux/c2port.h:27:
++	unsigned int flash_access:1;
++	kmemcheck_bitfield_end(flags);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#284: FILE: include/linux/kmemcheck.h:137:
++#define kmemcheck_bitfield_begin(name)	\
++	int name##_begin[0];
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#287: FILE: include/linux/kmemcheck.h:140:
++#define kmemcheck_bitfield_end(name)	\
++	int name##_end[0];
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#290: FILE: include/linux/kmemcheck.h:143:
++#define kmemcheck_annotate_bitfield(ptr, name)				\
++	do if (ptr) {							\
++		int _n = (long) &((ptr)->name##_end)			\
++			- (long) &((ptr)->name##_begin);		\
++		BUILD_BUG_ON(_n < 0);					\
++									\
++		kmemcheck_mark_initialized(&((ptr)->name##_begin), _n);	\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#290: FILE: include/linux/kmemcheck.h:143:
++#define kmemcheck_annotate_bitfield(ptr, name)				\
++	do if (ptr) {							\
++		int _n = (long) &((ptr)->name##_end)			\
++			- (long) &((ptr)->name##_begin);		\
++		BUILD_BUG_ON(_n < 0);					\
++									\
++		kmemcheck_mark_initialized(&((ptr)->name##_begin), _n);	\
++	} while (0)
+
+CHECK:SPACING: No space is necessary after a cast
+#292: FILE: include/linux/kmemcheck.h:145:
++		int _n = (long) &((ptr)->name##_end)			\
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#293: FILE: include/linux/kmemcheck.h:146:
++			- (long) &((ptr)->name##_begin);		\
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#299: FILE: include/linux/kmemcheck.h:152:
++#define kmemcheck_annotate_variable(var)				\
++	do {								\
++		kmemcheck_mark_initialized(&(var), sizeof(var));	\
++	} while (0)							\
++
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#318: FILE: include/linux/ring_buffer.h:17:
++	u32		type:2, len:3, time_delta:27;
++	kmemcheck_bitfield_end(bitfield);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#501: FILE: kernel/signal.c:870:
++	q = __sigqueue_alloc(t, GFP_ATOMIC | __GFP_NOTRACK_FALSE_POSITIVE,
++		override_rlimit);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000119867.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 8 warnings, 4 checks, 410 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000119867.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

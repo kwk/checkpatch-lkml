@@ -1,0 +1,170 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#40: 
+Adds a read-only "procs" file similar to "tasks" that shows only unique tgids
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#103: FILE: include/linux/cgroup.h:194:
++	 * and one for tgids (the procs file). */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around cgrp->tasks.mutex
+#117: FILE: kernel/cgroup.c:1124:
++	init_rwsem(&(cgrp->tasks.mutex));
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around cgrp->procs.mutex
+#118: FILE: kernel/cgroup.c:1125:
++	init_rwsem(&(cgrp->procs.mutex));
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#180: FILE: kernel/cgroup.c:2370:
++		while (list[src] == list[src-1]) {
+ 		                            ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kmalloc_array over kmalloc with multiply
+#227: FILE: kernel/cgroup.c:2417:
++	array = kmalloc(length * sizeof(pid_t), GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around cgrp->procs
+#251: FILE: kernel/cgroup.c:2436:
++		l = &(cgrp->procs);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around cgrp->tasks
+#253: FILE: kernel/cgroup.c:2438:
++		l = &(cgrp->tasks);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#307: FILE: kernel/cgroup.c:2529:
++			if (l->list[mid] == pid) {
+[...]
+-			} else if (cgrp->tasks_pids[mid] <= pid)
+[...]
+ 				index = mid + 1;
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#334: FILE: kernel/cgroup.c:2550:
++	struct cgroup_pidlist *l = s->private;
++	up_read(&l->mutex);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#386: FILE: kernel/cgroup.c:2590:
++	BUG_ON(!l->use_count);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#489: FILE: kernel/cgroup.c:2651:
+ }
++static int cgroup_tasks_open(struct inode *unused, struct file *file)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#493: FILE: kernel/cgroup.c:2655:
++}
++static int cgroup_procs_open(struct inode *unused, struct file *file)
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#522: FILE: kernel/cgroup.c:2696:
++		.mode = S_IRUGO,
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000082859.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 6 warnings, 8 checks, 453 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000082859.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

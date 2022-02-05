@@ -1,0 +1,133 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pg' - possible side-effects?
+#67: FILE: kernel/trace/ftrace.c:304:
++#define do_for_each_ftrace_rec(pg, rec)					\
++	for (pg = ftrace_pages_start; pg; pg = pg->next) {		\
++		int _____i;						\
++		for (_____i = 0; _____i < pg->index; _____i++) {	\
++			rec = &pg->records[_____i];
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#67: FILE: kernel/trace/ftrace.c:304:
++#define do_for_each_ftrace_rec(pg, rec)					\
++	for (pg = ftrace_pages_start; pg; pg = pg->next) {		\
++		int _____i;						\
++		for (_____i = 0; _____i < pg->index; _____i++) {	\
++			rec = &pg->records[_____i];
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#73: FILE: kernel/trace/ftrace.c:310:
++#define while_for_each_ftrace_rec()		\
++		}				\
++	}
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rec->ip >= s'
+#95: FILE: kernel/trace/ftrace.c:365:
++		if ((rec->ip >= s) && (rec->ip < e))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rec->ip < e'
+#95: FILE: kernel/trace/ftrace.c:365:
++		if ((rec->ip >= s) && (rec->ip < e))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'system_state == SYSTEM_BOOTING'
+#164: FILE: kernel/trace/ftrace.c:559:
++			if ((system_state == SYSTEM_BOOTING) ||
++			    !core_kernel_text(rec->ip)) {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#164: FILE: kernel/trace/ftrace.c:559:
++			if ((system_state == SYSTEM_BOOTING) ||
+[...]
++			} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#167: FILE: kernel/trace/ftrace.c:562:
++			} else
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'ptr[search_len] == 0'
+#264: FILE: kernel/trace/ftrace.c:1119:
++			if (ptr && (ptr[search_len] == 0))
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#313: FILE: kernel/trace/ftrace.c:1459:
++	do_for_each_ftrace_rec(pg, rec) {
++
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000166213.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 1 warnings, 8 checks, 269 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000166213.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

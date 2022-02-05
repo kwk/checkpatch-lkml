@@ -1,0 +1,84 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#36: 
+default. This patch adds an INITRAMFS_PRESERVE_MTIME option that allows mtimes
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*de)...) over kmalloc(sizeof(struct dir_entry)...)
+#68: FILE: init/initramfs.c:85:
++	struct dir_entry *de = kmalloc(sizeof(struct dir_entry), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#69: FILE: init/initramfs.c:86:
++	struct dir_entry *de = kmalloc(sizeof(struct dir_entry), GFP_KERNEL);
++	if (!de)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#70: FILE: init/initramfs.c:87:
++	if (!de)
++		panic("can't allocate dir_entry buffer");
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#80: FILE: init/initramfs.c:97:
++	struct list_head *e, *tmp;
++	list_for_each_safe(e, tmp, &dir_list) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#82: FILE: init/initramfs.c:99:
++		struct dir_entry *de = list_entry(e, struct dir_entry, list);
++		list_del(e);
+
+WARNING:MISPLACED_INIT: __initdata should be placed after mtime
+#89: FILE: init/initramfs.c:106:
++static __initdata struct utimbuf mtime;
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#98: FILE: init/initramfs.c:133:
++	mtime.actime = mtime.modtime = parsed[5];
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#147: FILE: init/initramfs.c:349:
++static long __init do_lutime(char __user *filename,
++	struct utimbuf __user *times)
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000231984.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 6 warnings, 3 checks, 121 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000231984.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

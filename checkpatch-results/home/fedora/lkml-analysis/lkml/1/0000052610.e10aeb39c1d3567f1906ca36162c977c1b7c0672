@@ -1,0 +1,160 @@
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#68: FILE: block/Kconfig.iosched:51:
++config DEBUG_CFQ_IOSCHED
++	bool "Debug CFQ Scheduling"
++	depends on CFQ_GROUP_IOSCHED
++	select DEBUG_BLK_CGROUP
++	default n
++	---help---
++	  Enable CFQ IO scheduling debugging in CFQ. Currently it makes
++	  blktrace output more verbose.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cfqq' - possible side-effects?
+#134: FILE: block/cfq-iosched.c:262:
++#define cfq_log_cfqq(cfqd, cfqq, fmt, args...)	\
++	blk_add_trace_msg((cfqd)->queue, "cfq%d%c %s " fmt, (cfqq)->pid, \
++			cfq_cfqq_sync((cfqq)) ? 'S' : 'A', \
++			blkg_path(&cfqq_to_cfqg((cfqq))->blkg), ##args);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#134: FILE: block/cfq-iosched.c:262:
++#define cfq_log_cfqq(cfqd, cfqq, fmt, args...)	\
++	blk_add_trace_msg((cfqd)->queue, "cfq%d%c %s " fmt, (cfqq)->pid, \
++			cfq_cfqq_sync((cfqq)) ? 'S' : 'A', \
++			blkg_path(&cfqq_to_cfqg((cfqq))->blkg), ##args);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#139: FILE: block/cfq-iosched.c:267:
++#define cfq_log_cfqe(cfqd, cfqe, fmt, args...)			\
++	if (cfqq_of(cfqe)) {						\
++		struct cfq_queue *cfqq = cfqq_of(cfqe);			\
++		blk_add_trace_msg((cfqd)->queue, "cfq%d%c %s " fmt,	\
++			(cfqq)->pid, cfq_cfqq_sync((cfqq)) ? 'S' : 'A', \
++			blkg_path(&cfqq_to_cfqg((cfqq))->blkg), ##args);\
++	} else {							\
++		struct cfq_group *cfqg = cfqg_of(cfqe);			\
++		blk_add_trace_msg((cfqd)->queue, "%s " fmt, 		\
++				blkg_path(&(cfqg)->blkg), ##args);	\
++	}
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cfqd' - possible side-effects?
+#139: FILE: block/cfq-iosched.c:267:
++#define cfq_log_cfqe(cfqd, cfqe, fmt, args...)			\
++	if (cfqq_of(cfqe)) {						\
++		struct cfq_queue *cfqq = cfqq_of(cfqe);			\
++		blk_add_trace_msg((cfqd)->queue, "cfq%d%c %s " fmt,	\
++			(cfqq)->pid, cfq_cfqq_sync((cfqq)) ? 'S' : 'A', \
++			blkg_path(&cfqq_to_cfqg((cfqq))->blkg), ##args);\
++	} else {							\
++		struct cfq_group *cfqg = cfqg_of(cfqe);			\
++		blk_add_trace_msg((cfqd)->queue, "%s " fmt, 		\
++				blkg_path(&(cfqg)->blkg), ##args);	\
++	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cfqe' - possible side-effects?
+#139: FILE: block/cfq-iosched.c:267:
++#define cfq_log_cfqe(cfqd, cfqe, fmt, args...)			\
++	if (cfqq_of(cfqe)) {						\
++		struct cfq_queue *cfqq = cfqq_of(cfqe);			\
++		blk_add_trace_msg((cfqd)->queue, "cfq%d%c %s " fmt,	\
++			(cfqq)->pid, cfq_cfqq_sync((cfqq)) ? 'S' : 'A', \
++			blkg_path(&cfqq_to_cfqg((cfqq))->blkg), ##args);\
++	} else {							\
++		struct cfq_group *cfqg = cfqg_of(cfqe);			\
++		blk_add_trace_msg((cfqd)->queue, "%s " fmt, 		\
++				blkg_path(&(cfqg)->blkg), ##args);	\
++	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fmt' - possible side-effects?
+#139: FILE: block/cfq-iosched.c:267:
++#define cfq_log_cfqe(cfqd, cfqe, fmt, args...)			\
++	if (cfqq_of(cfqe)) {						\
++		struct cfq_queue *cfqq = cfqq_of(cfqe);			\
++		blk_add_trace_msg((cfqd)->queue, "cfq%d%c %s " fmt,	\
++			(cfqq)->pid, cfq_cfqq_sync((cfqq)) ? 'S' : 'A', \
++			blkg_path(&cfqq_to_cfqg((cfqq))->blkg), ##args);\
++	} else {							\
++		struct cfq_group *cfqg = cfqg_of(cfqe);			\
++		blk_add_trace_msg((cfqd)->queue, "%s " fmt, 		\
++				blkg_path(&(cfqg)->blkg), ##args);	\
++	}
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#147: FILE: block/cfq-iosched.c:275:
++^I^Iblk_add_trace_msg((cfqd)->queue, "%s " fmt, ^I^I\$
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#181: FILE: block/cfq-iosched.c:913:
++		if (!cfqe_is_cfqq(cfqe)) {
++			cfq_log_cfqe(cfqq->cfqd, cfqe, "del_from_rr group");
++		}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#202: FILE: block/cfq-iosched.c:1014:
++		cfq_log_cfqe(cfqd, cfqe, "served: vt=%llx min_vt=%llx",
++				cfqe->vdisktime, cfqe->st->min_vdisktime);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000052610.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 4 warnings, 5 checks, 136 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000052610.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

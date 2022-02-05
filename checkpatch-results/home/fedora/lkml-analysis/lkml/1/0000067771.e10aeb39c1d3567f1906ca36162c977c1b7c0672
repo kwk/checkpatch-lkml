@@ -1,0 +1,184 @@
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '__VAR' may be better as '(__VAR)' to avoid precedence issues
+#91: FILE: block/elevator-fq.c:934:
++#define SHOW_FUNCTION(__VAR)						\
++static u64 io_cgroup_##__VAR##_read(struct cgroup *cgroup,		\
++				       struct cftype *cftype)		\
++{									\
++	struct io_cgroup *iocg;					\
++	u64 ret;							\
++									\
++	if (!cgroup_lock_live_group(cgroup))				\
++		return -ENODEV;						\
++									\
++	iocg = cgroup_to_io_cgroup(cgroup);				\
++	spin_lock_irq(&iocg->lock);					\
++	ret = iocg->__VAR;						\
++	spin_unlock_irq(&iocg->lock);					\
++									\
++	cgroup_unlock();						\
++									\
++	return ret;							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__VAR' - possible side-effects?
+#115: FILE: block/elevator-fq.c:958:
++#define STORE_FUNCTION(__VAR, __MIN, __MAX)				\
++static int io_cgroup_##__VAR##_write(struct cgroup *cgroup,		\
++					struct cftype *cftype,		\
++					u64 val)			\
++{									\
++	struct io_cgroup *iocg;					\
++	struct io_group *iog;						\
++	struct hlist_node *n;						\
++									\
++	if (val < (__MIN) || val > (__MAX))				\
++		return -EINVAL;						\
++									\
++	if (!cgroup_lock_live_group(cgroup))				\
++		return -ENODEV;						\
++									\
++	iocg = cgroup_to_io_cgroup(cgroup);				\
++									\
++	spin_lock_irq(&iocg->lock);					\
++	iocg->__VAR = (unsigned long)val;				\
++	hlist_for_each_entry(iog, n, &iocg->group_data, group_node) {	\
++		iog->entity.__VAR = (unsigned long)val;		\
++		smp_wmb();						\
++		iog->entity.ioprio_changed = 1;				\
++	}								\
++	spin_unlock_irq(&iocg->lock);					\
++									\
++	cgroup_unlock();						\
++									\
++	return 0;							\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '__VAR' may be better as '(__VAR)' to avoid precedence issues
+#115: FILE: block/elevator-fq.c:958:
++#define STORE_FUNCTION(__VAR, __MIN, __MAX)				\
++static int io_cgroup_##__VAR##_write(struct cgroup *cgroup,		\
++					struct cftype *cftype,		\
++					u64 val)			\
++{									\
++	struct io_cgroup *iocg;					\
++	struct io_group *iog;						\
++	struct hlist_node *n;						\
++									\
++	if (val < (__MIN) || val > (__MAX))				\
++		return -EINVAL;						\
++									\
++	if (!cgroup_lock_live_group(cgroup))				\
++		return -ENODEV;						\
++									\
++	iocg = cgroup_to_io_cgroup(cgroup);				\
++									\
++	spin_lock_irq(&iocg->lock);					\
++	iocg->__VAR = (unsigned long)val;				\
++	hlist_for_each_entry(iog, n, &iocg->group_data, group_node) {	\
++		iog->entity.__VAR = (unsigned long)val;		\
++		smp_wmb();						\
++		iog->entity.ioprio_changed = 1;				\
++	}								\
++	spin_unlock_irq(&iocg->lock);					\
++									\
++	cgroup_unlock();						\
++									\
++	return 0;							\
++}
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#136: FILE: block/elevator-fq.c:979:
++		smp_wmb();						\
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#169: FILE: block/elevator-fq.c:1012:
++static struct cgroup_subsys_state *iocg_create(struct cgroup_subsys *subsys,
++						struct cgroup *cgroup)
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#173: FILE: block/elevator-fq.c:1016:
++	if (cgroup->parent != NULL) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "cgroup->parent"
+#173: FILE: block/elevator-fq.c:1016:
++	if (cgroup->parent != NULL) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!iocg"
+#175: FILE: block/elevator-fq.c:1018:
++		if (iocg == NULL)
+
+CHECK:BRACES: Unbalanced braces around else statement
+#177: FILE: block/elevator-fq.c:1020:
++	} else
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#197: FILE: block/elevator-fq.c:1040:
++static int iocg_can_attach(struct cgroup_subsys *subsys, struct cgroup *cgroup,
++			    struct task_struct *tsk)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "ioc"
+#205: FILE: block/elevator-fq.c:1048:
++	if (ioc != NULL && atomic_read(&ioc->nr_tasks) > 1)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#219: FILE: block/elevator-fq.c:1062:
++static void iocg_attach(struct cgroup_subsys *subsys, struct cgroup *cgroup,
++			 struct cgroup *prev, struct task_struct *tsk)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "ioc"
+#225: FILE: block/elevator-fq.c:1068:
++	if (ioc != NULL)
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#232: FILE: block/elevator-fq.c:1075:
++{
++
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#281: FILE: block/elevator-fq.h:120:
++	spinlock_t lock;
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#285: FILE: block/elevator-fq.h:124:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000067771.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 1 warnings, 15 checks, 242 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000067771.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

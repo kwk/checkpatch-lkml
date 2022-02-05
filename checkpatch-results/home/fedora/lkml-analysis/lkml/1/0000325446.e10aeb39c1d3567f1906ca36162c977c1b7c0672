@@ -1,0 +1,212 @@
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#158: FILE: block/blk-core.c:867:
++	if (!blk_is_io_cpu(q)) {
+[...]
++	} else if (!blk_queue_plugged(q))
+[...]
+ 	else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#213: FILE: block/blk-settings.c:391:
++	if (cpu == -1)
+[...]
++	else if (!cpu_isset(cpu, cpu_possible_map)) {
+[...]
++	} else {
+[...]
+
+WARNING:UNNECESSARY_ELSE: else is not generally useful after a break or return
+#218: FILE: block/blk-settings.c:396:
++		return -EINVAL;
++	} else {
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#271: FILE: block/blk-softirq.c:15:
++	spinlock_t lock;
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#275: FILE: block/blk-softirq.c:19:
++};
++static DEFINE_PER_CPU(struct blk_comp, blk_cpu_done);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#286: FILE: block/blk-softirq.c:24:
++	int cpu = (unsigned long) hcpu;
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#359: FILE: block/blk-softirq.c:106:
++	BUG_ON(!q->softirq_done_fn);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#434: FILE: block/blk-sysfs.c:143:
++	len += sprintf(page+len, "\nlocal\t%d\nremote\t%d\n", q->local_complete, q->remote_complete);
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#434: FILE: block/blk-sysfs.c:143:
++	len += sprintf(page+len, "\nlocal\t%d\nremote\t%d\n", q->local_complete, q->remote_complete);
+ 	                   ^
+
+CHECK:SPACING: No space is necessary after a cast
+#441: FILE: block/blk-sysfs.c:150:
++	char *p = (char *) page;
+
+WARNING:CONSIDER_KSTRTO: simple_strtol is obsolete, use kstrtol instead
+#444: FILE: block/blk-sysfs.c:153:
++	val = simple_strtol(p, &p, 10);
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#447: FILE: block/blk-sysfs.c:156:
++	q->local_complete = q->remote_complete = 0;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#457: FILE: block/blk-sysfs.c:166:
++	len += sprintf(page+len, "\nlocal\t%d\nremote\t%d\n", q->local_queue, q->remote_queue);
+ 	                   ^
+
+CHECK:SPACING: No space is necessary after a cast
+#464: FILE: block/blk-sysfs.c:173:
++	char *p = (char *) page;
+
+WARNING:CONSIDER_KSTRTO: simple_strtol is obsolete, use kstrtol instead
+#467: FILE: block/blk-sysfs.c:176:
++	val = simple_strtol(p, &p, 10);
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#470: FILE: block/blk-sysfs.c:179:
++	q->local_queue = q->remote_queue = 0;
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#501: FILE: block/blk-sysfs.c:238:
++	.attr = {.name = "completion_affinity", .mode = S_IRUGO | S_IWUSR },
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#507: FILE: block/blk-sysfs.c:244:
++	.attr = {.name = "queue_affinity", .mode = S_IRUGO | S_IWUSR },
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#513: FILE: block/blk-sysfs.c:250:
++	.attr = {.name = "rq_affinity", .mode = S_IRUGO | S_IWUSR },
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#559: FILE: include/linux/blkdev.h:711:
++extern int blk_queue_set_queue_cpu(struct request_queue *, int);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request_queue *' should also have an identifier name
+#559: FILE: include/linux/blkdev.h:711:
++extern int blk_queue_set_queue_cpu(struct request_queue *, int);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#559: FILE: include/linux/blkdev.h:711:
++extern int blk_queue_set_queue_cpu(struct request_queue *, int);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#560: FILE: include/linux/blkdev.h:712:
++extern int blk_queue_set_completion_cpu(struct request_queue *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request_queue *' should also have an identifier name
+#560: FILE: include/linux/blkdev.h:712:
++extern int blk_queue_set_completion_cpu(struct request_queue *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#560: FILE: include/linux/blkdev.h:712:
++extern int blk_queue_set_completion_cpu(struct request_queue *, int);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000325446.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 12 warnings, 13 checks, 481 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000325446.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,101 @@
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#79: FILE: include/linux/kmemcheck.h:64:
++#define kmemcheck_bitfield_begin(name)	\
++	int name##_begin[0];
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#82: FILE: include/linux/kmemcheck.h:67:
++#define kmemcheck_bitfield_end(name)	\
++	int name##_end[0];
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#85: FILE: include/linux/kmemcheck.h:70:
++#define kmemcheck_annotate_bitfield(ptr, name)				\
++	do {								\
++		int _n;							\
++									\
++		if (!ptr)						\
++			break;						\
++									\
++		_n = (long) &((ptr)->name##_end)			\
++			- (long) &((ptr)->name##_begin);		\
++		MAYBE_BUILD_BUG_ON(_n < 0);				\
++									\
++		kmemcheck_mark_initialized(&((ptr)->name##_begin), _n);	\
++	} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ptr' may be better as '(ptr)' to avoid precedence issues
+#85: FILE: include/linux/kmemcheck.h:70:
++#define kmemcheck_annotate_bitfield(ptr, name)				\
++	do {								\
++		int _n;							\
++									\
++		if (!ptr)						\
++			break;						\
++									\
++		_n = (long) &((ptr)->name##_end)			\
++			- (long) &((ptr)->name##_begin);		\
++		MAYBE_BUILD_BUG_ON(_n < 0);				\
++									\
++		kmemcheck_mark_initialized(&((ptr)->name##_begin), _n);	\
++	} while (0)
+
+CHECK:SPACING: No space is necessary after a cast
+#92: FILE: include/linux/kmemcheck.h:77:
++		_n = (long) &((ptr)->name##_end)			\
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#93: FILE: include/linux/kmemcheck.h:78:
++			- (long) &((ptr)->name##_begin);		\
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#99: FILE: include/linux/kmemcheck.h:84:
++#define kmemcheck_annotate_variable(var)				\
++	do {								\
++		kmemcheck_mark_initialized(&(var), sizeof(var));	\
++	} while (0)							\
++
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000038729.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 3 warnings, 4 checks, 124 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000038729.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

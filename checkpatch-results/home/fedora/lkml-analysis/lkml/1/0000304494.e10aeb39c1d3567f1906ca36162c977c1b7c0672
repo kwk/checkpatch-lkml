@@ -1,0 +1,490 @@
+WARNING:EMAIL_SUBJECT: A patch subject line should describe the change not the tool that found it
+#16: 
+Subject: [PATCH 134/148] include/asm-x86/uaccess_64.h: checkpatch cleanups - formatting only
+
+Naming the tool that found the issue is not very useful in the
+subject line.  A good subject line summarizes the change that
+the patch brings.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'addr' - possible side-effects?
+#58: FILE: include/asm-x86/uaccess_64.h:40:
++#define __range_not_ok(addr, size)					\
++({									\
++	unsigned long flag, roksum;					\
++	__chk_user_ptr(addr);						\
++	asm("# range_ok\n\r"						\
++	    "addq %3,%1 ; sbbq %0,%0 ; cmpq %1,%4 ; sbbq $0,%0"		\
++	    : "=&r" (flag), "=r" (roksum)				\
++	    : "1" (addr), "g" ((long)(size)),				\
++	      "g" (current_thread_info()->addr_limit.seg));		\
++	flag;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#58: FILE: include/asm-x86/uaccess_64.h:40:
++#define __range_not_ok(addr, size)					\
++({									\
++	unsigned long flag, roksum;					\
++	__chk_user_ptr(addr);						\
++	asm("# range_ok\n\r"						\
++	    "addq %3,%1 ; sbbq %0,%0 ; cmpq %1,%4 ; sbbq $0,%0"		\
++	    : "=&r" (flag), "=r" (roksum)				\
++	    : "1" (addr), "g" ((long)(size)),				\
++	      "g" (current_thread_info()->addr_limit.seg));		\
++	flag;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#94: FILE: include/asm-x86/uaccess_64.h:90:
++#define __get_user_x(size, ret, x, ptr)		      \
++	asm volatile("call __get_user_" #size	      \
++		     : "=a" (ret),"=d" (x)	      \
++		     : "c" (ptr)		      \
++		     : "r8")
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#96: FILE: include/asm-x86/uaccess_64.h:92:
++		     : "=a" (ret),"=d" (x)	      \
+ 		                 ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#101: FILE: include/asm-x86/uaccess_64.h:97:
++ * for sign reasons */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#107: FILE: include/asm-x86/uaccess_64.h:99:
++#define get_user(x, ptr)						\
++({									\
++	unsigned long __val_gu;						\
++	int __ret_gu;							\
+ 	__chk_user_ptr(ptr);						\
++	switch (sizeof(*(ptr))) {					\
++	case 1:								\
++		__get_user_x(1, __ret_gu, __val_gu, ptr);		\
++		break;							\
++	case 2:								\
++		__get_user_x(2, __ret_gu, __val_gu, ptr);		\
++		break;							\
++	case 4:								\
++		__get_user_x(4, __ret_gu, __val_gu, ptr);		\
++		break;							\
++	case 8:								\
++		__get_user_x(8, __ret_gu, __val_gu, ptr);		\
++		break;							\
++	default:							\
++		__get_user_bad();					\
++		break;							\
+ 	}								\
+ 	(x) = (__force typeof(*(ptr)))__val_gu;				\
+ 	__ret_gu;							\
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#146: FILE: include/asm-x86/uaccess_64.h:131:
++#define __put_user_x(size, ret, x, ptr)					\
++	asm volatile("call __put_user_" #size				\
++		     :"=a" (ret)					\
++		     :"c" (ptr),"d" (x)					\
++		     :"r8")
+
+ERROR:SPACING: spaces required around that ':' (ctx:ExV)
+#148: FILE: include/asm-x86/uaccess_64.h:133:
++		     :"=a" (ret)					\
+ 		     ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:ExV)
+#149: FILE: include/asm-x86/uaccess_64.h:134:
++		     :"c" (ptr),"d" (x)					\
+ 		     ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#149: FILE: include/asm-x86/uaccess_64.h:134:
++		     :"c" (ptr),"d" (x)					\
+ 		               ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:ExV)
+#150: FILE: include/asm-x86/uaccess_64.h:135:
++		     :"r8")
+ 		     ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#154: FILE: include/asm-x86/uaccess_64.h:137:
++#define put_user(x, ptr)						\
++	__put_user_check((__typeof__(*(ptr)))(x), (ptr), sizeof(*(ptr)))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#161: FILE: include/asm-x86/uaccess_64.h:140:
++#define __get_user(x, ptr)						\
++	__get_user_nocheck((x), (ptr), sizeof(*(ptr)))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#163: FILE: include/asm-x86/uaccess_64.h:142:
++#define __put_user(x, ptr)						\
++	__put_user_nocheck((__typeof__(*(ptr)))(x), (ptr), sizeof(*(ptr)))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#191: FILE: include/asm-x86/uaccess_64.h:156:
++#define __put_user_check(x, ptr, size)				\
++({								\
++	int __pu_err;						\
++	typeof(*(ptr)) __user *__pu_addr = (ptr);		\
++	switch (size) {						\
++	case 1:							\
++		__put_user_x(1, __pu_err, x, __pu_addr);	\
++		break;						\
++	case 2:							\
++		__put_user_x(2, __pu_err, x, __pu_addr);	\
++		break;						\
++	case 4:							\
++		__put_user_x(4, __pu_err, x, __pu_addr);	\
++		break;						\
++	case 8:							\
++		__put_user_x(8, __pu_err, x, __pu_addr);	\
++		break;						\
++	default:						\
++		__put_user_bad();				\
++	}							\
++	__pu_err;						\
+ })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#191: FILE: include/asm-x86/uaccess_64.h:156:
++#define __put_user_check(x, ptr, size)				\
++({								\
++	int __pu_err;						\
++	typeof(*(ptr)) __user *__pu_addr = (ptr);		\
++	switch (size) {						\
++	case 1:							\
++		__put_user_x(1, __pu_err, x, __pu_addr);	\
++		break;						\
++	case 2:							\
++		__put_user_x(2, __pu_err, x, __pu_addr);	\
++		break;						\
++	case 4:							\
++		__put_user_x(4, __pu_err, x, __pu_addr);	\
++		break;						\
++	case 8:							\
++		__put_user_x(8, __pu_err, x, __pu_addr);	\
++		break;						\
++	default:						\
++		__put_user_bad();				\
++	}							\
++	__pu_err;						\
+ })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#215: FILE: include/asm-x86/uaccess_64.h:179:
++#define __put_user_size(x, ptr, size, retval)				\
+ do {									\
+ 	retval = 0;							\
+ 	__chk_user_ptr(ptr);						\
+ 	switch (size) {							\
++	case 1:								\
++		__put_user_asm(x, ptr, retval, "b", "b", "iq", -EFAULT);\
++		break;							\
++	case 2:								\
++		__put_user_asm(x, ptr, retval, "w", "w", "ir", -EFAULT);\
++		break;							\
++	case 4:								\
++		__put_user_asm(x, ptr, retval, "l", "k", "ir", -EFAULT);\
++		break;							\
++	case 8:								\
++		__put_user_asm(x, ptr, retval, "q", "", "Zr", -EFAULT);	\
++		break;							\
++	default:							\
++		__put_user_bad();					\
+ 	}								\
+ } while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#215: FILE: include/asm-x86/uaccess_64.h:179:
++#define __put_user_size(x, ptr, size, retval)				\
+ do {									\
+ 	retval = 0;							\
+ 	__chk_user_ptr(ptr);						\
+ 	switch (size) {							\
++	case 1:								\
++		__put_user_asm(x, ptr, retval, "b", "b", "iq", -EFAULT);\
++		break;							\
++	case 2:								\
++		__put_user_asm(x, ptr, retval, "w", "w", "ir", -EFAULT);\
++		break;							\
++	case 4:								\
++		__put_user_asm(x, ptr, retval, "l", "k", "ir", -EFAULT);\
++		break;							\
++	case 8:								\
++		__put_user_asm(x, ptr, retval, "q", "", "Zr", -EFAULT);	\
++		break;							\
++	default:							\
++		__put_user_bad();					\
+ 	}								\
+ } while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'retval' - possible side-effects?
+#215: FILE: include/asm-x86/uaccess_64.h:179:
++#define __put_user_size(x, ptr, size, retval)				\
+ do {									\
+ 	retval = 0;							\
+ 	__chk_user_ptr(ptr);						\
+ 	switch (size) {							\
++	case 1:								\
++		__put_user_asm(x, ptr, retval, "b", "b", "iq", -EFAULT);\
++		break;							\
++	case 2:								\
++		__put_user_asm(x, ptr, retval, "w", "w", "ir", -EFAULT);\
++		break;							\
++	case 4:								\
++		__put_user_asm(x, ptr, retval, "l", "k", "ir", -EFAULT);\
++		break;							\
++	case 8:								\
++		__put_user_asm(x, ptr, retval, "q", "", "Zr", -EFAULT);	\
++		break;							\
++	default:							\
++		__put_user_bad();					\
+ 	}								\
+ } while (0)
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#259: FILE: include/asm-x86/uaccess_64.h:211:
++	asm volatile("1:	mov"itype" %"rtype"1,%2\n"		\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#267: FILE: include/asm-x86/uaccess_64.h:219:
++		     : ltype (x), "m" (__m(addr)), "i" (errno), "0" (err))
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#269: FILE: include/asm-x86/uaccess_64.h:221:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#270: FILE: include/asm-x86/uaccess_64.h:222:
++#define __get_user_nocheck(x, ptr, size)			\
+ ({								\
+ 	int __gu_err;						\
+ 	unsigned long __gu_val;					\
++	__get_user_size(__gu_val, (ptr), (size), __gu_err);	\
+ 	(x) = (__force typeof(*(ptr)))__gu_val;			\
+ 	__gu_err;						\
+ })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#284: FILE: include/asm-x86/uaccess_64.h:237:
++#define __get_user_size(x, ptr, size, retval)				\
+ do {									\
+ 	retval = 0;							\
+ 	__chk_user_ptr(ptr);						\
+ 	switch (size) {							\
++	case 1:								\
++		__get_user_asm(x, ptr, retval, "b", "b", "=q", -EFAULT);\
++		break;							\
++	case 2:								\
++		__get_user_asm(x, ptr, retval, "w", "w", "=r", -EFAULT);\
++		break;							\
++	case 4:								\
++		__get_user_asm(x, ptr, retval, "l", "k", "=r", -EFAULT);\
++		break;							\
++	case 8:								\
++		__get_user_asm(x, ptr, retval, "q", "", "=r", -EFAULT);	\
++		break;							\
++	default:							\
++		(x) = __get_user_bad();					\
+ 	}								\
+ } while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#284: FILE: include/asm-x86/uaccess_64.h:237:
++#define __get_user_size(x, ptr, size, retval)				\
+ do {									\
+ 	retval = 0;							\
+ 	__chk_user_ptr(ptr);						\
+ 	switch (size) {							\
++	case 1:								\
++		__get_user_asm(x, ptr, retval, "b", "b", "=q", -EFAULT);\
++		break;							\
++	case 2:								\
++		__get_user_asm(x, ptr, retval, "w", "w", "=r", -EFAULT);\
++		break;							\
++	case 4:								\
++		__get_user_asm(x, ptr, retval, "l", "k", "=r", -EFAULT);\
++		break;							\
++	case 8:								\
++		__get_user_asm(x, ptr, retval, "q", "", "=r", -EFAULT);	\
++		break;							\
++	default:							\
++		(x) = __get_user_bad();					\
+ 	}								\
+ } while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'retval' - possible side-effects?
+#284: FILE: include/asm-x86/uaccess_64.h:237:
++#define __get_user_size(x, ptr, size, retval)				\
+ do {									\
+ 	retval = 0;							\
+ 	__chk_user_ptr(ptr);						\
+ 	switch (size) {							\
++	case 1:								\
++		__get_user_asm(x, ptr, retval, "b", "b", "=q", -EFAULT);\
++		break;							\
++	case 2:								\
++		__get_user_asm(x, ptr, retval, "w", "w", "=r", -EFAULT);\
++		break;							\
++	case 4:								\
++		__get_user_asm(x, ptr, retval, "l", "k", "=r", -EFAULT);\
++		break;							\
++	case 8:								\
++		__get_user_asm(x, ptr, retval, "q", "", "=r", -EFAULT);	\
++		break;							\
++	default:							\
++		(x) = __get_user_bad();					\
+ 	}								\
+ } while (0)
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#323: FILE: include/asm-x86/uaccess_64.h:260:
++	asm volatile("1:	mov"itype" %2,%"rtype"1\n"		\
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#327: FILE: include/asm-x86/uaccess_64.h:264:
++		     "	xor"itype" %"rtype"1,%"rtype"1\n"		\
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#331: FILE: include/asm-x86/uaccess_64.h:268:
++		     : "=r" (err), ltype (x)				\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#349: FILE: include/asm-x86/uaccess_64.h:293:
++	case 1:__get_user_asm(*(u8 *)dst, (u8 __user *)src,
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#353: FILE: include/asm-x86/uaccess_64.h:296:
++	case 2:__get_user_asm(*(u16 *)dst, (u16 __user *)src,
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#357: FILE: include/asm-x86/uaccess_64.h:299:
++	case 4:__get_user_asm(*(u32 *)dst, (u32 __user *)src,
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#360: FILE: include/asm-x86/uaccess_64.h:302:
++	case 8:__get_user_asm(*(u64 *)dst, (u64 __user *)src,
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#409: FILE: include/asm-x86/uaccess_64.h:335:
++	case 1:__put_user_asm(*(u8 *)src, (u8 __user *)dst,
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#413: FILE: include/asm-x86/uaccess_64.h:338:
++	case 2:__put_user_asm(*(u16 *)src, (u16 __user *)dst,
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#417: FILE: include/asm-x86/uaccess_64.h:341:
++	case 4:__put_user_asm(*(u32 *)src, (u32 __user *)dst,
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#420: FILE: include/asm-x86/uaccess_64.h:344:
++	case 8:__put_user_asm(*(u64 *)src, (u64 __user *)dst,
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#540: FILE: include/asm-x86/uaccess_64.h:432:
++					    unsigned size);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#549: FILE: include/asm-x86/uaccess_64.h:441:
++extern long __copy_user_nocache(void *dst, const void __user *src,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#550: FILE: include/asm-x86/uaccess_64.h:442:
++				unsigned size, int zerorest);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#554: FILE: include/asm-x86/uaccess_64.h:445:
++					   unsigned size)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#563: FILE: include/asm-x86/uaccess_64.h:453:
++						    unsigned size)
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000304494.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 15 errors, 10 warnings, 19 checks, 522 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000304494.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

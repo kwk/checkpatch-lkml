@@ -1,0 +1,89 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'lockaddr' - possible side-effects?
+#52: FILE: net/ipv4/route.c:240:
++# define rt_hash_lock_for_each(lockaddr) \
++	for (lockaddr = rt_hash_lock_addr(RT_HASH_LOCK_SZ-1); lockaddr >= rt_hash_locks; lockaddr--)
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#53: FILE: net/ipv4/route.c:241:
++	for (lockaddr = rt_hash_lock_addr(RT_HASH_LOCK_SZ-1); lockaddr >= rt_hash_locks; lockaddr--)
+ 	                                                 ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'locknum' may be better as '(locknum)' to avoid precedence issues
+#54: FILE: net/ipv4/route.c:242:
++# define rt_hash_lock_for_each_item(locknum, slot) \
++	for (slot = locknum-rt_hash_locks; slot <= rt_hash_mask; slot += RT_HASH_LOCK_SZ)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'slot' - possible side-effects?
+#54: FILE: net/ipv4/route.c:242:
++# define rt_hash_lock_for_each_item(locknum, slot) \
++	for (slot = locknum-rt_hash_locks; slot <= rt_hash_mask; slot += RT_HASH_LOCK_SZ)
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#55: FILE: net/ipv4/route.c:243:
++	for (slot = locknum-rt_hash_locks; slot <= rt_hash_mask; slot += RT_HASH_LOCK_SZ)
+ 	                   ^
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#59: FILE: net/ipv4/route.c:247:
++# define rt_hash_lock_for_each(lockaddr) \
++	lockaddr = NULL;
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#59: FILE: net/ipv4/route.c:247:
++# define rt_hash_lock_for_each(lockaddr) \
++	lockaddr = NULL;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'slot' - possible side-effects?
+#61: FILE: net/ipv4/route.c:249:
++# define rt_hash_lock_for_each_item(locknum, slot) \
++	for (slot = rt_hash_mask; slot >= 0; slot--)
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#70: FILE: net/ipv4/route.c:702:
++	spinlock_t *lockaddr;
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000432156.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 1 warnings, 7 checks, 53 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000432156.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,356 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#24: 
+functions or important driver interfaces; but another large part are functions
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#101: FILE: include/linux/module.h:171:
++extern void *do_symbol_get(const char *symbol, struct module *caller);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__knamespace") over __attribute__((section("__knamespace")))
+#124: FILE: include/linux/module.h:194:
++	__attribute__((section("__knamespace"), unused))	\
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#125: FILE: include/linux/module.h:195:
++	__attribute__((section("__knamespace"), unused))	\
++	= { #ns,  #module }
+
+Assignment operators should not be written at the start of a
+line but should follow the operand at the previous line.
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#132: FILE: include/linux/module.h:201:
++#define __CRC_SYMBOL(sym, sec, post, post2)			\
+ 	extern void *__crc_##sym __attribute__((weak));		\
++	static const unsigned long __kcrctab_##sym##post	\
++	asm("__kcrctab_" #sym post2)				\
+ 	__attribute_used__					\
+ 	__attribute__((section("__kcrctab" sec), unused))	\
+ 	= (unsigned long) &__crc_##sym;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sym' - possible side-effects?
+#147: FILE: include/linux/module.h:213:
++#define __EXPORT_SYMBOL(sym, sec, post, post2, ns)		\
+ 	extern typeof(sym) sym;					\
++	__CRC_SYMBOL(sym, sec, post, post2)			\
++	static const char __kstrtab_##sym##post[]		\
++	asm("__kstrtab_" #sym post2)				\
+ 	__attribute__((section("__ksymtab_strings")))		\
+ 	= MODULE_SYMBOL_PREFIX #sym;                    	\
++	static const struct kernel_symbol __ksymtab_##sym##post	\
++	asm("__ksymtab_" #sym post2)				\
+ 	__attribute_used__					\
+ 	__attribute__((section("__ksymtab" sec), unused))	\
++	__attribute__((aligned(sizeof(void *))))		\
++	= { (unsigned long)&sym, __kstrtab_##sym##post, ns }
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sec' - possible side-effects?
+#147: FILE: include/linux/module.h:213:
++#define __EXPORT_SYMBOL(sym, sec, post, post2, ns)		\
+ 	extern typeof(sym) sym;					\
++	__CRC_SYMBOL(sym, sec, post, post2)			\
++	static const char __kstrtab_##sym##post[]		\
++	asm("__kstrtab_" #sym post2)				\
+ 	__attribute__((section("__ksymtab_strings")))		\
+ 	= MODULE_SYMBOL_PREFIX #sym;                    	\
++	static const struct kernel_symbol __ksymtab_##sym##post	\
++	asm("__ksymtab_" #sym post2)				\
+ 	__attribute_used__					\
+ 	__attribute__((section("__ksymtab" sec), unused))	\
++	__attribute__((aligned(sizeof(void *))))		\
++	= { (unsigned long)&sym, __kstrtab_##sym##post, ns }
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'post2' - possible side-effects?
+#147: FILE: include/linux/module.h:213:
++#define __EXPORT_SYMBOL(sym, sec, post, post2, ns)		\
+ 	extern typeof(sym) sym;					\
++	__CRC_SYMBOL(sym, sec, post, post2)			\
++	static const char __kstrtab_##sym##post[]		\
++	asm("__kstrtab_" #sym post2)				\
+ 	__attribute__((section("__ksymtab_strings")))		\
+ 	= MODULE_SYMBOL_PREFIX #sym;                    	\
++	static const struct kernel_symbol __ksymtab_##sym##post	\
++	asm("__ksymtab_" #sym post2)				\
+ 	__attribute_used__					\
+ 	__attribute__((section("__ksymtab" sec), unused))	\
++	__attribute__((aligned(sizeof(void *))))		\
++	= { (unsigned long)&sym, __kstrtab_##sym##post, ns }
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __aligned(sizeof(void *)) over __attribute__((aligned(sizeof(void *))))
+#162: FILE: include/linux/module.h:224:
++	__attribute__((aligned(sizeof(void *))))		\
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#163: FILE: include/linux/module.h:225:
++	__attribute__((aligned(sizeof(void *))))		\
++	= { (unsigned long)&sym, __kstrtab_##sym##post, ns }
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#167: FILE: include/linux/module.h:228:
++	__EXPORT_SYMBOL(sym, "",,, NULL)
+ 	                       ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:OxO)
+#167: FILE: include/linux/module.h:228:
++	__EXPORT_SYMBOL(sym, "",,, NULL)
+ 	                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#171: FILE: include/linux/module.h:231:
++	__EXPORT_SYMBOL(sym, "_gpl",,, NULL)
+ 	                           ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxO)
+#171: FILE: include/linux/module.h:231:
++	__EXPORT_SYMBOL(sym, "_gpl",,, NULL)
+ 	                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#175: FILE: include/linux/module.h:234:
++	__EXPORT_SYMBOL(sym, "_gpl_future",,, NULL)
+ 	                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxO)
+#175: FILE: include/linux/module.h:234:
++	__EXPORT_SYMBOL(sym, "_gpl_future",,, NULL)
+ 	                                   ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#181: FILE: include/linux/module.h:240:
++	__EXPORT_SYMBOL(sym, "_gpl",__##ns, NS_SEPARATOR #ns, #ns)
+ 	                           ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#186: FILE: include/linux/module.h:243:
++#define EXPORT_UNUSED_SYMBOL(sym) __EXPORT_SYMBOL(sym, "_unused",,,NULL)
+                                                                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxO)
+#186: FILE: include/linux/module.h:243:
++#define EXPORT_UNUSED_SYMBOL(sym) __EXPORT_SYMBOL(sym, "_unused",,,NULL)
+                                                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxV)
+#186: FILE: include/linux/module.h:243:
++#define EXPORT_UNUSED_SYMBOL(sym) __EXPORT_SYMBOL(sym, "_unused",,,NULL)
+                                                                   ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#187: FILE: include/linux/module.h:244:
++#define EXPORT_UNUSED_SYMBOL_GPL(sym) __EXPORT_SYMBOL(sym, "_unused_gpl",,,NULL)
+                                                                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxO)
+#187: FILE: include/linux/module.h:244:
++#define EXPORT_UNUSED_SYMBOL_GPL(sym) __EXPORT_SYMBOL(sym, "_unused_gpl",,,NULL)
+                                                                          ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxV)
+#187: FILE: include/linux/module.h:244:
++#define EXPORT_UNUSED_SYMBOL_GPL(sym) __EXPORT_SYMBOL(sym, "_unused_gpl",,,NULL)
+                                                                           ^
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#197: FILE: include/linux/module.h:325:
++	unsigned num_knamespaces;
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#207: FILE: include/linux/module.h:430:
++extern void do_symbol_put(const char *symbol, struct module *caller);
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#229: FILE: kernel/module.c:143:
++extern const struct module_ns __start___knamespace[];
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#230: FILE: kernel/module.c:144:
++extern const struct module_ns __stop___knamespace[];
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#240: FILE: kernel/module.c:177:
++static const struct kernel_symbol *do_find_symbol(const char *name,
+ 				   struct module **owner,
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#333: FILE: kernel/module.c:290:
++ ^Ireturn NULL;$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#333: FILE: kernel/module.c:290:
++ ^Ireturn NULL;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#333: FILE: kernel/module.c:290:
++ ^Ireturn NULL;$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#339: FILE: kernel/module.c:296:
++^I^I ^I^I^I  ^Iconst char *name,$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#339: FILE: kernel/module.c:296:
++^I^I ^I^I^I  ^Iconst char *name,$
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#343: FILE: kernel/module.c:300:
++	const struct module_ns *ns;
++	for (ns = start; ns < stop; ns++)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#361: FILE: kernel/module.c:318:
++	ns = lookup_namespace(__start___knamespace, __stop___knamespace,
++				name, reqname, n);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#378: FILE: kernel/module.c:335:
++static unsigned long find_symbol(const char *name,
++				   struct module **owner,
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#381: FILE: kernel/module.c:338:
++^I^I^I           struct module *requester)$
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#384: FILE: kernel/module.c:341:
++	const struct kernel_symbol *ks;
++	ks = do_find_symbol(name, owner, crc, gplok);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#388: FILE: kernel/module.c:345:
++	/* When the symbol has a name space check if the requesting module
++	   is white listed as allowed. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#388: FILE: kernel/module.c:345:
++	   is white listed as allowed. */
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#393: FILE: kernel/module.c:350:
++		const struct module *mod;
++		ns = find_namespace(ks->namespace, requester->name, &n, &mod);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#396: FILE: kernel/module.c:353:
++				printk("module %s not allowed to "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#397: FILE: kernel/module.c:354:
++				printk("module %s not allowed to "
++				       "reference namespace `%s' for %s\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#400: FILE: kernel/module.c:357:
++				printk("%s referencing undeclared "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#401: FILE: kernel/module.c:358:
++				printk("%s referencing undeclared "
++				       "namespace `%s' for %s\n",
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#406: FILE: kernel/module.c:363:
++		/* Only allow name space declarations in the symbol's own
++		   module. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#406: FILE: kernel/module.c:363:
++		   module. */
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#408: FILE: kernel/module.c:365:
++			printk("namespace `%s' for symbol `%s' defined "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#409: FILE: kernel/module.c:366:
++			printk("namespace `%s' for symbol `%s' defined "
++			       "in wrong module `%s'\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#456: FILE: kernel/module.c:1036:
++	ret = find_symbol(name, &owner, &crc,
++			!(mod->taints & TAINT_PROPRIETARY_MODULE), mod);
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#490: FILE: kernel/module.c:1434:
++^I        if (find_symbol(mod->syms[i].name, &owner, &crc, 1, mod)) {$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#498: FILE: kernel/module.c:1441:
++^I        if (find_symbol(mod->gpl_syms[i].name, &owner, &crc, 1, mod)) {$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#540: FILE: include/asm-generic/vmlinux.lds.h:131:
++^I__knamespace : AT(ADDR(__knamespace) - LOAD_OFFSET) { ^I^I\$
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000354817.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 18 errors, 24 warnings, 11 checks, 437 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000354817.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

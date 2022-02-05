@@ -1,0 +1,92 @@
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#64: FILE: fs/bio.c:39:
++#define BIOSTACK_ALIGN (1 << 2)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#65: FILE: fs/bio.c:40:
++#define BIOCHUNK_SIZE (1 << 7)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#84: FILE: fs/bio.c:59:
++void *bio_push(struct bio *bio, unsigned size, bio_end_io_t *endio)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#87: FILE: fs/bio.c:62:
++	struct bioframe *frame = bio->bi_stack;
++	size += sizeof(struct bioframe);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#92: FILE: fs/bio.c:67:
++		bio_end_io_t *old = frame->endio;
++		BUG_ON(size > BIOCHUNK_PAYLOAD);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#92: FILE: fs/bio.c:67:
++		BUG_ON(size > BIOCHUNK_PAYLOAD);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#94: FILE: fs/bio.c:69:
++		frame = bio->bi_stack = chunk->frames;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#108: FILE: fs/bio.c:83:
++	struct bioframe *frame = bio->bi_stack;
++	if (unlikely(!frame->framesize)) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#110: FILE: fs/bio.c:85:
++		struct biochunk *chunk = bio->bi_stack - sizeof(struct biochunk);
++		BUG_ON(chunk->magic != BIOCHUNK_MAGIC);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#110: FILE: fs/bio.c:85:
++		BUG_ON(chunk->magic != BIOCHUNK_MAGIC);
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#111: FILE: fs/bio.c:86:
++		frame = bio->bi_stack = chunk->oldstack;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#195: FILE: include/linux/bio.h:305:
++extern void *bio_push(struct bio *bio, unsigned size, bio_end_io_t *endio);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#195: FILE: include/linux/bio.h:305:
++extern void *bio_push(struct bio *bio, unsigned size, bio_end_io_t *endio);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#196: FILE: include/linux/bio.h:306:
++extern void *bio_pop(struct bio *bio);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000307353.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 8 warnings, 6 checks, 130 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000307353.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,562 @@
+WARNING:BAD_SIGN_OFF: Do not use whitespace before Signed-off-by:
+#47: 
+    Signed-off-by: Satoshi UCHIDA <s-uchida@ap.jp.nec.com>
+
+The signed-off-by line does not fall in line with the standards
+specified by the community.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#72: FILE: block/cfq-cgroup.c:33:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#119: FILE: block/cfq-cgroup.c:402:
++		} else
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#130: FILE: block/cfq-cgroup.c:426:
+ 
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__VAR' - possible side-effects?
+#214: FILE: block/cfq-cgroup.c:748:
++#define READ_FUNCTION(__FUNC, __VAR, __DEF_MSG)				\
++static ssize_t __FUNC(struct cgroup *cont, struct cftype *cft,		\
++			struct file *file, char __user *userbuf,	\
++			size_t nbytes, loff_t *ppos)			\
++{									\
++	struct cfq_cgroup *cfqc;					\
++	char *page;							\
++	ssize_t ret;							\
++	struct rb_node *p;						\
++									\
++	page = (char *)__get_free_page(GFP_TEMPORARY);			\
++	if (!page)							\
++		return -ENOMEM;						\
++									\
++	cgroup_lock();							\
++	if (cgroup_is_removed(cont)) {					\
++		cgroup_unlock();					\
++		ret = -ENODEV;						\
++		goto out;						\
++	}								\
++									\
++	cfqc = cgroup_to_cfq_cgroup(cont);				\
++									\
++	cgroup_unlock();						\
++									\
++	/* print */							\
++	ret = snprintf(page, PAGE_SIZE, "default " __DEF_MSG ": %d\n",	\
++			cfqc->__VAR);					\
++									\
++	p = rb_first(&cfqc->sibling_tree);				\
++	while (p) {							\
++		struct cfq_data *__cfqd;				\
++									\
++		__cfqd = rb_entry(p, struct cfq_data, group_node);	\
++									\
++		ret += snprintf(page + ret, PAGE_SIZE - ret, " %s %d\n",\
++			       __cfqd->cfqdd->queue->kobj.parent->name,	\
++			       __cfqd->__VAR);				\
++									\
++		p = rb_next(p);						\
++	}								\
++									\
++	ret = simple_read_from_buffer(userbuf, nbytes, ppos, page, ret);\
++									\
++out:									\
++	free_page((unsigned long)page);					\
++	return ret;							\
+ }
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '__VAR' may be better as '(__VAR)' to avoid precedence issues
+#214: FILE: block/cfq-cgroup.c:748:
++#define READ_FUNCTION(__FUNC, __VAR, __DEF_MSG)				\
++static ssize_t __FUNC(struct cgroup *cont, struct cftype *cft,		\
++			struct file *file, char __user *userbuf,	\
++			size_t nbytes, loff_t *ppos)			\
++{									\
++	struct cfq_cgroup *cfqc;					\
++	char *page;							\
++	ssize_t ret;							\
++	struct rb_node *p;						\
++									\
++	page = (char *)__get_free_page(GFP_TEMPORARY);			\
++	if (!page)							\
++		return -ENOMEM;						\
++									\
++	cgroup_lock();							\
++	if (cgroup_is_removed(cont)) {					\
++		cgroup_unlock();					\
++		ret = -ENODEV;						\
++		goto out;						\
++	}								\
++									\
++	cfqc = cgroup_to_cfq_cgroup(cont);				\
++									\
++	cgroup_unlock();						\
++									\
++	/* print */							\
++	ret = snprintf(page, PAGE_SIZE, "default " __DEF_MSG ": %d\n",	\
++			cfqc->__VAR);					\
++									\
++	p = rb_first(&cfqc->sibling_tree);				\
++	while (p) {							\
++		struct cfq_data *__cfqd;				\
++									\
++		__cfqd = rb_entry(p, struct cfq_data, group_node);	\
++									\
++		ret += snprintf(page + ret, PAGE_SIZE - ret, " %s %d\n",\
++			       __cfqd->cfqdd->queue->kobj.parent->name,	\
++			       __cfqd->__VAR);				\
++									\
++		p = rb_next(p);						\
++	}								\
++									\
++	ret = simple_read_from_buffer(userbuf, nbytes, ppos, page, ret);\
++									\
++out:									\
++	free_page((unsigned long)page);					\
++	return ret;							\
+ }
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#214: FILE: block/cfq-cgroup.c:748:
++#define READ_FUNCTION(__FUNC, __VAR, __DEF_MSG)				\
++static ssize_t __FUNC(struct cgroup *cont, struct cftype *cft,		\
++			struct file *file, char __user *userbuf,	\
++			size_t nbytes, loff_t *ppos)			\
++{									\
++	struct cfq_cgroup *cfqc;					\
++	char *page;							\
++	ssize_t ret;							\
++	struct rb_node *p;						\
++									\
++	page = (char *)__get_free_page(GFP_TEMPORARY);			\
++	if (!page)							\
++		return -ENOMEM;						\
++									\
++	cgroup_lock();							\
++	if (cgroup_is_removed(cont)) {					\
++		cgroup_unlock();					\
++		ret = -ENODEV;						\
++		goto out;						\
++	}								\
++									\
++	cfqc = cgroup_to_cfq_cgroup(cont);				\
++									\
++	cgroup_unlock();						\
++									\
++	/* print */							\
++	ret = snprintf(page, PAGE_SIZE, "default " __DEF_MSG ": %d\n",	\
++			cfqc->__VAR);					\
++									\
++	p = rb_first(&cfqc->sibling_tree);				\
++	while (p) {							\
++		struct cfq_data *__cfqd;				\
++									\
++		__cfqd = rb_entry(p, struct cfq_data, group_node);	\
++									\
++		ret += snprintf(page + ret, PAGE_SIZE - ret, " %s %d\n",\
++			       __cfqd->cfqdd->queue->kobj.parent->name,	\
++			       __cfqd->__VAR);				\
++									\
++		p = rb_next(p);						\
++	}								\
++									\
++	ret = simple_read_from_buffer(userbuf, nbytes, ppos, page, ret);\
++									\
++out:									\
++	free_page((unsigned long)page);					\
++	return ret;							\
+ }
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#351: FILE: block/cfq-cgroup.c:796:
+ }
++READ_FUNCTION(cfq_cgroup_ioprio_read, ioprio, "priority");
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__VAR' - possible side-effects?
+#355: FILE: block/cfq-cgroup.c:800:
++#define WRITE_FUNCTION(__FUNC, __VAR, MIN, MAX)				\
++static ssize_t __FUNC(struct cgroup *cont, struct cftype *cft,		\
++			struct file *file, const char __user *userbuf,	\
++			size_t nbytes, loff_t *ppos)			\
++{									\
++	struct cfq_cgroup *cfqc;					\
++	ssize_t ret;							\
++	long new_val;							\
++	int err, sn;							\
++	char *buffer = NULL;						\
++	char *valbuf = NULL, *pathbuf = NULL;				\
++	struct rb_node *p;						\
++									\
++	cgroup_lock();							\
++	if (cgroup_is_removed(cont)) {					\
++		cgroup_unlock();					\
++		ret = -ENODEV;						\
++		goto out;						\
++	}								\
++									\
++	cfqc = cgroup_to_cfq_cgroup(cont);				\
++	cgroup_unlock();						\
++									\
++	/* set */							\
++	buffer = kmalloc(nbytes + 1, GFP_KERNEL);			\
++	if (buffer == NULL)						\
++		return -ENOMEM;						\
++									\
++	if (copy_from_user(buffer, userbuf, nbytes)) {			\
++		ret = -EFAULT;						\
++		goto free_buf;						\
++	}								\
++	buffer[nbytes] = 0;						\
++									\
++	valbuf = kmalloc(nbytes + 1, GFP_KERNEL);			\
++	if (!valbuf) {							\
++		ret = -ENOMEM;						\
++		goto free_buf;						\
++	}								\
++									\
++	pathbuf = kmalloc(nbytes + 1, GFP_KERNEL);			\
++	if (!pathbuf) {							\
++		ret = -ENOMEM;						\
++		goto free_val;						\
++	}								\
++									\
++	param_separate(buffer, valbuf, pathbuf, nbytes);		\
++									\
++	err = strict_strtoul(valbuf, 10, &new_val);			\
++	if ((err) || ((new_val < (MIN)) || (new_val > (MAX)))) {	\
++		ret = -EINVAL;						\
++		goto free_path;						\
++	}								\
++									\
++	sn = strlen(pathbuf);						\
++									\
++	p = rb_first(&cfqc->sibling_tree);				\
++	while (p) {							\
++		struct cfq_data *__cfqd;				\
++		const char *namep;					\
++									\
++		__cfqd = rb_entry(p, struct cfq_data, group_node);	\
++		namep = __cfqd->cfqdd->queue->kobj.parent->name;	\
++									\
++		if (sn == 0) {						\
++			__cfqd->__VAR = new_val;			\
++		} else if ((sn == strlen(namep)) &&			\
++			 (strncmp(pathbuf, namep, sn) == 0)) {		\
++			__cfqd->__VAR = new_val;			\
++			break;						\
++		}							\
++									\
++		p = rb_next(p);						\
++	}								\
++									\
++	if ((sn == 0) ||						\
++	    ((sn == 7) && (strncmp(pathbuf, "default", 7) == 0)))	\
++		cfqc->__VAR = new_val;					\
++									\
++	ret = nbytes;							\
++									\
++free_path:								\
++	kfree(pathbuf);							\
++free_val:								\
++	kfree(valbuf);							\
++free_buf:								\
++	kfree(buffer);							\
++out:									\
++	return ret;							\
+ }
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '__VAR' may be better as '(__VAR)' to avoid precedence issues
+#355: FILE: block/cfq-cgroup.c:800:
++#define WRITE_FUNCTION(__FUNC, __VAR, MIN, MAX)				\
++static ssize_t __FUNC(struct cgroup *cont, struct cftype *cft,		\
++			struct file *file, const char __user *userbuf,	\
++			size_t nbytes, loff_t *ppos)			\
++{									\
++	struct cfq_cgroup *cfqc;					\
++	ssize_t ret;							\
++	long new_val;							\
++	int err, sn;							\
++	char *buffer = NULL;						\
++	char *valbuf = NULL, *pathbuf = NULL;				\
++	struct rb_node *p;						\
++									\
++	cgroup_lock();							\
++	if (cgroup_is_removed(cont)) {					\
++		cgroup_unlock();					\
++		ret = -ENODEV;						\
++		goto out;						\
++	}								\
++									\
++	cfqc = cgroup_to_cfq_cgroup(cont);				\
++	cgroup_unlock();						\
++									\
++	/* set */							\
++	buffer = kmalloc(nbytes + 1, GFP_KERNEL);			\
++	if (buffer == NULL)						\
++		return -ENOMEM;						\
++									\
++	if (copy_from_user(buffer, userbuf, nbytes)) {			\
++		ret = -EFAULT;						\
++		goto free_buf;						\
++	}								\
++	buffer[nbytes] = 0;						\
++									\
++	valbuf = kmalloc(nbytes + 1, GFP_KERNEL);			\
++	if (!valbuf) {							\
++		ret = -ENOMEM;						\
++		goto free_buf;						\
++	}								\
++									\
++	pathbuf = kmalloc(nbytes + 1, GFP_KERNEL);			\
++	if (!pathbuf) {							\
++		ret = -ENOMEM;						\
++		goto free_val;						\
++	}								\
++									\
++	param_separate(buffer, valbuf, pathbuf, nbytes);		\
++									\
++	err = strict_strtoul(valbuf, 10, &new_val);			\
++	if ((err) || ((new_val < (MIN)) || (new_val > (MAX)))) {	\
++		ret = -EINVAL;						\
++		goto free_path;						\
++	}								\
++									\
++	sn = strlen(pathbuf);						\
++									\
++	p = rb_first(&cfqc->sibling_tree);				\
++	while (p) {							\
++		struct cfq_data *__cfqd;				\
++		const char *namep;					\
++									\
++		__cfqd = rb_entry(p, struct cfq_data, group_node);	\
++		namep = __cfqd->cfqdd->queue->kobj.parent->name;	\
++									\
++		if (sn == 0) {						\
++			__cfqd->__VAR = new_val;			\
++		} else if ((sn == strlen(namep)) &&			\
++			 (strncmp(pathbuf, namep, sn) == 0)) {		\
++			__cfqd->__VAR = new_val;			\
++			break;						\
++		}							\
++									\
++		p = rb_next(p);						\
++	}								\
++									\
++	if ((sn == 0) ||						\
++	    ((sn == 7) && (strncmp(pathbuf, "default", 7) == 0)))	\
++		cfqc->__VAR = new_val;					\
++									\
++	ret = nbytes;							\
++									\
++free_path:								\
++	kfree(pathbuf);							\
++free_val:								\
++	kfree(valbuf);							\
++free_buf:								\
++	kfree(buffer);							\
++out:									\
++	return ret;							\
+ }
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#355: FILE: block/cfq-cgroup.c:800:
++#define WRITE_FUNCTION(__FUNC, __VAR, MIN, MAX)				\
++static ssize_t __FUNC(struct cgroup *cont, struct cftype *cft,		\
++			struct file *file, const char __user *userbuf,	\
++			size_t nbytes, loff_t *ppos)			\
++{									\
++	struct cfq_cgroup *cfqc;					\
++	ssize_t ret;							\
++	long new_val;							\
++	int err, sn;							\
++	char *buffer = NULL;						\
++	char *valbuf = NULL, *pathbuf = NULL;				\
++	struct rb_node *p;						\
++									\
++	cgroup_lock();							\
++	if (cgroup_is_removed(cont)) {					\
++		cgroup_unlock();					\
++		ret = -ENODEV;						\
++		goto out;						\
++	}								\
++									\
++	cfqc = cgroup_to_cfq_cgroup(cont);				\
++	cgroup_unlock();						\
++									\
++	/* set */							\
++	buffer = kmalloc(nbytes + 1, GFP_KERNEL);			\
++	if (buffer == NULL)						\
++		return -ENOMEM;						\
++									\
++	if (copy_from_user(buffer, userbuf, nbytes)) {			\
++		ret = -EFAULT;						\
++		goto free_buf;						\
++	}								\
++	buffer[nbytes] = 0;						\
++									\
++	valbuf = kmalloc(nbytes + 1, GFP_KERNEL);			\
++	if (!valbuf) {							\
++		ret = -ENOMEM;						\
++		goto free_buf;						\
++	}								\
++									\
++	pathbuf = kmalloc(nbytes + 1, GFP_KERNEL);			\
++	if (!pathbuf) {							\
++		ret = -ENOMEM;						\
++		goto free_val;						\
++	}								\
++									\
++	param_separate(buffer, valbuf, pathbuf, nbytes);		\
++									\
++	err = strict_strtoul(valbuf, 10, &new_val);			\
++	if ((err) || ((new_val < (MIN)) || (new_val > (MAX)))) {	\
++		ret = -EINVAL;						\
++		goto free_path;						\
++	}								\
++									\
++	sn = strlen(pathbuf);						\
++									\
++	p = rb_first(&cfqc->sibling_tree);				\
++	while (p) {							\
++		struct cfq_data *__cfqd;				\
++		const char *namep;					\
++									\
++		__cfqd = rb_entry(p, struct cfq_data, group_node);	\
++		namep = __cfqd->cfqdd->queue->kobj.parent->name;	\
++									\
++		if (sn == 0) {						\
++			__cfqd->__VAR = new_val;			\
++		} else if ((sn == strlen(namep)) &&			\
++			 (strncmp(pathbuf, namep, sn) == 0)) {		\
++			__cfqd->__VAR = new_val;			\
++			break;						\
++		}							\
++									\
++		p = rb_next(p);						\
++	}								\
++									\
++	if ((sn == 0) ||						\
++	    ((sn == 7) && (strncmp(pathbuf, "default", 7) == 0)))	\
++		cfqc->__VAR = new_val;					\
++									\
++	ret = nbytes;							\
++									\
++free_path:								\
++	kfree(pathbuf);							\
++free_val:								\
++	kfree(valbuf);							\
++free_buf:								\
++	kfree(buffer);							\
++out:									\
++	return ret;							\
+ }
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!buffer"
+#380: FILE: block/cfq-cgroup.c:825:
++	if (buffer == NULL)						\
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:CONSIDER_KSTRTO: strict_strtoul is obsolete, use kstrtoul instead
+#403: FILE: block/cfq-cgroup.c:848:
++	err = strict_strtoul(valbuf, 10, &new_val);			\
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'sn == 0'
+#430: FILE: block/cfq-cgroup.c:875:
++	if ((sn == 0) ||						\
++	    ((sn == 7) && (strncmp(pathbuf, "default", 7) == 0)))	\
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'sn == 7'
+#430: FILE: block/cfq-cgroup.c:875:
++	if ((sn == 0) ||						\
++	    ((sn == 7) && (strncmp(pathbuf, "default", 7) == 0)))	\
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#445: FILE: block/cfq-cgroup.c:890:
+ }
++WRITE_FUNCTION(cfq_cgroup_ioprio_write, ioprio, 0, CFQ_CGROUP_MAX_IOPRIO);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#447: FILE: block/cfq-cgroup.c:892:
++WRITE_FUNCTION(cfq_cgroup_ioprio_class_write, ioprio_class, 0,
++							IOPRIO_CLASS_IDLE);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000205161.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 4 warnings, 13 checks, 409 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000205161.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

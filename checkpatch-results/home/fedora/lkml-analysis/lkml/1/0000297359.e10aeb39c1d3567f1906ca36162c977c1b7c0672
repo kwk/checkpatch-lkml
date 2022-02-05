@@ -1,0 +1,113 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#35: 
+Implements an alternative iret with popf and far return so trap and exception
+
+WARNING:TYPO_SPELLING: 'reenabled' may be misspelled - perhaps 're-enabled'?
+#37: 
+NMIs to be reenabled prematurely.
+           ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#121: FILE: include/linux/hardirq.h:63:
++#define HARDNMI_OFFSET	(1UL << HARDNMI_SHIFT)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#150: FILE: include/linux/hardirq.h:173:
++		BUG_ON(hardnmi_count());		\
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:BxV)
+#236: FILE: include/asm-x86/irqflags.h:160:
++#define INTERRUPT_RETURN_NMI_SAFE	pushl 16(%esp);	\
+                                  	         ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#236: FILE: include/asm-x86/irqflags.h:160:
++#define INTERRUPT_RETURN_NMI_SAFE	pushl 16(%esp);	\
++					popfl;		\
++					.byte 0xCA;	\
++					.word 8;
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#236: FILE: include/asm-x86/irqflags.h:160:
++#define INTERRUPT_RETURN_NMI_SAFE	pushl 16(%esp);	\
++					popfl;		\
++					.byte 0xCA;	\
++					.word 8;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:BxV)
+#266: FILE: include/asm-x86/irqflags.h:190:
++#define INTERRUPT_RETURN_NMI_SAFE	pushl 8(%esp);	\
+                                  	        ^
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#266: FILE: include/asm-x86/irqflags.h:190:
++#define INTERRUPT_RETURN_NMI_SAFE	pushl 8(%esp);	\
++					popfl;		\
++					.byte 0xCA;	\
++					.word 4;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#266: FILE: include/asm-x86/irqflags.h:190:
++#define INTERRUPT_RETURN_NMI_SAFE	pushl 8(%esp);	\
++					popfl;		\
++					.byte 0xCA;	\
++					.word 4;
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000297359.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 2 errors, 5 warnings, 3 checks, 178 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000297359.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,704 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#253: 
+--- 2.6.23.12.base/drivers/md/dm-ramback.c	2008-03-08 16:47:29.000000000 -0800
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#256: FILE: drivers/md/dm-ramback.c:1:
++#include <linux/version.h>
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:INCLUDE_LINUX: Use #include <linux/bug.h> instead of <asm/bug.h>
+#260: FILE: drivers/md/dm-ramback.c:5:
++#include <asm/bug.h>
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#271: FILE: drivers/md/dm-ramback.c:16:
++#define warn(string, args...) do { printk("%s: " string "\n", __func__, ##args); } while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#271: FILE: drivers/md/dm-ramback.c:16:
++#define warn(string, args...) do { printk("%s: " string "\n", __func__, ##args); } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#272: FILE: drivers/md/dm-ramback.c:17:
++#define error(string, args...) do { warn(string, ##args); BUG(); } while (0)
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#291: FILE: drivers/md/dm-ramback.c:36:
++#define TRACE_FLAG (1 << 8)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#293: FILE: drivers/md/dm-ramback.c:38:
++typedef uint32_t chunk_t; // up to 16 TB with 4K chunksize
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#313: FILE: drivers/md/dm-ramback.c:58:
++	spinlock_t lock;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#321: FILE: drivers/md/dm-ramback.c:66:
++	unsigned flags, chunkshift, chunk_sector_shift, populated;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#355: FILE: drivers/md/dm-ramback.c:100:
++	struct devinfo *info = seq->private;
++	seq_printf(seq, "flags: %i\n", info->flags);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:PRINTF_L: %Li is non-standard C, use %lli
+#360: FILE: drivers/md/dm-ramback.c:105:
++	seq_printf(seq, "loaded: %Li\n", info->loaded);
+
+WARNING:PRINTF_L: %Li is non-standard C, use %lli
+#361: FILE: drivers/md/dm-ramback.c:106:
++	seq_printf(seq, "stored: %Li\n", info->saved);
+
+WARNING:LONG_LINE: line length of 106 exceeds 100 columns
+#367: FILE: drivers/md/dm-ramback.c:112:
++static ssize_t ramback_proc_write(struct file *file, const char __user *buf, size_t count, loff_t *offset)
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#372: FILE: drivers/md/dm-ramback.c:117:
++	int n;
++	memset(text, 0, sizeof(text));
+
+WARNING:CONSIDER_KSTRTO: simple_strtoul is obsolete, use kstrtoul instead
+#377: FILE: drivers/md/dm-ramback.c:122:
++	n = simple_strtoul(text, &end, 10);
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#397: FILE: drivers/md/dm-ramback.c:142:
++static struct file_operations ramback_proc_fops = {
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#409: FILE: drivers/md/dm-ramback.c:154:
++	char name[24];
++	snprintf(name, sizeof(name), "%p", target);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#419: FILE: drivers/md/dm-ramback.c:164:
++	char name[24];
++	snprintf(name, sizeof(name), "%p", target);
+
+WARNING:IF_0: Consider removing the code enclosed by this #if 0 and its #endif
+#425: FILE: drivers/md/dm-ramback.c:170:
++#if 0
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#430: FILE: drivers/md/dm-ramback.c:175:
++	int paranoid = 0;
++	printk("loading: ");
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#430: FILE: drivers/md/dm-ramback.c:175:
++	printk("loading: ");
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#433: FILE: drivers/md/dm-ramback.c:178:
++		struct hook *hook = list_entry(list, struct hook, member);
++		printk("%p (%i..%i) ", hook->bio, hook->start, hook->limit - 1);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#433: FILE: drivers/md/dm-ramback.c:178:
++		printk("%p (%i..%i) ", hook->bio, hook->start, hook->limit - 1);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#435: FILE: drivers/md/dm-ramback.c:180:
++			printk("list way too long\n");
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#439: FILE: drivers/md/dm-ramback.c:184:
++	printk("\n");
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#447: FILE: drivers/md/dm-ramback.c:192:
++		va_list args;
++		va_start(args, fmt);
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#457: FILE: drivers/md/dm-ramback.c:202:
++	return kmem_cache_alloc(ramback_hooks, GFP_NOIO|__GFP_NOFAIL);
+ 	                                               ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#465: FILE: drivers/md/dm-ramback.c:210:
++static void unhook_endio(struct bio *bio, unsigned done, int error)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#468: FILE: drivers/md/dm-ramback.c:213:
++	struct hook *hook = bio->bi_private;
++	bio->bi_end_io = hook->old_endio;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#477: FILE: drivers/md/dm-ramback.c:222:
++	int i;
++	for (i = 0; i < bio->bi_vcnt; i++) {
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#485: FILE: drivers/md/dm-ramback.c:230:
++static unsigned get_chunk_state(struct devinfo *info, chunk_t chunk)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#487: FILE: drivers/md/dm-ramback.c:232:
++	unsigned shift = 2 * (chunk & 3), offset = chunk >> 2, mask = 3;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#488: FILE: drivers/md/dm-ramback.c:233:
++	unsigned shift = 2 * (chunk & 3), offset = chunk >> 2, mask = 3;
++	return (info->state[offset] >> shift) & mask;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#493: FILE: drivers/md/dm-ramback.c:238:
++	unsigned shift = 2 * (chunk & 3), offset = chunk >> 2, mask = 3;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#494: FILE: drivers/md/dm-ramback.c:239:
++	unsigned shift = 2 * (chunk & 3), offset = chunk >> 2, mask = 3;
++	info->state[offset] = (info->state[offset] & ~(mask << shift)) | (state << shift);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#510: FILE: drivers/md/dm-ramback.c:255:
++	struct list_head *list;
++	list_for_each(list, &info->loading) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#512: FILE: drivers/md/dm-ramback.c:257:
++		struct hook *this = list_entry(list, struct hook, member);
++		if (chunk >= this->start && chunk < this->limit)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#521: FILE: drivers/md/dm-ramback.c:266:
++	int changed = 0;
++	for (; chunk < limit; chunk++) {
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#545: FILE: drivers/md/dm-ramback.c:290:
++^I$
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#546: FILE: drivers/md/dm-ramback.c:291:
++	
++}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#553: FILE: drivers/md/dm-ramback.c:298:
++^I$
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#554: FILE: drivers/md/dm-ramback.c:299:
++	
++}
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#558: FILE: drivers/md/dm-ramback.c:303:
++ * Application read or write has to $
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#579: FILE: drivers/md/dm-ramback.c:324:
++ * $
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#584: FILE: drivers/md/dm-ramback.c:329:
++ * $
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#588: FILE: drivers/md/dm-ramback.c:333:
++ * $
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#591: FILE: drivers/md/dm-ramback.c:336:
++ * $
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#604: FILE: drivers/md/dm-ramback.c:349:
++	struct hook *hook;
++	spin_lock(&info->lock);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#607: FILE: drivers/md/dm-ramback.c:352:
++		struct list_head *list;
++		hook = list_entry(info->thru_queue.next, struct hook, queue);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#610: FILE: drivers/md/dm-ramback.c:355:
++			struct hook *that = list_entry(list, struct hook, member);
++			if ((hook->start < that->limit && hook->limit >= that->start))
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#613: FILE: drivers/md/dm-ramback.c:358:
++		trace(info, ">>> kick_thru bio %p: chunk %i..%i\n", hook->bio, hook->start, hook->limit - 1);
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'kick_thru', this function's name, in a string
+#613: FILE: drivers/md/dm-ramback.c:358:
++		trace(info, ">>> kick_thru bio %p: chunk %i..%i\n", hook->bio, hook->start, hook->limit - 1);
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#629: FILE: drivers/md/dm-ramback.c:374:
++static int load_write_endio(struct bio *bio, unsigned done, int error)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#636: FILE: drivers/md/dm-ramback.c:381:
++	chunk_t chunk = hook->start;
++	trace(info, "load_write_endio on bio %p chunk %zi\n", bio, chunk);
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'load_write_endio', this function's name, in a string
+#636: FILE: drivers/md/dm-ramback.c:381:
++	trace(info, "load_write_endio on bio %p chunk %zi\n", bio, chunk);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#643: FILE: drivers/md/dm-ramback.c:388:
++	BUG_ON(!is_empty(info, chunk));
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#654: FILE: drivers/md/dm-ramback.c:399:
++		struct hook *hook = list_entry(list, struct hook, member);
++		for (chunk = hook->start; chunk < hook->limit; chunk++)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#667: FILE: drivers/md/dm-ramback.c:412:
++static int load_read_endio(struct bio *bio, unsigned done, int error)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#671: FILE: drivers/md/dm-ramback.c:416:
++	struct devinfo *info = hook->info;
++	trace(info, "load_read_endio on bio %p chunk %zi\n", bio, hook->start);
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'load_read_endio', this function's name, in a string
+#671: FILE: drivers/md/dm-ramback.c:416:
++	trace(info, "load_read_endio on bio %p chunk %zi\n", bio, hook->start);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#682: FILE: drivers/md/dm-ramback.c:427:
++static int save_write_endio(struct bio *bio, unsigned done, int error)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#686: FILE: drivers/md/dm-ramback.c:431:
++	struct devinfo *info = hook->info;
++	trace(info, "save_write_endio on bio %p chunk %zi\n", bio, hook->start);
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'save_write_endio', this function's name, in a string
+#686: FILE: drivers/md/dm-ramback.c:431:
++	trace(info, "save_write_endio on bio %p chunk %zi\n", bio, hook->start);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#699: FILE: drivers/md/dm-ramback.c:444:
++static int save_read_endio(struct bio *bio, unsigned done, int error)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#703: FILE: drivers/md/dm-ramback.c:448:
++	struct devinfo *info = hook->info;
++	trace(info, "save_read_endio on bio %p chunk %zi\n", bio, hook->start);
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'save_read_endio', this function's name, in a string
+#703: FILE: drivers/md/dm-ramback.c:448:
++	trace(info, "save_read_endio on bio %p chunk %zi\n", bio, hook->start);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#714: FILE: drivers/md/dm-ramback.c:459:
++
++
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#715: FILE: drivers/md/dm-ramback.c:460:
++static int thru_write_endio(struct bio *bio, unsigned done, int error)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#720: FILE: drivers/md/dm-ramback.c:465:
++	struct bio *cloned = hook->cloned;
++	trace(info, "thru_write_endio on bio %p chunk %zi\n", bio, hook->start);
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'thru_write_endio', this function's name, in a string
+#720: FILE: drivers/md/dm-ramback.c:465:
++	trace(info, "thru_write_endio on bio %p chunk %zi\n", bio, hook->start);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#733: FILE: drivers/md/dm-ramback.c:478:
++static int thru_read_endio(struct bio *bio, unsigned done, int error)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#737: FILE: drivers/md/dm-ramback.c:482:
++	struct devinfo *info = hook->info;
++	trace(info, "thru_read_endio on bio %p chunk %zi\n", bio, hook->start);
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'thru_read_endio', this function's name, in a string
+#737: FILE: drivers/md/dm-ramback.c:482:
++	trace(info, "thru_read_endio on bio %p chunk %zi\n", bio, hook->start);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#748: FILE: drivers/md/dm-ramback.c:493:
++static int write_endio(struct bio *bio, unsigned done, int error)
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'write_endio', this function's name, in a string
+#754: FILE: drivers/md/dm-ramback.c:499:
++	trace(info, ">>> write_endio bio %p: chunk %i..%i\n", bio, hook->start, hook->limit - 1);
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'write_endio', this function's name, in a string
+#756: FILE: drivers/md/dm-ramback.c:501:
++		trace(info, ">>> write_endio writethrough\n");
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#785: FILE: drivers/md/dm-ramback.c:530:
++	struct page *page = alloc_pages(GFP_KERNEL|__GFP_NOFAIL, 0);
+ 	                                          ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#786: FILE: drivers/md/dm-ramback.c:531:
++	struct bio *bio = bio_alloc(GFP_KERNEL|__GFP_NOFAIL, 1);
+ 	                                      ^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#787: FILE: drivers/md/dm-ramback.c:532:
++	struct bio *bio = bio_alloc(GFP_KERNEL|__GFP_NOFAIL, 1);
++	trace(info, ">>> transfer chunk %i\n", hook->start);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#831: FILE: drivers/md/dm-ramback.c:576:
++	struct hook *hook = info->prehook;
++	info->prehook = NULL;
+
+WARNING:LONG_LINE: line length of 127 exceeds 100 columns
+#848: FILE: drivers/md/dm-ramback.c:593:
++		trace(info, ">>> submit bio %p for chunk %zi, size = %i\n", hook->bio, hook->start, hook->limit - hook->start);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#848: FILE: drivers/md/dm-ramback.c:593:
++		struct devinfo *info = hook->info;
++		trace(info, ">>> submit bio %p for chunk %zi, size = %i\n", hook->bio, hook->start, hook->limit - hook->start);
+
+WARNING:LONG_LINE_COMMENT: line length of 103 exceeds 100 columns
+#854: FILE: drivers/md/dm-ramback.c:599:
++			int pages = hook->limit - hook->start, i; // !!! assumes chunk size = page size
+
+A comment starts before but extends beyond the maximum line length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:LONG_LINE: line length of 145 exceeds 100 columns
+#856: FILE: drivers/md/dm-ramback.c:601:
++			trace(info, ">>> clone and submit bio %p for chunk %zi, size = %i\n", hook->bio, hook->start, hook->limit - hook->start);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#856: FILE: drivers/md/dm-ramback.c:601:
++			struct bio *bio = hook->bio, *clone = bio_alloc(__GFP_NOFAIL, pages);
++			trace(info, ">>> clone and submit bio %p for chunk %zi, size = %i\n", hook->bio, hook->start, hook->limit - hook->start);
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#863: FILE: drivers/md/dm-ramback.c:608:
++				struct page *page = alloc_pages(GFP_KERNEL|__GFP_NOFAIL, 0);
+ 				                                          ^
+
+WARNING:LONG_LINE: line length of 121 exceeds 100 columns
+#864: FILE: drivers/md/dm-ramback.c:609:
++				*(clone->bi_io_vec + i) = (struct bio_vec){ .bv_page = page, .bv_len = PAGE_CACHE_SIZE };
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#888: FILE: drivers/md/dm-ramback.c:633:
++	spinlock_t *lock = &info->lock;
++	trace(info, "fast daemon started\n");
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#910: FILE: drivers/md/dm-ramback.c:655:
++	struct list_head *submits = &info->slow_submits;
++	disable(trace_off(int die = 0);)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#913: FILE: drivers/md/dm-ramback.c:658:
++	chunk_t chunk = 0, chunks = info->chunks, i;
++	trace(info, "slow daemon started, %i chunks\n", chunks);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#917: FILE: drivers/md/dm-ramback.c:662:
++		disable(BUG_ON(++die == 100);)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#931: FILE: drivers/md/dm-ramback.c:676:
++			BUG_ON(info->flushing > info->dirty);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#939: FILE: drivers/md/dm-ramback.c:684:
++				struct hook *hook = consume_hook(info);
++				trace(info, ">>> dirty chunk %i\n", chunk);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#940: FILE: drivers/md/dm-ramback.c:685:
++				BUG_ON(is_loading(info, chunk));
+
+WARNING:LONG_LINE: line length of 106 exceeds 100 columns
+#941: FILE: drivers/md/dm-ramback.c:686:
++				*hook = (struct hook){ .info = info, .start = chunk, .limit = chunk + 1 };
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#946: FILE: drivers/md/dm-ramback.c:691:
++			} else if (1 && !info->populated && is_empty(info, chunk) && !is_loading(info, chunk)) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#948: FILE: drivers/md/dm-ramback.c:693:
++				struct hook *hook = consume_hook(info);
++				trace(info, ">>> empty chunk %i\n", chunk);
+
+WARNING:LONG_LINE: line length of 106 exceeds 100 columns
+#949: FILE: drivers/md/dm-ramback.c:694:
++				*hook = (struct hook){ .info = info, .start = chunk, .limit = chunk + 1 };
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#955: FILE: drivers/md/dm-ramback.c:700:
++				wait_event(info->slow_wait, info->inflight <= info->inflight_max / 2);
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#957: FILE: drivers/md/dm-ramback.c:702:
++		trace(info, "slow daemon sleeps %i %i %i\n", info->inflight, info->dirty, !list_empty(submits));
+
+WARNING:LONG_LINE: line length of 111 exceeds 100 columns
+#959: FILE: drivers/md/dm-ramback.c:704:
++		trace(info, "slow daemon wakes %i %i %i\n", info->inflight, info->dirty, !list_empty(submits));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#960: FILE: drivers/md/dm-ramback.c:705:
++		BUG_ON(info->inflight > chunks);
+
+WARNING:TYPO_SPELLING: 'tranfer' may be misspelled - perhaps 'transfer'?
+#971: FILE: drivers/md/dm-ramback.c:716:
++ * Map a bio tranfer to the ramdisk.  All chunks covered by a read transfer
+              ^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#981: FILE: drivers/md/dm-ramback.c:726:
++	unsigned shift = info->chunk_sector_shift;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#982: FILE: drivers/md/dm-ramback.c:727:
++	unsigned sectors_per_chunk = 1 << shift;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#983: FILE: drivers/md/dm-ramback.c:728:
++	unsigned sectors = bio->bi_size >> SECTOR_SHIFT;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#988: FILE: drivers/md/dm-ramback.c:733:
++	struct hook *hook = NULL;
++	trace(info, ">>> ramback_map bio %p: %Li %i\n", bio, (long long)bio->bi_sector, sectors);
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ramback_map', this function's name, in a string
+#988: FILE: drivers/md/dm-ramback.c:733:
++	trace(info, ">>> ramback_map bio %p: %Li %i\n", bio, (long long)bio->bi_sector, sectors);
+
+WARNING:PRINTF_L: %Li is non-standard C, use %lli
+#988: FILE: drivers/md/dm-ramback.c:733:
++	trace(info, ">>> ramback_map bio %p: %Li %i\n", bio, (long long)bio->bi_sector, sectors);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1042: FILE: drivers/md/dm-ramback.c:787:
++	struct devinfo *info = target->private;
++	if (!info)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1068: FILE: drivers/md/dm-ramback.c:813:
++	int mode = dm_table_get_mode(target->table);
++	return dm_get_device(target, name, 0, 0, mode, result);
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#1074: FILE: drivers/md/dm-ramback.c:819:
++^I$
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1081: FILE: drivers/md/dm-ramback.c:826:
++static int ramback_create(struct dm_target *target, unsigned argc, char **argv)
+
+WARNING:CONSIDER_KSTRTO: simple_strtol is obsolete, use kstrtol instead
+#1094: FILE: drivers/md/dm-ramback.c:839:
++		chunkshift = simple_strtol(argv[2], NULL, 0);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1101: FILE: drivers/md/dm-ramback.c:846:
++	if (!(info = kmalloc(sizeof(struct devinfo), GFP_KERNEL)))
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*info)...) over kmalloc(sizeof(struct devinfo)...)
+#1101: FILE: drivers/md/dm-ramback.c:846:
++	if (!(info = kmalloc(sizeof(struct devinfo), GFP_KERNEL)))
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1119: FILE: drivers/md/dm-ramback.c:864:
++	if (!(info->state = vmalloc(statebytes)))
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1123: FILE: drivers/md/dm-ramback.c:868:
++	if ((err = open_device(target, argv[0], &info->dm_ramdev)))
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1128: FILE: drivers/md/dm-ramback.c:873:
++	if ((err = open_device(target, argv[1], &info->dm_backdev)))
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1133: FILE: drivers/md/dm-ramback.c:878:
++	if (!(info->fast_daemon = kthread_run(fast_daemon, info, "ramback-fast")))
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1136: FILE: drivers/md/dm-ramback.c:881:
++	if (!(info->slow_daemon = kthread_run(slow_daemon, info, "ramback-slow")))
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#1147: FILE: drivers/md/dm-ramback.c:892:
++static int ramback_status(struct dm_target *target, status_type_t type, char *result, unsigned maxlen)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1147: FILE: drivers/md/dm-ramback.c:892:
++static int ramback_status(struct dm_target *target, status_type_t type, char *result, unsigned maxlen)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#1172: FILE: drivers/md/dm-ramback.c:917:
++	printk(KERN_ERR "ramback: %s failed (error %i)", action, err);
+
+WARNING:NEEDLESS_IF: kmem_cache_destroy(NULL) is safe and this check is probably not required
+#1183: FILE: drivers/md/dm-ramback.c:928:
++	if (ramback_hooks)
++		kmem_cache_destroy(ramback_hooks);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1197: FILE: drivers/md/dm-ramback.c:942:
++	if (!(ramback_hooks = kmem_cache_create("ramback-hooks",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1198: FILE: drivers/md/dm-ramback.c:943:
++	if (!(ramback_hooks = kmem_cache_create("ramback-hooks",
++		sizeof(struct hook), __alignof__(struct hook), 0, NULL)))
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1201: FILE: drivers/md/dm-ramback.c:946:
++	if ((err = dm_register_target(&ramback)))
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1204: FILE: drivers/md/dm-ramback.c:949:
++	if (!(ramback_proc_root = proc_mkdir("ramback", proc_root_driver)))
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000309393.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 17 errors, 101 warnings, 12 checks, 969 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000309393.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

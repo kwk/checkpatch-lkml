@@ -1,0 +1,497 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#55: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#60: FILE: fs/ceph/sysfs.c:1:
++#include <linux/ctype.h>
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#72: FILE: fs/ceph/sysfs.c:13:
++#define DEF_ATTR_OP(name) \
++static ssize_t name##_attr_show(struct kobject *kobj, struct attribute *attr,\
++				char *buf)				\
++{									\
++	struct name##_attr *a =						\
++		container_of(attr, struct name##_attr, attr);		\
++	struct name *c = container_of(kobj, struct name, kobj);		\
++	ssize_t ret = -EIO;						\
++									\
++	if (a->show)							\
++		ret = a->show(c, a, buf);				\
++	return ret;							\
++}									\
++									\
++static ssize_t name##_attr_store(struct kobject *kobj, struct attribute *attr, \
++				 const char *buf, size_t count)		\
++{									\
++	struct name##_attr *a = container_of(attr, struct name##_attr, attr); \
++	struct name *c = container_of(kobj, struct name, kobj);		\
++	ssize_t ret = -EIO;						\
++									\
++	if (a->store)							\
++		ret = a->store(c, a, buf, count);			\
++	return ret;							\
++}									\
++									\
++static struct sysfs_ops name##_sysfs_ops = {				\
++	.show	= name##_attr_show,					\
++	.store	= name##_attr_store,					\
++};									\
++									\
++static struct kobj_type name##_ops = {					\
++	.sysfs_ops = &name##_sysfs_ops,					\
++};
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'name' may be better as '(name)' to avoid precedence issues
+#72: FILE: fs/ceph/sysfs.c:13:
++#define DEF_ATTR_OP(name) \
++static ssize_t name##_attr_show(struct kobject *kobj, struct attribute *attr,\
++				char *buf)				\
++{									\
++	struct name##_attr *a =						\
++		container_of(attr, struct name##_attr, attr);		\
++	struct name *c = container_of(kobj, struct name, kobj);		\
++	ssize_t ret = -EIO;						\
++									\
++	if (a->show)							\
++		ret = a->show(c, a, buf);				\
++	return ret;							\
++}									\
++									\
++static ssize_t name##_attr_store(struct kobject *kobj, struct attribute *attr, \
++				 const char *buf, size_t count)		\
++{									\
++	struct name##_attr *a = container_of(attr, struct name##_attr, attr); \
++	struct name *c = container_of(kobj, struct name, kobj);		\
++	ssize_t ret = -EIO;						\
++									\
++	if (a->store)							\
++		ret = a->store(c, a, buf, count);			\
++	return ret;							\
++}									\
++									\
++static struct sysfs_ops name##_sysfs_ops = {				\
++	.show	= name##_attr_show,					\
++	.store	= name##_attr_store,					\
++};									\
++									\
++static struct kobj_type name##_ops = {					\
++	.sysfs_ops = &name##_sysfs_ops,					\
++};
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#72: FILE: fs/ceph/sysfs.c:13:
++#define DEF_ATTR_OP(name) \
++static ssize_t name##_attr_show(struct kobject *kobj, struct attribute *attr,\
++				char *buf)				\
++{									\
++	struct name##_attr *a =						\
++		container_of(attr, struct name##_attr, attr);		\
++	struct name *c = container_of(kobj, struct name, kobj);		\
++	ssize_t ret = -EIO;						\
++									\
++	if (a->show)							\
++		ret = a->show(c, a, buf);				\
++	return ret;							\
++}									\
++									\
++static ssize_t name##_attr_store(struct kobject *kobj, struct attribute *attr, \
++				 const char *buf, size_t count)		\
++{									\
++	struct name##_attr *a = container_of(attr, struct name##_attr, attr); \
++	struct name *c = container_of(kobj, struct name, kobj);		\
++	ssize_t ret = -EIO;						\
++									\
++	if (a->store)							\
++		ret = a->store(c, a, buf, count);			\
++	return ret;							\
++}									\
++									\
++static struct sysfs_ops name##_sysfs_ops = {				\
++	.show	= name##_attr_show,					\
++	.store	= name##_attr_store,					\
++};									\
++									\
++static struct kobj_type name##_ops = {					\
++	.sysfs_ops = &name##_sysfs_ops,					\
++};
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:CONST_STRUCT: struct sysfs_ops should normally be const
+#98: FILE: fs/ceph/sysfs.c:39:
++static struct sysfs_ops name##_sysfs_ops = {				\
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ent' - possible side-effects?
+#107: FILE: fs/ceph/sysfs.c:48:
++#define ADD_ENTITY_ATTR(ent, a, n, m, sh, st) \
++	ent->a.attr.name = n; \
++	ent->a.attr.mode = m; \
++	ent->a.show = sh; \
++	ent->a.store = st; \
++	ret = sysfs_create_file(&ent->kobj, &ent->a.attr);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ent' may be better as '(ent)' to avoid precedence issues
+#107: FILE: fs/ceph/sysfs.c:48:
++#define ADD_ENTITY_ATTR(ent, a, n, m, sh, st) \
++	ent->a.attr.name = n; \
++	ent->a.attr.mode = m; \
++	ent->a.show = sh; \
++	ent->a.store = st; \
++	ret = sysfs_create_file(&ent->kobj, &ent->a.attr);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'a' - possible side-effects?
+#107: FILE: fs/ceph/sysfs.c:48:
++#define ADD_ENTITY_ATTR(ent, a, n, m, sh, st) \
++	ent->a.attr.name = n; \
++	ent->a.attr.mode = m; \
++	ent->a.show = sh; \
++	ent->a.store = st; \
++	ret = sysfs_create_file(&ent->kobj, &ent->a.attr);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'a' may be better as '(a)' to avoid precedence issues
+#107: FILE: fs/ceph/sysfs.c:48:
++#define ADD_ENTITY_ATTR(ent, a, n, m, sh, st) \
++	ent->a.attr.name = n; \
++	ent->a.attr.mode = m; \
++	ent->a.show = sh; \
++	ent->a.store = st; \
++	ret = sysfs_create_file(&ent->kobj, &ent->a.attr);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#107: FILE: fs/ceph/sysfs.c:48:
++#define ADD_ENTITY_ATTR(ent, a, n, m, sh, st) \
++	ent->a.attr.name = n; \
++	ent->a.attr.mode = m; \
++	ent->a.show = sh; \
++	ent->a.store = st; \
++	ret = sysfs_create_file(&ent->kobj, &ent->a.attr);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#114: FILE: fs/ceph/sysfs.c:55:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#118: FILE: fs/ceph/sysfs.c:59:
++
++
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!client->monc.monmap"
+#137: FILE: fs/ceph/sysfs.c:78:
++	if (client->monc.monmap == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!client->mdsc.mdsmap"
+#159: FILE: fs/ceph/sysfs.c:100:
++	if (client->mdsc.mdsmap == NULL)
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#173: FILE: fs/ceph/sysfs.c:114:
++		pos += sprintf(buf+pos, "\tmds%d\t%u.%u.%u.%u:%u\t(%s)\n",
+ 		                  ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!client->osdc.osdmap"
+#186: FILE: fs/ceph/sysfs.c:127:
++	if (client->osdc.osdmap == NULL)
+
+CHECK:SPACING: spaces required around that ':' (ctx:VxV)
+#197: FILE: fs/ceph/sysfs.c:138:
++		       " NEARFULL":"",
+ 		                  ^
+
+CHECK:SPACING: spaces required around that ':' (ctx:VxV)
+#199: FILE: fs/ceph/sysfs.c:140:
++		       " FULL":"");
+ 		              ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#211: FILE: fs/ceph/sysfs.c:152:
++		       ((client->osdc.osdmap->osd_weight[i]*100) >> 16),
+ 		                                           ^
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#221: FILE: fs/ceph/sysfs.c:162:
++
++
+
+WARNING:LINUX_VERSION_CODE: LINUX_VERSION_CODE should be avoided, code should be for the version to which it is merged
+#226: FILE: fs/ceph/sysfs.c:167:
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#226: FILE: fs/ceph/sysfs.c:167:
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
+
+Comparisons with a constant or upper case identifier on the left
+side of the test should be avoided.
+
+WARNING:LINUX_VERSION_CODE: LINUX_VERSION_CODE should be avoided, code should be for the version to which it is merged
+#250: FILE: fs/ceph/sysfs.c:191:
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#250: FILE: fs/ceph/sysfs.c:191:
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#253: FILE: fs/ceph/sysfs.c:194:
++#endif^I$
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#259: FILE: fs/ceph/sysfs.c:200:
++static ssize_t req_mds_show(struct ceph_mds_request *req,
++			   struct ceph_mds_request_attr *attr, char *buf)
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#279: FILE: fs/ceph/sysfs.c:220:
++			pos += sprintf(buf+pos, " %s", path);
+ 			                  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#283: FILE: fs/ceph/sysfs.c:224:
++		pos += sprintf(buf+pos, " %s", req->r_path1);
+ 		                  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#289: FILE: fs/ceph/sysfs.c:230:
++			pos += sprintf(buf+pos, " %s", path);
+ 			                  ^
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 24)
+#292: FILE: fs/ceph/sysfs.c:233:
++	} else if (req->r_path2 &&
+[...]
++			pos += sprintf(buf+pos, " %s", req->r_path2);
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#294: FILE: fs/ceph/sysfs.c:235:
++			pos += sprintf(buf+pos, " %s", req->r_path2);
+ 			                  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#297: FILE: fs/ceph/sysfs.c:238:
++	pos += sprintf(buf+pos, "\n");
+ 	                  ^
+
+WARNING:LINUX_VERSION_CODE: LINUX_VERSION_CODE should be avoided, code should be for the version to which it is merged
+#306: FILE: fs/ceph/sysfs.c:247:
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#306: FILE: fs/ceph/sysfs.c:247:
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
+
+WARNING:LINUX_VERSION_CODE: LINUX_VERSION_CODE should be avoided, code should be for the version to which it is merged
+#324: FILE: fs/ceph/sysfs.c:265:
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#324: FILE: fs/ceph/sysfs.c:265:
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct ceph_attr *' should also have an identifier name
+#334: FILE: fs/ceph/sysfs.c:275:
++	ssize_t (*show)(struct ceph_attr *, char *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'char *' should also have an identifier name
+#334: FILE: fs/ceph/sysfs.c:275:
++	ssize_t (*show)(struct ceph_attr *, char *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct ceph_attr *' should also have an identifier name
+#335: FILE: fs/ceph/sysfs.c:276:
++	ssize_t (*store)(struct ceph_attr *, const char *, size_t);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const char *' should also have an identifier name
+#335: FILE: fs/ceph/sysfs.c:276:
++	ssize_t (*store)(struct ceph_attr *, const char *, size_t);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'size_t' should also have an identifier name
+#335: FILE: fs/ceph/sysfs.c:276:
++	ssize_t (*store)(struct ceph_attr *, const char *, size_t);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#343: FILE: fs/ceph/sysfs.c:284:
++	struct ceph_attr *ca = container_of(a, struct ceph_attr, attr);
++	return ca->show(ca, buf);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#350: FILE: fs/ceph/sysfs.c:291:
++	struct ceph_attr *ca = container_of(a, struct ceph_attr, attr);
++	return ca->store(ca, buf, len);
+
+WARNING:CONST_STRUCT: struct sysfs_ops should normally be const
+#353: FILE: fs/ceph/sysfs.c:294:
++static struct sysfs_ops ceph_sysfs_ops = {
+
+WARNING:SSCANF_TO_KSTRTO: Prefer kstrto<type> to single variable sscanf
+#372: FILE: fs/ceph/sysfs.c:313:
++	if (sscanf(buf, "%d", a->val) < 1)
++		return 0;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#377: FILE: fs/ceph/sysfs.c:318:
++#define DECLARE_DEBUG_ATTR(_name)					\
++	static struct ceph_attr ceph_attr_##_name = {			\
++		.attr = { .name = __stringify(_name), .mode = 0600 },	\
++		.show = int_attr_show,					\
++		.store = int_attr_store,				\
++		.val = &ceph_##_name,					\
++	};
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#427: FILE: fs/ceph/sysfs.c:368:
++			pos += sprintf(buf+pos, " %s",
+ 			                  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#431: FILE: fs/ceph/sysfs.c:372:
++	pos += sprintf(buf+pos, "\n");
+ 	                  ^
+
+WARNING:CONSIDER_KSTRTO: simple_strtol is obsolete, use kstrtol instead
+#458: FILE: fs/ceph/sysfs.c:399:
++			ceph_debug_mask = simple_strtol(tok, NULL, 0);
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#463: FILE: fs/ceph/sysfs.c:404:
++			if (*tok == '-') {
+[...]
++			} else if (*tok == '+')
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#468: FILE: fs/ceph/sysfs.c:409:
++			mask = get_debug_mask(tok, next-tok);
+ 			                               ^
+
+WARNING:LINUX_VERSION_CODE: LINUX_VERSION_CODE should be avoided, code should be for the version to which it is merged
+#490: FILE: fs/ceph/sysfs.c:431:
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#490: FILE: fs/ceph/sysfs.c:431:
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
+
+WARNING:LINUX_VERSION_CODE: LINUX_VERSION_CODE should be avoided, code should be for the version to which it is merged
+#521: FILE: fs/ceph/sysfs.c:462:
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#521: FILE: fs/ceph/sysfs.c:462:
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000157313.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 29 warnings, 26 checks, 465 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000157313.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

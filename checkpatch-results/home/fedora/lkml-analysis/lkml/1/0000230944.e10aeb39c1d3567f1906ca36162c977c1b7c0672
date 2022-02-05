@@ -1,0 +1,170 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#30: 
+timer 0 (IRQ 0) and timer 1 (IRQ 8) as is when legacy mode is being used. We
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#54: FILE: arch/x86/kernel/hpet.c:25:
++#define HPET_DEV_USED		(1 << HPET_DEV_USED_BIT)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'evt' - possible side-effects?
+#59: FILE: arch/x86/kernel/hpet.c:30:
++#define EVT_TO_HPET_DEV(evt) container_of(evt, struct hpet_dev, evt)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#73: FILE: arch/x86/kernel/hpet.c:47:
+ };
++static struct hpet_dev *hpet_devs;
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#113: FILE: arch/x86/kernel/hpet.c:309:
++			struct hpet_dev *hdev = EVT_TO_HPET_DEV(evt);
++			hpet_setup_msi_irq(hdev->irq);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#135: FILE: arch/x86/kernel/hpet.c:386:
++static void hpet_msi_set_mode(enum clock_event_mode mode,
++				struct clock_event_device *evt)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#138: FILE: arch/x86/kernel/hpet.c:389:
++	struct hpet_dev *hdev = EVT_TO_HPET_DEV(evt);
++	hpet_set_mode(mode, evt, hdev->num);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#142: FILE: arch/x86/kernel/hpet.c:393:
++static int hpet_msi_next_event(unsigned long delta,
++				struct clock_event_device *evt)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#145: FILE: arch/x86/kernel/hpet.c:396:
++	struct hpet_dev *hdev = EVT_TO_HPET_DEV(evt);
++	return hpet_next_event(delta, evt, hdev->num);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#180: FILE: arch/x86/kernel/hpet.c:431:
++		printk(KERN_INFO "Spurious HPET timer interrupt on HPET timer %d\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#181: FILE: arch/x86/kernel/hpet.c:432:
++		printk(KERN_INFO "Spurious HPET timer interrupt on HPET timer %d\n",
++				dev->num);
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#191: FILE: arch/x86/kernel/hpet.c:442:
++{
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#193: FILE: arch/x86/kernel/hpet.c:444:
++			IRQF_SHARED|IRQF_NOBALANCING, dev->name, dev))
+ 			           ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#207: FILE: arch/x86/kernel/hpet.c:458:
++	uint64_t hpet_freq;
+
+CHECK:SPACING: No space is necessary after a cast
+#238: FILE: arch/x86/kernel/hpet.c:489:
++	evt->mult = div_sc((unsigned long) hpet_freq,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#239: FILE: arch/x86/kernel/hpet.c:490:
++	evt->mult = div_sc((unsigned long) hpet_freq,
++				      NSEC_PER_SEC, evt->shift);
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*hpet_devs)...) over kzalloc(sizeof(struct hpet_dev)...)
+#267: FILE: arch/x86/kernel/hpet.c:518:
++	hpet_devs = kzalloc(sizeof(struct hpet_dev) * num_timers, GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#267: FILE: arch/x86/kernel/hpet.c:518:
++	hpet_devs = kzalloc(sizeof(struct hpet_dev) * num_timers, GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#297: FILE: arch/x86/kernel/hpet.c:548:
++	printk(KERN_INFO "HPET: %d timers in total, %d timers will be used for per-cpu timer\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#298: FILE: arch/x86/kernel/hpet.c:549:
++	printk(KERN_INFO "HPET: %d timers in total, %d timers will be used for per-cpu timer\n",
++		num_timers, num_timers_used);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#314: FILE: arch/x86/kernel/hpet.c:565:
++		if (test_and_set_bit(HPET_DEV_USED_BIT,
++			(unsigned long *)&hdev->flags))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#342: FILE: arch/x86/kernel/hpet.c:593:
++static int hpet_cpuhp_notify(struct notifier_block *n,
++		unsigned long action, void *hcpu)
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#371: FILE: arch/x86/kernel/hpet.c:622:
++	return;
++}
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#374: FILE: arch/x86/kernel/hpet.c:625:
++static int hpet_cpuhp_notify(struct notifier_block *n,
++		unsigned long action, void *hcpu)
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000230944.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 8 warnings, 16 checks, 359 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000230944.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

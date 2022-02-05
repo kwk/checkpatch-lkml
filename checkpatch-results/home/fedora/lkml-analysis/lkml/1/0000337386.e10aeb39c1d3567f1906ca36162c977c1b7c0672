@@ -1,0 +1,196 @@
+WARNING:TYPO_SPELLING: 'desireable' may be misspelled - perhaps 'desirable'?
+#85: 
+The (desireable) side-effect of this patch is that all enumeration is
+     ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:CONST_STRUCT: struct pci_raw_ops should normally be const
+#172: FILE: arch/x86/pci/common.c:29:
++struct pci_raw_ops *raw_pci_ops_extcfg;
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#216: FILE: arch/x86/pci/init.c:19:
++		printk(KERN_INFO "No direct PCI access, using MMCONFIG always\n");
+
+WARNING:CONST_STRUCT: struct pci_raw_ops should normally be const
+#253: FILE: arch/x86/pci/pci.h:35:
++extern struct pci_raw_ops *raw_pci_ops_extcfg;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'len' - possible side-effects?
+#264: FILE: drivers/pci/access.c:54:
++#define PCI_OP_READ_EXT(size, type, len) \
++int pci_bus_read_extconfig_##size \
++	(struct pci_bus *bus, unsigned int devfn, int pos, type *value)	\
++{									\
++	int res;							\
++	unsigned long flags;						\
++	u32 data = 0;							\
++	if (PCI_##size##_BAD)						\
++		return PCIBIOS_BAD_REGISTER_NUMBER;			\
++	spin_lock_irqsave(&pci_lock, flags);				\
++	if (bus->ops->readext)						\
++		res = bus->ops->readext(bus, devfn, pos, len, &data);	\
++	else								\
++		res = bus->ops->read(bus, devfn, pos, len, &data);	\
++	*value = (type)data;						\
++	spin_unlock_irqrestore(&pci_lock, flags);			\
++	return res;							\
++}									\
++EXPORT_SYMBOL(pci_bus_read_extconfig_##size);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#264: FILE: drivers/pci/access.c:54:
++#define PCI_OP_READ_EXT(size, type, len) \
++int pci_bus_read_extconfig_##size \
++	(struct pci_bus *bus, unsigned int devfn, int pos, type *value)	\
++{									\
++	int res;							\
++	unsigned long flags;						\
++	u32 data = 0;							\
++	if (PCI_##size##_BAD)						\
++		return PCIBIOS_BAD_REGISTER_NUMBER;			\
++	spin_lock_irqsave(&pci_lock, flags);				\
++	if (bus->ops->readext)						\
++		res = bus->ops->readext(bus, devfn, pos, len, &data);	\
++	else								\
++		res = bus->ops->read(bus, devfn, pos, len, &data);	\
++	*value = (type)data;						\
++	spin_unlock_irqrestore(&pci_lock, flags);			\
++	return res;							\
++}									\
++EXPORT_SYMBOL(pci_bus_read_extconfig_##size);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#266: FILE: drivers/pci/access.c:56:
++	(struct pci_bus *bus, unsigned int devfn, int pos, type *value)	\
+ 	                                                        ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'len' - possible side-effects?
+#284: FILE: drivers/pci/access.c:74:
++#define PCI_OP_WRITE_EXT(size, type, len) \
++int pci_bus_write_extconfig_##size \
++	(struct pci_bus *bus, unsigned int devfn, int pos, type value)	\
++{									\
++	int res;							\
++	unsigned long flags;						\
++	if (PCI_##size##_BAD)						\
++		return PCIBIOS_BAD_REGISTER_NUMBER;			\
++	spin_lock_irqsave(&pci_lock, flags);				\
++	if (bus->ops->writeext)						\
++		res = bus->ops->writeext(bus, devfn, pos, len, value);	\
++	else								\
++		res = bus->ops->write(bus, devfn, pos, len, value);	\
++	spin_unlock_irqrestore(&pci_lock, flags);			\
++	return res;							\
++}									\
++EXPORT_SYMBOL(pci_bus_write_extconfig_##size);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#284: FILE: drivers/pci/access.c:74:
++#define PCI_OP_WRITE_EXT(size, type, len) \
++int pci_bus_write_extconfig_##size \
++	(struct pci_bus *bus, unsigned int devfn, int pos, type value)	\
++{									\
++	int res;							\
++	unsigned long flags;						\
++	if (PCI_##size##_BAD)						\
++		return PCIBIOS_BAD_REGISTER_NUMBER;			\
++	spin_lock_irqsave(&pci_lock, flags);				\
++	if (bus->ops->writeext)						\
++		res = bus->ops->writeext(bus, devfn, pos, len, value);	\
++	else								\
++		res = bus->ops->write(bus, devfn, pos, len, value);	\
++	spin_unlock_irqrestore(&pci_lock, flags);			\
++	return res;							\
++}									\
++EXPORT_SYMBOL(pci_bus_write_extconfig_##size);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#302: FILE: drivers/pci/access.c:92:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#327: FILE: drivers/pci/pci-sysfs.c:147:
++static ssize_t extended_config_space_store(struct device *dev,
++				struct device_attribute *attr, const char *buf,
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#338: FILE: drivers/pci/pci-sysfs.c:158:
++		printk(KERN_WARNING "Application %s enabled extended config space for device %s\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#339: FILE: drivers/pci/pci-sysfs.c:159:
++		printk(KERN_WARNING "Application %s enabled extended config space for device %s\n",
++			current->comm,  pci_name(pdev));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#347: FILE: drivers/pci/pci-sysfs.c:167:
++static ssize_t extended_config_space_show(struct device *dev,
++			       struct device_attribute *attr, char *buf)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#363: FILE: drivers/pci/pci-sysfs.c:239:
++	__ATTR(extended_config_space, 0600, extended_config_space_show,
++		extended_config_space_store),
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#490: FILE: include/linux/pci.h:722:
++extern int pci_enable_ext_config(struct pci_dev *dev);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#492: FILE: include/linux/pci.h:724:
++
++
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000337386.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 7 warnings, 10 checks, 344 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000337386.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

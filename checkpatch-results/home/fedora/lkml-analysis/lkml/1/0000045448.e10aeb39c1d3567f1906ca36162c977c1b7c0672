@@ -1,0 +1,221 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'src' - possible side-effects?
+#64: FILE: arch/mips/include/asm/ftrace.h:22:
++#define safe_load(load, src, dst, error)		\
++do {							\
++	asm volatile (					\
++		"1: " load " %[" STR(dst) "], 0(%[" STR(src) "])\n"\
++		"   li %[" STR(error) "], 0\n"		\
++		"2:\n"					\
++							\
++		".section .fixup, \"ax\"\n"		\
++		"3: li %[" STR(error) "], 1\n"		\
++		"   j 2b\n"				\
++		".previous\n"				\
++							\
++		".section\t__ex_table,\"a\"\n\t"	\
++		STR(PTR) "\t1b, 3b\n\t"			\
++		".previous\n"				\
++							\
++		: [dst] "=&r" (dst), [error] "=r" (error)\
++		: [src] "r" (src)			\
++		: "memory"				\
++	);						\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'dst' - possible side-effects?
+#64: FILE: arch/mips/include/asm/ftrace.h:22:
++#define safe_load(load, src, dst, error)		\
++do {							\
++	asm volatile (					\
++		"1: " load " %[" STR(dst) "], 0(%[" STR(src) "])\n"\
++		"   li %[" STR(error) "], 0\n"		\
++		"2:\n"					\
++							\
++		".section .fixup, \"ax\"\n"		\
++		"3: li %[" STR(error) "], 1\n"		\
++		"   j 2b\n"				\
++		".previous\n"				\
++							\
++		".section\t__ex_table,\"a\"\n\t"	\
++		STR(PTR) "\t1b, 3b\n\t"			\
++		".previous\n"				\
++							\
++		: [dst] "=&r" (dst), [error] "=r" (error)\
++		: [src] "r" (src)			\
++		: "memory"				\
++	);						\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'error' - possible side-effects?
+#64: FILE: arch/mips/include/asm/ftrace.h:22:
++#define safe_load(load, src, dst, error)		\
++do {							\
++	asm volatile (					\
++		"1: " load " %[" STR(dst) "], 0(%[" STR(src) "])\n"\
++		"   li %[" STR(error) "], 0\n"		\
++		"2:\n"					\
++							\
++		".section .fixup, \"ax\"\n"		\
++		"3: li %[" STR(error) "], 1\n"		\
++		"   j 2b\n"				\
++		".previous\n"				\
++							\
++		".section\t__ex_table,\"a\"\n\t"	\
++		STR(PTR) "\t1b, 3b\n\t"			\
++		".previous\n"				\
++							\
++		: [dst] "=&r" (dst), [error] "=r" (error)\
++		: [src] "r" (src)			\
++		: "memory"				\
++	);						\
++} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#64: FILE: arch/mips/include/asm/ftrace.h:22:
++#define safe_load(load, src, dst, error)		\
++do {							\
++	asm volatile (					\
++		"1: " load " %[" STR(dst) "], 0(%[" STR(src) "])\n"\
++		"   li %[" STR(error) "], 0\n"		\
++		"2:\n"					\
++							\
++		".section .fixup, \"ax\"\n"		\
++		"3: li %[" STR(error) "], 1\n"		\
++		"   j 2b\n"				\
++		".previous\n"				\
++							\
++		".section\t__ex_table,\"a\"\n\t"	\
++		STR(PTR) "\t1b, 3b\n\t"			\
++		".previous\n"				\
++							\
++		: [dst] "=&r" (dst), [error] "=r" (error)\
++		: [src] "r" (src)			\
++		: "memory"				\
++	);						\
++} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'src' - possible side-effects?
+#86: FILE: arch/mips/include/asm/ftrace.h:44:
++#define safe_store(store, src, dst, error)	\
++do {						\
++	asm volatile (				\
++		"1: " store " %[" STR(src) "], 0(%[" STR(dst) "])\n"\
++		"   li %[" STR(error) "], 0\n"	\
++		"2:\n"				\
++						\
++		".section .fixup, \"ax\"\n"	\
++		"3: li %[" STR(error) "], 1\n"	\
++		"   j 2b\n"			\
++		".previous\n"			\
++						\
++		".section\t__ex_table,\"a\"\n\t"\
++		STR(PTR) "\t1b, 3b\n\t"		\
++		".previous\n"			\
++						\
++		: [error] "=r" (error)		\
++		: [dst] "r" (dst), [src] "r" (src)\
++		: "memory"			\
++	);					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'dst' - possible side-effects?
+#86: FILE: arch/mips/include/asm/ftrace.h:44:
++#define safe_store(store, src, dst, error)	\
++do {						\
++	asm volatile (				\
++		"1: " store " %[" STR(src) "], 0(%[" STR(dst) "])\n"\
++		"   li %[" STR(error) "], 0\n"	\
++		"2:\n"				\
++						\
++		".section .fixup, \"ax\"\n"	\
++		"3: li %[" STR(error) "], 1\n"	\
++		"   j 2b\n"			\
++		".previous\n"			\
++						\
++		".section\t__ex_table,\"a\"\n\t"\
++		STR(PTR) "\t1b, 3b\n\t"		\
++		".previous\n"			\
++						\
++		: [error] "=r" (error)		\
++		: [dst] "r" (dst), [src] "r" (src)\
++		: "memory"			\
++	);					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'error' - possible side-effects?
+#86: FILE: arch/mips/include/asm/ftrace.h:44:
++#define safe_store(store, src, dst, error)	\
++do {						\
++	asm volatile (				\
++		"1: " store " %[" STR(src) "], 0(%[" STR(dst) "])\n"\
++		"   li %[" STR(error) "], 0\n"	\
++		"2:\n"				\
++						\
++		".section .fixup, \"ax\"\n"	\
++		"3: li %[" STR(error) "], 1\n"	\
++		"   j 2b\n"			\
++		".previous\n"			\
++						\
++		".section\t__ex_table,\"a\"\n\t"\
++		STR(PTR) "\t1b, 3b\n\t"		\
++		".previous\n"			\
++						\
++		: [error] "=r" (error)		\
++		: [dst] "r" (dst), [src] "r" (src)\
++		: "memory"			\
++	);					\
++} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#86: FILE: arch/mips/include/asm/ftrace.h:44:
++#define safe_store(store, src, dst, error)	\
++do {						\
++	asm volatile (				\
++		"1: " store " %[" STR(src) "], 0(%[" STR(dst) "])\n"\
++		"   li %[" STR(error) "], 0\n"	\
++		"2:\n"				\
++						\
++		".section .fixup, \"ax\"\n"	\
++		"3: li %[" STR(error) "], 1\n"	\
++		"   j 2b\n"			\
++		".previous\n"			\
++						\
++		".section\t__ex_table,\"a\"\n\t"\
++		STR(PTR) "\t1b, 3b\n\t"		\
++		".previous\n"			\
++						\
++		: [error] "=r" (error)		\
++		: [dst] "r" (dst), [src] "r" (src)\
++		: "memory"			\
++	);					\
++} while (0)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#119: FILE: arch/mips/include/asm/ftrace.h:77:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000045448.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 2 warnings, 7 checks, 203 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000045448.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

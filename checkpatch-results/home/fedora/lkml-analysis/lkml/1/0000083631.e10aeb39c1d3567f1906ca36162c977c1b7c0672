@@ -1,0 +1,249 @@
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#266: FILE: fs/direct-io.c:435:
++	BUG_ON(dio->block_in_file >= dio->final_block_in_request);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#314: FILE: fs/direct-io.c:496:
++	ret = bio_add_page(dio->bio, dio->cur_page, dio->cur_page_len,
++				dio->cur_page_offset);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#337: FILE: fs/direct-io.c:861:
++direct_io_worker(int rw, struct kiocb *iocb, struct inode *inode,
++	struct dio_args *args, unsigned blkbits, get_block_t get_block,
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#337: FILE: fs/direct-io.c:861:
++	struct dio_args *args, unsigned blkbits, get_block_t get_block,
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#368: FILE: fs/direct-io.c:894:
++	if (args->user_addr) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#373: FILE: fs/direct-io.c:899:
++	} else
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 25)
+#478: FILE: fs/direct-io.c:1046:
++		if (bdev)
++			 blkbits = bdev_blkbits;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#515: FILE: fs/direct-io.c:1083:
++			retval = filemap_write_and_wait_range(mapping,
++							args->offset, end - 1);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#526: FILE: fs/direct-io.c:1110:
++	retval = direct_io_worker(rw, iocb, inode, args, blkbits, get_block,
++					end_io, dio);
+
+CHECK:SPACING: No space is necessary after a cast
+#555: FILE: fs/direct-io.c:1146:
++		.user_addr	= (unsigned long) iov->iov_base,
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#565: FILE: fs/direct-io.c:1156:
++		args.pages = kzalloc(nr_pages * sizeof(struct page *),
++					GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#566: FILE: fs/direct-io.c:1157:
++		args.pages = kzalloc(nr_pages * sizeof(struct page *),
++					GFP_KERNEL);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#572: FILE: fs/direct-io.c:1163:
++	ret = get_user_pages_fast(args.user_addr, nr_pages, rw == READ,
++					args.pages);
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'nfs_direct_IO', this function's name, in a string
+#880: FILE: fs/nfs/direct.c:116:
++	dprintk("NFS: nfs_direct_IO (%s) off/no(%Ld) EINVAL\n",
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+WARNING:PRINTF_L: %Ld is non-standard C, use %lld
+#880: FILE: fs/nfs/direct.c:116:
++	dprintk("NFS: nfs_direct_IO (%s) off/no(%Ld) EINVAL\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#881: FILE: fs/nfs/direct.c:117:
++	dprintk("NFS: nfs_direct_IO (%s) off/no(%Ld) EINVAL\n",
+ 			iocb->ki_filp->f_path.dentry->d_name.name,
+
+CHECK:SPACING: No space is necessary after a cast
+#883: FILE: fs/nfs/direct.c:118:
++			(long long) args->offset);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!dreq->commit_data"
+#1128: FILE: fs/nfs/direct.c:803:
++	if (dreq->commit_data == NULL || args->length < wsize)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:SPACING: No space is necessary after a cast
+#1173: FILE: fs/nfs/direct.c:851:
++		count, (long long) args->offset);
+
+CHECK:SPACING: No space is necessary after a cast
+#1221: FILE: fs/nfs/direct.c:905:
++		count, (long long) args->offset);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#1414: FILE: include/linux/fs.h:589:
++	ssize_t (*direct_IO)(int, struct kiocb *, struct dio_args *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct kiocb *' should also have an identifier name
+#1414: FILE: include/linux/fs.h:589:
++	ssize_t (*direct_IO)(int, struct kiocb *, struct dio_args *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct dio_args *' should also have an identifier name
+#1414: FILE: include/linux/fs.h:589:
++	ssize_t (*direct_IO)(int, struct kiocb *, struct dio_args *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#1451: FILE: include/linux/fs.h:2270:
++ssize_t do_dio(int, struct address_space *, struct kiocb *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct address_space *' should also have an identifier name
+#1451: FILE: include/linux/fs.h:2270:
++ssize_t do_dio(int, struct address_space *, struct kiocb *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct kiocb *' should also have an identifier name
+#1451: FILE: include/linux/fs.h:2270:
++ssize_t do_dio(int, struct address_space *, struct kiocb *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const struct iovec *' should also have an identifier name
+#1451: FILE: include/linux/fs.h:2270:
++ssize_t do_dio(int, struct address_space *, struct kiocb *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'loff_t' should also have an identifier name
+#1451: FILE: include/linux/fs.h:2270:
++ssize_t do_dio(int, struct address_space *, struct kiocb *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned long' should also have an identifier name
+#1451: FILE: include/linux/fs.h:2270:
++ssize_t do_dio(int, struct address_space *, struct kiocb *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'dio_io_actor' should also have an identifier name
+#1451: FILE: include/linux/fs.h:2270:
++ssize_t do_dio(int, struct address_space *, struct kiocb *,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1452: FILE: include/linux/fs.h:2271:
++ssize_t do_dio(int, struct address_space *, struct kiocb *,
++		const struct iovec *, loff_t, unsigned long, dio_io_actor);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1515: FILE: include/linux/nfs_fs.h:411:
++extern ssize_t nfs_direct_IO(int, struct kiocb *, struct dio_args *);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#1515: FILE: include/linux/nfs_fs.h:411:
++extern ssize_t nfs_direct_IO(int, struct kiocb *, struct dio_args *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct kiocb *' should also have an identifier name
+#1515: FILE: include/linux/nfs_fs.h:411:
++extern ssize_t nfs_direct_IO(int, struct kiocb *, struct dio_args *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct dio_args *' should also have an identifier name
+#1515: FILE: include/linux/nfs_fs.h:411:
++extern ssize_t nfs_direct_IO(int, struct kiocb *, struct dio_args *);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1516: FILE: include/linux/nfs_fs.h:412:
++extern ssize_t nfs_file_direct_io(int, struct kiocb *, struct dio_args *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#1516: FILE: include/linux/nfs_fs.h:412:
++extern ssize_t nfs_file_direct_io(int, struct kiocb *, struct dio_args *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct kiocb *' should also have an identifier name
+#1516: FILE: include/linux/nfs_fs.h:412:
++extern ssize_t nfs_file_direct_io(int, struct kiocb *, struct dio_args *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct dio_args *' should also have an identifier name
+#1516: FILE: include/linux/nfs_fs.h:412:
++extern ssize_t nfs_file_direct_io(int, struct kiocb *, struct dio_args *);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1543: FILE: mm/filemap.c:2150:
++	written = do_dio(WRITE, mapping, iocb, iov, pos, *nr_segs,
++				mapping->a_ops->direct_IO);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000083631.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 22 warnings, 18 checks, 1330 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000083631.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

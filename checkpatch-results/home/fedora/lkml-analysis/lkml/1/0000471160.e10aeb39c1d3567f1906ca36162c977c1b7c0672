@@ -1,0 +1,104 @@
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*mm->counter)...) over kmalloc(sizeof(struct mem_counter)...)
+#84: FILE: kernel/res_group/memctlr.c:80:
++	mm->counter = kmalloc(sizeof(struct mem_counter), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#123: FILE: kernel/res_group/memctlr.c:119:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#171: FILE: kernel/res_group/memctlr.c:194:
++	BUG_ON(!res);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#175: FILE: kernel/res_group/memctlr.c:197:
++	i = snprintf(buf, len, "RSS Pages %ld\n",
++			atomic_long_read(&res->counter.rss));
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#189: FILE: kernel/res_group/memctlr.c:231:
+ 
++
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#200: FILE: include/linux/memctlr.h:32:
++extern int mm_init_mem_counter(struct mm_struct *mm);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#201: FILE: include/linux/memctlr.h:33:
++extern void mm_assign_container(struct mm_struct *mm, struct task_struct *p);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#202: FILE: include/linux/memctlr.h:34:
++extern void memctlr_inc_rss(struct page *page);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#203: FILE: include/linux/memctlr.h:35:
++extern void memctlr_dec_rss(struct page *page);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#204: FILE: include/linux/memctlr.h:36:
++extern void mm_free_mem_counter(struct mm_struct *mm);
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#209: FILE: include/linux/memctlr.h:41:
++#define memctlr_inc_rss(page)		do { ; } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#210: FILE: include/linux/memctlr.h:42:
++#define memctlr_dec_rss(page)		do { ; } while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#211: FILE: include/linux/memctlr.h:43:
++#define mm_assign_container(mm, task)	do { ; } while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#212: FILE: include/linux/memctlr.h:44:
++#define mm_free_mem_counter(mm)		do { ; } while (0)
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000471160.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 5 warnings, 9 checks, 237 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000471160.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

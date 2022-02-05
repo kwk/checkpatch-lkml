@@ -1,0 +1,65 @@
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'current->signal->rlim[RLIMIT_MEMLOCK].rlim_cur'
+#97: FILE: kernel/perf_event.c:2424:
++	lock_limit = ACCESS_ONCE(current->signal->
++			rlim[RLIMIT_MEMLOCK].rlim_cur);
+
+A single dereferencing identifier spanned on multiple lines like::
+
+  struct_identifier->member[index].
+  member = <foo>;
+
+is generally hard to follow. It can easily lead to typos and so makes
+the code vulnerable to bugs.
+
+If fixing the multiple line dereferencing leads to an 80 column
+violation, then either rewrite the code in a more simple way or if the
+starting part of the dereferencing identifier is the same and used at
+multiple places then store it in a temporary variable, and use that
+temporary variable only at all the places. For example, if there are
+two dereferencing identifiers::
+
+  member1->member2->member3.foo1;
+  member1->member2->member3.foo2;
+
+then store the member1->member2->member3 part in a temporary variable.
+It not only helps to avoid the 80 column violation but also reduces
+the program size by removing the unnecessary dereferences.
+
+But if none of the above methods work then ignore the 80 column
+violation because it is much easier to read a dereferencing identifier
+on a single line.
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'sig->rlim[RLIMIT_RTTIME].rlim_max'
+#123: FILE: kernel/posix-cpu-timers.c:1038:
++		unsigned long hard = ACCESS_ONCE(sig->rlim[RLIMIT_RTTIME].
++				rlim_max);
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'p->signal->rlim[RLIMIT_NICE].rlim_cur'
+#174: FILE: kernel/sched.c:6076:
++	return (nice_rlim <= ACCESS_ONCE(p->signal->
++				rlim[RLIMIT_NICE].rlim_cur) ||
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'p->signal->rlim[RLIMIT_RTPRIO].rlim_cur'
+#184: FILE: kernel/sched.c:6262:
++			rlim_rtprio = ACCESS_ONCE(p->signal->
++					rlim[RLIMIT_RTPRIO].rlim_cur);
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 't->signal->rlim[RLIMIT_SIGPENDING].rlim_cur'
+#215: FILE: kernel/signal.c:212:
++	    atomic_read(&user->sigpending) <= ACCESS_ONCE(t->signal->
++	    rlim[RLIMIT_SIGPENDING].rlim_cur))
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'current->signal->rlim[RLIMIT_NPROC].rlim_cur'
+#230: FILE: kernel/sys.c:576:
++	if (atomic_read(&new_user->processes) >= ACCESS_ONCE(current->signal->
++				rlim[RLIMIT_NPROC].rlim_cur) &&
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000046347.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 6 warnings, 0 checks, 139 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000046347.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

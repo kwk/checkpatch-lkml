@@ -1,0 +1,113 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#108: FILE: include/linux/workqueue.h:97:
++extern void __init_work(struct work_struct *work, int onstack);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#109: FILE: include/linux/workqueue.h:98:
++extern void destroy_work_on_stack(struct work_struct *work);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_work' - possible side-effects?
+#123: FILE: include/linux/workqueue.h:112:
++#define __INIT_WORK(_work, _func, _onstack)				\
+ 	do {								\
+ 		static struct lock_class_key __key;			\
+ 									\
++		__init_work((_work), _onstack);				\
+ 		(_work)->data = (atomic_long_t) WORK_DATA_INIT();	\
+ 		lockdep_init_map(&(_work)->lockdep_map, #_work, &__key, 0);\
+ 		INIT_LIST_HEAD(&(_work)->entry);			\
+ 		PREPARE_WORK((_work), (_func));				\
+ 	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_work' - possible side-effects?
+#135: FILE: include/linux/workqueue.h:123:
++#define __INIT_WORK(_work, _func, _onstack)				\
+ 	do {								\
++		__init_work((_work), _onstack);				\
+ 		(_work)->data = (atomic_long_t) WORK_DATA_INIT();	\
+ 		INIT_LIST_HEAD(&(_work)->entry);			\
+ 		PREPARE_WORK((_work), (_func));				\
+ 	} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#144: FILE: include/linux/workqueue.h:132:
++#define INIT_WORK(_work, _func)					\
++	do {							\
++		__INIT_WORK((_work), (_func), 0);		\
++	} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#149: FILE: include/linux/workqueue.h:137:
++#define INIT_WORK_ON_STACK(_work, _func)			\
++	do {							\
++		__INIT_WORK((_work), (_func), 1);		\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_work' - possible side-effects?
+#167: FILE: include/linux/workqueue.h:154:
++#define INIT_DELAYED_WORK_DEFERRABLE(_work, _func)		\
+ 	do {							\
+ 		INIT_WORK(&(_work)->work, (_func));		\
+ 		init_timer_deferrable(&(_work)->timer);		\
+ 	} while (0)
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#222: FILE: kernel/workqueue.c:103:
++	switch (state) {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#387: FILE: lib/Kconfig.debug:301:
++config DEBUG_OBJECTS_WORK
++	bool "Debug work objects"
++	depends on DEBUG_OBJECTS
++	help
++	  If you say Y here, additional code will be inserted into the
++	  work queue routines to track the life time of work objects and
++	  validate the work operations.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000047396.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 3 warnings, 6 checks, 319 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000047396.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

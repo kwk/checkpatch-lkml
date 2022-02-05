@@ -1,0 +1,312 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#25: 
+Rewrite of the markers using a hash table as a basic container for the enabled
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#47: FILE: include/linux/marker.h:94:
++extern void marker_disarm_probe(const char *name);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#61: FILE: kernel/module.c:93:
++ * Protected by module_mutex. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#63: FILE: kernel/module.c:95:
++#define MARKER_TABLE_SIZE (1 << MARKER_HASH_BITS)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#86: FILE: kernel/module.c:182:
++extern struct __mark_marker __start___markers[];
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#87: FILE: kernel/module.c:183:
++extern struct __mark_marker __stop___markers[];
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#102: FILE: kernel/module.c:607:
++void __mark_empty_function(const struct __mark_marker *mdata,
+ 	const char *fmt, ...)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#116: FILE: kernel/module.c:613:
++ * Returns NULL if not present. */
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#130: FILE: kernel/module.c:622:
++	head = &marker_table[hash & ((1 << MARKER_HASH_BITS)-1)];
+ 	                                                    ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#151: FILE: kernel/module.c:631:
++static int hash_add_marker(int flags, const char *name,
++	const char *format, marker_probe_func *probe, void *pdata)
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#170: FILE: kernel/module.c:640:
++	head = &marker_table[hash & ((1 << MARKER_HASH_BITS)-1)];
+ 	                                                    ^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#200: FILE: kernel/module.c:649:
++	 * cause some memory fragmentation if overused. */
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*e)...) over kmalloc(sizeof(struct marker_entry)...)
+#201: FILE: kernel/module.c:650:
++	e = kmalloc(sizeof(struct marker_entry) + name_len + 1 + format_len + 1,
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#202: FILE: kernel/module.c:651:
++	e = kmalloc(sizeof(struct marker_entry) + name_len + 1 + format_len + 1,
++			GFP_KERNEL);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#216: FILE: kernel/module.c:665:
++ * held. */
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#226: FILE: kernel/module.c:675:
++	head = &marker_table[hash & ((1 << MARKER_HASH_BITS)-1)];
+ 	                                                    ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#248: FILE: kernel/module.c:690:
++static int set_marker(int flags, const char *name, const char *format,
++			marker_probe_func *probe, void *pdata,
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#251: FILE: kernel/module.c:693:
++	BUG_ON(strcmp(name, elem->name) != 0);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#255: FILE: kernel/module.c:697:
++			printk(KERN_NOTICE
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#257: FILE: kernel/module.c:699:
++				"Format mismatch for probe %s "
++				"(%s), marker (%s)\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#264: FILE: kernel/module.c:706:
++	if (flags & CF_LOCKDEP
++		&& !(elem->flags & CF_LOCKDEP)) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#265: FILE: kernel/module.c:707:
++		printk(KERN_NOTICE
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#267: FILE: kernel/module.c:709:
++			"Incompatible lockdep flags for "
++			"probe %s\n",
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#272: FILE: kernel/module.c:714:
++	if (flags & CF_PRINTK
++		&& !(elem->flags & CF_PRINTK)) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#273: FILE: kernel/module.c:715:
++		printk(KERN_NOTICE
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#275: FILE: kernel/module.c:717:
++			"Incompatible printk flags for "
++			"probe %s\n",
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#288: FILE: kernel/module.c:730:
++	 * only after a synchronize_sched(). It's never used anyway. */
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#292: FILE: kernel/module.c:734:
++static int marker_update_probe_range(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#312: FILE: kernel/module.c:748:
++			ret = set_marker(hash_mark->flags,
++				hash_mark->name, hash_mark->format,
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#344: FILE: kernel/module.c:767:
++ * safely unloaded from now on. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#363: FILE: kernel/module.c:777:
++	ret = marker_update_probe_range(__start___markers,
++			__stop___markers, probe_module, &refcount);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#370: FILE: kernel/module.c:784:
++			ret = marker_update_probe_range(mod->markers,
++				mod->markers+mod->num_markers,
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#370: FILE: kernel/module.c:784:
++				mod->markers+mod->num_markers,
+ 				            ^
+
+WARNING:DEPRECATED_API: Deprecated use of 'synchronize_sched', prefer 'synchronize_rcu' instead
+#378: FILE: kernel/module.c:792:
++		synchronize_sched();
+
+Usage of a deprecated RCU API is detected.  It is recommended to replace
+old flavourful RCU APIs by their new vanilla-RCU counterparts.
+
+The full list of available RCU APIs can be viewed from the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/RCU/whatisRCU.html#full-list-of-rcu-apis
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#384: FILE: kernel/module.c:798:
++ * refuse to load the module. */
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#389: FILE: kernel/module.c:803:
++			mod->markers+mod->num_markers, NULL, NULL);
+ 			            ^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#394: FILE: kernel/module.c:808:
++ * If the marker update fails, remove the probe and refresh the markers. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#396: FILE: kernel/module.c:810:
++int _marker_arm_probe(int flags, const char *name, const char *format,
++			marker_probe_func *probe, void *pdata)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#401: FILE: kernel/module.c:815:
++	ret = hash_add_marker(flags, name,
++			format, probe, pdata);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#408: FILE: kernel/module.c:822:
++		BUG_ON(ret);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#444: FILE: kernel/module.c:843:
++ * marker. */
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#457: FILE: kernel/module.c:856:
++	BUG_ON(ret);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#465: FILE: kernel/module.c:863:
++static const struct __mark_marker *marker_query_range(const char *name,
+ 	int instance,
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#489: FILE: kernel/module.c:880:
++ * associated data structure. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#501: FILE: kernel/module.c:889:
++	mdata = marker_query_range(name, instance,
+ 			__start___markers, __stop___markers);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#513: FILE: kernel/module.c:895:
++				mdata = marker_query_range(name, instance,
++					mod->markers,
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#514: FILE: kernel/module.c:896:
++					mod->markers+mod->num_markers);
+ 					            ^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#533: FILE: kernel/module.c:907:
++ * callback and format string. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#535: FILE: kernel/module.c:909:
++static int marker_list_probe_range(marker_probe_func *probe,
++	const struct __mark_marker *begin,
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#557: FILE: kernel/module.c:917:
++			if (probe != iter->call) continue;
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#558: FILE: kernel/module.c:918:
++		printk("name %s func 0x%p format \"%s\"\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#559: FILE: kernel/module.c:919:
++		printk("name %s func 0x%p format \"%s\"\n",
++			iter->name,
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000424884.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 25 warnings, 26 checks, 619 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000424884.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

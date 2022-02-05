@@ -1,0 +1,208 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#32: 
+created by debugfs_create_XXX. Having that, we can also have proper versions
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#63: FILE: fs/debugfs/file.c:62:
++	void (*get)(void *, char *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'char *' should also have an identifier name
+#63: FILE: fs/debugfs/file.c:62:
++	void (*get)(void *, char *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#64: FILE: fs/debugfs/file.c:63:
++	void (*set)(void *, char *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'char *' should also have an identifier name
+#64: FILE: fs/debugfs/file.c:63:
++	void (*set)(void *, char *);
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#68: FILE: fs/debugfs/file.c:67:
++	struct mutex mutex;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__type' - possible side-effects?
+#147: FILE: fs/debugfs/file.c:143:
++#define DEFINE_NUM_ATTR(__fops, __type, __format)			\
++static void __fops ## _get(void *data, char *buf)			\
++{									\
++	scnprintf(buf, 24, __format, *(__type *) data);			\
++}									\
++static void __fops ## _set(void *data, char *buf)			\
++{									\
++	sscanf(buf, __format, (__type *) data);				\
++}									\
++static int __fops ## _open(struct inode *inode, struct file *file)	\
++{									\
++	return debugfs_num_attr_open(inode, file, __fops ## _get,	\
++				     __fops ## _set);			\
++}									\
++static struct file_operations __fops = {				\
++	.owner	 = THIS_MODULE,						\
++	.open	 = __fops ## _open,					\
++	.release = debugfs_num_attr_close,				\
++	.read	 = debugfs_num_attr_read,				\
++	.write	 = debugfs_num_attr_write,				\
++};
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '__type' may be better as '(__type)' to avoid precedence issues
+#147: FILE: fs/debugfs/file.c:143:
++#define DEFINE_NUM_ATTR(__fops, __type, __format)			\
++static void __fops ## _get(void *data, char *buf)			\
++{									\
++	scnprintf(buf, 24, __format, *(__type *) data);			\
++}									\
++static void __fops ## _set(void *data, char *buf)			\
++{									\
++	sscanf(buf, __format, (__type *) data);				\
++}									\
++static int __fops ## _open(struct inode *inode, struct file *file)	\
++{									\
++	return debugfs_num_attr_open(inode, file, __fops ## _get,	\
++				     __fops ## _set);			\
++}									\
++static struct file_operations __fops = {				\
++	.owner	 = THIS_MODULE,						\
++	.open	 = __fops ## _open,					\
++	.release = debugfs_num_attr_close,				\
++	.read	 = debugfs_num_attr_read,				\
++	.write	 = debugfs_num_attr_write,				\
++};
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__format' - possible side-effects?
+#147: FILE: fs/debugfs/file.c:143:
++#define DEFINE_NUM_ATTR(__fops, __type, __format)			\
++static void __fops ## _get(void *data, char *buf)			\
++{									\
++	scnprintf(buf, 24, __format, *(__type *) data);			\
++}									\
++static void __fops ## _set(void *data, char *buf)			\
++{									\
++	sscanf(buf, __format, (__type *) data);				\
++}									\
++static int __fops ## _open(struct inode *inode, struct file *file)	\
++{									\
++	return debugfs_num_attr_open(inode, file, __fops ## _get,	\
++				     __fops ## _set);			\
++}									\
++static struct file_operations __fops = {				\
++	.owner	 = THIS_MODULE,						\
++	.open	 = __fops ## _open,					\
++	.release = debugfs_num_attr_close,				\
++	.read	 = debugfs_num_attr_read,				\
++	.write	 = debugfs_num_attr_write,				\
++};
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#147: FILE: fs/debugfs/file.c:143:
++#define DEFINE_NUM_ATTR(__fops, __type, __format)			\
++static void __fops ## _get(void *data, char *buf)			\
++{									\
++	scnprintf(buf, 24, __format, *(__type *) data);			\
++}									\
++static void __fops ## _set(void *data, char *buf)			\
++{									\
++	sscanf(buf, __format, (__type *) data);				\
++}									\
++static int __fops ## _open(struct inode *inode, struct file *file)	\
++{									\
++	return debugfs_num_attr_open(inode, file, __fops ## _get,	\
++				     __fops ## _set);			\
++}									\
++static struct file_operations __fops = {				\
++	.owner	 = THIS_MODULE,						\
++	.open	 = __fops ## _open,					\
++	.release = debugfs_num_attr_close,				\
++	.read	 = debugfs_num_attr_read,				\
++	.write	 = debugfs_num_attr_write,				\
++};
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:SPACING: No space is necessary after a cast
+#154: FILE: fs/debugfs/file.c:150:
++	sscanf(buf, __format, (__type *) data);				\
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:NAKED_SSCANF: unchecked sscanf return value
+#154: FILE: fs/debugfs/file.c:150:
++	sscanf(buf, __format, (__type *) data);				\
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#161: FILE: fs/debugfs/file.c:157:
++static struct file_operations __fops = {				\
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#300: FILE: fs/debugfs/file.c:348:
++struct dentry *debugfs_create_s16(const char *name, mode_t mode,
++				 struct dentry *parent, s16 *value)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#319: FILE: fs/debugfs/file.c:367:
++struct dentry *debugfs_create_s32(const char *name, mode_t mode,
++				 struct dentry *parent, s32 *value)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#339: FILE: fs/debugfs/file.c:386:
++struct dentry *debugfs_create_s64(const char *name, mode_t mode,
++				 struct dentry *parent, s64 *value)
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000346547.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 8 warnings, 8 checks, 438 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000346547.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

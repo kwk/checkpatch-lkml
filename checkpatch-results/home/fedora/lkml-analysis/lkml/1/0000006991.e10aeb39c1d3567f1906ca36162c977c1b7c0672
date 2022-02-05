@@ -1,0 +1,74 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#108: FILE: kernel/workqueue.c:169:
++#define for_each_busy_worker(worker, i, pos, gcwq)			\
++	for (i = 0; i < BUSY_WORKER_HASH_SIZE; i++)			\
++		hlist_for_each_entry(worker, pos, &gcwq->busy_hash[i], hentry)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'gcwq' may be better as '(gcwq)' to avoid precedence issues
+#108: FILE: kernel/workqueue.c:169:
++#define for_each_busy_worker(worker, i, pos, gcwq)			\
++	for (i = 0; i < BUSY_WORKER_HASH_SIZE; i++)			\
++		hlist_for_each_entry(worker, pos, &gcwq->busy_hash[i], hentry)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cond' - possible side-effects?
+#203: FILE: kernel/workqueue.c:1862:
++#define trustee_wait_event_timeout(cond, timeout) ({			\
++	long __ret = (timeout);						\
++	while (!((cond) || (gcwq->trustee_state == TRUSTEE_RELEASE)) &&	\
++	       __ret) {							\
++		spin_unlock_irq(&gcwq->lock);				\
++		__wait_event_timeout(gcwq->trustee_wait, (cond) ||	\
++			(gcwq->trustee_state == TRUSTEE_RELEASE),	\
++			__ret);						\
++		spin_lock_irq(&gcwq->lock);				\
++	}								\
++	gcwq->trustee_state == TRUSTEE_RELEASE ? -1 : (__ret);		\
++})
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#246: FILE: kernel/workqueue.c:1905:
++	BUG_ON(rc);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#259: FILE: kernel/workqueue.c:1918:
++	BUG_ON(gcwq->cpu != smp_processor_id());
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#266: FILE: kernel/workqueue.c:1925:
++	BUG_ON(gcwq->cpu != smp_processor_id());
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#331: FILE: kernel/workqueue.c:1990:
+ static int __devinit workqueue_cpu_callback(struct notifier_block *nfb,
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#373: FILE: kernel/workqueue.c:2017:
++		BUG_ON(gcwq->trustee || gcwq->trustee_state != TRUSTEE_DONE);
+
+WARNING:INDENTED_LABEL: labels should not be indented
+#398: FILE: kernel/workqueue.c:2042:
++	recheck:
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#420: FILE: kernel/workqueue.c:2134:
++		BUG_ON(gcwq->flags & GCWQ_FREEZING);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#430: FILE: kernel/workqueue.c:2220:
++		BUG_ON(!(gcwq->flags & GCWQ_FREEZING));
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000006991.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 8 warnings, 3 checks, 379 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000006991.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

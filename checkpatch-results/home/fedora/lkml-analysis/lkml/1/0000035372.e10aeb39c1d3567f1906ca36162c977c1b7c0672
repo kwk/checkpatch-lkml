@@ -1,0 +1,365 @@
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#49: FILE: include/linux/kqueue.h:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#65: FILE: include/linux/kqueue.h:17:
++ * along with this program; if not, write to the Free Software$
+
+Kernel maintainers reject new instances of the GPL boilerplate paragraph
+directing people to write to the FSF for a copy of the GPL, since the
+FSF has moved in the past and may do so again.
+So do not write paragraphs about writing to the Free Software Foundation's
+mailing address.
+
+See: https://lore.kernel.org/lkml/20131006222342.GT19510@leaf/
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#66: FILE: include/linux/kqueue.h:18:
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'size' - possible side-effects?
+#80: FILE: include/linux/kqueue.h:32:
++#define STRUCT_KQUEUE(type, size) \
++struct { \
++	unsigned int	in; \
++	unsigned int	out; \
++	unsigned int	mask; \
++	type		data[size ? ((size & (size - 1)) ? -1 : size) : 1]; \
++}
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#94: FILE: include/linux/kqueue.h:46:
++#define DECLARE_KQUEUE(queue, type, size) \
++	STRUCT_KQUEUE(type, size) queue
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#102: FILE: include/linux/kqueue.h:54:
++#define __kqueue_initializer(queue) \
++	(typeof(queue)) { \
++		.in	= 0, \
++		.out	= 0, \
++		.mask	= ARRAY_SIZE(queue.data) - 1, \
++	}
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#113: FILE: include/linux/kqueue.h:65:
++#define INIT_KQUEUE(queue) \
++	queue = __kqueue_initializer(queue)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'queue' - possible side-effects?
+#113: FILE: include/linux/kqueue.h:65:
++#define INIT_KQUEUE(queue) \
++	queue = __kqueue_initializer(queue)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#124: FILE: include/linux/kqueue.h:76:
++#define DEFINE_KQUEUE(queue, type, size) \
++	DECLARE_KQUEUE(queue, type, size) = __kqueue_initializer(queue)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'queue' - possible side-effects?
+#124: FILE: include/linux/kqueue.h:76:
++#define DEFINE_KQUEUE(queue, type, size) \
++	DECLARE_KQUEUE(queue, type, size) = __kqueue_initializer(queue)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#137: FILE: include/linux/kqueue.h:89:
++#define kqueue_reset(queue) \
++(void)({ \
++	typeof(queue) __tmp = queue; \
++	__tmp->in = __tmp->out = 0; \
++})
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#140: FILE: include/linux/kqueue.h:92:
++	__tmp->in = __tmp->out = 0; \
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#147: FILE: include/linux/kqueue.h:99:
++#define kqueue_reset_out(queue)	\
++(void)({ \
++	typeof(queue) __tmp = queue; \
++	__tmp->out = __tmp->in; \
++})
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#162: FILE: include/linux/kqueue.h:114:
++	smp_rmb(); \
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#216: FILE: include/linux/kqueue.h:168:
++	smp_mb(); \
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'lock' - possible side-effects?
+#231: FILE: include/linux/kqueue.h:183:
++#define	kqueue_in_locked(queue, val, lock) \
++({ \
++	typeof(val) __val = val; \
++	unsigned long __flags; \
++	unsigned int __ret; \
++	spin_lock_irqsave(lock, __flags); \
++	kqueue_in(queue, __val); \
++	spin_unlock_irqrestore(lock, __flags); \
++	__val; \
++})
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#255: FILE: include/linux/kqueue.h:207:
++	smp_rmb(); \
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'lock' - possible side-effects?
+#269: FILE: include/linux/kqueue.h:221:
++#define	kqueue_out_locked(queue, lock) \
++({ \
++	typeof(queue) __tmpq = queue; \
++	typeof(__tmp->data[0]) __ret; \
++	unsigned long __flags; \
++	unsigned int __ret; \
++	spin_lock_irqsave(lock, __flags); \
++	__ret = kqueue_out(__tmpq); \
++	spin_unlock_irqrestore(lock, __flags); \
++	__ret; \
++})
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#281: FILE: include/linux/kqueue.h:233:
++extern unsigned int __kqueue_from_user(void *data, unsigned int size,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#282: FILE: include/linux/kqueue.h:234:
++extern unsigned int __kqueue_from_user(void *data, unsigned int size,
++		unsigned int in, unsigned int out, size_t esize,
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#304: FILE: include/linux/kqueue.h:256:
++	smp_mb(); \
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#311: FILE: include/linux/kqueue.h:263:
++extern unsigned int __kqueue_to_user(void *data, unsigned int size,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#312: FILE: include/linux/kqueue.h:264:
++extern unsigned int __kqueue_to_user(void *data, unsigned int size,
++		unsigned int in, unsigned int out, size_t esize,
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#333: FILE: include/linux/kqueue.h:285:
++	smp_rmb(); \
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#340: FILE: include/linux/kqueue.h:292:
++extern int __kqueue_alloc(void **queue, unsigned int size,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#341: FILE: include/linux/kqueue.h:293:
++extern int __kqueue_alloc(void **queue, unsigned int size,
++		size_t off, size_t esize, gfp_t gfp_mask);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#368: FILE: include/linux/kqueue.h:320:
++extern unsigned int __kqueue_dma_in_prepare(void *data, unsigned int size,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#369: FILE: include/linux/kqueue.h:321:
++extern unsigned int __kqueue_dma_in_prepare(void *data, unsigned int size,
++		unsigned int in, unsigned int out, size_t esize,
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#388: FILE: include/linux/kqueue.h:340:
++	smp_mb(); \
+
+WARNING:REPEATED_WORD: Possible repeated word: 'number'
+#396: FILE: include/linux/kqueue.h:348:
++ * @len: number number of bytes to received.
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#404: FILE: include/linux/kqueue.h:356:
++#define kqueue_dma_in_finish(queue, len) \
++(void)({ \
++	typeof(queue) __tmp = queue; \
++	__tmp->in += len / sizeof(__tmp->data[0]); \
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'len' may be better as '(len)' to avoid precedence issues
+#404: FILE: include/linux/kqueue.h:356:
++#define kqueue_dma_in_finish(queue, len) \
++(void)({ \
++	typeof(queue) __tmp = queue; \
++	__tmp->in += len / sizeof(__tmp->data[0]); \
++})
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#410: FILE: include/linux/kqueue.h:362:
++extern unsigned int __kqueue_dma_out_prepare(void *data, unsigned int size,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#411: FILE: include/linux/kqueue.h:363:
++extern unsigned int __kqueue_dma_out_prepare(void *data, unsigned int size,
++		unsigned int in, unsigned int out, size_t esize,
+
+WARNING:REPEATED_WORD: Possible repeated word: 'number'
+#419: FILE: include/linux/kqueue.h:371:
++ * @len: number number of bytes to transfer.
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#432: FILE: include/linux/kqueue.h:384:
++	smp_rmb(); \
+
+WARNING:TYPO_SPELLING: 'transferd' may be misspelled - perhaps 'transferred'?
+#440: FILE: include/linux/kqueue.h:392:
++ * @len: number number of bytes transferd.
+                                 ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:REPEATED_WORD: Possible repeated word: 'number'
+#440: FILE: include/linux/kqueue.h:392:
++ * @len: number number of bytes transferd.
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#448: FILE: include/linux/kqueue.h:400:
++#define kqueue_dma_out_finish(queue, len) \
++(void)({ \
++	typeof(queue) __tmp = queue; \
++	__tmp->out += len / sizeof(__tmp->data[0]); \
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'len' may be better as '(len)' to avoid precedence issues
+#448: FILE: include/linux/kqueue.h:400:
++#define kqueue_dma_out_finish(queue, len) \
++(void)({ \
++	typeof(queue) __tmp = queue; \
++	__tmp->out += len / sizeof(__tmp->data[0]); \
++})
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#460: FILE: kernel/kqueue.c:1:
++/*
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#476: FILE: kernel/kqueue.c:17:
++ * along with this program; if not, write to the Free Software$
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#477: FILE: kernel/kqueue.c:18:
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'size' - possible side-effects?
+#491: FILE: kernel/kqueue.c:32:
++#define	roundup_diff(val, size)	(((val) + (size - 1)) / size)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'size' may be better as '(size)' to avoid precedence issues
+#491: FILE: kernel/kqueue.c:32:
++#define	roundup_diff(val, size)	(((val) + (size - 1)) / size)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#494: FILE: kernel/kqueue.c:35:
++int __kqueue_alloc(void **queue, unsigned int size,
++		size_t off, size_t esize, gfp_t gfp_mask)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#503: FILE: kernel/kqueue.c:44:
++		BUG_ON(size > 0x80000000);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#514: FILE: kernel/kqueue.c:55:
++	proxy->in = proxy->out = 0;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#521: FILE: kernel/kqueue.c:62:
++unsigned int __kqueue_from_user(void *data, unsigned int size, unsigned int in,
++		unsigned int out, size_t esize,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#555: FILE: kernel/kqueue.c:96:
++unsigned int __kqueue_to_user(void *data, unsigned int size, unsigned int in,
++		unsigned int out, size_t esize,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#589: FILE: kernel/kqueue.c:130:
++extern unsigned int __kqueue_dma_in_prepare(void *data, unsigned int size,
++		unsigned int in, unsigned int out, size_t esize,
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#597: FILE: kernel/kqueue.c:138:
++		BUG();
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#608: FILE: kernel/kqueue.c:149:
++		if (nents > 1) {
+[...]
++		} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#614: FILE: kernel/kqueue.c:155:
++		} else
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#624: FILE: kernel/kqueue.c:165:
++unsigned int __kqueue_dma_out_prepare(void *data, unsigned int size,
++		unsigned int in, unsigned int out, size_t esize,
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#631: FILE: kernel/kqueue.c:172:
++		BUG();
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#644: FILE: kernel/kqueue.c:185:
++		if (nents > 1) {
+[...]
++		} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#650: FILE: kernel/kqueue.c:191:
++		} else
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000035372.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 12 errors, 16 warnings, 30 checks, 615 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000035372.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

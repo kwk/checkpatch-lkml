@@ -1,0 +1,193 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#46: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#51: FILE: arch/arm/mach-omap2/iommu2.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#82: FILE: arch/arm/mach-omap2/iommu2.c:32:
++#define MMU_SYS_IDLE_NONE	(1 << MMU_SYS_IDLE_SHIFT)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#86: FILE: arch/arm/mach-omap2/iommu2.c:36:
++#define MMU_SYS_SOFTRESET	(1 << 1)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#93: FILE: arch/arm/mach-omap2/iommu2.c:43:
++#define MMU_IRQ_MULTIHITFAULT	(1 << 4)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#94: FILE: arch/arm/mach-omap2/iommu2.c:44:
++#define MMU_IRQ_TABLEWALKFAULT	(1 << 3)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#95: FILE: arch/arm/mach-omap2/iommu2.c:45:
++#define MMU_IRQ_EMUMISS		(1 << 2)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#96: FILE: arch/arm/mach-omap2/iommu2.c:46:
++#define MMU_IRQ_TRANSLATIONFAULT	(1 << 1)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#97: FILE: arch/arm/mach-omap2/iommu2.c:47:
++#define MMU_IRQ_TLBMISS		(1 << 0)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#105: FILE: arch/arm/mach-omap2/iommu2.c:55:
++#define MMU_CNTL_EML_TLB	(1 << 3)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#106: FILE: arch/arm/mach-omap2/iommu2.c:56:
++#define MMU_CNTL_TWL_EN		(1 << 2)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#107: FILE: arch/arm/mach-omap2/iommu2.c:57:
++#define MMU_CNTL_MMU_EN		(1 << 1)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pgsz' - possible side-effects?
+#109: FILE: arch/arm/mach-omap2/iommu2.c:59:
++#define get_cam_va_mask(pgsz)				\
++	(((pgsz) == MMU_CAM_PGSZ_16M) ? 0xff000000 :	\
++	 ((pgsz) == MMU_CAM_PGSZ_1M)  ? 0xfff00000 :	\
++	 ((pgsz) == MMU_CAM_PGSZ_64K) ? 0xffff0000 :	\
++	 ((pgsz) == MMU_CAM_PGSZ_4K)  ? 0xfffff000 : 0)
+
+WARNING:STATIC_CONST_CHAR_ARRAY: char * array declaration might be better as static const
+#176: FILE: arch/arm/mach-omap2/iommu2.c:126:
++	const char *err_msg[] =	{
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#196: FILE: arch/arm/mach-omap2/iommu2.c:146:
++			printk("%s ", err_msg[i]);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#198: FILE: arch/arm/mach-omap2/iommu2.c:148:
++	printk("\n");
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#271: FILE: arch/arm/mach-omap2/iommu2.c:221:
++#define pr_reg(name)							\
++	p += sprintf(p, "%20s: %08x\n",					\
++		     __stringify(name), iommu_read_reg(obj, MMU_##name));
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#271: FILE: arch/arm/mach-omap2/iommu2.c:221:
++#define pr_reg(name)							\
++	p += sprintf(p, "%20s: %08x\n",					\
++		     __stringify(name), iommu_read_reg(obj, MMU_##name));
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#311: FILE: arch/arm/mach-omap2/iommu2.c:261:
++	BUG_ON(p[0] != IOMMU_ARCH_VERSION);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#324: FILE: arch/arm/mach-omap2/iommu2.c:274:
++	BUG_ON(p[0] != IOMMU_ARCH_VERSION);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#382: FILE: arch/arm/plat-omap/include/mach/iommu2.h:1:
++/*
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'x' may be better as '(x)' to avoid precedence issues
+#426: FILE: arch/arm/plat-omap/include/mach/iommu2.h:45:
++#define MMU_LOCK_BASE(x)	\
++	((x & MMU_LOCK_BASE_MASK) >> MMU_LOCK_BASE_SHIFT)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'x' may be better as '(x)' to avoid precedence issues
+#431: FILE: arch/arm/plat-omap/include/mach/iommu2.h:50:
++#define MMU_LOCK_VICT(x)	\
++	((x & MMU_LOCK_VICT_MASK) >> MMU_LOCK_VICT_SHIFT)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#437: FILE: arch/arm/plat-omap/include/mach/iommu2.h:56:
++#define MMU_CAM_P		(1 << 3)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#438: FILE: arch/arm/plat-omap/include/mach/iommu2.h:57:
++#define MMU_CAM_V		(1 << 2)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#441: FILE: arch/arm/plat-omap/include/mach/iommu2.h:60:
++#define MMU_CAM_PGSZ_64K	(1 << 0)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#449: FILE: arch/arm/plat-omap/include/mach/iommu2.h:68:
++#define MMU_RAM_ENDIAN_MASK	(1 << MMU_RAM_ENDIAN_SHIFT)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#450: FILE: arch/arm/plat-omap/include/mach/iommu2.h:69:
++#define MMU_RAM_ENDIAN_BIG	(1 << MMU_RAM_ENDIAN_SHIFT)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#455: FILE: arch/arm/plat-omap/include/mach/iommu2.h:74:
++#define MMU_RAM_ELSZ_16		(1 << MMU_RAM_ELSZ_SHIFT)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#459: FILE: arch/arm/plat-omap/include/mach/iommu2.h:78:
++#define MMU_RAM_MIXED_MASK	(1 << MMU_RAM_MIXED_SHIFT)
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000179720.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 9 warnings, 20 checks, 419 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000179720.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

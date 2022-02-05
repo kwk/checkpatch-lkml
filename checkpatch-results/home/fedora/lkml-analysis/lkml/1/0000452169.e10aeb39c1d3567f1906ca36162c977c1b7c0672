@@ -1,0 +1,139 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#42: 
+> > > > > Please consider applying the patch below. It switches struct device_type
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#135: FILE: drivers/input/input.c:686:
++#define INPUT_DEV_STRING_ATTR_SHOW(name)				\
++static ssize_t input_dev_show_##name(struct device *dev,		\
++				     struct device_attribute *attr,	\
++				     char *buf)				\
++{									\
++	struct input_dev *input_dev = to_input_dev(dev);		\
++									\
++	return scnprintf(buf, PAGE_SIZE, "%s\n",			\
++			 input_dev->name ? input_dev->name : "");	\
++}									\
++static DEVICE_ATTR(name, S_IRUGO, input_dev_show_##name, NULL)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'name' may be better as '(name)' to avoid precedence issues
+#135: FILE: drivers/input/input.c:686:
++#define INPUT_DEV_STRING_ATTR_SHOW(name)				\
++static ssize_t input_dev_show_##name(struct device *dev,		\
++				     struct device_attribute *attr,	\
++				     char *buf)				\
++{									\
++	struct input_dev *input_dev = to_input_dev(dev);		\
++									\
++	return scnprintf(buf, PAGE_SIZE, "%s\n",			\
++			 input_dev->name ? input_dev->name : "");	\
++}									\
++static DEVICE_ATTR(name, S_IRUGO, input_dev_show_##name, NULL)
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#145: FILE: drivers/input/input.c:696:
++static DEVICE_ATTR(name, S_IRUGO, input_dev_show_##name, NULL)
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#165: FILE: drivers/input/input.c:761:
++static DEVICE_ATTR(modalias, S_IRUGO, input_dev_show_modalias, NULL);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#190: FILE: drivers/input/input.c:775:
++#define INPUT_DEV_ID_ATTR(name)						\
++static ssize_t input_dev_show_id_##name(struct device *dev,		\
++					struct device_attribute *attr,	\
++					char *buf)			\
++{									\
++	struct input_dev *input_dev = to_input_dev(dev);		\
++	return scnprintf(buf, PAGE_SIZE, "%04x\n", input_dev->id.name);	\
++}									\
++static DEVICE_ATTR(name, S_IRUGO, input_dev_show_id_##name, NULL)
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#198: FILE: drivers/input/input.c:783:
++static DEVICE_ATTR(name, S_IRUGO, input_dev_show_id_##name, NULL)
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#240: FILE: drivers/input/input.c:833:
++static DEVICE_ATTR(bm, S_IRUGO, input_dev_show_cap_##bm, NULL)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#373: FILE: include/linux/input.h:981:
+ };
++#define to_input_dev(d) container_of(d, struct input_dev, dev)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#895: FILE: drivers/input/mousedev.c:498:
++		else {
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:STRLCPY: Prefer strscpy over strlcpy - see: https://lore.kernel.org/r/CAHk-=wgfRnXz0W3D37d01q3JFkr_i_uTL=V6A6G1oUZcprmknw@mail.gmail.com/
+#954: FILE: drivers/input/mousedev.c:714:
++		strlcpy(mousedev->name, "mice", sizeof(mousedev->name));
+
+WARNING:STRLCPY: Prefer strscpy over strlcpy - see: https://lore.kernel.org/r/CAHk-=wgfRnXz0W3D37d01q3JFkr_i_uTL=V6A6G1oUZcprmknw@mail.gmail.com/
+#968: FILE: drivers/input/mousedev.c:726:
++	strlcpy(mousedev->dev.bus_id, mousedev->name,
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#1025: FILE: drivers/input/mousedev.c:773:
++	for (minor = 0; minor < MOUSEDEV_MINORS && mousedev_table[minor]; minor++);
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#1027: FILE: drivers/input/mousedev.c:775:
++		printk(KERN_ERR "mousedev: no more free mousedev devices\n");
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000452169.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 8 warnings, 5 checks, 1091 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000452169.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

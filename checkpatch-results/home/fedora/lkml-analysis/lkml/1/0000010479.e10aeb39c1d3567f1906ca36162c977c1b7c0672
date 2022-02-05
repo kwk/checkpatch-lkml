@@ -1,0 +1,174 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#23: 
+Convert struct bnx2x member msglevel to msg_enable for netif_msg_<foo> macros
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#61: FILE: drivers/net/bnx2x.h:63:
++		printk(DP_LEVEL "[%s:%d(%s)]" __fmt,		\
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#87: FILE: drivers/net/bnx2x.h:80:
++#define BNX2X_ERR(__fmt, __args...)				\
++do {								\
++	pr_err("[%s:%d(%s)]" __fmt,				\
++	       __func__, __LINE__,				\
++	       bp->dev ? (bp->dev->name) : "?",			\
++	       ##__args);					\
++} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#182: FILE: drivers/net/bnx2x_main.c:525:
++		pr_cont("%s", (char *)data);
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#190: FILE: drivers/net/bnx2x_main.c:532:
++		pr_cont("%s", (char *)data);
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#220: FILE: drivers/net/bnx2x_main.c:2160:
++		pr_cont("%d Mbps ", line_speed);
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#224: FILE: drivers/net/bnx2x_main.c:2163:
++			pr_cont("full duplex");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#227: FILE: drivers/net/bnx2x_main.c:2165:
++			pr_cont("half duplex");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#232: FILE: drivers/net/bnx2x_main.c:2169:
++				pr_cont(", receive ");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#236: FILE: drivers/net/bnx2x_main.c:2172:
++					pr_cont("& transmit ");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#239: FILE: drivers/net/bnx2x_main.c:2174:
++				pr_cont(", transmit ");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#242: FILE: drivers/net/bnx2x_main.c:2176:
++			pr_cont("flow control ON");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#245: FILE: drivers/net/bnx2x_main.c:2178:
++		pr_cont("\n");
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'event != STATS_EVENT_UPDATE'
+#290: FILE: drivers/net/bnx2x_main.c:4465:
++	if ((event != STATS_EVENT_UPDATE) || netif_msg_timer(bp))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#370: FILE: drivers/net/bnx2x_main.c:8298:
+ static void __devinit bnx2x_link_settings_supported(struct bnx2x *bp,
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arr' - possible side-effects?
+#554: FILE: drivers/net/bnx2x_main.c:12020:
++#define BNX2X_ALLOC_AND_SET(arr, lbl, func)				\
++do {									\
++	u32 len = be32_to_cpu(fw_hdr->arr.len);				\
++	bp->arr = kmalloc(len, GFP_KERNEL);				\
++	if (!bp->arr) {							\
++		pr_err("Failed to allocate %d bytes for "#arr"\n", len); \
++		goto lbl;						\
++	}								\
++	func(bp->firmware->data + be32_to_cpu(fw_hdr->arr.offset),	\
++	     (u8 *)bp->arr, len);					\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'arr' may be better as '(arr)' to avoid precedence issues
+#554: FILE: drivers/net/bnx2x_main.c:12020:
++#define BNX2X_ALLOC_AND_SET(arr, lbl, func)				\
++do {									\
++	u32 len = be32_to_cpu(fw_hdr->arr.len);				\
++	bp->arr = kmalloc(len, GFP_KERNEL);				\
++	if (!bp->arr) {							\
++		pr_err("Failed to allocate %d bytes for "#arr"\n", len); \
++		goto lbl;						\
++	}								\
++	func(bp->firmware->data + be32_to_cpu(fw_hdr->arr.offset),	\
++	     (u8 *)bp->arr, len);					\
++} while (0)
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#554: FILE: drivers/net/bnx2x_main.c:12020:
++#define BNX2X_ALLOC_AND_SET(arr, lbl, func)				\
++do {									\
++	u32 len = be32_to_cpu(fw_hdr->arr.len);				\
++	bp->arr = kmalloc(len, GFP_KERNEL);				\
++	if (!bp->arr) {							\
++		pr_err("Failed to allocate %d bytes for "#arr"\n", len); \
++		goto lbl;						\
++	}								\
++	func(bp->firmware->data + be32_to_cpu(fw_hdr->arr.offset),	\
++	     (u8 *)bp->arr, len);					\
++} while (0)
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#559: FILE: drivers/net/bnx2x_main.c:12025:
++		pr_err("Failed to allocate %d bytes for "#arr"\n", len); \
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#566: FILE: drivers/net/bnx2x_main.c:12032:
+ static int __devinit bnx2x_init_firmware(struct bnx2x *bp, struct device *dev)
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000010479.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 16 warnings, 4 checks, 589 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000010479.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

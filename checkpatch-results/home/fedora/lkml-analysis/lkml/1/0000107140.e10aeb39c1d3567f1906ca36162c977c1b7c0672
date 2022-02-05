@@ -1,0 +1,59 @@
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#52: FILE: arch/blackfin/include/asm/ipipe_base.h:56:
++		volatile unsigned long *p = &__ipipe_root_status;	\
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#63: FILE: arch/blackfin/include/asm/ipipe_base.h:62:
++		volatile unsigned long *p = &__ipipe_root_status;	\
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#131: FILE: arch/blackfin/include/asm/irqflags.h:59:
++#define raw_local_save_flags_ptr(x)					\
++	do {								\
++		*(x) = __ipipe_test_root() ? bfin_no_irqs : bfin_irq_flags; \
++	} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#178: FILE: arch/blackfin/include/asm/irqflags.h:106:
++#define local_save_flags_hw(flags)			\
++	do {						\
++		(flags) = bfin_read_IMASK();		\
++	} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#200: FILE: arch/blackfin/include/asm/irqflags.h:128:
++#define local_irq_save_hw_notrace(flags)		\
++	do {						\
++		local_irq_save_ptr_hw(&(flags));	\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'flags' - possible side-effects?
+#226: FILE: arch/blackfin/include/asm/irqflags.h:154:
++# define local_irq_save_hw(flags)			\
++	do {						\
++		local_save_flags_hw(flags);		\
++		if (!irqs_disabled_flags_hw(flags)) {	\
++			local_irq_disable_hw_notrace();	\
++			ipipe_trace_begin(0x80000001);	\
++		}					\
++	} while (0)
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000107140.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 5 warnings, 1 checks, 253 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000107140.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

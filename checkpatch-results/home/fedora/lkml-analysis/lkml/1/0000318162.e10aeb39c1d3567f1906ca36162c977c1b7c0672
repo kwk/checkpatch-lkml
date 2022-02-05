@@ -1,0 +1,155 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#33: 
+When during sys_swapon() the swapfile() method is found and returns no error
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#85: FILE: include/linux/swap.h:221:
++extern void swap_sync_page(struct page *page);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#86: FILE: include/linux/swap.h:222:
++extern int swap_set_page_dirty(struct page *page);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#94: FILE: include/linux/swap.h:256:
++extern struct swap_info_struct *page_swap_info(struct page *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct page *' should also have an identifier name
+#94: FILE: include/linux/swap.h:256:
++extern struct swap_info_struct *page_swap_info(struct page *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'sis->swap_file->f_mapping->a_ops->swap_out'
+#123: FILE: mm/page_io.c:110:
++		ret = sis->swap_file->f_mapping->
++			a_ops->swap_out(sis->swap_file, page, wbc);
+
+A single dereferencing identifier spanned on multiple lines like::
+
+  struct_identifier->member[index].
+  member = <foo>;
+
+is generally hard to follow. It can easily lead to typos and so makes
+the code vulnerable to bugs.
+
+If fixing the multiple line dereferencing leads to an 80 column
+violation, then either rewrite the code in a more simple way or if the
+starting part of the dereferencing identifier is the same and used at
+multiple places then store it in a temporary variable, and use that
+temporary variable only at all the places. For example, if there are
+two dereferencing identifiers::
+
+  member1->member2->member3.foo1;
+  member1->member2->member3.foo2;
+
+then store the member1->member2->member3 part in a temporary variable.
+It not only helps to avoid the 80 column violation but also reduces
+the program size by removing the unnecessary dereferences.
+
+But if none of the above methods work then ignore the 80 column
+violation because it is much easier to read a dereferencing identifier
+on a single line.
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#140: FILE: mm/page_io.c:138:
++	if (sis->flags & SWP_FILE) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#145: FILE: mm/page_io.c:143:
++	} else
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'sis->swap_file->f_mapping->a_ops->swap_in'
+#178: FILE: mm/page_io.c:176:
++		ret = sis->swap_file->f_mapping->
++			a_ops->swap_in(sis->swap_file, page);
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'sis->swap_file->f_mapping->a_ops->swapfile'
+#214: FILE: mm/swapfile.c:1019:
++		sis->swap_file->f_mapping->a_ops->
++			swapfile(sis->swap_file->f_mapping, 0);
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'sis->swap_file->f_mapping->a_ops->swapfile'
+#225: FILE: mm/swapfile.c:1115:
++		ret = sis->swap_file->f_mapping->a_ops->
++			swapfile(sis->swap_file->f_mapping, 1);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#253: FILE: mm/swapfile.c:1816:
++	swp_entry_t swap = { .val = page_private(page) };
++	BUG_ON(!PageSwapCache(page));
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#253: FILE: mm/swapfile.c:1816:
++	BUG_ON(!PageSwapCache(page));
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct address_space *' should also have an identifier name
+#272: FILE: include/linux/fs.h:488:
++	int (*swapfile)(struct address_space *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#272: FILE: include/linux/fs.h:488:
++	int (*swapfile)(struct address_space *, int);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000318162.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 10 warnings, 5 checks, 252 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000318162.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

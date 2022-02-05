@@ -1,0 +1,1551 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#118: 
+ drivers/ide/setup-pci.c             |  240 +++++++++++++++++++++++------------
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#311: FILE: drivers/ide/arm/palm_bk3710.c:338:
++static struct ide_port_info __devinitdata palm_bk3710_port_info = {
+
+WARNING:MISPLACED_INIT: __devinitdata should be placed after palm_bk3710_port_info
+#311: FILE: drivers/ide/arm/palm_bk3710.c:338:
++static struct ide_port_info __devinitdata palm_bk3710_port_info = {
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+WARNING:CONSTANT_CONVERSION: __constant_cpu_to_be32 should be cpu_to_be32
+#409: FILE: drivers/ide/ide-cd.c:1321:
++	case __constant_cpu_to_be32(512):
+
+Use of __constant_<foo> form is discouraged for the following functions::
+
+  __constant_cpu_to_be[x]
+  __constant_cpu_to_le[x]
+  __constant_be[x]_to_cpu
+  __constant_le[x]_to_cpu
+  __constant_htons
+  __constant_ntohs
+
+Using any of these outside of include/uapi/ is not preferred as using the
+function without __constant_ is identical when the argument is a
+constant.
+
+In big endian systems, the macros like __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to the same expression::
+
+  #define __constant_cpu_to_be32(x) ((__force __be32)(__u32)(x))
+  #define __cpu_to_be32(x)          ((__force __be32)(__u32)(x))
+
+In little endian systems, the macros __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to __constant_swab32 and __swab32.  __swab32
+has a __builtin_constant_p check::
+
+  #define __swab32(x)				\
+    (__builtin_constant_p((__u32)(x)) ?	\
+    ___constant_swab32(x) :			\
+    __fswab32(x))
+
+So ultimately they have a special case for constants.
+Similar is the case with all of the macros in the list.  Thus
+using the __constant_... forms are unnecessarily verbose and
+not preferred outside of include/uapi.
+
+See: https://lore.kernel.org/lkml/1400106425.12666.6.camel@joe-AO725/
+
+WARNING:CONSTANT_CONVERSION: __constant_cpu_to_be32 should be cpu_to_be32
+#410: FILE: drivers/ide/ide-cd.c:1322:
++	case __constant_cpu_to_be32(1024):
+
+WARNING:CONSTANT_CONVERSION: __constant_cpu_to_be32 should be cpu_to_be32
+#411: FILE: drivers/ide/ide-cd.c:1323:
++	case __constant_cpu_to_be32(2048):
+
+WARNING:CONSTANT_CONVERSION: __constant_cpu_to_be32 should be cpu_to_be32
+#412: FILE: drivers/ide/ide-cd.c:1324:
++	case __constant_cpu_to_be32(4096):
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#415: FILE: drivers/ide/ide-cd.c:1327:
++		printk(KERN_ERR "%s: weird block size %u\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#416: FILE: drivers/ide/ide-cd.c:1328:
++		printk(KERN_ERR "%s: weird block size %u\n",
++			drive->name, capbuf.blocklen);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#417: FILE: drivers/ide/ide-cd.c:1329:
++		printk(KERN_ERR "%s: default to 2kb block size\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#418: FILE: drivers/ide/ide-cd.c:1330:
++		printk(KERN_ERR "%s: default to 2kb block size\n",
++			drive->name);
+
+WARNING:CONSTANT_CONVERSION: __constant_cpu_to_be32 should be cpu_to_be32
+#419: FILE: drivers/ide/ide-cd.c:1331:
++		capbuf.blocklen = __constant_cpu_to_be32(2048);
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#538: FILE: drivers/ide/ide-generic.c:89:
++#if defined(CONFIG_PLAT_M32700UT) || defined(CONFIG_PLAT_MAPPI2) \
++	|| defined(CONFIG_PLAT_OPSPUT)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#633: FILE: drivers/ide/ide-probe.c:158:
++	printk(KERN_INFO "%s: %s, ", drive->name, id->model);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_cont([subsystem]dev, ... then dev_cont(dev, ... then pr_cont(...  to printk(KERN_CONT ...
+#644: FILE: drivers/ide/ide-probe.c:169:
++		printk(KERN_CONT "ATAPI ");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#644: FILE: drivers/ide/ide-probe.c:169:
++		printk(KERN_CONT "ATAPI ");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_cont([subsystem]dev, ... then dev_cont(dev, ... then pr_cont(...  to printk(KERN_CONT ...
+#652: FILE: drivers/ide/ide-probe.c:176:
++						printk(KERN_CONT "cdrom or floppy?, assuming ");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#652: FILE: drivers/ide/ide-probe.c:176:
++						printk(KERN_CONT "cdrom or floppy?, assuming ");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_cont([subsystem]dev, ... then dev_cont(dev, ... then pr_cont(...  to printk(KERN_CONT ...
+#655: FILE: drivers/ide/ide-probe.c:178:
++						printk(KERN_CONT "FLOPPY");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#655: FILE: drivers/ide/ide-probe.c:178:
++						printk(KERN_CONT "FLOPPY");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_cont([subsystem]dev, ... then dev_cont(dev, ... then pr_cont(...  to printk(KERN_CONT ...
+#664: FILE: drivers/ide/ide-probe.c:191:
++					printk(KERN_CONT "FLOPPY");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#664: FILE: drivers/ide/ide-probe.c:191:
++					printk(KERN_CONT "FLOPPY");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_cont([subsystem]dev, ... then dev_cont(dev, ... then pr_cont(...  to printk(KERN_CONT ...
+#670: FILE: drivers/ide/ide-probe.c:196:
++				printk(KERN_CONT "CD/DVD-ROM");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#670: FILE: drivers/ide/ide-probe.c:196:
++				printk(KERN_CONT "CD/DVD-ROM");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_cont([subsystem]dev, ... then dev_cont(dev, ... then pr_cont(...  to printk(KERN_CONT ...
+#674: FILE: drivers/ide/ide-probe.c:199:
++				printk(KERN_CONT "TAPE");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#674: FILE: drivers/ide/ide-probe.c:199:
++				printk(KERN_CONT "TAPE");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_cont([subsystem]dev, ... then dev_cont(dev, ... then pr_cont(...  to printk(KERN_CONT ...
+#678: FILE: drivers/ide/ide-probe.c:202:
++				printk(KERN_CONT "OPTICAL");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#678: FILE: drivers/ide/ide-probe.c:202:
++				printk(KERN_CONT "OPTICAL");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_cont([subsystem]dev, ... then dev_cont(dev, ... then pr_cont(...  to printk(KERN_CONT ...
+#683: FILE: drivers/ide/ide-probe.c:206:
++				printk(KERN_CONT "UNKNOWN (type %d)", type);
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#683: FILE: drivers/ide/ide-probe.c:206:
++				printk(KERN_CONT "UNKNOWN (type %d)", type);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_cont([subsystem]dev, ... then dev_cont(dev, ... then pr_cont(...  to printk(KERN_CONT ...
+#687: FILE: drivers/ide/ide-probe.c:209:
++		printk(KERN_CONT " drive\n");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#687: FILE: drivers/ide/ide-probe.c:209:
++		printk(KERN_CONT " drive\n");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_cont([subsystem]dev, ... then dev_cont(dev, ... then pr_cont(...  to printk(KERN_CONT ...
+#697: FILE: drivers/ide/ide-probe.c:230:
++	printk(KERN_CONT "%s DISK drive\n",
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#697: FILE: drivers/ide/ide-probe.c:230:
++	printk(KERN_CONT "%s DISK drive\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#698: FILE: drivers/ide/ide-probe.c:231:
++	printk(KERN_CONT "%s DISK drive\n",
++		(id->config == 0x848a) ? "CFA" : "ATA");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#707: FILE: drivers/ide/ide-probe.c:382:
++				printk(KERN_ERR "%s: IRQ probe failed (0x%lx)\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#708: FILE: drivers/ide/ide-probe.c:383:
++				printk(KERN_ERR "%s: IRQ probe failed (0x%lx)\n",
+ 					drive->name, cookie);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#716: FILE: drivers/ide/ide-probe.c:451:
++	printk(KERN_INFO "probing for %s: present=%d, media=%d, probetype=%s\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#717: FILE: drivers/ide/ide-probe.c:452:
++	printk(KERN_INFO "probing for %s: present=%d, media=%d, probetype=%s\n",
+ 		drive->name, drive->present, drive->media,
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#725: FILE: drivers/ide/ide-probe.c:529:
++	printk(KERN_INFO "%s: enabling %s -- ", hwif->name, drive->id->model);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#735: FILE: drivers/ide/ide-probe.c:879:
++		printk(KERN_WARNING "%s: potential IRQ problem with %s and %s\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#736: FILE: drivers/ide/ide-probe.c:880:
++		printk(KERN_WARNING "%s: potential IRQ problem with %s and %s\n",
+ 			hwif->name, new->name, m->name);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#744: FILE: drivers/ide/ide-probe.c:1138:
++	printk(KERN_INFO "%s at 0x%03lx-0x%03lx,0x%03lx on irq %d", hwif->name,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#745: FILE: drivers/ide/ide-probe.c:1139:
++	printk(KERN_INFO "%s at 0x%03lx-0x%03lx,0x%03lx on irq %d", hwif->name,
+ 		io_ports->data_addr, io_ports->status_addr,
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#749: FILE: drivers/ide/ide-probe.c:1142:
++	printk(KERN_INFO "%s at 0x%08lx on irq %d", hwif->name,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#750: FILE: drivers/ide/ide-probe.c:1143:
++	printk(KERN_INFO "%s at 0x%08lx on irq %d", hwif->name,
+ 		io_ports->data_addr, hwif->irq);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_cont([subsystem]dev, ... then dev_cont(dev, ... then pr_cont(...  to printk(KERN_CONT ...
+#754: FILE: drivers/ide/ide-probe.c:1146:
++		printk(KERN_CONT " (%sed with %s)",
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#754: FILE: drivers/ide/ide-probe.c:1146:
++		printk(KERN_CONT " (%sed with %s)",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#755: FILE: drivers/ide/ide-probe.c:1147:
++		printk(KERN_CONT " (%sed with %s)",
+ 			hwif->sharing_irq ? "shar" : "serializ", match->name);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_cont([subsystem]dev, ... then dev_cont(dev, ... then pr_cont(...  to printk(KERN_CONT ...
+#757: FILE: drivers/ide/ide-probe.c:1148:
++	printk(KERN_CONT "\n");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#757: FILE: drivers/ide/ide-probe.c:1148:
++	printk(KERN_CONT "\n");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#766: FILE: drivers/ide/ide-probe.c:1283:
++			printk(KERN_ERR "%s: disabled, no IRQ\n", hwif->name);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#775: FILE: drivers/ide/ide-probe.c:1313:
++		printk(KERN_ERR "%s: disabled, unable to get IRQ %d\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#776: FILE: drivers/ide/ide-probe.c:1314:
++		printk(KERN_ERR "%s: disabled, unable to get IRQ %d\n",
+ 			hwif->name, old_irq);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#781: FILE: drivers/ide/ide-probe.c:1318:
++		printk(KERN_ERR "%s: probed IRQ %d and default IRQ %d failed\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#782: FILE: drivers/ide/ide-probe.c:1319:
++		printk(KERN_ERR "%s: probed IRQ %d and default IRQ %d failed\n",
+ 			hwif->name, old_irq, hwif->irq);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#786: FILE: drivers/ide/ide-probe.c:1322:
++	printk(KERN_WARNING "%s: probed IRQ %d failed, using default\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#787: FILE: drivers/ide/ide-probe.c:1323:
++	printk(KERN_WARNING "%s: probed IRQ %d failed, using default\n",
+ 		hwif->name, hwif->irq);
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1020: FILE: drivers/ide/legacy/gayle.c:130:
++    int a4000, i, rc;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1029: FILE: drivers/ide/legacy/gayle.c:182:
++    rc = ide_host_add(NULL, hws, NULL);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1030: FILE: drivers/ide/legacy/gayle.c:183:
++    if (rc)$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1033: FILE: drivers/ide/legacy/gayle.c:186:
++    return rc;$
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1157: FILE: drivers/ide/pci/aec62xx.c:143:
++static unsigned int __devinit init_chipset_aec62xx(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#1172: FILE: drivers/ide/pci/aec62xx.c:184:
+ static const struct ide_port_info aec62xx_chipsets[] __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1230: FILE: drivers/ide/pci/aec62xx.c:254:
+ static int __devinit aec62xx_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#1251: FILE: drivers/ide/pci/aec62xx.c:277:
++			printk(KERN_INFO DRV_NAME " %s: AEC6880%s card detected"
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1252: FILE: drivers/ide/pci/aec62xx.c:278:
++			printk(KERN_INFO DRV_NAME " %s: AEC6880%s card detected"
++				"\n", pci_name(dev), (idx == 4) ? "R" : "");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:HOTPLUG_SECTION: Using __devexit is unnecessary
+#1265: FILE: drivers/ide/pci/aec62xx.c:290:
++static void __devexit aec62xx_remove(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1321: FILE: drivers/ide/pci/alim15x3.c:217:
++static unsigned int __devinit init_chipset_ali15x3(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#1328: FILE: drivers/ide/pci/alim15x3.c:518:
+ static const struct ide_port_info ali15x3_chipset __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1384: FILE: drivers/ide/pci/amd74xx.c:115:
++static void __devinit amd7409_cable_detect(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1392: FILE: drivers/ide/pci/amd74xx.c:121:
++static void __devinit amd7411_cable_detect(struct pci_dev *dev)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#1403: FILE: drivers/ide/pci/amd74xx.c:132:
++			printk(KERN_WARNING DRV_NAME " %s: BIOS didn't set "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1404: FILE: drivers/ide/pci/amd74xx.c:133:
++			printk(KERN_WARNING DRV_NAME " %s: BIOS didn't set "
++				"cable bits correctly. Enabling workaround.\n",
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1415: FILE: drivers/ide/pci/amd74xx.c:143:
++static unsigned int __devinit init_chipset_amd74xx(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#1483: FILE: drivers/ide/pci/amd74xx.c:234:
+ static const struct ide_port_info amd74xx_chipsets[] __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1520: FILE: drivers/ide/pci/amd74xx.c:246:
+ static int __devinit amd74xx_probe(struct pci_dev *dev, const struct pci_device_id *id)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#1535: FILE: drivers/ide/pci/amd74xx.c:266:
++	printk(KERN_INFO "%s %s: UDMA%s controller\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1536: FILE: drivers/ide/pci/amd74xx.c:267:
++	printk(KERN_INFO "%s %s: UDMA%s controller\n",
++		d.name, pci_name(dev), amd_dma[fls(d.udma_mask) - 1]);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments should align the * on each line
+#1539: FILE: drivers/ide/pci/amd74xx.c:270:
++	/*
++	* Determine the system bus clock.
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#1544: FILE: drivers/ide/pci/amd74xx.c:275:
++	case 33000: amd_clock = 33333; break;
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#1545: FILE: drivers/ide/pci/amd74xx.c:276:
++	case 37000: amd_clock = 37500; break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#1546: FILE: drivers/ide/pci/amd74xx.c:277:
++	case 41000: amd_clock = 41666; break;
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#1550: FILE: drivers/ide/pci/amd74xx.c:281:
++		printk(KERN_WARNING "%s: User given PCI clock speed impossible"
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1551: FILE: drivers/ide/pci/amd74xx.c:282:
++		printk(KERN_WARNING "%s: User given PCI clock speed impossible"
++				    " (%d), using 33 MHz instead.\n",
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#1649: FILE: drivers/ide/pci/atiixp.c:141:
+ static const struct ide_port_info atiixp_pci_info[] __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1670: FILE: drivers/ide/pci/atiixp.c:171:
+ static int __devinit atiixp_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1717: FILE: drivers/ide/pci/cmd64x.c:335:
++static unsigned int __devinit init_chipset_cmd64x(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#1745: FILE: drivers/ide/pci/cmd64x.c:411:
+ static const struct ide_port_info cmd64x_chipsets[] __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#1849: FILE: drivers/ide/pci/cs5520.c:97:
++static const struct ide_port_info cyrix_chipset __devinitdata = {
+
+ERROR:INIT_ATTRIBUTE: Use of const init definition must use __devinitconst
+#1849: FILE: drivers/ide/pci/cs5520.c:97:
++static const struct ide_port_info cyrix_chipset __devinitdata = {
+
+Const init definitions should use __initconst instead of
+__initdata.
+
+Similarly init definitions without const require a separate
+use of const.
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1859: FILE: drivers/ide/pci/cs5520.c:110:
+ static int __devinit cs5520_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#1871: FILE: drivers/ide/pci/cs5520.c:126:
++		printk(KERN_WARNING "%s: No suitable DMA available.\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1872: FILE: drivers/ide/pci/cs5520.c:127:
++		printk(KERN_WARNING "%s: No suitable DMA available.\n",
++			d->name);
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1899: FILE: drivers/ide/pci/cs5530.c:136:
++static unsigned int __devinit init_chipset_cs5530(struct pci_dev *dev)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#1908: FILE: drivers/ide/pci/cs5530.c:155:
++		printk(KERN_ERR DRV_NAME ": unable to locate PCI MASTER function\n");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#1913: FILE: drivers/ide/pci/cs5530.c:159:
++		printk(KERN_ERR DRV_NAME ": unable to locate CS5530 LEGACY function\n");
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#1920: FILE: drivers/ide/pci/cs5530.c:246:
+ static const struct ide_port_info cs5530_chipset __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1928: FILE: drivers/ide/pci/cs5530.c:258:
+ static int __devinit cs5530_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#1973: FILE: drivers/ide/pci/cs5535.c:173:
+ static const struct ide_port_info cs5535_chipset __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1980: FILE: drivers/ide/pci/cs5535.c:182:
+ static int __devinit cs5535_init_one(struct pci_dev *dev,
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#2028: FILE: drivers/ide/pci/cy82c693.c:335:
++static unsigned int __devinit init_chipset_cy82c693(struct pci_dev *dev)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#2038: FILE: drivers/ide/pci/cy82c693.c:354:
++	printk(KERN_INFO DRV_NAME ": Peripheral Configuration Register: 0x%X\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2039: FILE: drivers/ide/pci/cy82c693.c:355:
++	printk(KERN_INFO DRV_NAME ": Peripheral Configuration Register: 0x%X\n",
++		data);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#2049: FILE: drivers/ide/pci/cy82c693.c:376:
++	printk(KERN_INFO ": New Peripheral Configuration Register: 0x%X\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2050: FILE: drivers/ide/pci/cy82c693.c:377:
++	printk(KERN_INFO ": New Peripheral Configuration Register: 0x%X\n",
++		data);
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#2057: FILE: drivers/ide/pci/cy82c693.c:402:
+ static const struct ide_port_info cy82c693_chipset __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devexit is unnecessary
+#2076: FILE: drivers/ide/pci/cy82c693.c:431:
++static void __devexit cy82c693_remove(struct pci_dev *dev)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'extra_flags' may be better as '(extra_flags)' to avoid precedence issues
+#2128: FILE: drivers/ide/pci/generic.c:39:
++#define DECLARE_GENERIC_PCI_DEV(extra_flags) \
+ 	{ \
++		.name		= DRV_NAME, \
+ 		.host_flags	= IDE_HFLAG_TRUST_BIOS_FOR_DMA | \
+ 				  extra_flags, \
+ 		.swdma_mask	= ATA_SWDMA2, \
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#2138: FILE: drivers/ide/pci/generic.c:49:
+ static const struct ide_port_info generic_chipsets[] __devinitdata = {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#2198: FILE: drivers/ide/pci/generic.c:134:
++			printk(KERN_INFO "%s %s: skipping disabled "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#2199: FILE: drivers/ide/pci/generic.c:135:
++			printk(KERN_INFO "%s %s: skipping disabled "
++				"controller\n", d->name, pci_name(dev));
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#2281: FILE: drivers/ide/pci/hpt34x.c:82:
++static unsigned int __devinit init_chipset_hpt34x(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#2288: FILE: drivers/ide/pci/hpt34x.c:130:
+ static const struct ide_port_info hpt34x_chipsets[] __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#2397: FILE: drivers/ide/pci/hpt366.c:973:
++static unsigned int __devinit init_chipset_hpt366(struct pci_dev *dev)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#2427: FILE: drivers/ide/pci/hpt366.c:1050:
++			printk(KERN_WARNING "%s %s: no clock data saved by "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#2428: FILE: drivers/ide/pci/hpt366.c:1051:
++			printk(KERN_WARNING "%s %s: no clock data saved by "
++				"BIOS\n", name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#2438: FILE: drivers/ide/pci/hpt366.c:1076:
++		printk(KERN_INFO "%s %s: DPLL base: %d MHz, f_CNT: %d, "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#2439: FILE: drivers/ide/pci/hpt366.c:1077:
++		printk(KERN_INFO "%s %s: DPLL base: %d MHz, f_CNT: %d, "
++			"assuming %d MHz PCI\n", name, pci_name(dev),
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#2450: FILE: drivers/ide/pci/hpt366.c:1144:
++			printk(KERN_ERR "%s %s: unknown bus timing!\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2451: FILE: drivers/ide/pci/hpt366.c:1145:
++			printk(KERN_ERR "%s %s: unknown bus timing!\n",
++				name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#2461: FILE: drivers/ide/pci/hpt366.c:1171:
++			printk(KERN_ERR "%s %s: DPLL did not stabilize!\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2462: FILE: drivers/ide/pci/hpt366.c:1172:
++			printk(KERN_ERR "%s %s: DPLL did not stabilize!\n",
++				name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#2467: FILE: drivers/ide/pci/hpt366.c:1176:
++		printk(KERN_INFO "%s %s: using %d MHz DPLL clock\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2468: FILE: drivers/ide/pci/hpt366.c:1177:
++		printk(KERN_INFO "%s %s: using %d MHz DPLL clock\n",
++			name, pci_name(dev), dpll_clk);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#2474: FILE: drivers/ide/pci/hpt366.c:1182:
++		printk(KERN_INFO "%s %s: using %d MHz PCI clock\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2475: FILE: drivers/ide/pci/hpt366.c:1183:
++		printk(KERN_INFO "%s %s: using %d MHz PCI clock\n",
++			name, pci_name(dev), pci_clk);
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#2490: FILE: drivers/ide/pci/hpt366.c:1217:
+ static u8 __devinit hpt3xx_cable_detect(ide_hwif_t *hwif)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#2500: FILE: drivers/ide/pci/hpt366.c:1262:
+ static void __devinit init_hwif_hpt366(ide_hwif_t *hwif)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#2514: FILE: drivers/ide/pci/hpt366.c:1368:
++		printk(KERN_INFO DRV_NAME " %s: PCI config space interrupt "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#2515: FILE: drivers/ide/pci/hpt366.c:1369:
++		printk(KERN_INFO DRV_NAME " %s: PCI config space interrupt "
++			"fixed\n", pci_name(dev2));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#2525: FILE: drivers/ide/pci/hpt366.c:1404:
++		printk(KERN_INFO DRV_NAME " %s: onboard version of chipset, "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#2526: FILE: drivers/ide/pci/hpt366.c:1405:
++		printk(KERN_INFO DRV_NAME " %s: onboard version of chipset, "
++			"pin1=%d pin2=%d\n", pci_name(dev), pin1, pin2);
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#2533: FILE: drivers/ide/pci/hpt366.c:1459:
+ static const struct ide_port_info hpt366_chipsets[] __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#2599: FILE: drivers/ide/pci/hpt366.c:1500:
+ static int __devinit hpt366_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#2616: FILE: drivers/ide/pci/hpt366.c:1545:
++	printk(KERN_INFO DRV_NAME ": %s chipset detected\n", info->chip_name);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!dyn_info"
+#2635: FILE: drivers/ide/pci/hpt366.c:1559:
++	if (dyn_info == NULL) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#2636: FILE: drivers/ide/pci/hpt366.c:1560:
++		printk(KERN_ERR "%s %s: out of memory!\n",
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#2636: FILE: drivers/ide/pci/hpt366.c:1560:
++	if (dyn_info == NULL) {
++		printk(KERN_ERR "%s %s: out of memory!\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2637: FILE: drivers/ide/pci/hpt366.c:1561:
++		printk(KERN_ERR "%s %s: out of memory!\n",
++			d.name, pci_name(dev));
+
+WARNING:HOTPLUG_SECTION: Using __devexit is unnecessary
+#2676: FILE: drivers/ide/pci/hpt366.c:1597:
++static void __devexit hpt366_remove(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinitconst is unnecessary
+#2687: FILE: drivers/ide/pci/hpt366.c:1608:
+ static const struct pci_device_id hpt366_pci_tbl[] __devinitconst = {
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#2741: FILE: drivers/ide/pci/it8213.c:160:
++static const struct ide_port_info it8213_chipset __devinitdata = {
+
+ERROR:INIT_ATTRIBUTE: Use of const init definition must use __devinitconst
+#2741: FILE: drivers/ide/pci/it8213.c:160:
++static const struct ide_port_info it8213_chipset __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#2758: FILE: drivers/ide/pci/it8213.c:181:
+ static int __devinit it8213_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#2801: FILE: drivers/ide/pci/it821x.c:536:
+ static void __devinit init_hwif_it821x(ide_hwif_t *hwif)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#2817: FILE: drivers/ide/pci/it821x.c:574:
++			printk(KERN_WARNING DRV_NAME " %s: revision 0x10, "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#2818: FILE: drivers/ide/pci/it821x.c:575:
++			printk(KERN_WARNING DRV_NAME " %s: revision 0x10, "
++				"workarounds activated\n", pci_name(dev));
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#2827: FILE: drivers/ide/pci/it821x.c:608:
++static unsigned int __devinit init_chipset_it821x(struct pci_dev *dev)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#2835: FILE: drivers/ide/pci/it821x.c:615:
++		printk(KERN_INFO DRV_NAME " %s: forcing bypass mode\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2836: FILE: drivers/ide/pci/it821x.c:616:
++		printk(KERN_INFO DRV_NAME " %s: forcing bypass mode\n",
++			pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#2841: FILE: drivers/ide/pci/it821x.c:620:
++	printk(KERN_INFO DRV_NAME " %s: controller in %s mode\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2842: FILE: drivers/ide/pci/it821x.c:621:
++	printk(KERN_INFO DRV_NAME " %s: controller in %s mode\n",
++		pci_name(dev), mode[conf & 1]);
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#2861: FILE: drivers/ide/pci/it821x.c:633:
++static const struct ide_port_info it821x_chipset __devinitdata = {
+
+ERROR:INIT_ATTRIBUTE: Use of const init definition must use __devinitconst
+#2861: FILE: drivers/ide/pci/it821x.c:633:
++static const struct ide_port_info it821x_chipset __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#2872: FILE: drivers/ide/pci/it821x.c:650:
+ static int __devinit it821x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!itdevs"
+#2889: FILE: drivers/ide/pci/it821x.c:656:
++	if (itdevs == NULL) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#2890: FILE: drivers/ide/pci/it821x.c:657:
++		printk(KERN_ERR DRV_NAME " %s: out of memory\n", pci_name(dev));
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#2890: FILE: drivers/ide/pci/it821x.c:657:
++	if (itdevs == NULL) {
++		printk(KERN_ERR DRV_NAME " %s: out of memory\n", pci_name(dev));
+
+WARNING:HOTPLUG_SECTION: Using __devexit is unnecessary
+#2903: FILE: drivers/ide/pci/it821x.c:668:
++static void __devexit it821x_remove(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#2951: FILE: drivers/ide/pci/jmicron.c:106:
+ static const struct ide_port_info jmicron_chipset __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#2959: FILE: drivers/ide/pci/jmicron.c:124:
+ static int __devinit jmicron_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#3004: FILE: drivers/ide/pci/ns87415.c:309:
+ static const struct ide_port_info ns87415_chipset __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#3057: FILE: drivers/ide/pci/opti621.c:204:
+ static const struct ide_port_info opti621_chipset __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#3065: FILE: drivers/ide/pci/opti621.c:212:
+ static int __devinit opti621_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#3112: FILE: drivers/ide/pci/pdc202xx_new.c:329:
++static unsigned int __devinit init_chipset_pdcnew(struct pci_dev *dev)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#3123: FILE: drivers/ide/pci/pdc202xx_new.c:364:
++	printk(KERN_INFO "%s %s: PLL input clock is %ld kHz\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3124: FILE: drivers/ide/pci/pdc202xx_new.c:365:
++	printk(KERN_INFO "%s %s: PLL input clock is %ld kHz\n",
++		name, pci_name(dev), pll_input / 1000);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#3130: FILE: drivers/ide/pci/pdc202xx_new.c:369:
++		printk(KERN_ERR "%s %s: Bad PLL input clock %ld Hz, giving up!"
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#3131: FILE: drivers/ide/pci/pdc202xx_new.c:370:
++		printk(KERN_ERR "%s %s: Bad PLL input clock %ld Hz, giving up!"
++			"\n", name, pci_name(dev), pll_input);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#3140: FILE: drivers/ide/pci/pdc202xx_new.c:406:
++		printk(KERN_ERR "%s %s: Bad ratio %ld, giving up!\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3141: FILE: drivers/ide/pci/pdc202xx_new.c:407:
++		printk(KERN_ERR "%s %s: Bad ratio %ld, giving up!\n",
++			name, pci_name(dev), ratio);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#3150: FILE: drivers/ide/pci/pdc202xx_new.c:417:
++		printk(KERN_ERR "%s %s: F[%d] invalid!\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3151: FILE: drivers/ide/pci/pdc202xx_new.c:418:
++		printk(KERN_ERR "%s %s: F[%d] invalid!\n",
++			name, pci_name(dev), f);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#3161: FILE: drivers/ide/pci/pdc202xx_new.c:464:
++			printk(KERN_INFO DRV_NAME " %s: PCI config space "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#3162: FILE: drivers/ide/pci/pdc202xx_new.c:465:
++			printk(KERN_INFO DRV_NAME " %s: PCI config space "
++				"interrupt fixed\n", pci_name(dev));
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#3181: FILE: drivers/ide/pci/pdc202xx_new.c:495:
+ static const struct ide_port_info pdcnew_chipsets[] __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#3196: FILE: drivers/ide/pci/pdc202xx_new.c:509:
+ static int __devinit pdc202new_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#3229: FILE: drivers/ide/pci/pdc202xx_new.c:536:
++		printk(KERN_INFO DRV_NAME " %s: attached to I2O RAID controller,"
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#3230: FILE: drivers/ide/pci/pdc202xx_new.c:537:
++		printk(KERN_INFO DRV_NAME " %s: attached to I2O RAID controller,"
++			" skipping\n", pci_name(dev));
+
+WARNING:HOTPLUG_SECTION: Using __devexit is unnecessary
+#3238: FILE: drivers/ide/pci/pdc202xx_new.c:544:
++static void __devexit pdc202new_remove(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#3304: FILE: drivers/ide/pci/pdc202xx_old.c:268:
++static unsigned int __devinit init_chipset_pdc202xx(struct pci_dev *dev)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#3314: FILE: drivers/ide/pci/pdc202xx_old.c:308:
++			printk(KERN_INFO "%s %s: PCI config space interrupt "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#3315: FILE: drivers/ide/pci/pdc202xx_old.c:309:
++			printk(KERN_INFO "%s %s: PCI config space interrupt "
++				"mirror fixed\n", name, pci_name(dev));
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#3334: FILE: drivers/ide/pci/pdc202xx_old.c:366:
+ static const struct ide_port_info pdc202xx_chipsets[] __devinitdata = {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#3375: FILE: drivers/ide/pci/pdc202xx_old.c:410:
++			printk(KERN_INFO DRV_NAME " %s: skipping Promise "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#3376: FILE: drivers/ide/pci/pdc202xx_old.c:411:
++			printk(KERN_INFO DRV_NAME " %s: skipping Promise "
++				"PDC20265 attached to I2O RAID controller\n",
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#3444: FILE: drivers/ide/pci/piix.c:208:
++static unsigned int __devinit init_chipset_ich(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#3475: FILE: drivers/ide/pci/piix.c:345:
+ static const struct ide_port_info piix_pci_info[] __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#3534: FILE: drivers/ide/pci/piix.c:382:
+ static int __devinit piix_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#3546: FILE: drivers/ide/pci/piix.c:411:
++		printk(KERN_WARNING DRV_NAME ": 450NX errata present, disabling IDE DMA.\n");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#3549: FILE: drivers/ide/pci/piix.c:413:
++		printk(KERN_WARNING DRV_NAME ": A BIOS update may resolve this.\n");
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#3640: FILE: drivers/ide/pci/rz1000.c:26:
+ static void __devinit init_hwif_rz1000 (ide_hwif_t *hwif)
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#3646: FILE: drivers/ide/pci/rz1000.c:44:
+ static const struct ide_port_info rz1000_chipset __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#3654: FILE: drivers/ide/pci/rz1000.c:51:
+ static int __devinit rz1000_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#3752: FILE: drivers/ide/pci/sc1200.c:295:
+ static const struct ide_port_info sc1200_chipset __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#3760: FILE: drivers/ide/pci/sc1200.c:307:
+ static int __devinit sc1200_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!ss"
+#3768: FILE: drivers/ide/pci/sc1200.c:314:
++	if (ss == NULL)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#3819: FILE: drivers/ide/pci/serverworks.c:177:
++static unsigned int __devinit init_chipset_svwks(struct pci_dev *dev)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#3828: FILE: drivers/ide/pci/serverworks.c:193:
++				printk(KERN_DEBUG DRV_NAME " %s: UDMA not BIOS "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#3829: FILE: drivers/ide/pci/serverworks.c:194:
++				printk(KERN_DEBUG DRV_NAME " %s: UDMA not BIOS "
++					"enabled.\n", pci_name(dev));
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#3836: FILE: drivers/ide/pci/serverworks.c:357:
+ static const struct ide_port_info serverworks_chipsets[] __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#4041: FILE: drivers/ide/pci/siimage.c:465:
++static unsigned int __devinit init_chipset_siimage(struct pci_dev *dev)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#4067: FILE: drivers/ide/pci/siimage.c:542:
++		printk(KERN_INFO DRV_NAME " %s: BASE CLOCK %s\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4068: FILE: drivers/ide/pci/siimage.c:543:
++		printk(KERN_INFO DRV_NAME " %s: BASE CLOCK %s\n",
++			pci_name(dev), clk_str[tmp & 3]);
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#4073: FILE: drivers/ide/pci/siimage.c:561:
+ static void __devinit init_mmio_iops_siimage(ide_hwif_t *hwif)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#4083: FILE: drivers/ide/pci/siimage.c:661:
+ static void __devinit init_iops_siimage(ide_hwif_t *hwif)
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#4117: FILE: drivers/ide/pci/siimage.c:732:
+ static const struct ide_port_info siimage_chipsets[] __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#4127: FILE: drivers/ide/pci/siimage.c:746:
+ static int __devinit siimage_init_one(struct pci_dev *dev,
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#4145: FILE: drivers/ide/pci/siimage.c:763:
++			printk(KERN_INFO DRV_NAME ": For full SATA support you "
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments should align the * on each line
+#4161: FILE: drivers/ide/pci/siimage.c:778:
++		/*
++		* Drop back to PIO if we can't map the MMIO. Some systems
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#4165: FILE: drivers/ide/pci/siimage.c:782:
++			printk(KERN_WARNING DRV_NAME " %s: MMIO ports not "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#4166: FILE: drivers/ide/pci/siimage.c:783:
++			printk(KERN_WARNING DRV_NAME " %s: MMIO ports not "
++				"available\n", pci_name(dev));
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!ioaddr"
+#4169: FILE: drivers/ide/pci/siimage.c:786:
++			if (ioaddr == NULL)
+
+WARNING:HOTPLUG_SECTION: Using __devexit is unnecessary
+#4186: FILE: drivers/ide/pci/siimage.c:803:
++static void __devexit siimage_remove(struct pci_dev *dev)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#4254: FILE: drivers/ide/pci/sis5513.c:385:
++		printk(KERN_INFO DRV_NAME " %s: %s %s controller\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4255: FILE: drivers/ide/pci/sis5513.c:386:
++		printk(KERN_INFO DRV_NAME " %s: %s %s controller\n",
++			pci_name(dev), SiSHostChipInfo[i].name,
+
+CHECK:CAMELCASE: Avoid CamelCase: <SiSHostChipInfo>
+#4255: FILE: drivers/ide/pci/sis5513.c:386:
++			pci_name(dev), SiSHostChipInfo[i].name,
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#4265: FILE: drivers/ide/pci/sis5513.c:402:
++				printk(KERN_INFO DRV_NAME " %s: SiS 962/963 MuTIOL IDE UDMA133 controller\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4266: FILE: drivers/ide/pci/sis5513.c:403:
++				printk(KERN_INFO DRV_NAME " %s: SiS 962/963 MuTIOL IDE UDMA133 controller\n",
++					pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#4275: FILE: drivers/ide/pci/sis5513.c:412:
++					printk(KERN_INFO DRV_NAME " %s: Switching to 5513 register mapping\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4276: FILE: drivers/ide/pci/sis5513.c:413:
++					printk(KERN_INFO DRV_NAME " %s: Switching to 5513 register mapping\n",
++						pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#4285: FILE: drivers/ide/pci/sis5513.c:437:
++					printk(KERN_INFO DRV_NAME " %s: SiS 961B MuTIOL IDE UDMA133 controller\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4286: FILE: drivers/ide/pci/sis5513.c:438:
++					printk(KERN_INFO DRV_NAME " %s: SiS 961B MuTIOL IDE UDMA133 controller\n",
++						pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#4290: FILE: drivers/ide/pci/sis5513.c:441:
++					printk(KERN_INFO DRV_NAME " %s: SiS 961 MuTIOL IDE UDMA100 controller\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4291: FILE: drivers/ide/pci/sis5513.c:442:
++					printk(KERN_INFO DRV_NAME " %s: SiS 961 MuTIOL IDE UDMA100 controller\n",
++						pci_name(dev));
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#4301: FILE: drivers/ide/pci/sis5513.c:451:
++static unsigned int __devinit init_chipset_sis5513(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#4308: FILE: drivers/ide/pci/sis5513.c:563:
+ static const struct ide_port_info sis5513_chipset __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devexit is unnecessary
+#4322: FILE: drivers/ide/pci/sis5513.c:595:
++static void __devexit sis5513_remove(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#4369: FILE: drivers/ide/pci/sl82c105.c:275:
++static unsigned int __devinit init_chipset_sl82c105(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#4376: FILE: drivers/ide/pci/sl82c105.c:305:
+ static const struct ide_port_info sl82c105_chipset __devinitdata = {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#4387: FILE: drivers/ide/pci/sl82c105.c:333:
++		printk(KERN_INFO DRV_NAME ": Winbond W83C553 bridge "
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#4437: FILE: drivers/ide/pci/slc90e66.c:136:
+ static const struct ide_port_info slc90e66_chipset __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#4445: FILE: drivers/ide/pci/slc90e66.c:147:
+ static int __devinit slc90e66_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#4507: FILE: drivers/ide/pci/tc86c001.c:195:
+ static const struct ide_port_info tc86c001_chipset __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#4515: FILE: drivers/ide/pci/tc86c001.c:206:
+ static int __devinit tc86c001_init_one(struct pci_dev *dev,
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#4527: FILE: drivers/ide/pci/tc86c001.c:217:
++		printk(KERN_ERR DRV_NAME ": system control regs already in use");
+
+WARNING:HOTPLUG_SECTION: Using __devexit is unnecessary
+#4545: FILE: drivers/ide/pci/tc86c001.c:235:
++static void __devexit tc86c001_remove(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#4593: FILE: drivers/ide/pci/triflex.c:97:
+ static const struct ide_port_info triflex_device __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#4600: FILE: drivers/ide/pci/triflex.c:106:
+ static int __devinit triflex_init_one(struct pci_dev *dev, 
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#4648: FILE: drivers/ide/pci/trm290.c:250:
++		printk(KERN_INFO DRV_NAME " %s: chip", pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#4652: FILE: drivers/ide/pci/trm290.c:253:
++		printk(KERN_INFO DRV_NAME " %s: using default", pci_name(dev));
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#4659: FILE: drivers/ide/pci/trm290.c:329:
+ static const struct ide_port_info trm290_chipset __devinitdata = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#4667: FILE: drivers/ide/pci/trm290.c:343:
+ static int __devinit trm290_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#4740: FILE: drivers/ide/pci/via82cxxx.c:270:
++static unsigned int __devinit init_chipset_via82cxxx(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#4812: FILE: drivers/ide/pci/via82cxxx.c:355:
+ static u8 __devinit via82cxxx_cable_detect(ide_hwif_t *hwif)
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#4824: FILE: drivers/ide/pci/via82cxxx.c:376:
+ static const struct ide_port_info via82cxxx_chipset __devinitdata = {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#4846: FILE: drivers/ide/pci/via82cxxx.c:405:
++		printk(KERN_WARNING DRV_NAME " %s: unknown chipset, skipping\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4847: FILE: drivers/ide/pci/via82cxxx.c:406:
++		printk(KERN_WARNING DRV_NAME " %s: unknown chipset, skipping\n",
++			pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#4854: FILE: drivers/ide/pci/via82cxxx.c:413:
++	printk(KERN_INFO DRV_NAME " %s: VIA %s (rev %02x) IDE %sDMA%s\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4855: FILE: drivers/ide/pci/via82cxxx.c:414:
++	printk(KERN_INFO DRV_NAME " %s: VIA %s (rev %02x) IDE %sDMA%s\n",
++		pci_name(dev), via_config->name, isa->revision,
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#4868: FILE: drivers/ide/pci/via82cxxx.c:427:
++	case 33000: via_clock = 33333; break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#4869: FILE: drivers/ide/pci/via82cxxx.c:428:
++	case 37000: via_clock = 37500; break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#4870: FILE: drivers/ide/pci/via82cxxx.c:429:
++	case 41000: via_clock = 41666; break;
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#4874: FILE: drivers/ide/pci/via82cxxx.c:433:
++		printk(KERN_WARNING DRV_NAME ": User given PCI clock speed "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#4875: FILE: drivers/ide/pci/via82cxxx.c:434:
++		printk(KERN_WARNING DRV_NAME ": User given PCI clock speed "
++			"impossible (%d), using 33 MHz instead.\n", via_clock);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#4876: FILE: drivers/ide/pci/via82cxxx.c:435:
++		printk(KERN_WARNING DRV_NAME ": Use ide0=ata66 if you want "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#4877: FILE: drivers/ide/pci/via82cxxx.c:436:
++		printk(KERN_WARNING DRV_NAME ": Use ide0=ata66 if you want "
++			"to assume 80-wire cable.\n");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#4891: FILE: drivers/ide/pci/via82cxxx.c:457:
++		printk(KERN_ERR DRV_NAME " %s: out of memory :(\n",
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#4891: FILE: drivers/ide/pci/via82cxxx.c:457:
++	if (!vdev) {
++		printk(KERN_ERR DRV_NAME " %s: out of memory :(\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4892: FILE: drivers/ide/pci/via82cxxx.c:458:
++		printk(KERN_ERR DRV_NAME " %s: out of memory :(\n",
++			pci_name(dev));
+
+WARNING:HOTPLUG_SECTION: Using __devexit is unnecessary
+#4905: FILE: drivers/ide/pci/via82cxxx.c:471:
++static void __devexit via_remove(struct pci_dev *dev)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#4947: FILE: drivers/ide/setup-pci.c:42:
++			printk(KERN_INFO "%s %s: device not capable of full "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#4948: FILE: drivers/ide/setup-pci.c:43:
++			printk(KERN_INFO "%s %s: device not capable of full "
++				"native PCI mode\n", name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#4952: FILE: drivers/ide/setup-pci.c:46:
++		printk(KERN_INFO "%s %s: placing both ports into native PCI "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#4953: FILE: drivers/ide/setup-pci.c:47:
++		printk(KERN_INFO "%s %s: placing both ports into native PCI "
++			"mode\n", name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#4960: FILE: drivers/ide/setup-pci.c:51:
++			printk(KERN_ERR "%s %s: rewrite of PROGIF failed, "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#4961: FILE: drivers/ide/setup-pci.c:52:
++			printk(KERN_ERR "%s %s: rewrite of PROGIF failed, "
++				"wanted 0x%04x, got 0x%04x\n",
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#4989: FILE: drivers/ide/setup-pci.c:95:
++			printk(KERN_ERR "%s %s: DMA base is invalid\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4990: FILE: drivers/ide/setup-pci.c:96:
++			printk(KERN_ERR "%s %s: DMA base is invalid\n",
++				d->name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#5007: FILE: drivers/ide/setup-pci.c:118:
++			printk(KERN_INFO "%s %s: simplex device: DMA forced\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5008: FILE: drivers/ide/setup-pci.c:119:
++			printk(KERN_INFO "%s %s: simplex device: DMA forced\n",
++				d->name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#5017: FILE: drivers/ide/setup-pci.c:135:
++		printk(KERN_INFO "%s %s: simplex device: DMA disabled\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5018: FILE: drivers/ide/setup-pci.c:136:
++		printk(KERN_INFO "%s %s: simplex device: DMA disabled\n",
++			d->name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#5028: FILE: drivers/ide/setup-pci.c:158:
++			printk(KERN_ERR "%s %s: error updating PCICMD\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5029: FILE: drivers/ide/setup-pci.c:159:
++			printk(KERN_ERR "%s %s: error updating PCICMD\n",
++				name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#5040: FILE: drivers/ide/setup-pci.c:171:
++	printk(KERN_INFO "%s %s: IDE controller (0x%04x:0x%04x rev 0x%02x)\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5041: FILE: drivers/ide/setup-pci.c:172:
++	printk(KERN_INFO "%s %s: IDE controller (0x%04x:0x%04x rev 0x%02x)\n",
++		d->name, pci_name(dev),
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#5052: FILE: drivers/ide/setup-pci.c:198:
++			printk(KERN_WARNING "%s %s: couldn't enable device\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5053: FILE: drivers/ide/setup-pci.c:199:
++			printk(KERN_WARNING "%s %s: couldn't enable device\n",
++				d->name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#5057: FILE: drivers/ide/setup-pci.c:202:
++		printk(KERN_WARNING "%s %s: BIOS configuration fixed\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5058: FILE: drivers/ide/setup-pci.c:203:
++		printk(KERN_WARNING "%s %s: BIOS configuration fixed\n",
++			d->name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#5067: FILE: drivers/ide/setup-pci.c:213:
++		printk(KERN_ERR "%s %s: can't set DMA mask\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5068: FILE: drivers/ide/setup-pci.c:214:
++		printk(KERN_ERR "%s %s: can't set DMA mask\n",
++			d->name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#5077: FILE: drivers/ide/setup-pci.c:232:
++		printk(KERN_ERR "%s %s: can't reserve resources\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5078: FILE: drivers/ide/setup-pci.c:233:
++		printk(KERN_ERR "%s %s: can't reserve resources\n",
++			d->name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#5087: FILE: drivers/ide/setup-pci.c:259:
++		printk(KERN_INFO "%s %s: device disabled (BIOS)\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5088: FILE: drivers/ide/setup-pci.c:260:
++		printk(KERN_INFO "%s %s: device disabled (BIOS)\n",
++			d->name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#5093: FILE: drivers/ide/setup-pci.c:264:
++		printk(KERN_ERR "%s %s: error accessing PCI regs\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5094: FILE: drivers/ide/setup-pci.c:265:
++		printk(KERN_ERR "%s %s: error accessing PCI regs\n",
++			d->name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#5099: FILE: drivers/ide/setup-pci.c:269:
++		printk(KERN_ERR "%s %s: unable to enable IDE controller\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5100: FILE: drivers/ide/setup-pci.c:270:
++		printk(KERN_ERR "%s %s: unable to enable IDE controller\n",
++			d->name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#5110: FILE: drivers/ide/setup-pci.c:326:
++			printk(KERN_ERR "%s %s: I/O baseregs (BIOS) are "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#5111: FILE: drivers/ide/setup-pci.c:327:
++			printk(KERN_ERR "%s %s: I/O baseregs (BIOS) are "
++				"reported as MEM for port %d!\n",
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#5122: FILE: drivers/ide/setup-pci.c:341:
++		printk(KERN_ERR "%s %s: bad PCI BARs for port %d, skipping\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5123: FILE: drivers/ide/setup-pci.c:342:
++		printk(KERN_ERR "%s %s: bad PCI BARs for port %d, skipping\n",
++			d->name, pci_name(dev), port);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#5149: FILE: drivers/ide/setup-pci.c:430:
++		printk(KERN_ERR "%s %s: error accessing PCI regs\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5150: FILE: drivers/ide/setup-pci.c:431:
++		printk(KERN_ERR "%s %s: error accessing PCI regs\n",
++			d->name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#5159: FILE: drivers/ide/setup-pci.c:438:
++		printk(KERN_INFO "%s %s: device enabled (Linux)\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5160: FILE: drivers/ide/setup-pci.c:439:
++		printk(KERN_INFO "%s %s: device enabled (Linux)\n",
++			d->name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#5169: FILE: drivers/ide/setup-pci.c:478:
++			printk(KERN_INFO "%s %s: IDE port disabled\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5170: FILE: drivers/ide/setup-pci.c:479:
++			printk(KERN_INFO "%s %s: IDE port disabled\n",
++				d->name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#5214: FILE: drivers/ide/setup-pci.c:525:
++			printk(KERN_INFO "%s %s: not 100%% native mode: will "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#5215: FILE: drivers/ide/setup-pci.c:526:
++			printk(KERN_INFO "%s %s: not 100%% native mode: will "
++				"probe irqs later\n", d->name, pci_name(dev));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#5236: FILE: drivers/ide/setup-pci.c:529:
++		printk(KERN_WARNING "%s %s: bad irq (%d): will probe later\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5237: FILE: drivers/ide/setup-pci.c:530:
++		printk(KERN_WARNING "%s %s: bad irq (%d): will probe later\n",
++			d->name, pci_name(dev), pciirq);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#5239: FILE: drivers/ide/setup-pci.c:532:
++		printk(KERN_INFO "%s %s: 100%% native mode on irq %d\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5240: FILE: drivers/ide/setup-pci.c:533:
++		printk(KERN_INFO "%s %s: 100%% native mode on irq %d\n",
++			d->name, pci_name(dev), pciirq);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!host"
+#5268: FILE: drivers/ide/setup-pci.c:555:
++	if (host == NULL) {
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#5284: FILE: drivers/ide/setup-pci.c:571:
++	hw[1].irq = hw[0].irq = ret;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#5310: FILE: drivers/ide/setup-pci.c:594:
++		ide_pci_setup_ports(pdev[i], d, 0, &hw[i*2], &hws[i*2]);
+ 		                                        ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#5310: FILE: drivers/ide/setup-pci.c:594:
++		ide_pci_setup_ports(pdev[i], d, 0, &hw[i*2], &hws[i*2]);
+ 		                                                   ^
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!host"
+#5314: FILE: drivers/ide/setup-pci.c:598:
++	if (host == NULL) {
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#5338: FILE: drivers/ide/setup-pci.c:622:
++		hw[i*2 + 1].irq = hw[i*2].irq = ret;
+ 		    ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#5338: FILE: drivers/ide/setup-pci.c:622:
++		hw[i*2 + 1].irq = hw[i*2].irq = ret;
+ 		                      ^
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#5338: FILE: drivers/ide/setup-pci.c:622:
++		hw[i*2 + 1].irq = hw[i*2].irq = ret;
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#5511: 
+deleted file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#6278: FILE: include/linux/ide.h:215:
++    defined(CONFIG_MIPS) || defined(CONFIG_MN10300) || defined(CONFIG_PARISC) \$
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#6279: FILE: include/linux/ide.h:216:
++    defined(CONFIG_MIPS) || defined(CONFIG_MN10300) || defined(CONFIG_PARISC) \
++    || defined(CONFIG_PPC) || defined(CONFIG_SPARC) || defined(CONFIG_SPARC64)
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#6279: FILE: include/linux/ide.h:216:
++    || defined(CONFIG_PPC) || defined(CONFIG_SPARC) || defined(CONFIG_SPARC64)$
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'ide_drive_t *' should also have an identifier name
+#6326: FILE: include/linux/ide.h:898:
++int ide_device_get(ide_drive_t *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'ide_drive_t *' should also have an identifier name
+#6327: FILE: include/linux/ide.h:899:
++void ide_device_put(ide_drive_t *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct pci_dev *' should also have an identifier name
+#6337: FILE: include/linux/ide.h:1209:
++	unsigned int		(*init_chipset)(struct pci_dev *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct pci_dev *' should also have an identifier name
+#6347: FILE: include/linux/ide.h:1228:
++int ide_pci_init_one(struct pci_dev *, const struct ide_port_info *, void *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const struct ide_port_info *' should also have an identifier name
+#6347: FILE: include/linux/ide.h:1228:
++int ide_pci_init_one(struct pci_dev *, const struct ide_port_info *, void *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#6347: FILE: include/linux/ide.h:1228:
++int ide_pci_init_one(struct pci_dev *, const struct ide_port_info *, void *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct pci_dev *' should also have an identifier name
+#6348: FILE: include/linux/ide.h:1229:
++int ide_pci_init_two(struct pci_dev *, struct pci_dev *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct pci_dev *' should also have an identifier name
+#6348: FILE: include/linux/ide.h:1229:
++int ide_pci_init_two(struct pci_dev *, struct pci_dev *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const struct ide_port_info *' should also have an identifier name
+#6348: FILE: include/linux/ide.h:1229:
++int ide_pci_init_two(struct pci_dev *, struct pci_dev *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#6348: FILE: include/linux/ide.h:1229:
++int ide_pci_init_two(struct pci_dev *, struct pci_dev *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct pci_dev *' should also have an identifier name
+#6350: FILE: include/linux/ide.h:1231:
++void ide_pci_remove(struct pci_dev *);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000249909.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 9 errors, 253 warnings, 69 checks, 4973 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000249909.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

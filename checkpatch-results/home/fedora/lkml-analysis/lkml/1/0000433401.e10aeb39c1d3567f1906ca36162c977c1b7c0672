@@ -1,0 +1,221 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#53: FILE: arch/powerpc/kernel/marker.c:1:
++/* marker.c
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/cacheflush.h> instead of <asm/cacheflush.h>
+#63: FILE: arch/powerpc/kernel/marker.c:11:
++#include <asm/cacheflush.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#67: FILE: arch/powerpc/kernel/marker.c:15:
++	char newi[MARK_OPTIMIZED_ENABLE_IMMEDIATE_OFFSET+1];
+ 	                                                ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#83: FILE: include/asm-powerpc/marker.h:1:
++#ifndef _ASM_POWERPC_MARKER_H
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'format' - possible side-effects?
+#105: FILE: include/asm-powerpc/marker.h:23:
++#define trace_mark_optimized(flags, name, format, args...) \
++	do { \
++		static const char __mstrtab_name_##name[] \
++		__attribute__((section("__markers_strings"))) \
++		= #name; \
++		static const char __mstrtab_format_##name[] \
++		__attribute__((section("__markers_strings"))) \
++		= format; \
++		static const char __mstrtab_args_##name[] \
++		__attribute__((section("__markers_strings"))) \
++		= #args; \
++		static struct __mark_marker_data __mark_data_##name \
++		__attribute__((section("__markers_data"))) = \
++		{ __mstrtab_name_##name,  __mstrtab_format_##name, \
++		__mstrtab_args_##name, \
++		(flags) | MF_OPTIMIZED, __mark_empty_function, NULL }; \
++		char condition; \
++		asm volatile(	".section __markers, \"a\", @progbits;\n\t" \
++					PPC_LONG "%1, 0f;\n\t" \
++					".previous;\n\t" \
++					".align 4\n\t" \
++					"0:\n\t" \
++					"li %0,0;\n\t" \
++				: "=r" (condition) \
++				: "i" (&__mark_data_##name)); \
++		__mark_check_format(format, ## args); \
++		if (unlikely(condition)) { \
++			preempt_disable(); \
++			(*__mark_data_##name.call)(&__mark_data_##name, \
++						format, ## args); \
++			preempt_enable(); \
++		} \
++	} while (0)
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__markers_strings") over __attribute__((section("__markers_strings")))
+#108: FILE: include/asm-powerpc/marker.h:26:
++		__attribute__((section("__markers_strings"))) \
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#109: FILE: include/asm-powerpc/marker.h:27:
++		__attribute__((section("__markers_strings"))) \
++		= #name; \
+
+Assignment operators should not be written at the start of a
+line but should follow the operand at the previous line.
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__markers_strings") over __attribute__((section("__markers_strings")))
+#111: FILE: include/asm-powerpc/marker.h:29:
++		__attribute__((section("__markers_strings"))) \
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#112: FILE: include/asm-powerpc/marker.h:30:
++		__attribute__((section("__markers_strings"))) \
++		= format; \
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__markers_strings") over __attribute__((section("__markers_strings")))
+#114: FILE: include/asm-powerpc/marker.h:32:
++		__attribute__((section("__markers_strings"))) \
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#115: FILE: include/asm-powerpc/marker.h:33:
++		__attribute__((section("__markers_strings"))) \
++		= #args; \
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__markers_data") over __attribute__((section("__markers_data")))
+#117: FILE: include/asm-powerpc/marker.h:35:
++		__attribute__((section("__markers_data"))) = \
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#122: FILE: include/asm-powerpc/marker.h:40:
++		asm volatile(	".section __markers, \"a\", @progbits;\n\t" \
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#140: FILE: include/asm-powerpc/marker.h:58:
++ * on the flags specified. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'flags' - possible side-effects?
+#141: FILE: include/asm-powerpc/marker.h:59:
++#define _trace_mark(flags, format, args...) \
++do { \
++	if ((flags) & MF_OPTIMIZED) \
++		trace_mark_optimized(flags, format, ## args); \
++	else \
++		trace_mark_generic(flags, format, ## args); \
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'format' - possible side-effects?
+#141: FILE: include/asm-powerpc/marker.h:59:
++#define _trace_mark(flags, format, args...) \
++do { \
++	if ((flags) & MF_OPTIMIZED) \
++		trace_mark_optimized(flags, format, ## args); \
++	else \
++		trace_mark_generic(flags, format, ## args); \
++} while (0)
+
+WARNING:TYPO_SPELLING: 'dependant' may be misspelled - perhaps 'dependent'?
+#152: FILE: include/asm-powerpc/marker.h:70:
++/* Architecture dependant marker information, used internally for marker
+                 ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#153: FILE: include/asm-powerpc/marker.h:71:
++ * activation. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#156: FILE: include/asm-powerpc/marker.h:74:
++ * of the li mnemonic), in bytes. */
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#160: FILE: include/asm-powerpc/marker.h:78:
++#define MARK_OPTIMIZED_ENABLE(a) \
++	*(MARK_OPTIMIZED_ENABLE_TYPE*) \
++		((char*)a+MARK_OPTIMIZED_ENABLE_IMMEDIATE_OFFSET)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'a' may be better as '(a)' to avoid precedence issues
+#160: FILE: include/asm-powerpc/marker.h:78:
++#define MARK_OPTIMIZED_ENABLE(a) \
++	*(MARK_OPTIMIZED_ENABLE_TYPE*) \
++		((char*)a+MARK_OPTIMIZED_ENABLE_IMMEDIATE_OFFSET)
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#161: FILE: include/asm-powerpc/marker.h:79:
++	*(MARK_OPTIMIZED_ENABLE_TYPE*) \
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#162: FILE: include/asm-powerpc/marker.h:80:
++		((char*)a+MARK_OPTIMIZED_ENABLE_IMMEDIATE_OFFSET)
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#162: FILE: include/asm-powerpc/marker.h:80:
++		((char*)a+MARK_OPTIMIZED_ENABLE_IMMEDIATE_OFFSET)
+ 		         ^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#164: FILE: include/asm-powerpc/marker.h:82:
++extern int marker_optimized_set_enable(void *address, char enable);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000433401.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 4 errors, 11 warnings, 11 checks, 114 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000433401.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

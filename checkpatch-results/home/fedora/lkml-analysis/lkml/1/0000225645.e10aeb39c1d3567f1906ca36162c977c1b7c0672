@@ -1,0 +1,102 @@
+WARNING:TYPO_SPELLING: 'seperation' may be misspelled - perhaps 'separation'?
+#40: 
+net: Do software flow seperation on receive.
+                      ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+ERROR:INITIALISED_STATIC: do not initialise statics to 0
+#113: FILE: net/core/dev.c:1664:
++static int simple_hashrnd_initialized = 0;
+
+Static variables should not be initialized explicitly to zero.
+Your compiler (or rather your loader) automatically does
+it for you.
+
+WARNING:CONSTANT_CONVERSION: __constant_htons should be htons
+#302: FILE: net/core/dev.c:2243:
++	case __constant_htons(ETH_P_IP):
+
+Use of __constant_<foo> form is discouraged for the following functions::
+
+  __constant_cpu_to_be[x]
+  __constant_cpu_to_le[x]
+  __constant_be[x]_to_cpu
+  __constant_le[x]_to_cpu
+  __constant_htons
+  __constant_ntohs
+
+Using any of these outside of include/uapi/ is not preferred as using the
+function without __constant_ is identical when the argument is a
+constant.
+
+In big endian systems, the macros like __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to the same expression::
+
+  #define __constant_cpu_to_be32(x) ((__force __be32)(__u32)(x))
+  #define __cpu_to_be32(x)          ((__force __be32)(__u32)(x))
+
+In little endian systems, the macros __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to __constant_swab32 and __swab32.  __swab32
+has a __builtin_constant_p check::
+
+  #define __swab32(x)				\
+    (__builtin_constant_p((__u32)(x)) ?	\
+    ___constant_swab32(x) :			\
+    __fswab32(x))
+
+So ultimately they have a special case for constants.
+Similar is the case with all of the macros in the list.  Thus
+using the __constant_... forms are unnecessarily verbose and
+not preferred outside of include/uapi.
+
+See: https://lore.kernel.org/lkml/1400106425.12666.6.camel@joe-AO725/
+
+CHECK:SPACING: No space is necessary after a cast
+#308: FILE: net/core/dev.c:2247:
++		ip = (struct iphdr *) skb->data;
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:CONSTANT_CONVERSION: __constant_htons should be htons
+#314: FILE: net/core/dev.c:2253:
++	case __constant_htons(ETH_P_IPV6):
+
+CHECK:SPACING: No space is necessary after a cast
+#318: FILE: net/core/dev.c:2257:
++		ip6 = (struct ipv6hdr *) skb->data;
+
+CHECK:SPACING: No space is necessary after a cast
+#338: FILE: net/core/dev.c:2277:
++			ports = *((u32 *) (skb->data + (ihl * 4)));
+
+CHECK:SPACING: No space is necessary after a cast
+#348: FILE: net/core/dev.c:2286:
++	return (u16) (((u64) hash * rxflow_num_cpus) >> 32);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#411: FILE: net/core/dev.c:2349:
++EXPORT_SYMBOL(netif_rx_ni);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#457: FILE: net/core/dev.c:4843:
++	rxflow_cpu_map = kzalloc(sizeof(u16) * num_possible_cpus(), GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000225645.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 5 warnings, 4 checks, 403 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000225645.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

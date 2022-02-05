@@ -1,0 +1,126 @@
+WARNING:BAD_SIGN_OFF: 'Signed-off-by:' is the preferred signature form
+#30: 
+signed-off-by: Mimi Zohar <zohar@us.ibm.com>
+
+The signed-off-by line does not fall in line with the standards
+specified by the community.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
+
+WARNING:BAD_SIGN_OFF: 'Signed-off-by:' is the preferred signature form
+#31: 
+signed-off-by: Kylene Hall <kjhall@us.ibm.com>
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#56: FILE: security/evm/ima/ima.h:40:
++#define IMA_MEASURE_HTABLE_SIZE (1 << IMA_HASH_BITS)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'digest' may be better as '(digest)' to avoid precedence issues
+#57: FILE: security/evm/ima/ima.h:41:
++#define IMA_HASH_KEY(digest) (hash_long( \
+ 	(unsigned long)(*digest), IMA_HASH_BITS));
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#57: FILE: security/evm/ima/ima.h:41:
++#define IMA_HASH_KEY(digest) (hash_long( \
+ 	(unsigned long)(*digest), IMA_HASH_BITS));
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#90: FILE: security/evm/ima/ima.h:67:
++struct ima_queue_entry *ima_lookup_digest_entry(u8 * digest);
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*entry)...) over kzalloc(sizeof(struct ima_measure_entry)...)
+#179: FILE: security/evm/ima/ima_init.c:36:
++	entry = kzalloc(sizeof(struct ima_measure_entry), GFP_ATOMIC);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#186: FILE: security/evm/ima/ima_init.c:41:
++	if ((count = strlen(boot_aggregate_name)) > IMA_EVENT_NAME_LEN_MAX)
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*entry)...) over kzalloc(sizeof(struct ima_measure_entry)...)
+#218: FILE: security/evm/ima/ima_main.c:67:
++	entry = kzalloc(sizeof(struct ima_measure_entry), GFP_ATOMIC);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#227: FILE: security/evm/ima/ima_main.c:74:
++	if ((count = strlen(name)) > IMA_EVENT_NAME_LEN_MAX)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#259: FILE: security/evm/ima/ima_queue.c:56:
++struct ima_queue_entry *ima_lookup_digest_entry(u8 * digest_value)
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*qe)...) over kmalloc(sizeof(struct ima_queue_entry)...)
+#285: FILE: security/evm/ima/ima_queue.c:81:
++	qe = kmalloc(sizeof(struct ima_queue_entry), GFP_ATOMIC);
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*qe)...) over kmalloc(sizeof(struct ima_queue_entry)...)
+#306: FILE: security/evm/ima/ima_queue.c:105:
++	qe = kmalloc(sizeof(struct ima_queue_entry), GFP_ATOMIC);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000451327.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 4 errors, 3 warnings, 6 checks, 231 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000451327.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

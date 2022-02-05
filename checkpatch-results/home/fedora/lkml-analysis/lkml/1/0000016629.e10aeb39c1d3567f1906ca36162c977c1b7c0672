@@ -1,0 +1,111 @@
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#66: FILE: drivers/platform/x86/asus-laptop.c:201:
++#define ASUS_DEFINE_LED(object)					\
++	int object##_wk;					\
++	struct work_struct object##_work;			\
++	struct led_classdev object;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#71: FILE: drivers/platform/x86/asus-laptop.c:206:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#651: FILE: drivers/platform/x86/asus-laptop.c:1279:
++	asus->keymap = kmemdup(asus_keymap, sizeof(asus_keymap),
++				GFP_KERNEL);
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#668: FILE: drivers/platform/x86/asus-laptop.c:1302:
++#define ASUS_LED_UNREGISTER(object)				\
+ 	if (object##_led.dev)					\
+ 		led_classdev_unregister(&object##_led)
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'asus' - possible side-effects?
+#728: FILE: drivers/platform/x86/asus-laptop.c:1353:
++#define ASUS_LED_REGISTER(asus, object, _name, max)			\
++	do {								\
++		struct led_classdev *ldev = &asus->leds.object;		\
++		if (!object##_set_handle)				\
++			break ;						\
++									\
++		INIT_WORK(&asus->leds.object##_work, object##_led_update); \
++		ldev->name = "asus::" _name;				\
++		ldev->brightness_set = object##_led_set;		\
++		ldev->max_brightness = max;				\
++		rv = led_classdev_register(&asus->platform_device->dev, ldev); \
++		if (rv)							\
++			goto error;					\
++	} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'asus' may be better as '(asus)' to avoid precedence issues
+#728: FILE: drivers/platform/x86/asus-laptop.c:1353:
++#define ASUS_LED_REGISTER(asus, object, _name, max)			\
++	do {								\
++		struct led_classdev *ldev = &asus->leds.object;		\
++		if (!object##_set_handle)				\
++			break ;						\
++									\
++		INIT_WORK(&asus->leds.object##_work, object##_led_update); \
++		ldev->name = "asus::" _name;				\
++		ldev->brightness_set = object##_led_set;		\
++		ldev->max_brightness = max;				\
++		rv = led_classdev_register(&asus->platform_device->dev, ldev); \
++		if (rv)							\
++			goto error;					\
++	} while (0)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#817: FILE: drivers/platform/x86/asus-laptop.c:1398:
++static int __devinit asus_acpi_init(struct asus_laptop *asus)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#868: FILE: drivers/platform/x86/asus-laptop.c:1449:
+ static int __devinit asus_acpi_add(struct acpi_device *device)
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000016629.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 3 warnings, 4 checks, 837 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000016629.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

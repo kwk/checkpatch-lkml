@@ -1,0 +1,568 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#25: 
+i386 optimization of the immediate values which uses a movl with code patching
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#42: FILE: include/asm-i386/immediate.h:1:
++#ifndef _ASM_I386_IMMEDIATE_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'var' - possible side-effects?
+#75: FILE: include/asm-i386/immediate.h:34:
++#define immediate_read(var)						\
++	({								\
++		__typeof__((var)->value) value;				\
++		switch (sizeof(value)) {				\
++		case 1:							\
++			asm (	".section __immediate, \"a\", @progbits;\n\t" \
++					".long %1, (0f)+1, 1;\n\t"	\
++					".previous;\n\t"		\
++					"0:\n\t"			\
++					"mov %2,%0;\n\t"		\
++				: "=r" (value)				\
++				: "m" ((var)->value),			\
++				  "i" (0));				\
++			break;						\
++		case 2:							\
++			asm (	".section __immediate, \"a\", @progbits;\n\t" \
++					".long %1, (0f)+2, 2;\n\t"	\
++					".previous;\n\t"		\
++					"1:\n\t"			\
++					".align 2;\n\t"			\
++					"0:\n\t"			\
++					"mov %2,%0;\n\t"		\
++				: "=r" (value)				\
++				: "m" ((var)->value),			\
++				  "i" (0));				\
++			break;						\
++		case 4:							\
++			asm (	".section __immediate, \"a\", @progbits;\n\t" \
++					".long %1, (0f)+1, 4;\n\t"	\
++					".previous;\n\t"		\
++					"1:\n\t"			\
++					".org (1b)+(3-((1b)%%4)), 0x90;\n\t" \
++					"0:\n\t"			\
++					"mov %2,%0;\n\t"		\
++				: "=r" (value)				\
++				: "m" ((var)->value),			\
++				  "i" (0));				\
++			break;						\
++		default:value = (var)->value;				\
++			break;						\
++		};							\
++		value;							\
++	})
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#80: FILE: include/asm-i386/immediate.h:39:
++			asm (	".section __immediate, \"a\", @progbits;\n\t" \
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#90: FILE: include/asm-i386/immediate.h:49:
++			asm (	".section __immediate, \"a\", @progbits;\n\t" \
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#102: FILE: include/asm-i386/immediate.h:61:
++			asm (	".section __immediate, \"a\", @progbits;\n\t" \
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#113: FILE: include/asm-i386/immediate.h:72:
++		default:value = (var)->value;				\
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#122: FILE: include/asm-i386/immediate.h:81:
++#define immediate_set(var, i) \
++	(var)->value = (i); \
++	immediate_update(1);
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#122: FILE: include/asm-i386/immediate.h:81:
++#define immediate_set(var, i) \
++	(var)->value = (i); \
++	immediate_update(1);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#129: FILE: include/asm-i386/immediate.h:88:
++#define _immediate_set(var, i) \
++	(var)->value = (i); \
++	immediate_update(0);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#129: FILE: include/asm-i386/immediate.h:88:
++#define _immediate_set(var, i) \
++	(var)->value = (i); \
++	immediate_update(0);
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#136: FILE: include/asm-i386/immediate.h:95:
++#define immediate_set_early(var, i) \
++	(var)->value = (i); \
++	immediate_update_early();
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#136: FILE: include/asm-i386/immediate.h:95:
++#define immediate_set_early(var, i) \
++	(var)->value = (i); \
++	immediate_update_early();
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#146: FILE: include/asm-i386/immediate.h:105:
++#define immediate_if(var)	if (unlikely(immediate_read(var)))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#152: FILE: include/asm-i386/immediate.h:111:
++extern void immediate_update(int lock);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#153: FILE: include/asm-i386/immediate.h:112:
++extern void module_immediate_setup(struct module *mod);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#154: FILE: include/asm-i386/immediate.h:113:
++extern void immediate_update_early(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#155: FILE: include/asm-i386/immediate.h:114:
++extern int arch_immediate_update(const struct __immediate *immediate);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#156: FILE: include/asm-i386/immediate.h:115:
++extern void arch_immediate_update_early(const struct __immediate *immediate);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#176: FILE: arch/i386/kernel/immediate.c:1:
++/*
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/cacheflush.h> instead of <asm/cacheflush.h>
+#255: FILE: arch/i386/kernel/immediate.c:80:
++#include <asm/cacheflush.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+ERROR:SWITCH_CASE_INDENT_LEVEL: switch and case should be at the same indent
+#277: FILE: arch/i386/kernel/immediate.c:102:
++	switch (size) {
++		case 1: return 1;
++		case 2: return 2;
++		case 4: return 1;
++		default: BUG();
+
+switch should be at the same indent as case.
+Example::
+
+  switch (suffix) {
+  case 'G':
+  case 'g':
+          mem <<= 30;
+          break;
+  case 'M':
+  case 'm':
+          mem <<= 20;
+          break;
+  case 'K':
+  case 'k':
+          mem <<= 10;
+          fallthrough;
+  default:
+          break;
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#281: FILE: arch/i386/kernel/immediate.c:106:
++		default: BUG();
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#281: FILE: arch/i386/kernel/immediate.c:106:
++		default: BUG();
+
+WARNING:REPEATED_WORD: Possible repeated word: 'nop'
+#291: FILE: arch/i386/kernel/immediate.c:116:
++ * nop nop nop nop nop nop nop nop int3
+
+WARNING:REPEATED_WORD: Possible repeated word: 'nop'
+#291: FILE: arch/i386/kernel/immediate.c:116:
++ * nop nop nop nop nop nop nop nop int3
+
+WARNING:REPEATED_WORD: Possible repeated word: 'nop'
+#291: FILE: arch/i386/kernel/immediate.c:116:
++ * nop nop nop nop nop nop nop nop int3
+
+WARNING:REPEATED_WORD: Possible repeated word: 'nop'
+#291: FILE: arch/i386/kernel/immediate.c:116:
++ * nop nop nop nop nop nop nop nop int3
+
+WARNING:REPEATED_WORD: Possible repeated word: 'nop'
+#291: FILE: arch/i386/kernel/immediate.c:116:
++ * nop nop nop nop nop nop nop nop int3
+
+WARNING:REPEATED_WORD: Possible repeated word: 'nop'
+#291: FILE: arch/i386/kernel/immediate.c:116:
++ * nop nop nop nop nop nop nop nop int3
+
+WARNING:REPEATED_WORD: Possible repeated word: 'nop'
+#291: FILE: arch/i386/kernel/immediate.c:116:
++ * nop nop nop nop nop nop nop nop int3
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#296: FILE: arch/i386/kernel/immediate.c:121:
++		asm volatile (	"jmp 2f;\n\t"
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#321: FILE: arch/i386/kernel/immediate.c:146:
++static int immediate_notifier(struct notifier_block *nb,
++	unsigned long val, void *data)
+
+CHECK:SPACING: No space is necessary after a cast
+#323: FILE: arch/i386/kernel/immediate.c:148:
++	enum die_val die_val = (enum die_val) val;
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#364: FILE: arch/i386/kernel/immediate.c:189:
++	if (unlikely(*(unsigned char*)insn == BREAKPOINT_INSTRUCTION)) {
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#365: FILE: arch/i386/kernel/immediate.c:190:
++		printk(KERN_WARNING "Immediate value in conflict with kprobe. "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#366: FILE: arch/i386/kernel/immediate.c:191:
++		printk(KERN_WARNING "Immediate value in conflict with kprobe. "
++				    "Variable at %p, "
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#367: FILE: arch/i386/kernel/immediate.c:192:
++				    "Variable at %p, "
++				    "instruction at %p, size %lu\n",
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#368: FILE: arch/i386/kernel/immediate.c:193:
++				    (void*)immediate->immediate,
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#369: FILE: arch/i386/kernel/immediate.c:194:
++				    (void*)immediate->var, immediate->size);
+
+ERROR:SWITCH_CASE_INDENT_LEVEL: switch and case should be at the same indent
+#378: FILE: arch/i386/kernel/immediate.c:203:
++	switch (immediate->size) {
++		case 1:	if (*(uint8_t*)immediate->immediate
+[...]
++		case 2:	if (*(uint16_t*)immediate->immediate
+[...]
++		case 4:	if (*(uint32_t*)immediate->immediate
+[...]
++		default:return -EINVAL;
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 32)
+#379: FILE: arch/i386/kernel/immediate.c:204:
++		case 1:	if (*(uint8_t*)immediate->immediate
+[...]
++				return 0;
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#379: FILE: arch/i386/kernel/immediate.c:204:
++		case 1:	if (*(uint8_t*)immediate->immediate
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#379: FILE: arch/i386/kernel/immediate.c:204:
++		case 1:	if (*(uint8_t*)immediate->immediate
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#380: FILE: arch/i386/kernel/immediate.c:205:
++					== *(uint8_t*)immediate->var)
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 32)
+#383: FILE: arch/i386/kernel/immediate.c:208:
++		case 2:	if (*(uint16_t*)immediate->immediate
+[...]
++				return 0;
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#383: FILE: arch/i386/kernel/immediate.c:208:
++		case 2:	if (*(uint16_t*)immediate->immediate
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#383: FILE: arch/i386/kernel/immediate.c:208:
++		case 2:	if (*(uint16_t*)immediate->immediate
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#384: FILE: arch/i386/kernel/immediate.c:209:
++					== *(uint16_t*)immediate->var)
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 32)
+#387: FILE: arch/i386/kernel/immediate.c:212:
++		case 4:	if (*(uint32_t*)immediate->immediate
+[...]
++				return 0;
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#387: FILE: arch/i386/kernel/immediate.c:212:
++		case 4:	if (*(uint32_t*)immediate->immediate
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#387: FILE: arch/i386/kernel/immediate.c:212:
++		case 4:	if (*(uint32_t*)immediate->immediate
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#388: FILE: arch/i386/kernel/immediate.c:213:
++					== *(uint32_t*)immediate->var)
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#400: FILE: arch/i386/kernel/immediate.c:225:
++	memcpy((void*)bypass_eip, (void*)insn, insn_size + immediate->size);
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#400: FILE: arch/i386/kernel/immediate.c:225:
++	memcpy((void*)bypass_eip, (void*)insn, insn_size + immediate->size);
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#404: FILE: arch/i386/kernel/immediate.c:229:
++	memset((void*)(bypass_immediate + immediate->size),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#405: FILE: arch/i386/kernel/immediate.c:230:
++	memset((void*)(bypass_immediate + immediate->size),
++		NOP_INSTRUCTION,
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#414: FILE: arch/i386/kernel/immediate.c:239:
++	*(char*)insn = BREAKPOINT_INSTRUCTION;
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#415: FILE: arch/i386/kernel/immediate.c:240:
++	wmb();
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#421: FILE: arch/i386/kernel/immediate.c:246:
++	BUG_ON(ret != 0);
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#423: FILE: arch/i386/kernel/immediate.c:248:
++	memcpy((void*)immediate->immediate, (void*)immediate->var,
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#423: FILE: arch/i386/kernel/immediate.c:248:
++	memcpy((void*)immediate->immediate, (void*)immediate->var,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#424: FILE: arch/i386/kernel/immediate.c:249:
++	memcpy((void*)immediate->immediate, (void*)immediate->var,
++			immediate->size);
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#425: FILE: arch/i386/kernel/immediate.c:250:
++	wmb();
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#426: FILE: arch/i386/kernel/immediate.c:251:
++	*(char*)insn = *(char*)bypass_eip;
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#426: FILE: arch/i386/kernel/immediate.c:251:
++	*(char*)insn = *(char*)bypass_eip;
+
+WARNING:DEPRECATED_API: Deprecated use of 'synchronize_sched', prefer 'synchronize_rcu' instead
+#438: FILE: arch/i386/kernel/immediate.c:263:
++	synchronize_sched();
+
+Usage of a deprecated RCU API is detected.  It is recommended to replace
+old flavourful RCU APIs by their new vanilla-RCU counterparts.
+
+The full list of available RCU APIs can be viewed from the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/RCU/whatisRCU.html#full-list-of-rcu-apis
+
+ERROR:SWITCH_CASE_INDENT_LEVEL: switch and case should be at the same indent
+#453: FILE: arch/i386/kernel/immediate.c:278:
++	switch (immediate->size) {
++		case 1:	if (*(uint8_t*)immediate->immediate
+[...]
++		case 2:	if (*(uint16_t*)immediate->immediate
+[...]
++		case 4:	if (*(uint32_t*)immediate->immediate
+[...]
++		default:return;
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 32)
+#454: FILE: arch/i386/kernel/immediate.c:279:
++		case 1:	if (*(uint8_t*)immediate->immediate
+[...]
++				return;
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#454: FILE: arch/i386/kernel/immediate.c:279:
++		case 1:	if (*(uint8_t*)immediate->immediate
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#454: FILE: arch/i386/kernel/immediate.c:279:
++		case 1:	if (*(uint8_t*)immediate->immediate
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#455: FILE: arch/i386/kernel/immediate.c:280:
++					== *(uint8_t*)immediate->var)
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 32)
+#458: FILE: arch/i386/kernel/immediate.c:283:
++		case 2:	if (*(uint16_t*)immediate->immediate
+[...]
++				return;
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#458: FILE: arch/i386/kernel/immediate.c:283:
++		case 2:	if (*(uint16_t*)immediate->immediate
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#458: FILE: arch/i386/kernel/immediate.c:283:
++		case 2:	if (*(uint16_t*)immediate->immediate
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#459: FILE: arch/i386/kernel/immediate.c:284:
++					== *(uint16_t*)immediate->var)
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 32)
+#462: FILE: arch/i386/kernel/immediate.c:287:
++		case 4:	if (*(uint32_t*)immediate->immediate
+[...]
++				return;
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#462: FILE: arch/i386/kernel/immediate.c:287:
++		case 4:	if (*(uint32_t*)immediate->immediate
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#462: FILE: arch/i386/kernel/immediate.c:287:
++		case 4:	if (*(uint32_t*)immediate->immediate
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#463: FILE: arch/i386/kernel/immediate.c:288:
++					== *(uint32_t*)immediate->var)
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#466: FILE: arch/i386/kernel/immediate.c:291:
++		default:return;
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#468: FILE: arch/i386/kernel/immediate.c:293:
++	memcpy((void*)immediate->immediate, (void*)immediate->var,
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#468: FILE: arch/i386/kernel/immediate.c:293:
++	memcpy((void*)immediate->immediate, (void*)immediate->var,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#469: FILE: arch/i386/kernel/immediate.c:294:
++	memcpy((void*)immediate->immediate, (void*)immediate->var,
++			immediate->size);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#498: FILE: arch/i386/kernel/traps.c:866:
++	 * interrupts disabled. Normal trap handlers don't. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000406398.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 45 errors, 28 warnings, 12 checks, 445 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000406398.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

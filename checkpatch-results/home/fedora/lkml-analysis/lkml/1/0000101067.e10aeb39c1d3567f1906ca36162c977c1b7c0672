@@ -1,0 +1,880 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#34: 
+flat fair queuing support where there is only one group, "root group" and all
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#68: FILE: block/Kconfig.iosched:5:
++config ELV_FAIR_QUEUING
++	bool "Elevator Fair Queuing Support"
++	default n
++	---help---
++	  Traditionally only cfq had notion of multiple queues and it did
++	  fair queuing at its own. With the cgroups and need of controlling
++	  IO, now even the simple io schedulers like noop, deadline, as will
++	  have one queue per cgroup and will need hierarchical fair queuing.
++	  Instead of every io scheduler implementing its own fair queuing
++	  logic, this option enables fair queuing in elevator layer so that
++	  other ioschedulers can make use of it.
++	  If unsure, say N.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#142: FILE: block/elevator-fq.c:43:
++static inline int elv_prio_slice(struct elv_fq_data *efqd, int sync,
++					unsigned short prio)
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#148: FILE: block/elevator-fq.c:49:
++	return base_slice + (base_slice/ELV_SLICE_SCALE * (4 - prio));
+ 	                               ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#231: FILE: block/elevator-fq.c:830:
++static inline int is_root_group_ioq(struct request_queue *q,
++					struct io_queue *ioq)
+
+CHECK:SPACING: No space is necessary after a cast
+#250: FILE: block/elevator-fq.c:849:
++	char *p = (char *) page;
+
+WARNING:CONSIDER_KSTRTO: simple_strtoul is obsolete, use kstrtoul instead
+#252: FILE: block/elevator-fq.c:851:
++	*var = simple_strtoul(p, &p, 10);
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#256: FILE: block/elevator-fq.c:855:
++#define SHOW_FUNCTION(__FUNC, __VAR, __CONV)				\
++ssize_t __FUNC(struct elevator_queue *e, char *page)		\
++{									\
++	struct elv_fq_data *efqd = &e->efqd;				\
++	unsigned int __data = __VAR;					\
++	if (__CONV)							\
++		__data = jiffies_to_msecs(__data);			\
++	return elv_var_show(__data, (page));				\
++}
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#265: FILE: block/elevator-fq.c:864:
++}
++SHOW_FUNCTION(elv_slice_idle_show, efqd->elv_slice_idle, 1);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#266: FILE: block/elevator-fq.c:865:
++EXPORT_SYMBOL(elv_slice_idle_show);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#268: FILE: block/elevator-fq.c:867:
++EXPORT_SYMBOL(elv_slice_sync_show);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#270: FILE: block/elevator-fq.c:869:
++EXPORT_SYMBOL(elv_slice_async_show);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__PTR' - possible side-effects?
+#273: FILE: block/elevator-fq.c:872:
++#define STORE_FUNCTION(__FUNC, __PTR, MIN, MAX, __CONV)			\
++ssize_t __FUNC(struct elevator_queue *e, const char *page, size_t count)\
++{									\
++	struct elv_fq_data *efqd = &e->efqd;				\
++	unsigned int __data;						\
++	int ret = elv_var_store(&__data, (page), count);		\
++	if (__data < (MIN))						\
++		__data = (MIN);						\
++	else if (__data > (MAX))					\
++		__data = (MAX);						\
++	if (__CONV)							\
++		*(__PTR) = msecs_to_jiffies(__data);			\
++	else								\
++		*(__PTR) = __data;					\
++	return ret;							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'MIN' - possible side-effects?
+#273: FILE: block/elevator-fq.c:872:
++#define STORE_FUNCTION(__FUNC, __PTR, MIN, MAX, __CONV)			\
++ssize_t __FUNC(struct elevator_queue *e, const char *page, size_t count)\
++{									\
++	struct elv_fq_data *efqd = &e->efqd;				\
++	unsigned int __data;						\
++	int ret = elv_var_store(&__data, (page), count);		\
++	if (__data < (MIN))						\
++		__data = (MIN);						\
++	else if (__data > (MAX))					\
++		__data = (MAX);						\
++	if (__CONV)							\
++		*(__PTR) = msecs_to_jiffies(__data);			\
++	else								\
++		*(__PTR) = __data;					\
++	return ret;							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'MAX' - possible side-effects?
+#273: FILE: block/elevator-fq.c:872:
++#define STORE_FUNCTION(__FUNC, __PTR, MIN, MAX, __CONV)			\
++ssize_t __FUNC(struct elevator_queue *e, const char *page, size_t count)\
++{									\
++	struct elv_fq_data *efqd = &e->efqd;				\
++	unsigned int __data;						\
++	int ret = elv_var_store(&__data, (page), count);		\
++	if (__data < (MIN))						\
++		__data = (MIN);						\
++	else if (__data > (MAX))					\
++		__data = (MAX);						\
++	if (__CONV)							\
++		*(__PTR) = msecs_to_jiffies(__data);			\
++	else								\
++		*(__PTR) = __data;					\
++	return ret;							\
++}
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#273: FILE: block/elevator-fq.c:872:
++#define STORE_FUNCTION(__FUNC, __PTR, MIN, MAX, __CONV)			\
++ssize_t __FUNC(struct elevator_queue *e, const char *page, size_t count)\
++{									\
++	struct elv_fq_data *efqd = &e->efqd;				\
++	unsigned int __data;						\
++	int ret = elv_var_store(&__data, (page), count);		\
++	if (__data < (MIN))						\
++		__data = (MIN);						\
++	else if (__data > (MAX))					\
++		__data = (MAX);						\
++	if (__CONV)							\
++		*(__PTR) = msecs_to_jiffies(__data);			\
++	else								\
++		*(__PTR) = __data;					\
++	return ret;							\
++}
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#289: FILE: block/elevator-fq.c:888:
++}
++STORE_FUNCTION(elv_slice_idle_store, &efqd->elv_slice_idle, 0, UINT_MAX, 1);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#290: FILE: block/elevator-fq.c:889:
++EXPORT_SYMBOL(elv_slice_idle_store);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#292: FILE: block/elevator-fq.c:891:
++EXPORT_SYMBOL(elv_slice_sync_store);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#294: FILE: block/elevator-fq.c:893:
++EXPORT_SYMBOL(elv_slice_async_store);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#326: FILE: block/elevator-fq.c:925:
++static void elv_ioq_set_prio_slice(struct request_queue *q,
++					struct io_queue *ioq)
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#340: FILE: block/elevator-fq.c:939:
++	ioq->ttime_samples = (7*ioq->ttime_samples + 256) / 8;
+ 	                       ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#341: FILE: block/elevator-fq.c:940:
++	ioq->ttime_total = (7*ioq->ttime_total + 256*ttime) / 8;
+ 	                     ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#341: FILE: block/elevator-fq.c:940:
++	ioq->ttime_total = (7*ioq->ttime_total + 256*ttime) / 8;
+ 	                                            ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#350: FILE: block/elevator-fq.c:949:
++static void elv_ioq_update_idle_window(struct elevator_queue *eq,
++				struct io_queue *ioq, struct request *rq)
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#361: FILE: block/elevator-fq.c:960:
++	enable_idle = old_idle = elv_ioq_idle_window(ioq);
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#363: FILE: block/elevator-fq.c:962:
++	if (!efqd->elv_slice_idle)
+[...]
++	else if (ioq_sample_valid(ioq->ttime_samples)) {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#379: FILE: block/elevator-fq.c:978:
++			enable_idle = eq->ops->elevator_update_idle_window_fn(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#410: FILE: block/elevator-fq.c:1009:
++int elv_init_ioq(struct elevator_queue *eq, struct io_queue *ioq,
++		struct io_group *iog, void *sched_queue, int ioprio_class,
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#439: FILE: block/elevator-fq.c:1038:
++	BUG_ON(atomic_read(&ioq->ref) <= 0);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#442: FILE: block/elevator-fq.c:1041:
++	BUG_ON(ioq->nr_queued);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#443: FILE: block/elevator-fq.c:1042:
++	BUG_ON(ioq->entity.tree != NULL);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "ioq->entity.tree"
+#443: FILE: block/elevator-fq.c:1042:
++	BUG_ON(ioq->entity.tree != NULL);
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#444: FILE: block/elevator-fq.c:1043:
++	BUG_ON(elv_ioq_busy(ioq));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#445: FILE: block/elevator-fq.c:1044:
++	BUG_ON(efqd->active_queue == ioq);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#448: FILE: block/elevator-fq.c:1047:
++	BUG_ON(!e->ops->elevator_free_sched_queue_fn);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "ioq"
+#460: FILE: block/elevator-fq.c:1059:
++	if (ioq != NULL) {
+
+WARNING:TYPO_SPELLING: 'accomodate' may be misspelled - perhaps 'accommodate'?
+#470: FILE: block/elevator-fq.c:1069:
++ * out of order. This is primarily to accomodate the close_cooperator
+                                       ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#484: FILE: block/elevator-fq.c:1083:
++	BUG_ON(efqd->active_queue != NULL || sd->active_entity != NULL);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "efqd->active_queue"
+#484: FILE: block/elevator-fq.c:1083:
++	BUG_ON(efqd->active_queue != NULL || sd->active_entity != NULL);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "sd->active_entity"
+#484: FILE: block/elevator-fq.c:1083:
++	BUG_ON(efqd->active_queue != NULL || sd->active_entity != NULL);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#485: FILE: block/elevator-fq.c:1084:
++	BUG_ON(!efqd->busy_queues);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#486: FILE: block/elevator-fq.c:1085:
++	BUG_ON(sd != entity->sched_data);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#487: FILE: block/elevator-fq.c:1086:
++	BUG_ON(!st);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#508: FILE: block/elevator-fq.c:1107:
++	BUG_ON(efqd->active_queue != NULL);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "efqd->active_queue"
+#508: FILE: block/elevator-fq.c:1107:
++	BUG_ON(efqd->active_queue != NULL);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#516: FILE: block/elevator-fq.c:1115:
++	BUG_ON(!entity);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#529: FILE: block/elevator-fq.c:1128:
++static void __elv_set_active_ioq(struct elv_fq_data *efqd, struct io_queue *ioq,
++					int coop)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#535: FILE: block/elevator-fq.c:1134:
++		elv_log_ioq(efqd, ioq, "set_active, busy=%d",
++							efqd->busy_queues);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#557: FILE: block/elevator-fq.c:1156:
++static struct io_queue *elv_set_active_ioq(struct request_queue *q,
++						struct io_queue *ioq)
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#562: FILE: block/elevator-fq.c:1161:
++	if (!ioq)
+[...]
++	else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#564: FILE: block/elevator-fq.c:1163:
++	else {
+
+WARNING:REPEATED_WORD: Possible repeated word: 'this'
+#568: FILE: block/elevator-fq.c:1167:
++		 * io scheduler selected the next queue for us. Pass this
++		 * this info back to io scheudler. cfq currently uses it
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#595: FILE: block/elevator-fq.c:1194:
++static void elv_deactivate_ioq(struct elv_fq_data *efqd, struct io_queue *ioq,
++					int requeue)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#603: FILE: block/elevator-fq.c:1202:
++	BUG_ON(elv_ioq_busy(ioq));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#604: FILE: block/elevator-fq.c:1203:
++	BUG_ON(ioq == efqd->active_queue);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#611: FILE: block/elevator-fq.c:1210:
++		struct io_group *iog = ioq_to_io_group(ioq);
++		iog->busy_rt_queues++;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#616: FILE: block/elevator-fq.c:1215:
++static void elv_del_ioq_busy(struct elevator_queue *e, struct io_queue *ioq,
++					int requeue)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#620: FILE: block/elevator-fq.c:1219:
++	BUG_ON(!elv_ioq_busy(ioq));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#621: FILE: block/elevator-fq.c:1220:
++	BUG_ON(ioq->nr_queued);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#624: FILE: block/elevator-fq.c:1223:
++	BUG_ON(efqd->busy_queues == 0);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#628: FILE: block/elevator-fq.c:1227:
++		struct io_group *iog = ioq_to_io_group(ioq);
++		iog->busy_rt_queues--;
+
+WARNING:TYPO_SPELLING: 'reuqest' may be misspelled - perhaps 'request'?
+#671: FILE: block/elevator-fq.c:1270:
++	 * reuqest from the queue got completed. Of course we are not planning
+ 	   ^^^^^^^
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#685: FILE: block/elevator-fq.c:1284:
++	if (!ioq->slice_end)
+[...]
++	else {
+[...]
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#686: FILE: block/elevator-fq.c:1285:
++		slice_used = entity->budget/4;
+ 		                           ^
+
+CHECK:BRACES: Unbalanced braces around else statement
+#687: FILE: block/elevator-fq.c:1286:
++	else {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#690: FILE: block/elevator-fq.c:1289:
++			if (slice_unused == entity->budget) {
+[...]
++			} else
+[...]
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#696: FILE: block/elevator-fq.c:1295:
++				slice_used = entity->budget/4;
+ 				                           ^
+
+CHECK:BRACES: Unbalanced braces around else statement
+#697: FILE: block/elevator-fq.c:1296:
++			} else
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#706: FILE: block/elevator-fq.c:1305:
++	elv_log_ioq(efqd, ioq, "sl_end=%lx, jiffies=%lx", ioq->slice_end,
++			jiffies);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#708: FILE: block/elevator-fq.c:1307:
++	elv_log_ioq(efqd, ioq, "sl_used=%ld, budget=%ld overshoot=%ld",
++				slice_used, entity->budget, slice_overshoot);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#711: FILE: block/elevator-fq.c:1310:
++	BUG_ON(ioq != efqd->active_queue);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#737: FILE: block/elevator-fq.c:1336:
++static int elv_should_preempt(struct request_queue *q, struct io_queue *new_ioq,
++			struct request *rq)
+
+WARNING:TYPO_SPELLING: 'pre-empt' may be misspelled - perhaps 'preempt'?
+#752: FILE: block/elevator-fq.c:1351:
++	 * Allow an RT request to pre-empt an ongoing non-RT cfqq timeslice.
+ 	                          ^^^^^^^^
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#756: FILE: block/elevator-fq.c:1355:
++	if (new_entity->ioprio_class == IOPRIO_CLASS_RT
++	    && entity->ioprio_class != IOPRIO_CLASS_RT)
+
+WARNING:TYPO_SPELLING: 'pre-empt' may be misspelled - perhaps 'preempt'?
+#759: FILE: block/elevator-fq.c:1358:
++	 * Allow an BE request to pre-empt an ongoing IDLE clas timeslice.
+ 	                          ^^^^^^^^
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#763: FILE: block/elevator-fq.c:1362:
++	if (new_entity->ioprio_class == IOPRIO_CLASS_BE
++	    && entity->ioprio_class == IOPRIO_CLASS_IDLE)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#800: FILE: block/elevator-fq.c:1399:
++	BUG_ON(!efqd);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#801: FILE: block/elevator-fq.c:1400:
++	BUG_ON(!ioq);
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#856: FILE: block/elevator-fq.c:1455:
++	if (ioq) {
++
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#896: FILE: block/elevator-fq.c:1495:
++	BUG_ON(!ioq);
+
+WARNING:TYPO_SPELLING: 'schduler' may be misspelled - perhaps 'scheduler'?
+#920: FILE: block/elevator-fq.c:1519:
++	 * schduler will take care of arming the timer, if need be.
+ 	   ^^^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#938: FILE: block/elevator-fq.c:1537:
++static inline struct io_queue *elv_close_cooperator(struct request_queue *q,
++					struct io_queue *ioq, int probe)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!ioq"
+#971: FILE: block/elevator-fq.c:1570:
++	if (ioq == NULL)
+
+WARNING:TYPO_SPELLING: 'pre-empt' may be misspelled - perhaps 'preempt'?
+#992: FILE: block/elevator-fq.c:1591:
++	 * If we have a RT cfqq waiting, then we pre-empt the current non-rt
+ 	                                         ^^^^^^^^
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1054: FILE: block/elevator-fq.c:1653:
++	BUG_ON(!ioq);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1058: FILE: block/elevator-fq.c:1657:
++	BUG_ON(!efqd);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1073: FILE: block/elevator-fq.c:1672:
++	BUG_ON(!ioq);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1088: FILE: block/elevator-fq.c:1687:
++	elv_log_ioq(efqd, rq->ioq, "activate rq, drv=%d",
++						efqd->rq_in_driver);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1101: FILE: block/elevator-fq.c:1700:
++	elv_log_ioq(efqd, rq->ioq, "deactivate rq, drv=%d",
++						efqd->rq_in_driver);
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1173: FILE: block/elevator-fq.c:1772:
++		else if (!ioq->nr_queued && !elv_close_cooperator(q, ioq, 1)
++			 && sync && !rq_noidle(rq))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1191: FILE: block/elevator-fq.c:1790:
++void *io_group_async_queue_prio(struct io_group *iog, int ioprio_class,
++					int ioprio)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1206: FILE: block/elevator-fq.c:1805:
++		BUG();
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1216: FILE: block/elevator-fq.c:1815:
++void io_group_set_async_queue(struct io_group *iog, int ioprio_class,
++					int ioprio, struct io_queue *ioq)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1229: FILE: block/elevator-fq.c:1828:
++		BUG();
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1257: FILE: block/elevator-fq.c:1856:
++static struct io_group *io_alloc_root_group(struct request_queue *q,
++					struct elevator_queue *e, void *key)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!iog"
+#1263: FILE: block/elevator-fq.c:1862:
++	if (iog == NULL)
+
+WARNING:NEEDLESS_IF: kmem_cache_destroy(NULL) is safe and this check is probably not required
+#1294: FILE: block/elevator-fq.c:1893:
++	if (elv_ioq_pool)
++		kmem_cache_destroy(elv_ioq_pool);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!iog"
+#1319: FILE: block/elevator-fq.c:1918:
++	if (iog == NULL)
+
+CHECK:SPACING: No space is necessary after a cast
+#1327: FILE: block/elevator-fq.c:1926:
++	efqd->idle_slice_timer.data = (unsigned long) efqd;
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1355: FILE: block/elevator-fq.c:1954:
++	BUG_ON(timer_pending(&efqd->idle_slice_timer));
+
+WARNING:TYPO_SPELLING: 'structres' may be misspelled - perhaps 'structures'?
+#1360: FILE: block/elevator-fq.c:1959:
++ * This is called after the io scheduler has cleaned up its data structres.
+                                                                  ^^^^^^^^^
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1377: FILE: block/elevator-fq.c:1976:
++	BUG_ON(timer_pending(&efqd->idle_slice_timer));
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1380: FILE: block/elevator-fq.c:1979:
++
++
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#1408: FILE: block/elevator-fq.h:27:
++	__ATTR(name, S_IRUGO|S_IWUSR, elv_##name##_show, elv_##name##_store)
+ 	                    ^
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO|S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#1408: FILE: block/elevator-fq.h:27:
++	__ATTR(name, S_IRUGO|S_IWUSR, elv_##name##_show, elv_##name##_store)
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:TYPO_SPELLING: 'pre-empt' may be misspelled - perhaps 'preempt'?
+#1452: FILE: block/elevator-fq.h:191:
++	 * Used to track any pending rt requests so we can pre-empt current
+ 	                                                   ^^^^^^^^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ioq' - possible side-effects?
+#1495: FILE: block/elevator-fq.h:234:
++#define elv_log_ioq(efqd, ioq, fmt, args...) \
++	blk_add_trace_msg((efqd)->queue, "elv%d%c " fmt, (ioq)->pid,	\
++				elv_ioq_sync(ioq) ? 'S' : 'A', ##args)
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1524: FILE: block/elevator-fq.h:263:
++static inline int elv_ioq_##name(struct io_queue *ioq)         ^I^I\$
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1598: FILE: block/elevator-fq.h:341:
++static inline void elv_ioq_set_ioprio_class(struct io_queue *ioq,
++						int ioprio_class)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1634: FILE: block/elevator-fq.h:377:
++extern ssize_t elv_slice_idle_show(struct elevator_queue *q, char *name);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1635: FILE: block/elevator-fq.h:378:
++extern ssize_t elv_slice_idle_store(struct elevator_queue *q, const char *name,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1636: FILE: block/elevator-fq.h:379:
++extern ssize_t elv_slice_idle_store(struct elevator_queue *q, const char *name,
++						size_t count);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1637: FILE: block/elevator-fq.h:380:
++extern ssize_t elv_slice_sync_show(struct elevator_queue *q, char *name);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1638: FILE: block/elevator-fq.h:381:
++extern ssize_t elv_slice_sync_store(struct elevator_queue *q, const char *name,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1639: FILE: block/elevator-fq.h:382:
++extern ssize_t elv_slice_sync_store(struct elevator_queue *q, const char *name,
++						size_t count);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1640: FILE: block/elevator-fq.h:383:
++extern ssize_t elv_slice_async_show(struct elevator_queue *q, char *name);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1641: FILE: block/elevator-fq.h:384:
++extern ssize_t elv_slice_async_store(struct elevator_queue *q, const char *name,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1642: FILE: block/elevator-fq.h:385:
++extern ssize_t elv_slice_async_store(struct elevator_queue *q, const char *name,
++						size_t count);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1645: FILE: block/elevator-fq.h:388:
++extern int elv_init_fq_data(struct request_queue *q, struct elevator_queue *e);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1646: FILE: block/elevator-fq.h:389:
++extern void elv_exit_fq_data(struct elevator_queue *e);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1647: FILE: block/elevator-fq.h:390:
++extern void elv_exit_fq_data_post(struct elevator_queue *e);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1649: FILE: block/elevator-fq.h:392:
++extern void elv_ioq_request_add(struct request_queue *q, struct request *rq);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1650: FILE: block/elevator-fq.h:393:
++extern void elv_ioq_request_removed(struct elevator_queue *e,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1651: FILE: block/elevator-fq.h:394:
++extern void elv_ioq_request_removed(struct elevator_queue *e,
++					struct request *rq);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1652: FILE: block/elevator-fq.h:395:
++extern void elv_fq_dispatched_request(struct elevator_queue *e,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1653: FILE: block/elevator-fq.h:396:
++extern void elv_fq_dispatched_request(struct elevator_queue *e,
++					struct request *rq);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1655: FILE: block/elevator-fq.h:398:
++extern void elv_fq_activate_rq(struct request_queue *q, struct request *rq);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1656: FILE: block/elevator-fq.h:399:
++extern void elv_fq_deactivate_rq(struct request_queue *q, struct request *rq);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1658: FILE: block/elevator-fq.h:401:
++extern void elv_ioq_completed_request(struct request_queue *q,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1659: FILE: block/elevator-fq.h:402:
++extern void elv_ioq_completed_request(struct request_queue *q,
++				struct request *rq);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1661: FILE: block/elevator-fq.h:404:
++extern void *elv_fq_select_ioq(struct request_queue *q, int force);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1664: FILE: block/elevator-fq.h:407:
++extern void elv_put_ioq(struct io_queue *ioq);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1665: FILE: block/elevator-fq.h:408:
++extern void __elv_ioq_slice_expired(struct request_queue *q,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1666: FILE: block/elevator-fq.h:409:
++extern void __elv_ioq_slice_expired(struct request_queue *q,
++					struct io_queue *ioq);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1667: FILE: block/elevator-fq.h:410:
++extern int elv_init_ioq(struct elevator_queue *eq, struct io_queue *ioq,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1668: FILE: block/elevator-fq.h:411:
++extern int elv_init_ioq(struct elevator_queue *eq, struct io_queue *ioq,
++		struct io_group *iog, void *sched_queue, int ioprio_class,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1670: FILE: block/elevator-fq.h:413:
++extern void elv_schedule_dispatch(struct request_queue *q);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1671: FILE: block/elevator-fq.h:414:
++extern int elv_hw_tag(struct elevator_queue *e);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1672: FILE: block/elevator-fq.h:415:
++extern void *elv_active_sched_queue(struct elevator_queue *e);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1673: FILE: block/elevator-fq.h:416:
++extern int elv_mod_idle_slice_timer(struct elevator_queue *eq,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1674: FILE: block/elevator-fq.h:417:
++extern int elv_mod_idle_slice_timer(struct elevator_queue *eq,
++					unsigned long expires);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1675: FILE: block/elevator-fq.h:418:
++extern int elv_del_idle_slice_timer(struct elevator_queue *eq);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1676: FILE: block/elevator-fq.h:419:
++extern unsigned int elv_get_slice_idle(struct elevator_queue *eq);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1677: FILE: block/elevator-fq.h:420:
++extern void *io_group_async_queue_prio(struct io_group *iog, int ioprio_class,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1678: FILE: block/elevator-fq.h:421:
++extern void *io_group_async_queue_prio(struct io_group *iog, int ioprio_class,
++					int ioprio);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1679: FILE: block/elevator-fq.h:422:
++extern void io_group_set_async_queue(struct io_group *iog, int ioprio_class,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1680: FILE: block/elevator-fq.h:423:
++extern void io_group_set_async_queue(struct io_group *iog, int ioprio_class,
++					int ioprio, struct io_queue *ioq);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1681: FILE: block/elevator-fq.h:424:
++extern struct io_group *io_get_io_group(struct request_queue *q);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1682: FILE: block/elevator-fq.h:425:
++extern int elv_nr_busy_ioq(struct elevator_queue *e);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1683: FILE: block/elevator-fq.h:426:
++extern struct io_queue *elv_alloc_ioq(struct request_queue *q, gfp_t gfp_mask);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1684: FILE: block/elevator-fq.h:427:
++extern void elv_free_ioq(struct io_queue *ioq);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1689: FILE: block/elevator-fq.h:432:
++static inline int elv_init_fq_data(struct request_queue *q,
++					struct elevator_queue *e)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1698: FILE: block/elevator-fq.h:441:
++static inline void elv_fq_activate_rq(struct request_queue *q,
++					struct request *rq)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1708: FILE: block/elevator-fq.h:451:
++static inline void elv_fq_dispatched_request(struct elevator_queue *e,
++						struct request *rq)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1713: FILE: block/elevator-fq.h:456:
++static inline void elv_ioq_request_removed(struct elevator_queue *e,
++						struct request *rq)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1718: FILE: block/elevator-fq.h:461:
++static inline void elv_ioq_request_add(struct request_queue *q,
++					struct request *rq)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1723: FILE: block/elevator-fq.h:466:
++static inline void elv_ioq_completed_request(struct request_queue *q,
++						struct request *rq)
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#1916: FILE: include/linux/elevator.h:74:
++	elevator_free_sched_queue_fn *elevator_free_sched_queue_fn;
+ 	                             ^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1971: FILE: include/linux/elevator.h:259:
++extern void *elv_get_sched_queue(struct request_queue *q, struct request *rq);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1972: FILE: include/linux/elevator.h:260:
++extern void *elv_select_sched_queue(struct request_queue *q, int force);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000101067.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 53 warnings, 108 checks, 1855 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000101067.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,479 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#46: 
+> > > And regardless, we should fix the silent cmpxchg failure, even if it's 
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#95: FILE: arch/x86/include/asm/cmpxchg_32.h:11:
++extern void __xchg_wrong_size(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#108: FILE: arch/x86/include/asm/cmpxchg_32.h:24:
++#define __xchg(x, ptr, size)						\
++({									\
++ 	__typeof(*(ptr)) __x = (x);					\
++	switch (size) {							\
++ 	case 1:								\
++		asm volatile("xchgb %b0,%1"				\
++			     : "=q" (__x)				\
++			     : "m" (*__xg(ptr)), "0" (__x)		\
++			     : "memory");				\
++		break;							\
++	case 2:								\
++		asm volatile("xchgw %w0,%1"				\
++			     : "=r" (__x)				\
++			     : "m" (*__xg(ptr)), "0" (__x)		\
++			     : "memory");				\
++		break;							\
++	case 4:								\
++		asm volatile("xchgl %0,%1"				\
++			     : "=r" (__x)				\
++			     : "m" (*__xg(ptr)), "0" (__x)		\
++			     : "memory");				\
++		break;							\
++	default:							\
++		__xchg_wrong_size();					\
++	}								\
++	__x;								\
++})
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#110: FILE: arch/x86/include/asm/cmpxchg_32.h:26:
++ ^I__typeof(*(ptr)) __x = (x);^I^I^I^I^I\$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#110: FILE: arch/x86/include/asm/cmpxchg_32.h:26:
++ ^I__typeof(*(ptr)) __x = (x);^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#110: FILE: arch/x86/include/asm/cmpxchg_32.h:26:
++ ^I__typeof(*(ptr)) __x = (x);^I^I^I^I^I\$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#112: FILE: arch/x86/include/asm/cmpxchg_32.h:28:
++ ^Icase 1:^I^I^I^I^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#112: FILE: arch/x86/include/asm/cmpxchg_32.h:28:
++ ^Icase 1:^I^I^I^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#112: FILE: arch/x86/include/asm/cmpxchg_32.h:28:
++ ^Icase 1:^I^I^I^I^I^I^I^I\$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#136: FILE: arch/x86/include/asm/cmpxchg_32.h:52:
++#define xchg(ptr, v)							\
++	__xchg((v), (ptr), sizeof(*ptr))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#176: FILE: arch/x86/include/asm/cmpxchg_32.h:110:
++extern void __cmpxchg_wrong_size(void);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#183: FILE: arch/x86/include/asm/cmpxchg_32.h:117:
++#define __raw_cmpxchg(ptr, old, new, size, lock)			\
++({									\
++ 	__typeof__(*(ptr)) __ret;					\
++ 	__typeof__(*(ptr)) __old = (old);				\
++ 	__typeof__(*(ptr)) __new = (new);				\
++	switch (size) {							\
++	case 1:								\
++		asm volatile(lock "cmpxchgb %b1,%2"			\
++			     : "=a"(__ret)				\
++			     : "q"(__new), "m"(*__xg(ptr)), "0"(__old)	\
++			     : "memory");				\
++ 		break;							\
++	case 2:								\
++		asm volatile(lock "cmpxchgw %w1,%2"			\
++			     : "=a"(__ret)				\
++			     : "r"(__new), "m"(*__xg(ptr)), "0"(__old)	\
++			     : "memory");				\
++ 		break;							\
++	case 4:								\
++		asm volatile(lock "cmpxchgl %1,%2"			\
++			     : "=a"(__ret)				\
++			     : "r"(__new), "m"(*__xg(ptr)), "0"(__old)	\
++			     : "memory");				\
++ 		break;							\
++	default:							\
++		__cmpxchg_wrong_size();					\
++	}								\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'lock' - possible side-effects?
+#183: FILE: arch/x86/include/asm/cmpxchg_32.h:117:
++#define __raw_cmpxchg(ptr, old, new, size, lock)			\
++({									\
++ 	__typeof__(*(ptr)) __ret;					\
++ 	__typeof__(*(ptr)) __old = (old);				\
++ 	__typeof__(*(ptr)) __new = (new);				\
++	switch (size) {							\
++	case 1:								\
++		asm volatile(lock "cmpxchgb %b1,%2"			\
++			     : "=a"(__ret)				\
++			     : "q"(__new), "m"(*__xg(ptr)), "0"(__old)	\
++			     : "memory");				\
++ 		break;							\
++	case 2:								\
++		asm volatile(lock "cmpxchgw %w1,%2"			\
++			     : "=a"(__ret)				\
++			     : "r"(__new), "m"(*__xg(ptr)), "0"(__old)	\
++			     : "memory");				\
++ 		break;							\
++	case 4:								\
++		asm volatile(lock "cmpxchgl %1,%2"			\
++			     : "=a"(__ret)				\
++			     : "r"(__new), "m"(*__xg(ptr)), "0"(__old)	\
++			     : "memory");				\
++ 		break;							\
++	default:							\
++		__cmpxchg_wrong_size();					\
++	}								\
++	__ret;								\
++})
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#185: FILE: arch/x86/include/asm/cmpxchg_32.h:119:
++ ^I__typeof__(*(ptr)) __ret;^I^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#185: FILE: arch/x86/include/asm/cmpxchg_32.h:119:
++ ^I__typeof__(*(ptr)) __ret;^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#185: FILE: arch/x86/include/asm/cmpxchg_32.h:119:
++ ^I__typeof__(*(ptr)) __ret;^I^I^I^I^I\$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#186: FILE: arch/x86/include/asm/cmpxchg_32.h:120:
++ ^I__typeof__(*(ptr)) __old = (old);^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#186: FILE: arch/x86/include/asm/cmpxchg_32.h:120:
++ ^I__typeof__(*(ptr)) __old = (old);^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#186: FILE: arch/x86/include/asm/cmpxchg_32.h:120:
++ ^I__typeof__(*(ptr)) __old = (old);^I^I^I^I\$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#187: FILE: arch/x86/include/asm/cmpxchg_32.h:121:
++ ^I__typeof__(*(ptr)) __new = (new);^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#187: FILE: arch/x86/include/asm/cmpxchg_32.h:121:
++ ^I__typeof__(*(ptr)) __new = (new);^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#187: FILE: arch/x86/include/asm/cmpxchg_32.h:121:
++ ^I__typeof__(*(ptr)) __new = (new);^I^I^I^I\$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#194: FILE: arch/x86/include/asm/cmpxchg_32.h:128:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#194: FILE: arch/x86/include/asm/cmpxchg_32.h:128:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#194: FILE: arch/x86/include/asm/cmpxchg_32.h:128:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#200: FILE: arch/x86/include/asm/cmpxchg_32.h:134:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#200: FILE: arch/x86/include/asm/cmpxchg_32.h:134:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#200: FILE: arch/x86/include/asm/cmpxchg_32.h:134:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#206: FILE: arch/x86/include/asm/cmpxchg_32.h:140:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#206: FILE: arch/x86/include/asm/cmpxchg_32.h:140:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#206: FILE: arch/x86/include/asm/cmpxchg_32.h:140:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#237: FILE: arch/x86/include/asm/cmpxchg_32.h:159:
++#define cmpxchg(ptr, old, new)						\
++	__cmpxchg((ptr), (old), (new), sizeof(*ptr))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#240: FILE: arch/x86/include/asm/cmpxchg_32.h:162:
++#define sync_cmpxchg(ptr, old, new)					\
++	__sync_cmpxchg((ptr), (old), (new), sizeof(*ptr))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#243: FILE: arch/x86/include/asm/cmpxchg_32.h:165:
++#define cmpxchg_local(ptr, old, new)					\
++	__cmpxchg_local((ptr), (old), (new), sizeof(*ptr))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#361: FILE: arch/x86/include/asm/cmpxchg_64.h:15:
++extern void __xchg_wrong_size(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#362: FILE: arch/x86/include/asm/cmpxchg_64.h:16:
++extern void __cmpxchg_wrong_size(void);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#400: FILE: arch/x86/include/asm/cmpxchg_64.h:23:
++#define __xchg(x, ptr, size)						\
++({									\
++ 	__typeof(*(ptr)) __x = (x);					\
++	switch (size) {							\
++ 	case 1:								\
++		asm volatile("xchgb %b0,%1"				\
++			     : "=q" (__x)				\
++			     : "m" (*__xg(ptr)), "0" (__x)		\
++			     : "memory");				\
++		break;							\
++	case 2:								\
++		asm volatile("xchgw %w0,%1"				\
++			     : "=r" (__x)				\
++			     : "m" (*__xg(ptr)), "0" (__x)		\
++			     : "memory");				\
++		break;							\
++	case 4:								\
++		asm volatile("xchgl %k0,%1"				\
++			     : "=r" (__x)				\
++			     : "m" (*__xg(ptr)), "0" (__x)		\
++			     : "memory");				\
++		break;							\
++	case 8:								\
++		asm volatile("xchgq %0,%1"				\
++			     : "=r" (__x)				\
++			     : "m" (*__xg(ptr)), "0" (__x)		\
++			     : "memory");				\
++		break;							\
++	default:							\
++		__xchg_wrong_size();					\
++	}								\
++	__x;								\
++})
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#402: FILE: arch/x86/include/asm/cmpxchg_64.h:25:
++ ^I__typeof(*(ptr)) __x = (x);^I^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#402: FILE: arch/x86/include/asm/cmpxchg_64.h:25:
++ ^I__typeof(*(ptr)) __x = (x);^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#402: FILE: arch/x86/include/asm/cmpxchg_64.h:25:
++ ^I__typeof(*(ptr)) __x = (x);^I^I^I^I^I\$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#404: FILE: arch/x86/include/asm/cmpxchg_64.h:27:
++ ^Icase 1:^I^I^I^I^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#404: FILE: arch/x86/include/asm/cmpxchg_64.h:27:
++ ^Icase 1:^I^I^I^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#404: FILE: arch/x86/include/asm/cmpxchg_64.h:27:
++ ^Icase 1:^I^I^I^I^I^I^I^I\$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#434: FILE: arch/x86/include/asm/cmpxchg_64.h:57:
++#define xchg(ptr, v)							\
++	__xchg((v), (ptr), sizeof(*ptr))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#444: FILE: arch/x86/include/asm/cmpxchg_64.h:67:
++#define __raw_cmpxchg(ptr, old, new, size, lock)			\
++({									\
++ 	__typeof__(*(ptr)) __ret;					\
++ 	__typeof__(*(ptr)) __old = (old);				\
++ 	__typeof__(*(ptr)) __new = (new);				\
++	switch (size) {							\
++	case 1:								\
++		asm volatile(lock "cmpxchgb %b1,%2"			\
++			     : "=a"(__ret)				\
++			     : "q"(__new), "m"(*__xg(ptr)), "0"(__old)	\
++			     : "memory");				\
++ 		break;							\
++	case 2:								\
++		asm volatile(lock "cmpxchgw %w1,%2"			\
++			     : "=a"(__ret)				\
++			     : "r"(__new), "m"(*__xg(ptr)), "0"(__old)	\
++			     : "memory");				\
++ 		break;							\
++	case 4:								\
++		asm volatile(lock "cmpxchgl %k1,%2"			\
++			     : "=a"(__ret)				\
++			     : "r"(__new), "m"(*__xg(ptr)), "0"(__old)	\
++			     : "memory");				\
++ 		break;							\
++	case 8:								\
++		asm volatile(lock "cmpxchgq %1,%2"			\
++			     : "=a"(__ret)				\
++			     : "r"(__new), "m"(*__xg(ptr)), "0"(__old)	\
++			     : "memory");				\
++		break;							\
++	default:							\
++		__cmpxchg_wrong_size();					\
++	}								\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'lock' - possible side-effects?
+#444: FILE: arch/x86/include/asm/cmpxchg_64.h:67:
++#define __raw_cmpxchg(ptr, old, new, size, lock)			\
++({									\
++ 	__typeof__(*(ptr)) __ret;					\
++ 	__typeof__(*(ptr)) __old = (old);				\
++ 	__typeof__(*(ptr)) __new = (new);				\
++	switch (size) {							\
++	case 1:								\
++		asm volatile(lock "cmpxchgb %b1,%2"			\
++			     : "=a"(__ret)				\
++			     : "q"(__new), "m"(*__xg(ptr)), "0"(__old)	\
++			     : "memory");				\
++ 		break;							\
++	case 2:								\
++		asm volatile(lock "cmpxchgw %w1,%2"			\
++			     : "=a"(__ret)				\
++			     : "r"(__new), "m"(*__xg(ptr)), "0"(__old)	\
++			     : "memory");				\
++ 		break;							\
++	case 4:								\
++		asm volatile(lock "cmpxchgl %k1,%2"			\
++			     : "=a"(__ret)				\
++			     : "r"(__new), "m"(*__xg(ptr)), "0"(__old)	\
++			     : "memory");				\
++ 		break;							\
++	case 8:								\
++		asm volatile(lock "cmpxchgq %1,%2"			\
++			     : "=a"(__ret)				\
++			     : "r"(__new), "m"(*__xg(ptr)), "0"(__old)	\
++			     : "memory");				\
++		break;							\
++	default:							\
++		__cmpxchg_wrong_size();					\
++	}								\
++	__ret;								\
++})
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#446: FILE: arch/x86/include/asm/cmpxchg_64.h:69:
++ ^I__typeof__(*(ptr)) __ret;^I^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#446: FILE: arch/x86/include/asm/cmpxchg_64.h:69:
++ ^I__typeof__(*(ptr)) __ret;^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#446: FILE: arch/x86/include/asm/cmpxchg_64.h:69:
++ ^I__typeof__(*(ptr)) __ret;^I^I^I^I^I\$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#447: FILE: arch/x86/include/asm/cmpxchg_64.h:70:
++ ^I__typeof__(*(ptr)) __old = (old);^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#447: FILE: arch/x86/include/asm/cmpxchg_64.h:70:
++ ^I__typeof__(*(ptr)) __old = (old);^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#447: FILE: arch/x86/include/asm/cmpxchg_64.h:70:
++ ^I__typeof__(*(ptr)) __old = (old);^I^I^I^I\$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#448: FILE: arch/x86/include/asm/cmpxchg_64.h:71:
++ ^I__typeof__(*(ptr)) __new = (new);^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#448: FILE: arch/x86/include/asm/cmpxchg_64.h:71:
++ ^I__typeof__(*(ptr)) __new = (new);^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#448: FILE: arch/x86/include/asm/cmpxchg_64.h:71:
++ ^I__typeof__(*(ptr)) __new = (new);^I^I^I^I\$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#455: FILE: arch/x86/include/asm/cmpxchg_64.h:78:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#455: FILE: arch/x86/include/asm/cmpxchg_64.h:78:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#455: FILE: arch/x86/include/asm/cmpxchg_64.h:78:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#461: FILE: arch/x86/include/asm/cmpxchg_64.h:84:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#461: FILE: arch/x86/include/asm/cmpxchg_64.h:84:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#461: FILE: arch/x86/include/asm/cmpxchg_64.h:84:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#467: FILE: arch/x86/include/asm/cmpxchg_64.h:90:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#467: FILE: arch/x86/include/asm/cmpxchg_64.h:90:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#467: FILE: arch/x86/include/asm/cmpxchg_64.h:90:
++ ^I^Ibreak;^I^I^I^I^I^I^I\$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#587: FILE: arch/x86/include/asm/cmpxchg_64.h:112:
++#define cmpxchg(ptr, old, new)						\
++	__cmpxchg((ptr), (old), (new), sizeof(*ptr))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#590: FILE: arch/x86/include/asm/cmpxchg_64.h:115:
++#define sync_cmpxchg(ptr, old, new)					\
++	__sync_cmpxchg((ptr), (old), (new), sizeof(*ptr))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#593: FILE: arch/x86/include/asm/cmpxchg_64.h:118:
++#define cmpxchg_local(ptr, old, new)					\
++	__cmpxchg_local((ptr), (old), (new), sizeof(*ptr))
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000063815.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 16 errors, 33 warnings, 18 checks, 518 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000063815.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

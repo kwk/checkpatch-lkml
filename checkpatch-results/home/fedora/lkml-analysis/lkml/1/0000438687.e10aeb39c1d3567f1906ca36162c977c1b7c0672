@@ -1,0 +1,168 @@
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#34: 
+-		ret = __fat_readdir(inode, filp, &buf, fat_ioctl_filldir,
+ 		                           ^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#35: 
++		ret = __fat_readdir(inode, filp, &buf, filldir,
+ 		                           ^^^^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'dirent_type' - possible side-effects?
+#60: FILE: fs/fat/dir.c:650:
++#define FAT_IOCTL_FILLDIR_FUNC(func, dirent_type)			   \
++static int func(void *__buf, const char *name, int name_len,		   \
++			     loff_t offset, u64 ino, unsigned int d_type)  \
++{									   \
++	struct fat_ioctl_filldir_callback *buf = __buf;			   \
++	struct dirent_type __user *d1 = buf->dirent;			   \
++	struct dirent_type __user *d2 = d1 + 1;				   \
++									   \
++	if (buf->result)						   \
++		return -EINVAL;						   \
++	buf->result++;							   \
++									   \
++	if (name != NULL) {						   \
++		/* dirent has only short name */			   \
++		if (name_len >= sizeof(d1->d_name))			   \
++			name_len = sizeof(d1->d_name) - 1;		   \
++									   \
++		if (put_user(0, d2->d_name)			||	   \
++		    put_user(0, &d2->d_reclen)			||	   \
++		    copy_to_user(d1->d_name, name, name_len)	||	   \
++		    put_user(0, d1->d_name + name_len)		||	   \
++		    put_user(name_len, &d1->d_reclen))			   \
++			goto efault;					   \
++	} else {							   \
++		/* dirent has short and long name */			   \
++		const char *longname = buf->longname;			   \
++		int long_len = buf->long_len;				   \
++		const char *shortname = buf->shortname;			   \
++		int short_len = buf->short_len;				   \
++									   \
++		if (long_len >= sizeof(d1->d_name))			   \
++			long_len = sizeof(d1->d_name) - 1;		   \
++		if (short_len >= sizeof(d1->d_name))			   \
++			short_len = sizeof(d1->d_name) - 1;		   \
++									   \
++		if (copy_to_user(d2->d_name, longname, long_len)	|| \
++		    put_user(0, d2->d_name + long_len)			|| \
++		    put_user(long_len, &d2->d_reclen)			|| \
++		    put_user(ino, &d2->d_ino)				|| \
++		    put_user(offset, &d2->d_off)			|| \
++		    copy_to_user(d1->d_name, shortname, short_len)	|| \
++		    put_user(0, d1->d_name + short_len)			|| \
++		    put_user(short_len, &d1->d_reclen))			   \
++			goto efault;					   \
++	}								   \
++	return 0;							   \
++efault:									   \
++	buf->result = -EFAULT;						   \
++	return -EFAULT;							   \
++}
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#60: FILE: fs/fat/dir.c:650:
++#define FAT_IOCTL_FILLDIR_FUNC(func, dirent_type)			   \
++static int func(void *__buf, const char *name, int name_len,		   \
++			     loff_t offset, u64 ino, unsigned int d_type)  \
++{									   \
++	struct fat_ioctl_filldir_callback *buf = __buf;			   \
++	struct dirent_type __user *d1 = buf->dirent;			   \
++	struct dirent_type __user *d2 = d1 + 1;				   \
++									   \
++	if (buf->result)						   \
++		return -EINVAL;						   \
++	buf->result++;							   \
++									   \
++	if (name != NULL) {						   \
++		/* dirent has only short name */			   \
++		if (name_len >= sizeof(d1->d_name))			   \
++			name_len = sizeof(d1->d_name) - 1;		   \
++									   \
++		if (put_user(0, d2->d_name)			||	   \
++		    put_user(0, &d2->d_reclen)			||	   \
++		    copy_to_user(d1->d_name, name, name_len)	||	   \
++		    put_user(0, d1->d_name + name_len)		||	   \
++		    put_user(name_len, &d1->d_reclen))			   \
++			goto efault;					   \
++	} else {							   \
++		/* dirent has short and long name */			   \
++		const char *longname = buf->longname;			   \
++		int long_len = buf->long_len;				   \
++		const char *shortname = buf->shortname;			   \
++		int short_len = buf->short_len;				   \
++									   \
++		if (long_len >= sizeof(d1->d_name))			   \
++			long_len = sizeof(d1->d_name) - 1;		   \
++		if (short_len >= sizeof(d1->d_name))			   \
++			short_len = sizeof(d1->d_name) - 1;		   \
++									   \
++		if (copy_to_user(d2->d_name, longname, long_len)	|| \
++		    put_user(0, d2->d_name + long_len)			|| \
++		    put_user(long_len, &d2->d_reclen)			|| \
++		    put_user(ino, &d2->d_ino)				|| \
++		    put_user(offset, &d2->d_off)			|| \
++		    copy_to_user(d1->d_name, shortname, short_len)	|| \
++		    put_user(0, d1->d_name + short_len)			|| \
++		    put_user(short_len, &d1->d_reclen))			   \
++			goto efault;					   \
++	}								   \
++	return 0;							   \
++efault:									   \
++	buf->result = -EFAULT;						   \
++	return -EFAULT;							   \
++}
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "name"
+#72: FILE: fs/fat/dir.c:662:
++	if (name != NULL) {						   \
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#113: FILE: fs/fat/dir.c:703:
++static int fat_ioctl_readdir(struct inode *inode, struct file *filp,
+                                                                ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#165: FILE: fs/fat/dir.c:715:
++		ret = __fat_readdir(inode, filp, &buf, filldir,
+ 		                           ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#180: FILE: fs/fat/dir.c:724:
++static int fat_dir_ioctl(struct inode *inode, struct file *filp,
+                                                            ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#215: FILE: fs/fat/dir.c:753:
++	return fat_ioctl_readdir(inode, filp, d1, fat_ioctl_filldir,
+ 	                                ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#240: FILE: fs/fat/dir.c:763:
++static long fat_compat_dir_ioctl(struct file *filp, unsigned cmd,
+                                               ^^^^
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#240: FILE: fs/fat/dir.c:763:
++static long fat_compat_dir_ioctl(struct file *filp, unsigned cmd,
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#289: FILE: fs/fat/dir.c:793:
++	return fat_ioctl_readdir(inode, filp, d1, fat_compat_ioctl_filldir,
+ 	                                ^^^^
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000438687.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 10 warnings, 2 checks, 245 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000438687.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

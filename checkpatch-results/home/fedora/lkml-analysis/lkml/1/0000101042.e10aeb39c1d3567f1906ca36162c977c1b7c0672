@@ -1,0 +1,148 @@
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '__VAR' may be better as '(__VAR)' to avoid precedence issues
+#93: FILE: block/elevator-fq.c:919:
++#define SHOW_FUNCTION(__VAR)						\
++static u64 io_cgroup_##__VAR##_read(struct cgroup *cgroup,		\
++				       struct cftype *cftype)		\
++{									\
++	struct io_cgroup *iocg;					\
++	u64 ret;							\
++									\
++	if (!cgroup_lock_live_group(cgroup))				\
++		return -ENODEV;						\
++									\
++	iocg = cgroup_to_io_cgroup(cgroup);				\
++	spin_lock_irq(&iocg->lock);					\
++	ret = iocg->__VAR;						\
++	spin_unlock_irq(&iocg->lock);					\
++									\
++	cgroup_unlock();						\
++									\
++	return ret;							\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '__VAR' may be better as '(__VAR)' to avoid precedence issues
+#117: FILE: block/elevator-fq.c:943:
++#define STORE_FUNCTION(__VAR, __MIN, __MAX)				\
++static int io_cgroup_##__VAR##_write(struct cgroup *cgroup,		\
++					struct cftype *cftype,		\
++					u64 val)			\
++{									\
++	struct io_cgroup *iocg;					\
++	struct io_group *iog;						\
++	struct hlist_node *n;						\
++									\
++	if (val < (__MIN) || val > (__MAX))				\
++		return -EINVAL;						\
++									\
++	if (!cgroup_lock_live_group(cgroup))				\
++		return -ENODEV;						\
++									\
++	iocg = cgroup_to_io_cgroup(cgroup);				\
++									\
++	spin_lock_irq(&iocg->lock);					\
++	iocg->__VAR = (unsigned long)val;				\
++	hlist_for_each_entry(iog, n, &iocg->group_data, group_node) {	\
++		iog->entity.new_##__VAR = (unsigned long)val;		\
++		smp_wmb();						\
++		iog->entity.ioprio_changed = 1;				\
++	}								\
++	spin_unlock_irq(&iocg->lock);					\
++									\
++	cgroup_unlock();						\
++									\
++	return 0;							\
++}
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#138: FILE: block/elevator-fq.c:964:
++		smp_wmb();						\
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#172: FILE: block/elevator-fq.c:998:
++static struct cgroup_subsys_state *iocg_create(struct cgroup_subsys *subsys,
++						struct cgroup *cgroup)
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#176: FILE: block/elevator-fq.c:1002:
++	if (cgroup->parent != NULL) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "cgroup->parent"
+#176: FILE: block/elevator-fq.c:1002:
++	if (cgroup->parent != NULL) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!iocg"
+#178: FILE: block/elevator-fq.c:1004:
++		if (iocg == NULL)
+
+CHECK:BRACES: Unbalanced braces around else statement
+#180: FILE: block/elevator-fq.c:1006:
++	} else
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#200: FILE: block/elevator-fq.c:1026:
++static int iocg_can_attach(struct cgroup_subsys *subsys, struct cgroup *cgroup,
++			    struct task_struct *tsk)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "ioc"
+#208: FILE: block/elevator-fq.c:1034:
++	if (ioc != NULL && atomic_read(&ioc->nr_tasks) > 1)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#222: FILE: block/elevator-fq.c:1048:
++static void iocg_attach(struct cgroup_subsys *subsys, struct cgroup *cgroup,
++			 struct cgroup *prev, struct task_struct *tsk)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "ioc"
+#228: FILE: block/elevator-fq.c:1054:
++	if (ioc != NULL)
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#235: FILE: block/elevator-fq.c:1061:
++{
++
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#315: FILE: block/elevator-fq.h:226:
++	spinlock_t lock;
+
+WARNING:TYPO_SPELLING: 'pre-empt' may be misspelled - perhaps 'preempt'?
+#327: FILE: block/elevator-fq.h:238:
++	 * Used to track any pending rt requests so we can pre-empt current
+ 	                                                   ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000101042.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 2 warnings, 13 checks, 291 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000101042.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

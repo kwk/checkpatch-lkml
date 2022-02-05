@@ -1,0 +1,208 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#33: 
+Linus really wants the extended (4Kb) PCI configuration space (using MCFG acpi table etc) to be opt-in, since there's many issues with it and most drivers don't even use/need it. The idea behind opt-in is that if you don't use it, you don't get to suffer the bugs...
+
+WARNING:CONST_STRUCT: struct pci_raw_ops should normally be const
+#77: FILE: arch/x86/pci/common.c:29:
++struct pci_raw_ops *raw_pci_ops_extcfg;
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#178: FILE: include/linux/pci.h:535:
++int pci_bus_read_extconfig_byte (struct pci_bus *bus, unsigned int devfn, int where, u8 *val);
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#179: FILE: include/linux/pci.h:536:
++int pci_bus_read_extconfig_word (struct pci_bus *bus, unsigned int devfn, int where, u16 *val);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#180: FILE: include/linux/pci.h:537:
++int pci_bus_read_extconfig_dword (struct pci_bus *bus, unsigned int devfn, int where, u32 *val);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#181: FILE: include/linux/pci.h:538:
++int pci_bus_write_extconfig_byte (struct pci_bus *bus, unsigned int devfn, int where, u8 val);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#182: FILE: include/linux/pci.h:539:
++int pci_bus_write_extconfig_word (struct pci_bus *bus, unsigned int devfn, int where, u16 val);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#183: FILE: include/linux/pci.h:540:
++int pci_bus_write_extconfig_dword (struct pci_bus *bus, unsigned int devfn, int where, u32 val);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#188: FILE: include/linux/pci.h:545:
++		return pci_bus_read_extconfig_byte (dev->bus, dev->devfn, where, val);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#194: FILE: include/linux/pci.h:551:
++		return pci_bus_read_extconfig_word (dev->bus, dev->devfn, where, val);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#200: FILE: include/linux/pci.h:557:
++		return pci_bus_read_extconfig_dword (dev->bus, dev->devfn, where, val);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#206: FILE: include/linux/pci.h:563:
++		return pci_bus_write_extconfig_byte (dev->bus, dev->devfn, where, val);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#212: FILE: include/linux/pci.h:569:
++		return pci_bus_write_extconfig_word (dev->bus, dev->devfn, where, val);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#218: FILE: include/linux/pci.h:575:
++		return pci_bus_write_extconfig_dword (dev->bus, dev->devfn, where, val);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#226: FILE: include/linux/pci.h:726:
++extern int pci_enable_ext_config(struct pci_dev *dev);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#228: FILE: include/linux/pci.h:728:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#273: FILE: drivers/pci/access.c:54:
++#define PCI_OP_READ_EXT(size,type,len) \
+                             ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#273: FILE: drivers/pci/access.c:54:
++#define PCI_OP_READ_EXT(size,type,len) \
+                                  ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'len' - possible side-effects?
+#273: FILE: drivers/pci/access.c:54:
++#define PCI_OP_READ_EXT(size,type,len) \
++int pci_bus_read_extconfig_##size \
++	(struct pci_bus *bus, unsigned int devfn, int pos, type *value)	\
++{									\
++	int res;							\
++	unsigned long flags;						\
++	u32 data = 0;							\
++	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
++	spin_lock_irqsave(&pci_lock, flags);				\
++	if (bus->ops->readext)						\
++		res = bus->ops->readext(bus, devfn, pos, len, &data);	\
++	else								\
++		res = bus->ops->read(bus, devfn, pos, len, &data);	\
++	*value = (type)data;						\
++	spin_unlock_irqrestore(&pci_lock, flags);			\
++	return res;							\
++}
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#275: FILE: drivers/pci/access.c:56:
++	(struct pci_bus *bus, unsigned int devfn, int pos, type *value)	\
+ 	                                                        ^
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#280: FILE: drivers/pci/access.c:61:
++	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#291: FILE: drivers/pci/access.c:72:
++#define PCI_OP_WRITE_EXT(size,type,len) \
+                              ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#291: FILE: drivers/pci/access.c:72:
++#define PCI_OP_WRITE_EXT(size,type,len) \
+                                   ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'len' - possible side-effects?
+#291: FILE: drivers/pci/access.c:72:
++#define PCI_OP_WRITE_EXT(size,type,len) \
++int pci_bus_write_extconfig_##size \
++	(struct pci_bus *bus, unsigned int devfn, int pos, type value)	\
++{									\
++	int res;							\
++	unsigned long flags;						\
++	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
++	spin_lock_irqsave(&pci_lock, flags);				\
++	if (bus->ops->writeext)						\
++		res = bus->ops->writeext(bus, devfn, pos, len, value);	\
++	else								\
++		res = bus->ops->write(bus, devfn, pos, len, value);	\
++	spin_unlock_irqrestore(&pci_lock, flags);			\
++	return res;							\
++}
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#297: FILE: drivers/pci/access.c:78:
++	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#307: FILE: drivers/pci/access.c:88:
++
++
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#329: FILE: drivers/pci/access.c:110:
++EXPORT_SYMBOL(pci_bus_read_extconfig_word);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#330: FILE: drivers/pci/access.c:111:
++EXPORT_SYMBOL(pci_bus_read_extconfig_dword);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#331: FILE: drivers/pci/access.c:112:
++EXPORT_SYMBOL(pci_bus_write_extconfig_byte);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#332: FILE: drivers/pci/access.c:113:
++EXPORT_SYMBOL(pci_bus_write_extconfig_word);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#333: FILE: drivers/pci/access.c:114:
++EXPORT_SYMBOL(pci_bus_write_extconfig_dword);
+
+WARNING:CONST_STRUCT: struct pci_raw_ops should normally be const
+#345: FILE: arch/x86/pci/pci.h:35:
++extern struct pci_raw_ops *raw_pci_ops_extcfg;
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000343927.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 6 errors, 20 warnings, 6 checks, 240 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000343927.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

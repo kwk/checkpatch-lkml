@@ -1,0 +1,366 @@
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#427: FILE: kernel/gcov/Kconfig:3:
++config GCOV_KERNEL
++	bool "Enable gcov-based kernel profiling"
++	depends on DEBUG_FS && CONSTRUCTORS
++	default n
++	---help---
++	This option enables gcov-based code profiling (e.g. for code coverage
++	measurements).
++
++	If unsure, say N.
++
++	Additionally specify CONFIG_GCOV_PROFILE_ALL=y to get profiling data
++	for the entire kernel. To enable profiling for specific files or
++	directories, add a line similar to the following to the respective
++	Makefile:
++
++	For a single file (e.g. main.o):
++	        GCOV_PROFILE_main.o := y
++
++	For all files in one directory:
++	        GCOV_PROFILE := y
++
++	To exclude files from being profiled even when CONFIG_GCOV_PROFILE_ALL
++	is specified, use:
++
++	        GCOV_PROFILE_main.o := n
++	and:
++	        GCOV_PROFILE := n
++
++	Note that the debugfs filesystem has to be mounted to access
++	profiling data.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#458: FILE: kernel/gcov/Kconfig:34:
++config GCOV_PROFILE_ALL
++	bool "Profile entire Kernel"
++	depends on GCOV_KERNEL
++	depends on S390 || X86_32
++	default n
++	---help---
++	This options activates profiling for the entire kernel.
++
++	If unsure, say N.
++
++	Note that a kernel compiled with profiling flags will be significantly
++	larger and run slower. Also be sure to exclude files from profiling
++	which are not linked to the kernel image to prevent linker errors.
++
+
+WARNING:DEPRECATED_VARIABLE: Use of EXTRA_CFLAGS is deprecated, please use `ccflags-y instead.
+#478: FILE: kernel/gcov/Makefile:1:
++EXTRA_CFLAGS := -DSRCTREE='"$(srctree)"' -DOBJTREE='"$(objtree)"'
+
+EXTRA_{A,C,CPP,LD}FLAGS are deprecated and should be replaced by the new
+flags added via commit f77bf01425b1 ("kbuild: introduce ccflags-y,
+asflags-y and ldflags-y").
+
+The following conversion scheme maybe used::
+
+  EXTRA_AFLAGS    ->  asflags-y
+  EXTRA_CFLAGS    ->  ccflags-y
+  EXTRA_CPPFLAGS  ->  cppflags-y
+  EXTRA_LDFLAGS   ->  ldflags-y
+
+See:
+
+  1. https://lore.kernel.org/lkml/20070930191054.GA15876@uranus.ravnborg.org/
+  2. https://lore.kernel.org/lkml/1313384834-24433-12-git-send-email-lacombar@gmail.com/
+  3. https://www.kernel.org/doc/html/latest/kbuild/makefiles.html#compilation-flags
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#486: FILE: kernel/gcov/base.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#609: FILE: kernel/gcov/base.c:124:
++		if (within(info, mod->module_core, mod->core_size)) {
+[...]
++		} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#616: FILE: kernel/gcov/base.c:131:
++		} else
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#639: FILE: kernel/gcov/fs.c:1:
++/*
+
+CHECK:UNDOCUMENTED_SETUP: __setup appears un-documented -- check Documentation/admin-guide/kernel-parameters.txt
+#723: FILE: kernel/gcov/fs.c:85:
++__setup("gcov_persist=", gcov_persist_setup);
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 30)
+#975: FILE: kernel/gcov/fs.c:337:
++	for (num = 0; gcov_link[num].ext; num++)
++		/* Nothing. */;
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*node)...) over kzalloc(sizeof(struct gcov_node)...)
+#1035: FILE: kernel/gcov/fs.c:397:
++	node = kzalloc(sizeof(struct gcov_node) + strlen(name) + 1, GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#1037: FILE: kernel/gcov/fs.c:399:
++	if (!node) {
++		pr_warning("out of memory\n");
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1042: FILE: kernel/gcov/fs.c:404:
++	if (info) {
+[...]
++	} else
+[...]
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1044: FILE: kernel/gcov/fs.c:406:
++		node->dentry = debugfs_create_file(deskew(node->name), 0600,
++					parent->dentry, node, &gcov_data_fops);
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1045: FILE: kernel/gcov/fs.c:407:
++	} else
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1129: FILE: kernel/gcov/fs.c:491:
++		if (node->info)
+[...]
++		else if (list_empty(&node->children)) {
+[...]
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1228: FILE: kernel/gcov/fs.c:590:
++	if (gcov_info_is_compatible(node->ghost, info))
+[...]
++	else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1230: FILE: kernel/gcov/fs.c:592:
++	else {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1256: FILE: kernel/gcov/fs.c:618:
++		if (gcov_persist)
+[...]
++		else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1258: FILE: kernel/gcov/fs.c:620:
++		else {
+
+WARNING:NEEDLESS_IF: debugfs_remove(NULL) is safe and this check is probably not required
+#1308: FILE: kernel/gcov/fs.c:670:
++	if (root_node.dentry)
++		debugfs_remove(root_node.dentry);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1318: FILE: kernel/gcov/gcc_3_4.c:1:
++/*
+
+CHECK:SPACING: No space is necessary after a cast
+#1431: FILE: kernel/gcov/gcc_3_4.c:114:
++		((char *) info->functions + fn * get_fn_size(info));
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*dup)...) over kzalloc(sizeof(struct gcov_info)...)
+#1448: FILE: kernel/gcov/gcc_3_4.c:131:
++	dup = kzalloc(sizeof(struct gcov_info) +
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*iter)...) over kzalloc(sizeof(struct gcov_iterator)...)
+#1566: FILE: kernel/gcov/gcc_3_4.c:249:
++	iter = kzalloc(sizeof(struct gcov_iterator) +
+
+WARNING:PREFER_FALLTHROUGH: Prefer 'fallthrough;' over fallthrough comment
+#1647: FILE: kernel/gcov/gcc_3_4.c:330:
++		/* fall through */
+
+Use the `fallthrough;` pseudo keyword instead of
+`/* fallthrough */` like comments.
+
+WARNING:PREFER_FALLTHROUGH: Prefer 'fallthrough;' over fallthrough comment
+#1657: FILE: kernel/gcov/gcc_3_4.c:340:
++		/* fall through */
+
+WARNING:PREFER_FALLTHROUGH: Prefer 'fallthrough;' over fallthrough comment
+#1666: FILE: kernel/gcov/gcc_3_4.c:349:
++		/* fall through */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1749: FILE: kernel/gcov/gcc_3_4.c:432:
++		rc = seq_write_gcov_u32(seq,
++			GCOV_TAG_FOR_COUNTER(get_type(iter)->ctr_type));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1753: FILE: kernel/gcov/gcc_3_4.c:436:
++		rc = seq_write_gcov_u32(seq,
++				get_func(iter)->n_ctrs[iter->type] * 2);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1757: FILE: kernel/gcov/gcc_3_4.c:440:
++		rc = seq_write_gcov_u64(seq,
++			iter->info->counts[iter->type].
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'iter->info->counts[iter->type].values[iter->count+get_type(iter)->offset]'
+#1758: FILE: kernel/gcov/gcc_3_4.c:441:
++			iter->info->counts[iter->type].
++				values[iter->count + get_type(iter)->offset]);
+
+A single dereferencing identifier spanned on multiple lines like::
+
+  struct_identifier->member[index].
+  member = <foo>;
+
+is generally hard to follow. It can easily lead to typos and so makes
+the code vulnerable to bugs.
+
+If fixing the multiple line dereferencing leads to an 80 column
+violation, then either rewrite the code in a more simple way or if the
+starting part of the dereferencing identifier is the same and used at
+multiple places then store it in a temporary variable, and use that
+temporary variable only at all the places. For example, if there are
+two dereferencing identifiers::
+
+  member1->member2->member3.foo1;
+  member1->member2->member3.foo2;
+
+then store the member1->member2->member3 part in a temporary variable.
+It not only helps to avoid the 80 column violation but also reduces
+the program size by removing the unnecessary dereferences.
+
+But if none of the above methods work then ignore the 80 column
+violation because it is much easier to read a dereferencing identifier
+on a single line.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1768: FILE: kernel/gcov/gcov.h:1:
++/*
+
+CHECK:SPACING: No space is necessary after a cast
+#1792: FILE: kernel/gcov/gcov.h:25:
++#define GCOV_DATA_MAGIC		((unsigned int) 0x67636461)
+
+WARNING:TYPECAST_INT_CONSTANT: Unnecessary typecast of c90 int constant - '(unsigned int) 0x67636461' could be '0x67636461U'
+#1792: FILE: kernel/gcov/gcov.h:25:
++#define GCOV_DATA_MAGIC		((unsigned int) 0x67636461)
+
+CHECK:SPACING: No space is necessary after a cast
+#1793: FILE: kernel/gcov/gcov.h:26:
++#define GCOV_TAG_FUNCTION	((unsigned int) 0x01000000)
+
+WARNING:TYPECAST_INT_CONSTANT: Unnecessary typecast of c90 int constant - '(unsigned int) 0x01000000' could be '0x01000000U'
+#1793: FILE: kernel/gcov/gcov.h:26:
++#define GCOV_TAG_FUNCTION	((unsigned int) 0x01000000)
+
+CHECK:SPACING: No space is necessary after a cast
+#1794: FILE: kernel/gcov/gcov.h:27:
++#define GCOV_TAG_COUNTER_BASE	((unsigned int) 0x01a10000)
+
+WARNING:TYPECAST_INT_CONSTANT: Unnecessary typecast of c90 int constant - '(unsigned int) 0x01a10000' could be '0x01a10000U'
+#1794: FILE: kernel/gcov/gcov.h:27:
++#define GCOV_TAG_COUNTER_BASE	((unsigned int) 0x01a10000)
+
+CHECK:SPACING: No space is necessary after a cast
+#1796: FILE: kernel/gcov/gcov.h:29:
++	(GCOV_TAG_COUNTER_BASE + ((unsigned int) (count) << 17))
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#1799: FILE: kernel/gcov/gcov.h:32:
++typedef long gcov_type;
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#1801: FILE: kernel/gcov/gcov.h:34:
++typedef long long gcov_type;
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'gcov_type *' should also have an identifier name
+#1831: FILE: kernel/gcov/gcov.h:64:
++	void		(*merge)(gcov_type *, unsigned int);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned int' should also have an identifier name
+#1831: FILE: kernel/gcov/gcov.h:64:
++	void		(*merge)(gcov_type *, unsigned int);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1893: FILE: kernel/gcov/gcov.h:126:
++};
++extern const struct gcov_link gcov_link[];
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000116935.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 21 warnings, 23 checks, 1787 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000116935.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

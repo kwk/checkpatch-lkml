@@ -1,0 +1,56 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'proto' - possible side-effects?
+#65: FILE: include/linux/tracepoint.h:67:
++#define DECLARE_TRACE(name, proto, args)				 \
++	extern struct tracepoint __tracepoint_##name;			 \
++	static inline void trace_##name(proto)				 \
++	{								 \
++		JUMP_LABEL(name, trace_label, __tracepoint_##name.state);\
++		__DO_TRACE(&__tracepoint_##name,			 \
++			   TP_PROTO(proto), TP_ARGS(args));		 \
++trace_label:								 \
++		return;							 \
++	}								 \
++	static inline int register_trace_##name(void (*probe)(proto))	 \
++	{								 \
++		return tracepoint_probe_register(#name, (void *)probe);	 \
++	}								 \
++	static inline int unregister_trace_##name(void (*probe)(proto))	 \
++	{								 \
+ 		return tracepoint_probe_unregister(#name, (void *)probe);\
+ 	}
+
+WARNING:BRACES: braces {} are not necessary for any arm of this statement
+#101: FILE: kernel/tracepoint.c:261:
++	if (!elem->state && active) {
+[...]
++	} else if (elem->state && !active)
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000067650.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 1 warnings, 1 checks, 71 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000067650.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

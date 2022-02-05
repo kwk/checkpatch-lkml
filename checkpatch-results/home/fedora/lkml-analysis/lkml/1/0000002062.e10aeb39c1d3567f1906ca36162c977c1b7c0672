@@ -1,0 +1,62 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#33: 
+Gitweb:     http://git.kernel.org/tip/3f6da3905398826d85731247e7fbcf53400c18bd
+
+WARNING:TYPO_SPELLING: 'chello' may be misspelled - perhaps 'cello'?
+#34: 
+Author:     Peter Zijlstra <a.p.zijlstra@chello.nl>
+                                         ^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:MISPLACED_INIT: __initconst should be placed after amd_pmu
+#305: FILE: arch/x86/kernel/cpu/perf_event_amd.c:359:
++static __initconst struct x86_pmu amd_pmu = {
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+ERROR:INIT_ATTRIBUTE: Use of __initconst requires a separate use of const
+#305: FILE: arch/x86/kernel/cpu/perf_event_amd.c:359:
++static __initconst struct x86_pmu amd_pmu = {
+
+Const init definitions should use __initconst instead of
+__initdata.
+
+Similarly init definitions without const require a separate
+use of const.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fn' - possible side-effects?
+#385: FILE: include/linux/perf_event.h:942:
++#define perf_cpu_notifier(fn)					\
++do {								\
++	static struct notifier_block fn##_nb __cpuinitdata =	\
++		{ .notifier_call = fn, .priority = 20 };	\
++	fn(&fn##_nb, (unsigned long)CPU_UP_PREPARE,		\
++		(void *)(unsigned long)smp_processor_id());	\
++	fn(&fn##_nb, (unsigned long)CPU_STARTING,		\
++		(void *)(unsigned long)smp_processor_id());	\
++	fn(&fn##_nb, (unsigned long)CPU_ONLINE,			\
++		(void *)(unsigned long)smp_processor_id());	\
++	register_cpu_notifier(&fn##_nb);			\
++} while (0)
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000002062.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 3 warnings, 1 checks, 304 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000002062.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

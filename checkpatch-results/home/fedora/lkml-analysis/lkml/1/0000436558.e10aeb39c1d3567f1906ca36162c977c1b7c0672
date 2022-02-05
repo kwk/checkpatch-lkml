@@ -1,0 +1,211 @@
+WARNING:COMMIT_COMMENT_SYMBOL: Commit log lines starting with '#' are dropped by git as comments
+#45: 
+# cd /sys/block/sda/queue
+
+Commit log lines starting with a '#' are ignored by git as
+comments.  To solve this problem addition of a single space
+infront of the log line is enough.
+
+WARNING:COMMIT_COMMENT_SYMBOL: Commit log lines starting with '#' are dropped by git as comments
+#46: 
+# echo 1024 > max_segments
+
+WARNING:COMMIT_COMMENT_SYMBOL: Commit log lines starting with '#' are dropped by git as comments
+#47: 
+# cat echo 4096 > max_sectors_kb
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#90: FILE: block/ll_rw_blk.c:1325:
++	sg = next_sg = &sglist[0];
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:WxV)
+#152: FILE: block/ll_rw_blk.c:3970:
++	.attr = {.name = "max_segments", .mode = S_IRUGO |S_IWUSR },
+ 	                                                 ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO |S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#152: FILE: block/ll_rw_blk.c:3970:
++	.attr = {.name = "max_segments", .mode = S_IRUGO |S_IWUSR },
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#225: FILE: drivers/ata/libata-core.c:1430:
++^I$
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#381: FILE: drivers/scsi/scsi_lib.c:717:
++		printk(KERN_ERR "scsi: bad segment count=%d\n", nents);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#382: FILE: drivers/scsi/scsi_lib.c:718:
++		BUG();
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#398: FILE: drivers/scsi/scsi_lib.c:731:
++	BUG_ON(!cmd->use_sg);
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#401: FILE: drivers/scsi/scsi_lib.c:734:
++	ret = prev = NULL;
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#404: FILE: drivers/scsi/scsi_lib.c:737:
++		if (this > SCSI_MAX_SG_SEGMENTS) {
+[...]
++		} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#407: FILE: drivers/scsi/scsi_lib.c:740:
++		} else
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#470: FILE: drivers/scsi/scsi_lib.c:801:
++	BUG_ON(cmd->sglist_len >= SG_MEMPOOL_NR);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#486: FILE: drivers/scsi/scsi_lib.c:817:
++			if (this > SCSI_MAX_SG_SEGMENTS) {
+[...]
++			} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#489: FILE: drivers/scsi/scsi_lib.c:820:
++			} else
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#598: FILE: include/asm-i386/dma-mapping.h:48:
++		BUG_ON(!sg->page);
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#613: FILE: include/asm-i386/scatterlist.h:9:
++    struct scatterlist^I*next;$
+
+ERROR:DEFINE_ARCH_HAS: #define of 'ARCH_HAS_SG_CHAIN' is wrong - use Kconfig variables or standard guards instead
+#616: FILE: include/asm-i386/scatterlist.h:12:
++#define ARCH_HAS_SG_CHAIN
+
+The ARCH_HAS_xyz and ARCH_HAVE_xyz patterns are wrong.
+
+For big conceptual features use Kconfig symbols instead.  And for
+smaller things where we have compatibility fallback functions but
+want architectures able to override them with optimized ones, we
+should either use weak functions (appropriate for some cases), or
+the symbol that protects them should be the same symbol we use.
+
+See: https://lore.kernel.org/lkml/CA+55aFycQ9XJvEOsiM3txHL5bjUc8CeKWJNR_H+MiicaddB42Q@mail.gmail.com/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sg' - possible side-effects?
+#686: FILE: include/linux/scatterlist.h:24:
++#define sg_next(sg)	(sg_chain_ptr((sg)) ? : (sg) + 1)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#697: FILE: include/linux/scatterlist.h:35:
++#define sg_chain(prv, nents, sgl)	BUG()
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sg' - possible side-effects?
+#704: FILE: include/linux/scatterlist.h:42:
++#define for_each_sg(sglist, sg, nr, __i)	\
++	for (__i = 0, sg = (sglist); __i < nr; __i++, sg = sg_next(sg))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'nr' may be better as '(nr)' to avoid precedence issues
+#704: FILE: include/linux/scatterlist.h:42:
++#define for_each_sg(sglist, sg, nr, __i)	\
++	for (__i = 0, sg = (sglist); __i < nr; __i++, sg = sg_next(sg))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__i' - possible side-effects?
+#704: FILE: include/linux/scatterlist.h:42:
++#define for_each_sg(sglist, sg, nr, __i)	\
++	for (__i = 0, sg = (sglist); __i < nr; __i++, sg = sg_next(sg))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#743: FILE: include/scsi/scsi_cmnd.h:140:
++extern void scsi_free_sgtable(struct scsi_cmnd *);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct scsi_cmnd *' should also have an identifier name
+#743: FILE: include/scsi/scsi_cmnd.h:140:
++extern void scsi_free_sgtable(struct scsi_cmnd *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000436558.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 2 errors, 12 warnings, 12 checks, 591 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000436558.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

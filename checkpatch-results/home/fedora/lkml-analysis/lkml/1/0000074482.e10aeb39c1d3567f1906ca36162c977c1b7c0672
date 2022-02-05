@@ -1,0 +1,121 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#37: 
+inode_operations structures for sysfs. The patch uses hooks introduced in the
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*attrs)...) over kzalloc(sizeof(struct sysfs_inode_attrs)...)
+#109: FILE: fs/sysfs/inode.c:53:
++	attrs = kzalloc(sizeof(struct sysfs_inode_attrs), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#118: FILE: fs/sysfs/inode.c:62:
++	iattrs->ia_atime = iattrs->ia_mtime = iattrs->ia_ctime = CURRENT_TIME;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#169: FILE: fs/sysfs/inode.c:106:
++			iattrs->ia_atime = timespec_trunc(iattr->ia_atime,
++					inode->i_sb->s_time_gran);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#172: FILE: fs/sysfs/inode.c:109:
++			iattrs->ia_mtime = timespec_trunc(iattr->ia_mtime,
++					inode->i_sb->s_time_gran);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#175: FILE: fs/sysfs/inode.c:112:
++			iattrs->ia_ctime = timespec_trunc(iattr->ia_ctime,
++					inode->i_sb->s_time_gran);
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#181: FILE: fs/sysfs/inode.c:118:
++			iattrs->ia_mode = sd->s_mode = mode;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#210: FILE: fs/sysfs/inode.c:125:
++int sysfs_setxattr(struct dentry *dentry, const char *name, const void *value,
++		size_t size, int flags)
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#227: FILE: fs/sysfs/inode.c:142:
++	if (!strncmp(name, XATTR_SECURITY_PREFIX, XATTR_SECURITY_PREFIX_LEN)) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#229: FILE: fs/sysfs/inode.c:144:
++		const char *suffix = name + XATTR_SECURITY_PREFIX_LEN;
++		error = security_inode_setsecurity(dentry->d_inode, suffix,
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#230: FILE: fs/sysfs/inode.c:145:
++		error = security_inode_setsecurity(dentry->d_inode, suffix,
++						value, size, flags);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#234: FILE: fs/sysfs/inode.c:149:
++		error = security_inode_getsecctx(dentry->d_inode,
++						&secdata, &secdata_len);
+
+CHECK:BRACES: Unbalanced braces around else statement
+#243: FILE: fs/sysfs/inode.c:158:
++	} else
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#272: FILE: fs/sysfs/inode.c:224:
++			security_inode_notifysecctx(inode,
++						iattrs->ia_secdata,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#341: FILE: fs/sysfs/sysfs.h:160:
++int sysfs_setxattr(struct dentry *dentry, const char *name, const void *value,
++		size_t size, int flags);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000074482.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 2 warnings, 13 checks, 273 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000074482.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

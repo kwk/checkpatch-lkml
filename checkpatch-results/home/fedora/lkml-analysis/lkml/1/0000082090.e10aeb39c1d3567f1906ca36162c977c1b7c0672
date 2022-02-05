@@ -1,0 +1,141 @@
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#221: FILE: fs/direct-io.c:435:
++	BUG_ON(dio->block_in_file >= dio->final_block_in_request);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#269: FILE: fs/direct-io.c:496:
++	ret = bio_add_page(dio->bio, dio->cur_page, dio->cur_page_len,
++				dio->cur_page_offset);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#310: FILE: fs/direct-io.c:895:
++	if (args->user_addr) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#315: FILE: fs/direct-io.c:900:
++	} else
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 25)
+#387: FILE: fs/direct-io.c:1044:
++		if (bdev)
++			 blkbits = bdev_blkbits;
+
+CHECK:SPACING: No space is necessary after a cast
+#425: FILE: fs/direct-io.c:1145:
++		.user_addr	= (unsigned long) iov->iov_base,
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#436: FILE: fs/direct-io.c:1155:
++		args.pages = kzalloc(nr_pages * sizeof(struct page *),
++					GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#437: FILE: fs/direct-io.c:1156:
++		args.pages = kzalloc(nr_pages * sizeof(struct page *),
++					GFP_KERNEL);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#443: FILE: fs/direct-io.c:1162:
++	ret = get_user_pages_fast(args.user_addr, nr_pages, rw == READ,
++					args.pages);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#472: FILE: fs/direct-io.c:1188:
++		ret2 = __generic_file_direct_IO(rw, mapping, kiocb, iov, offset,
++							actor);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!dreq->commit_data"
+#731: FILE: fs/nfs/direct.c:802:
++	if (dreq->commit_data == NULL || args->length < wsize)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:SPACING: No space is necessary after a cast
+#776: FILE: fs/nfs/direct.c:850:
++		count, (long long) args->offset);
+
+CHECK:SPACING: No space is necessary after a cast
+#824: FILE: fs/nfs/direct.c:904:
++		count, (long long) args->offset);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#944: FILE: include/linux/nfs_fs.h:412:
++extern ssize_t nfs_file_direct_io(struct kiocb *, struct dio_args *);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct kiocb *' should also have an identifier name
+#944: FILE: include/linux/nfs_fs.h:412:
++extern ssize_t nfs_file_direct_io(struct kiocb *, struct dio_args *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct dio_args *' should also have an identifier name
+#944: FILE: include/linux/nfs_fs.h:412:
++extern ssize_t nfs_file_direct_io(struct kiocb *, struct dio_args *);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000082090.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 5 warnings, 11 checks, 856 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000082090.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,245 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'mask' - possible side-effects?
+#83: FILE: include/linux/kernel.h:137:
++#define __ALIGN_MASK(x, mask)	(((x) + (mask)) & ~(mask))
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#84: FILE: include/linux/kernel.h:138:
++#define ALIGN(x, a)		__ALIGN_MASK(x, (typeof(x))(a)-1)
+                    		                              ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'f' may be better as '(f)' to avoid precedence issues
+#92: FILE: include/linux/kernel.h:146:
++#define FIELD_SIZEOF(t, f)	(sizeof(((t *)0)->f))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'a' - possible side-effects?
+#123: FILE: include/linux/kernel.h:151:
++#define swap(a, b)			\
++	do { typeof(a) __tmp = (a); (a) = (b); (b) = __tmp; } while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'b' - possible side-effects?
+#123: FILE: include/linux/kernel.h:151:
++#define swap(a, b)			\
++	do { typeof(a) __tmp = (a); (a) = (b); (b) = __tmp; } while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'member' - possible side-effects?
+#139: FILE: include/linux/kernel.h:161:
++#define container_of(ptr, type, member)				\
++({	const typeof(((type *)0)->member) *__mptr = (ptr);	\
++	(type *)((char *)__mptr - offsetof(type, member));	\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'member' may be better as '(member)' to avoid precedence issues
+#139: FILE: include/linux/kernel.h:161:
++#define container_of(ptr, type, member)				\
++({	const typeof(((type *)0)->member) *__mptr = (ptr);	\
++	(type *)((char *)__mptr - offsetof(type, member));	\
++})
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#140: FILE: include/linux/kernel.h:162:
++({	const typeof(((type *)0)->member) *__mptr = (ptr);	\
+   	                                  ^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#175: FILE: include/linux/kernel.h:191:
++extern int _cond_resched(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'd' - possible side-effects?
+#190: FILE: include/linux/kernel.h:209:
++#define DIV_ROUND_UP(n, d)	(((n) + (d) - 1) / (d))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'y' - possible side-effects?
+#191: FILE: include/linux/kernel.h:210:
++#define roundup(x, y)		((((x) + ((y) - 1)) / (y)) * (y))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#301: FILE: include/linux/kernel.h:320:
++# define sector_div(n, b)	  \
++({	int _res;		  \
++	_res = (n) % (b);	  \
++	(n) /= (b);		  \
++	_res;			  \
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'b' - possible side-effects?
+#301: FILE: include/linux/kernel.h:320:
++# define sector_div(n, b)	  \
++({	int _res;		  \
++	_res = (n) % (b);	  \
++	(n) /= (b);		  \
++	_res;			  \
++})
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __noreturn over __attribute__((noreturn))
+#337: FILE: include/linux/kernel.h:354:
++	__attribute__ ((noreturn, format (printf, 1, 2))) __cold;
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __printf(1, 2) over __attribute__((format(printf, 1, 2)))
+#337: FILE: include/linux/kernel.h:354:
++	__attribute__ ((noreturn, format (printf, 1, 2))) __cold;
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __noreturn over __attribute__((noreturn))
+#354: FILE: include/linux/kernel.h:358:
++void do_exit(long error_code) __attribute__ ((noreturn));
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __noreturn over __attribute__((noreturn))
+#356: FILE: include/linux/kernel.h:360:
++	__attribute__ ((noreturn));
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#357: FILE: include/linux/kernel.h:361:
++extern void bust_spinlocks(int yes);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#358: FILE: include/linux/kernel.h:362:
++extern void wake_up_klogd(void);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#360: FILE: include/linux/kernel.h:364:
++					 * oops, panic(), BUG() or die() */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#369: FILE: include/linux/kernel.h:373:
++extern int strict_strtoul(const char *cp, unsigned int base,
+
+WARNING:CONSIDER_KSTRTO: strict_strtoul is obsolete, use kstrtoul instead
+#369: FILE: include/linux/kernel.h:373:
++extern int strict_strtoul(const char *cp, unsigned int base,
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#371: FILE: include/linux/kernel.h:375:
++extern int strict_strtol(const char *cp, unsigned int base,
+
+WARNING:CONSIDER_KSTRTO: strict_strtol is obsolete, use kstrtol instead
+#371: FILE: include/linux/kernel.h:375:
++extern int strict_strtol(const char *cp, unsigned int base,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#373: FILE: include/linux/kernel.h:377:
++extern int strict_strtoull(const char *cp, unsigned int base,
+
+WARNING:CONSIDER_KSTRTO: strict_strtoull is obsolete, use kstrtoull instead
+#373: FILE: include/linux/kernel.h:377:
++extern int strict_strtoull(const char *cp, unsigned int base,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#375: FILE: include/linux/kernel.h:379:
++extern int strict_strtoll(const char *cp, unsigned int base,
+
+WARNING:CONSIDER_KSTRTO: strict_strtoll is obsolete, use kstrtoll instead
+#375: FILE: include/linux/kernel.h:379:
++extern int strict_strtoll(const char *cp, unsigned int base,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#381: FILE: include/linux/kernel.h:385:
++extern unsigned long simple_strtoul(const char *cp, char **endp,
+
+WARNING:CONSIDER_KSTRTO: simple_strtoul is obsolete, use kstrtoul instead
+#381: FILE: include/linux/kernel.h:385:
++extern unsigned long simple_strtoul(const char *cp, char **endp,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#383: FILE: include/linux/kernel.h:387:
++extern long simple_strtol(const char *cp, char **endp,
+
+WARNING:CONSIDER_KSTRTO: simple_strtol is obsolete, use kstrtol instead
+#383: FILE: include/linux/kernel.h:387:
++extern long simple_strtol(const char *cp, char **endp,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#385: FILE: include/linux/kernel.h:389:
++extern unsigned long long simple_strtoull(const char *cp, char **endp,
+
+WARNING:CONSIDER_KSTRTO: simple_strtoull is obsolete, use kstrtoull instead
+#385: FILE: include/linux/kernel.h:389:
++extern unsigned long long simple_strtoull(const char *cp, char **endp,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#387: FILE: include/linux/kernel.h:391:
++extern long long simple_strtoll(const char *cp, char **endp,
+
+WARNING:CONSIDER_KSTRTO: simple_strtoll is obsolete, use kstrtoll instead
+#387: FILE: include/linux/kernel.h:391:
++extern long long simple_strtoll(const char *cp, char **endp,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#393: FILE: include/linux/kernel.h:397:
++extern int sprintf(char *buf, const char *fmt, ...)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#398: FILE: include/linux/kernel.h:401:
++extern int snprintf(char *buf, size_t size, const char *fmt, ...)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#403: FILE: include/linux/kernel.h:405:
++extern int scnprintf(char *buf, size_t size, const char *fmt, ...)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#433: FILE: include/linux/kernel.h:435:
++#define _RET_IP_	(unsigned long)__builtin_return_address(0)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#467: FILE: include/linux/kernel.h:453:
++extern void add_taint(unsigned flag);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#467: FILE: include/linux/kernel.h:453:
++extern void add_taint(unsigned flag);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#468: FILE: include/linux/kernel.h:454:
++extern int test_taint(unsigned flag);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#468: FILE: include/linux/kernel.h:454:
++extern int test_taint(unsigned flag);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#469: FILE: include/linux/kernel.h:455:
++extern unsigned long get_taint(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#612: FILE: include/linux/kernel.h:512:
++extern struct pid *session_of_pgrp(struct pid *pgrp);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000073868.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 15 warnings, 30 checks, 567 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000073868.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

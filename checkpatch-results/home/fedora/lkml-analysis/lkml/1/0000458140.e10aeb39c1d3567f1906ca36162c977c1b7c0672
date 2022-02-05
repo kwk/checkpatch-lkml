@@ -1,0 +1,90 @@
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#79: FILE: arch/i386/kernel/alternative.c:162:
++		if (boot_cpu_has(a->cpuid)) {
+[...]
++		} else if ((a->replacementlen2 > 0) &&
+[...]
++		} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#86: FILE: arch/i386/kernel/alternative.c:169:
++		} else
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#89: FILE: arch/i386/kernel/alternative.c:172:
++		BUG_ON(replacementlen > a->instrlen);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __packed over __attribute__((packed))
+#123: FILE: include/asm-i386/alternative.h:20:
++}  __attribute__ ((packed));
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#134: FILE: include/asm-i386/alternative.h:45:
++#define ASM_OUTPUT2(a, b) a, b
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#169: FILE: include/asm-i386/alternative.h:104:
++#define alternative_io_two(oldinstr, newinstr, feat, newinstr2, feat2,\
++		output, input...) \
++	asm volatile ("661:\n\t" oldinstr "\n662:\n"                    \
++		      ".section .altinstructions,\"a\"\n"               \
++		      "  .align 4\n"                                    \
++		      "  .long 661b\n"            /* label */           \
++		      "  .long 663f\n"            /* new instruction */ \
++		      "  .long 665f\n"            /* new instruction 2 */\
++		      "  .byte %c[f]\n"        /* feature bit */        \
++		      "  .byte %c[f2]\n"          /* feature bit 2*/    \
++		      "  .byte 662b-661b\n"       /* sourcelen */       \
++		      "  .byte 664f-663f\n"       /* replacementlen */  \
++		      "  .byte 666f-665f\n"       /* replacementlen 2 */\
++		      ".previous\n"                                     \
++		      ".section .altinstr_replacement,\"ax\"\n"         \
++		      "663:\n\t" newinstr "\n664:\n"  /* replacement */ \
++		      "665:\n\t" newinstr2 "\n666:\n" /* replacement2 */ \
++		      ".previous" : output : [f] "i" (feat), \
++		      [f2] "i" (feat2),##input)
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#187: FILE: include/asm-i386/alternative.h:122:
++		      [f2] "i" (feat2),##input)
+ 		                      ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000458140.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 3 errors, 2 warnings, 2 checks, 116 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000458140.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

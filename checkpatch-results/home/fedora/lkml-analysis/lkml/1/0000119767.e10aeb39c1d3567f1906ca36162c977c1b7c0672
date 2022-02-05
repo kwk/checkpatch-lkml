@@ -1,0 +1,313 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'var' - possible side-effects?
+#95: FILE: arch/microblaze/include/asm/uaccess.h:47:
++#define __get_user(var, ptr)				\
++({							\
++	int __gu_err = 0;				\
++	switch (sizeof(*(ptr))) {			\
++	case 1:						\
++	case 2:						\
++	case 4:						\
++		(var) = *(ptr);				\
++		break;					\
++	case 8:						\
++		memcpy((void *) &(var), (ptr), 8);	\
++		break;					\
++	default:					\
++		(var) = 0;				\
++		__gu_err = __get_user_bad();		\
++		break;					\
++	}						\
++	__gu_err;					\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#95: FILE: arch/microblaze/include/asm/uaccess.h:47:
++#define __get_user(var, ptr)				\
++({							\
++	int __gu_err = 0;				\
++	switch (sizeof(*(ptr))) {			\
++	case 1:						\
++	case 2:						\
++	case 4:						\
++		(var) = *(ptr);				\
++		break;					\
++	case 8:						\
++		memcpy((void *) &(var), (ptr), 8);	\
++		break;					\
++	default:					\
++		(var) = 0;				\
++		__gu_err = __get_user_bad();		\
++		break;					\
++	}						\
++	__gu_err;					\
++})
+
+CHECK:SPACING: No space is necessary after a cast
+#105: FILE: arch/microblaze/include/asm/uaccess.h:57:
++		memcpy((void *) &(var), (ptr), 8);	\
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#193: FILE: arch/microblaze/include/asm/uaccess.h:116:
++extern long strncpy_from_user(char *dst, const char *src, long count);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#194: FILE: arch/microblaze/include/asm/uaccess.h:117:
++extern long strnlen_user(const char *src, long count);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'addr' - possible side-effects?
+#202: FILE: arch/microblaze/include/asm/uaccess.h:125:
++#define access_ok(type, addr, size) \
++	(get_fs().seg > (((unsigned long)(addr)) | \
++		(size) | ((unsigned long)(addr) + (size))))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'size' - possible side-effects?
+#202: FILE: arch/microblaze/include/asm/uaccess.h:125:
++#define access_ok(type, addr, size) \
++	(get_fs().seg > (((unsigned long)(addr)) | \
++		(size) | ((unsigned long)(addr) + (size))))
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#207: FILE: arch/microblaze/include/asm/uaccess.h:130:
++/* || printk("access_ok failed for %s at 0x%08lx (size %d), seg 0x%08x\n",
++ type?"WRITE":"READ",addr,size,get_fs().seg)) */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#207: FILE: arch/microblaze/include/asm/uaccess.h:130:
++ type?"WRITE":"READ",addr,size,get_fs().seg)) */
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#215: FILE: arch/microblaze/include/asm/uaccess.h:138:
++#define get_user(x, ptr)						\
++({									\
++	access_ok(VERIFY_READ, (ptr), sizeof(*(ptr)))			\
++		? __get_user((x), (ptr)) : -EFAULT;			\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#221: FILE: arch/microblaze/include/asm/uaccess.h:144:
++#define put_user(x, ptr)						\
++({									\
++	access_ok(VERIFY_WRITE, (ptr), sizeof(*(ptr)))			\
++		? __put_user((x), (ptr)) : -EFAULT;			\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#227: FILE: arch/microblaze/include/asm/uaccess.h:150:
++#define __get_user(x, ptr)						\
++({									\
++	unsigned long __gu_val;						\
++	/*unsigned long __gu_ptr = (unsigned long)(ptr);*/		\
++	long __gu_err;							\
++	switch (sizeof(*(ptr))) {					\
++	case 1:								\
++		__get_user_asm("lbu", (ptr), __gu_val, __gu_err);	\
++		break;							\
++	case 2:								\
++		__get_user_asm("lhu", (ptr), __gu_val, __gu_err);	\
++		break;							\
++	case 4:								\
++		__get_user_asm("lw", (ptr), __gu_val, __gu_err);	\
++		break;							\
++	default:							\
++		__gu_val = 0; __gu_err = -EINVAL;			\
++	}								\
++	x = (__typeof__(*(ptr))) __gu_val;				\
++	__gu_err;							\
++})
+
+WARNING:LINE_CONTINUATIONS: Avoid line continuations in quoted strings
+#252: FILE: arch/microblaze/include/asm/uaccess.h:175:
++			"1:"	insn	" %1, %2, r0;			\
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#261: FILE: arch/microblaze/include/asm/uaccess.h:184:
++			.previous;"					\
+
+WARNING:LINE_CONTINUATIONS: Avoid line continuations in quoted strings
+#261: FILE: arch/microblaze/include/asm/uaccess.h:184:
++			.previous;"					\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#267: FILE: arch/microblaze/include/asm/uaccess.h:190:
++#define __put_user(x, ptr)						\
++({									\
++	__typeof__(*(ptr)) __gu_val = x;				\
++	long __gu_err = 0;						\
++	switch (sizeof(__gu_val)) {					\
++	case 1:								\
++		__put_user_asm("sb", (ptr), __gu_val, __gu_err);	\
++		break;							\
++	case 2: 							\
++		__put_user_asm("sh", (ptr), __gu_val, __gu_err);	\
++		break;							\
++	case 4:								\
++		__put_user_asm("sw", (ptr), __gu_val, __gu_err);	\
++		break;							\
++	case 8:								\
++		__put_user_asm_8((ptr), __gu_val, __gu_err);		\
++		break;							\
++	default:							\
++		__gu_err = -EINVAL;					\
++	}								\
++	__gu_err;							\
++})
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#275: FILE: arch/microblaze/include/asm/uaccess.h:198:
++^Icase 2: ^I^I^I^I^I^I^I\$
+
+WARNING:LINE_CONTINUATIONS: Avoid line continuations in quoted strings
+#292: FILE: arch/microblaze/include/asm/uaccess.h:215:
++__asm__ __volatile__ ("	lwi	%0, %1, 0;		\
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#304: FILE: arch/microblaze/include/asm/uaccess.h:227:
++		.previous;"				\
+
+WARNING:LINE_CONTINUATIONS: Avoid line continuations in quoted strings
+#304: FILE: arch/microblaze/include/asm/uaccess.h:227:
++		.previous;"				\
+
+WARNING:LINE_CONTINUATIONS: Avoid line continuations in quoted strings
+#314: FILE: arch/microblaze/include/asm/uaccess.h:237:
++			"1:"	insn	" %1, %2, r0;		\
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#323: FILE: arch/microblaze/include/asm/uaccess.h:246:
++			.previous;"				\
+
+WARNING:LINE_CONTINUATIONS: Avoid line continuations in quoted strings
+#323: FILE: arch/microblaze/include/asm/uaccess.h:246:
++			.previous;"				\
+
+WARNING:LINE_CONTINUATIONS: Avoid line continuations in quoted strings
+#335: FILE: arch/microblaze/include/asm/uaccess.h:258:
++		__asm__ __volatile__ ("				\
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#344: FILE: arch/microblaze/include/asm/uaccess.h:267:
++				.section .text;"		\
+
+WARNING:LINE_CONTINUATIONS: Avoid line continuations in quoted strings
+#344: FILE: arch/microblaze/include/asm/uaccess.h:267:
++				.section .text;"		\
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#352: FILE: arch/microblaze/include/asm/uaccess.h:275:
++extern unsigned long __copy_tofrom_user(void __user *to,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#353: FILE: arch/microblaze/include/asm/uaccess.h:276:
++extern unsigned long __copy_tofrom_user(void __user *to,
++		const void __user *from, unsigned long size);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'to' - possible side-effects?
+#355: FILE: arch/microblaze/include/asm/uaccess.h:278:
++#define copy_to_user(to, from, n)					\
++	(access_ok(VERIFY_WRITE, (to), (n)) ?				\
++		__copy_tofrom_user((void __user *)(to),			\
++			(__force const void __user *)(from), (n))	\
++		: -EFAULT)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#355: FILE: arch/microblaze/include/asm/uaccess.h:278:
++#define copy_to_user(to, from, n)					\
++	(access_ok(VERIFY_WRITE, (to), (n)) ?				\
++		__copy_tofrom_user((void __user *)(to),			\
++			(__force const void __user *)(from), (n))	\
++		: -EFAULT)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'from' - possible side-effects?
+#364: FILE: arch/microblaze/include/asm/uaccess.h:287:
++#define copy_from_user(to, from, n)					\
++	(access_ok(VERIFY_READ, (from), (n)) ?				\
++		__copy_tofrom_user((__force void __user *)(to),		\
++			(void __user *)(from), (n))			\
++		: -EFAULT)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#364: FILE: arch/microblaze/include/asm/uaccess.h:287:
++#define copy_from_user(to, from, n)					\
++	(access_ok(VERIFY_READ, (from), (n)) ?				\
++		__copy_tofrom_user((__force void __user *)(to),		\
++			(void __user *)(from), (n))			\
++		: -EFAULT)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#374: FILE: arch/microblaze/include/asm/uaccess.h:297:
++extern int __strncpy_user(char *to, const char __user *from, int len);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#375: FILE: arch/microblaze/include/asm/uaccess.h:298:
++extern int __strnlen_user(const char __user *sstr, int len);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'from' - possible side-effects?
+#377: FILE: arch/microblaze/include/asm/uaccess.h:300:
++#define strncpy_from_user(to, from, len)	\
++		(access_ok(VERIFY_READ, from, 1) ?	\
++			__strncpy_user(to, from, len) : -EFAULT)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'str' - possible side-effects?
+#380: FILE: arch/microblaze/include/asm/uaccess.h:303:
++#define strnlen_user(str, len)	\
++		(access_ok(VERIFY_READ, str, 1) ? __strnlen_user(str, len) : 0)
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#391: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#396: FILE: arch/microblaze/lib/uaccess_old.S:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000119767.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 18 warnings, 21 checks, 467 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000119767.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

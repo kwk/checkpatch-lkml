@@ -1,0 +1,102 @@
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#53: FILE: arch/x86/include/asm/amd_iommu_types.h:199:
++#define APERTURE_RANGE_SIZE	(1ULL << APERTURE_RANGE_SHIFT)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#117: FILE: arch/x86/kernel/amd_iommu.c:638:
++	boundary_size = ALIGN(dma_get_seg_boundary(dev) + 1,
++			PAGE_SIZE) >> PAGE_SHIFT;
+
+ERROR:SPACING: space required after that ';' (ctx:BxV)
+#119: FILE: arch/x86/kernel/amd_iommu.c:640:
++	for (;i < max_index; ++i) {
+ 	     ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#193: FILE: arch/x86/kernel/amd_iommu.c:702:
++	unsigned i = address >> APERTURE_RANGE_SHIFT;
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#196: FILE: arch/x86/kernel/amd_iommu.c:705:
++	BUG_ON(i >= APERTURE_MAX_RANGES || range == NULL);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!range"
+#196: FILE: arch/x86/kernel/amd_iommu.c:705:
++	BUG_ON(i >= APERTURE_MAX_RANGES || range == NULL);
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#222: FILE: arch/x86/kernel/amd_iommu.c:768:
++		int page  = i % APERTURE_RANGE_PAGES;
++		__set_bit(page, dom->aperture[index]->bitmap);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*dma_dom->aperture[0])...) over kzalloc(sizeof(struct aperture_range)...)
+#252: FILE: arch/x86/kernel/amd_iommu.c:848:
++	dma_dom->aperture[0] = kzalloc(sizeof(struct aperture_range),
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:BRACES: Unbalanced braces around else statement
+#306: FILE: arch/x86/kernel/amd_iommu.c:1231:
++	} else
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000121810.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 3 warnings, 5 checks, 270 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000121810.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

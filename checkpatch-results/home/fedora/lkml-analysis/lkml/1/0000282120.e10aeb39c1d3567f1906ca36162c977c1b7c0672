@@ -1,0 +1,232 @@
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#113: FILE: kernel/kexec.c:115:
++#define KIMAGE_PGTABLE_SIZE (1 << KIMAGE_HASH_BITS)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#173: FILE: kernel/kexec.c:208:
++static int do_kimage_alloc(struct kimage **rimage, unsigned long entry,
++				unsigned long nr_segments,
+
+WARNING:TYPO_SPELLING: 'unuseable' may be misspelled - perhaps 'unusable'?
+#198: FILE: kernel/kexec.c:233:
++	/* Initialize the list of unuseable pages */
+ 	                          ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#239: FILE: kernel/kexec.c:280:
++static int kimage_normal_alloc(struct kimage **rimage, unsigned long entry,
++				unsigned long nr_segments,
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*image->pgtable)...) over kzalloc(sizeof(struct hlist_head)...)
+#254: FILE: kernel/kexec.c:295:
++	image->pgtable = kzalloc(sizeof(struct hlist_head) *
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*map)...) over kzalloc(sizeof(struct pgmap)...)
+#293: FILE: kernel/kexec.c:401:
++	map = kzalloc(sizeof(struct pgmap), GFP_KERNEL);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'image' - possible side-effects?
+#309: FILE: kernel/kexec.c:417:
++#define for_each_pgmap(image, hhead, hnode, map)		\
++	for (hhead = image->pgtable;				\
++	     hhead < image->pgtable + KIMAGE_PGTABLE_SIZE;	\
++	     hhead++)						\
++		hlist_for_each_entry(map, hnode, hhead, hlist)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'image' may be better as '(image)' to avoid precedence issues
+#309: FILE: kernel/kexec.c:417:
++#define for_each_pgmap(image, hhead, hnode, map)		\
++	for (hhead = image->pgtable;				\
++	     hhead < image->pgtable + KIMAGE_PGTABLE_SIZE;	\
++	     hhead++)						\
++		hlist_for_each_entry(map, hnode, hhead, hlist)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'hhead' - possible side-effects?
+#309: FILE: kernel/kexec.c:417:
++#define for_each_pgmap(image, hhead, hnode, map)		\
++	for (hhead = image->pgtable;				\
++	     hhead < image->pgtable + KIMAGE_PGTABLE_SIZE;	\
++	     hhead++)						\
++		hlist_for_each_entry(map, hnode, hhead, hlist)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#338: FILE: kernel/kexec.c:454:
++static int kimage_is_destination_range(struct kimage *image,
++					unsigned long start,
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#375: FILE: kernel/kexec.c:725:
++	BUG_ON(page->lru.prev);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#411: FILE: kernel/kexec.c:764:
++		if (entry & IND_DESTINATION)
+[...]
++		else if (entry & IND_SOURCE) {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#647: FILE: kernel/kexec.c:940:
++							     addr+PAGE_SIZE)) {
+ 							         ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around map->hlist.next
+#648: FILE: kernel/kexec.c:941:
++				pprev = &(map->hlist.next);
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:BRACES: Unbalanced braces around else statement
+#735: FILE: kernel/kexec.c:1187:
++			else {
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#771: FILE: kernel/kexec.c:1221:
++				result = do_kimage_alloc_normal_control_pages(
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#784: FILE: kernel/kexec.c:1234:
++	if (stage == KS_full || stage == KS_start) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#787: FILE: kernel/kexec.c:1237:
++	} else
+
+ERROR:OPEN_BRACE: open brace '{' following struct go on the same line
+#803: FILE: kernel/kexec.c:1288:
++struct kexec_pgmap_pos
++{
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#835: FILE: kernel/kexec.c:1320:
++static void *kexec_pgmap_next(struct seq_file *f, void * v, loff_t *ppos)
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#885: FILE: kernel/kexec.c:1370:
++	entry = proc_create("kexec_pgmap", S_IRUSR, NULL,
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#954: FILE: include/linux/kexec.h:173:
++#define KEXEC_GET_STAGE(flags)	(((flags)&KEXEC_STAGE_MASK)>>2)
+                               	         ^
+
+CHECK:SPACING: spaces preferred around that '>>' (ctx:VxV)
+#954: FILE: include/linux/kexec.h:173:
++#define KEXEC_GET_STAGE(flags)	(((flags)&KEXEC_STAGE_MASK)>>2)
+                               	                           ^
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000282120.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 2 errors, 3 warnings, 18 checks, 847 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000282120.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

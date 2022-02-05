@@ -1,0 +1,272 @@
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#53: FILE: kernel/trace/Kconfig:252:
++config KSYM_TRACER
++	bool "Trace read and write access on kernel memory locations"
++	select TRACING
++	help
++	  This tracer helps find read and write operations on any given kernel
++	  symbol i.e. /proc/kallsyms.
+ 
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#125: FILE: kernel/trace/trace_ksym.c:1:
++#include <linux/module.h>
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:UNCOMMENTED_DEFINITION: DEFINE_MUTEX definition without comment
+#147: FILE: kernel/trace/trace_ksym.c:23:
++DEFINE_MUTEX(ksym_tracer_mutex);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#179: FILE: kernel/trace/trace_ksym.c:55:
++	event = trace_buffer_lock_reserve(tr, TRACE_KSYM,
++							sizeof(*entry), 0, pc);
+
+WARNING:STRLCPY: Prefer strscpy over strlcpy - see: https://lore.kernel.org/r/CAHk-=wgfRnXz0W3D37d01q3JFkr_i_uTL=V6A6G1oUZcprmknw@mail.gmail.com/
+#184: FILE: kernel/trace/trace_ksym.c:60:
++	strlcpy(entry->ksym_name, hbkpt->info.name, KSYM_SYMBOL_LEN);
+
+WARNING:STRLCPY: Prefer strscpy over strlcpy - see: https://lore.kernel.org/r/CAHk-=wgfRnXz0W3D37d01q3JFkr_i_uTL=V6A6G1oUZcprmknw@mail.gmail.com/
+#187: FILE: kernel/trace/trace_ksym.c:63:
++	strlcpy(entry->p_name, current->comm, TASK_COMM_LEN);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#247: FILE: kernel/trace/trace_ksym.c:123:
++static int parse_ksym_trace_str(char *input_string, char **ksymname,
++							unsigned long *addr)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around '!input_string'
+#257: FILE: kernel/trace/trace_ksym.c:133:
++	if ((!input_string) ||
++		(strlen(input_string) != KSYM_TRACER_OP_LEN + 1) ||
++		(*addr == 0))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#258: FILE: kernel/trace/trace_ksym.c:134:
++	if ((!input_string) ||
++		(strlen(input_string) != KSYM_TRACER_OP_LEN + 1) ||
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#269: FILE: kernel/trace/trace_ksym.c:145:
++static int process_new_ksym_entry(struct trace_ksym *entry, char *ksymname,
++			     int op, unsigned long addr)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#272: FILE: kernel/trace/trace_ksym.c:148:
++		printk(KERN_ERR "ksym_tracer: Maximum limit:(%d) reached. No"
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#273: FILE: kernel/trace/trace_ksym.c:149:
++		printk(KERN_ERR "ksym_tracer: Maximum limit:(%d) reached. No"
++			" new requests for tracing can be accepted now.\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*entry)...) over kzalloc(sizeof(struct trace_ksym)...)
+#278: FILE: kernel/trace/trace_ksym.c:154:
++	entry = kzalloc(sizeof(struct trace_ksym), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*entry->ksym_hbkpt)...) over kzalloc(sizeof(struct hw_breakpoint)...)
+#282: FILE: kernel/trace/trace_ksym.c:158:
++	entry->ksym_hbkpt = kzalloc(sizeof(struct hw_breakpoint), GFP_KERNEL);
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#288: FILE: kernel/trace/trace_ksym.c:164:
++	entry->ksym_addr = entry->ksym_hbkpt->info.address = addr;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#297: FILE: kernel/trace/trace_ksym.c:173:
++		printk(KERN_INFO "ksym_tracer request failed. Try again"
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#298: FILE: kernel/trace/trace_ksym.c:174:
++		printk(KERN_INFO "ksym_tracer request failed. Try again"
++					" later!!\n");
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around entry->ksym_hlist
+#302: FILE: kernel/trace/trace_ksym.c:178:
++	hlist_add_head(&(entry->ksym_hlist), &ksym_filter_head);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#303: FILE: kernel/trace/trace_ksym.c:179:
++	printk(KERN_INFO "ksym_tracer changes are now effective\n");
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#310: FILE: kernel/trace/trace_ksym.c:186:
++static ssize_t ksym_trace_filter_read(struct file *filp, char __user *ubuf,
+                                                    ^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#311: FILE: kernel/trace/trace_ksym.c:187:
++static ssize_t ksym_trace_filter_read(struct file *filp, char __user *ubuf,
++						size_t count, loff_t *ppos)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#337: FILE: kernel/trace/trace_ksym.c:213:
++static ssize_t ksym_trace_filter_write(struct file *file,
++					const char __user *buffer,
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#357: FILE: kernel/trace/trace_ksym.c:233:
++	ret = op = parse_ksym_trace_str(input_string, &ksymname, &ksym_addr);
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#385: FILE: kernel/trace/trace_ksym.c:261:
++				unregister_kernel_hw_breakpoint(entry->\
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around entry->ksym_hlist
+#390: FILE: kernel/trace/trace_ksym.c:266:
++		hlist_del(&(entry->ksym_hlist));
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#448: FILE: kernel/trace/trace_ksym.c:324:
++{
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#451: FILE: kernel/trace/trace_ksym.c:327:
++		 "#       TASK-PID      CPU#      Symbol         Type    "
++		 "Function         \n");
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#451: FILE: kernel/trace/trace_ksym.c:327:
++		 "Function         \n");
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#454: FILE: kernel/trace/trace_ksym.c:330:
++		 "#          |           |          |              |         "
++		 "|            \n");
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#454: FILE: kernel/trace/trace_ksym.c:330:
++		 "|            \n");
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#468: FILE: kernel/trace/trace_ksym.c:344:
++	ret = trace_seq_printf(s, "%-15s %-5d %-3d %-20s ", field->p_name,
++				field->pid, iter->cpu, field->ksym_name);
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#495: FILE: kernel/trace/trace_ksym.c:371:
++struct tracer ksym_tracer __read_mostly =
++{
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:EXPORTED_WORLD_WRITABLE: Exporting world writable files is usually an error. Consider more restrictive permissions.
+#514: FILE: kernel/trace/trace_ksym.c:390:
++	entry = debugfs_create_file("ksym_trace_filter", 0666, d_tracer,
+
+Exporting world writable sysfs/debugfs files is usually a bad thing.
+When done arbitrarily they can introduce serious security bugs.
+In the past, some of the debugfs vulnerabilities would seemingly allow
+any local user to write arbitrary values into device registers - a
+situation from which little good can be expected to emerge.
+
+See: https://lore.kernel.org/linux-arm-kernel/cover.1296818921.git.segoon@openwall.com/
+
+ERROR:EXPORTED_WORLD_WRITABLE: Exporting writable files is usually an error. Consider more restrictive permissions.
+#514: FILE: kernel/trace/trace_ksym.c:390:
++	entry = debugfs_create_file("ksym_trace_filter", 0666, d_tracer,
++				    NULL, &ksym_tracing_fops);
+WARNING:SPLIT_STRING: quoted string split across lines
+#518: FILE: kernel/trace/trace_ksym.c:394:
++		pr_warning("Could not create debugfs "
++			   "'ksym_trace_filter' file\n");
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#522: FILE: kernel/trace/trace_ksym.c:398:
++
++}
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000159207.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 2 errors, 17 warnings, 17 checks, 456 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000159207.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

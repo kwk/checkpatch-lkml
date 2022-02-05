@@ -1,0 +1,84 @@
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#155: FILE: checkpoint/checkpoint.c:339:
++	BUG_ON(nr_tasks <= 0);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#288: FILE: checkpoint/checkpoint.c:472:
++	ctx->tasks_arr = kzalloc(n * sizeof(*ctx->tasks_arr), GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#528: FILE: include/linux/checkpoint.h:37:
++#define CKPT_CTX_CHECKPOINT	(1 << CKPT_CTX_CHECKPOINT_BIT)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#529: FILE: include/linux/checkpoint.h:38:
++#define CKPT_CTX_RESTART	(1 << CKPT_CTX_RESTART_BIT)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#534: FILE: include/linux/checkpoint.h:43:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __aligned(8) over __attribute__((aligned(8)))
+#560: FILE: include/linux/checkpoint_hdr.h:116:
++} __attribute__((aligned(8)));
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __aligned(8) over __attribute__((aligned(8)))
+#568: FILE: include/linux/checkpoint_hdr.h:124:
++} __attribute__((aligned(8)));
+
+WARNING:DUPLICATED_SYSCTL_CONST: duplicated sysctl range checking value 'zero', consider using the shared one in include/linux/sysctl.h
+#622: FILE: kernel/sysctl.c:1005:
++		.extra1		= &zero,
+
+Commit d91bff3011cf ("proc/sysctl: add shared variables for range
+check") added some shared const variables to be used instead of a local
+copy in each source file.
+
+Consider replacing the sysctl range checking value with the shared
+one in include/linux/sysctl.h.  The following conversion scheme may
+be used::
+
+  &zero     ->  SYSCTL_ZERO
+  &one      ->  SYSCTL_ONE
+  &int_max  ->  SYSCTL_INT_MAX
+
+See:
+
+  1. https://lore.kernel.org/lkml/20190430180111.10688-1-mcroce@redhat.com/
+  2. https://lore.kernel.org/lkml/20190531131422.14970-1-mcroce@redhat.com/
+
+WARNING:DUPLICATED_SYSCTL_CONST: duplicated sysctl range checking value 'one', consider using the shared one in include/linux/sysctl.h
+#623: FILE: kernel/sysctl.c:1006:
++		.extra2		= &one,
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000093836.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 6 warnings, 3 checks, 496 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000093836.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

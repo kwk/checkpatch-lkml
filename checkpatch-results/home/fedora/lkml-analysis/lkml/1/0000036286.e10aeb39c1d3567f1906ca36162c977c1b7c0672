@@ -1,0 +1,103 @@
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#84: FILE: kernel/sched.c:4558:
++	nohz_tracker_ptrs = kzalloc(nr_node_ids * sizeof(struct nohz_tracker *),
++				    GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#87: FILE: kernel/sched.c:4561:
++		printk(KERN_WARNING "Can not alloc nohz trackers\n");
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#87: FILE: kernel/sched.c:4561:
++	if (!nohz_tracker_ptrs) {
++		printk(KERN_WARNING "Can not alloc nohz trackers\n");
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc_node(sizeof(*nohz_tracker_ptrs[i])...) over kzalloc_node(sizeof(struct nohz_tracker)...)
+#92: FILE: kernel/sched.c:4566:
++		nohz_tracker_ptrs[i] = kzalloc_node(sizeof(struct nohz_tracker),
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#95: FILE: kernel/sched.c:4569:
++			printk(KERN_WARNING "Can not alloc domain group for "
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#95: FILE: kernel/sched.c:4569:
++		if (!nohz_tracker_ptrs[i]) {
++			printk(KERN_WARNING "Can not alloc domain group for "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#96: FILE: kernel/sched.c:4570:
++			printk(KERN_WARNING "Can not alloc domain group for "
++				"node %d\n", i);
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#101: FILE: kernel/sched.c:4575:
++		if (!zalloc_cpumask_var_node(&nohz_tracker_ptrs[i]->idle_cpus_mask,
++					    GFP_KERNEL, i)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#107: FILE: kernel/sched.c:4581:
++		if (!zalloc_cpumask_var_node(&nohz_tracker_ptrs[i]->tmp_nohz_mask,
++					    GFP_KERNEL, i)) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#148: FILE: kernel/sched.c:4621:
++	struct nohz_tracker *node_nohz = per_cpu(cpu_node_nohz_ptr, cpu);
++	return get_nohz_load_balancer_node(node_nohz);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#166: FILE: kernel/sched.c:4671:
++static inline int is_semi_idle_group(struct sched_group *ilb_group,
++				struct nohz_tracker *node_nohz)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#170: FILE: kernel/sched.c:4674:
++	cpumask_and(node_nohz->tmp_nohz_mask, node_nohz->idle_cpus_mask,
+ 					sched_group_cpus(ilb_group));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#182: FILE: kernel/sched.c:4684:
++	if (cpumask_equal(node_nohz->tmp_nohz_mask,
++			sched_group_cpus(ilb_group))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#229: FILE: kernel/sched.c:4739:
++static inline int find_new_ilb(int call_cpu,
++				struct nohz_tracker *node_nohz)
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000036286.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 7 warnings, 7 checks, 340 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000036286.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

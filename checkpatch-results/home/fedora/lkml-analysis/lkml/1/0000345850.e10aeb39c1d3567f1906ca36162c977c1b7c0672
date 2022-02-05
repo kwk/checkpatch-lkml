@@ -1,0 +1,155 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'regs' - possible side-effects?
+#120: FILE: include/asm-x86/processor.h:813:
++#define start_thread(regs, new_eip, new_esp) do {		\
++	__asm__("movl %0,%%gs": :"r" (0));			\
++	regs->fs = 0;						\
++	set_fs(USER_DS);					\
++	regs->ds = __USER_DS;					\
++	regs->es = __USER_DS;					\
++	regs->ss = __USER_DS;					\
++	regs->cs = __USER_CS;					\
++	regs->ip = new_eip;					\
++	regs->sp = new_esp;					\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'regs' may be better as '(regs)' to avoid precedence issues
+#120: FILE: include/asm-x86/processor.h:813:
++#define start_thread(regs, new_eip, new_esp) do {		\
++	__asm__("movl %0,%%gs": :"r" (0));			\
++	regs->fs = 0;						\
++	set_fs(USER_DS);					\
++	regs->ds = __USER_DS;					\
++	regs->es = __USER_DS;					\
++	regs->ss = __USER_DS;					\
++	regs->cs = __USER_CS;					\
++	regs->ip = new_eip;					\
++	regs->sp = new_esp;					\
++} while (0)
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxW)
+#121: FILE: include/asm-x86/processor.h:814:
++	__asm__("movl %0,%%gs": :"r" (0));			\
+ 	                      ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: spaces required around that ':' (ctx:WxV)
+#121: FILE: include/asm-x86/processor.h:814:
++	__asm__("movl %0,%%gs": :"r" (0));			\
+ 	                        ^
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#132: FILE: include/asm-x86/processor.h:825:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#133: FILE: include/asm-x86/processor.h:826:
++extern unsigned long thread_saved_pc(struct task_struct *tsk);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#135: FILE: include/asm-x86/processor.h:828:
++#define THREAD_SIZE_LONGS      (THREAD_SIZE/sizeof(unsigned long))
+                                            ^
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#138: FILE: include/asm-x86/processor.h:831:
++       unsigned long *__ptr = (unsigned long *)(info);                 \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#139: FILE: include/asm-x86/processor.h:832:
++       (unsigned long)(&__ptr[THREAD_SIZE_LONGS]);                     \$
+
+WARNING:TYPO_SPELLING: 'accessable' may be misspelled - perhaps 'accessible'?
+#145: FILE: include/asm-x86/processor.h:838:
++ * is accessable even if the CPU haven't stored the SS/ESP registers
+       ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#154: FILE: include/asm-x86/processor.h:847:
++       struct pt_regs *__regs__;                                       \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#155: FILE: include/asm-x86/processor.h:848:
++       __regs__ = (struct pt_regs *)(KSTK_TOP(task_stack_page(task))-8); \$
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#155: FILE: include/asm-x86/processor.h:848:
++       __regs__ = (struct pt_regs *)(KSTK_TOP(task_stack_page(task))-8); \
+                                                                     ^
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#156: FILE: include/asm-x86/processor.h:849:
++       __regs__ - 1;                                                   \$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#173: FILE: include/asm-x86/processor.h:866:
++#define TASK_SIZE ^I^I(test_thread_flag(TIF_IA32) ? \$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#175: FILE: include/asm-x86/processor.h:868:
++#define TASK_SIZE_OF(child) ^I((test_tsk_thread_flag(child, TIF_IA32)) ? \$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#186: FILE: include/asm-x86/processor.h:879:
++#define start_thread(regs, new_rip, new_rsp) do { ^I^I^I     \$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'regs' - possible side-effects?
+#186: FILE: include/asm-x86/processor.h:879:
++#define start_thread(regs, new_rip, new_rsp) do { 			     \
++	asm volatile("movl %0,%%fs; movl %0,%%es; movl %0,%%ds": :"r" (0));  \
++	load_gs_index(0);						     \
++	(regs)->ip = (new_rip);						     \
++	(regs)->sp = (new_rsp);						     \
++	write_pda(oldrsp, (new_rsp));					     \
++	(regs)->cs = __USER_CS;						     \
++	(regs)->ss = __USER_DS;						     \
++	(regs)->flags = 0x200;						     \
++	set_fs(USER_DS);						     \
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'new_rsp' - possible side-effects?
+#186: FILE: include/asm-x86/processor.h:879:
++#define start_thread(regs, new_rip, new_rsp) do { 			     \
++	asm volatile("movl %0,%%fs; movl %0,%%es; movl %0,%%ds": :"r" (0));  \
++	load_gs_index(0);						     \
++	(regs)->ip = (new_rip);						     \
++	(regs)->sp = (new_rsp);						     \
++	write_pda(oldrsp, (new_rsp));					     \
++	(regs)->cs = __USER_CS;						     \
++	(regs)->ss = __USER_DS;						     \
++	(regs)->flags = 0x200;						     \
++	set_fs(USER_DS);						     \
++} while (0)
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxW)
+#187: FILE: include/asm-x86/processor.h:880:
++	asm volatile("movl %0,%%fs; movl %0,%%es; movl %0,%%ds": :"r" (0));  \
+ 	                                                       ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:WxV)
+#187: FILE: include/asm-x86/processor.h:880:
++	asm volatile("movl %0,%%fs; movl %0,%%es; movl %0,%%ds": :"r" (0));  \
+ 	                                                         ^
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000345850.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 4 errors, 9 warnings, 8 checks, 160 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000345850.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

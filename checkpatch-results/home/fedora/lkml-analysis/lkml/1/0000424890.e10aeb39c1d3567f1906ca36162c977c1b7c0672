@@ -1,0 +1,334 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#25: 
+Conditional calls are used to compile in code that is meant to be dynamically
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#49: FILE: include/linux/condcall.h:1:
++#ifndef _LINUX_CONDCALL_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __packed over __attribute__((packed))
+#67: FILE: include/linux/condcall.h:19:
++} __attribute__((packed));
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#69: FILE: include/linux/condcall.h:21:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#72: FILE: include/linux/condcall.h:24:
++ * used at reentrancy-unfriendly sites. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#73: FILE: include/linux/condcall.h:25:
++#define CF_OPTIMIZED		(1 << 0) /* Use optimized cond_call */
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#74: FILE: include/linux/condcall.h:26:
++#define CF_LOCKDEP		(1 << 1) /* Can call lockdep */
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#75: FILE: include/linux/condcall.h:27:
++#define CF_PRINTK		(1 << 2) /* Probe can call vprintk */
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#76: FILE: include/linux/condcall.h:28:
++#define CF_STATIC_ENABLE	(1 << 3) /* Enable cond_call statically */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#83: FILE: include/linux/condcall.h:35:
++ * "used" attribute to fix a gcc 4.1.x bug. */
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'flags' - possible side-effects?
+#84: FILE: include/linux/condcall.h:36:
++#define cond_call_generic(flags, name, func) \
++	({ \
++		static const char __cstrtab_name_##name[] \
++		__attribute__((section("__cond_call_strings"))) = #name; \
++		static char __cond_call_enable_##name = \
++			(flags) & CF_STATIC_ENABLE; \
++		static const struct __cond_call_struct __cond_call_##name \
++			__attribute__((section("__cond_call"))) = \
++			{ __cstrtab_name_##name, \
++			&__cond_call_enable_##name, \
++			(flags) & ~CF_OPTIMIZED } ; \
++		asm volatile ( "" : : "i" (&__cond_call_##name)); \
++		(unlikely(__cond_call_enable_##name)) ? \
++			(func) : \
++			(__typeof__(func))0; \
++	})
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__cond_call_strings") over __attribute__((section("__cond_call_strings")))
+#87: FILE: include/linux/condcall.h:39:
++		__attribute__((section("__cond_call_strings"))) = #name; \
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__cond_call") over __attribute__((section("__cond_call")))
+#91: FILE: include/linux/condcall.h:43:
++			__attribute__((section("__cond_call"))) = \
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#95: FILE: include/linux/condcall.h:47:
++		asm volatile ( "" : : "i" (&__cond_call_##name)); \
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#104: FILE: include/linux/condcall.h:56:
++#define COND_CALL_GENERIC_ENABLE(a) \
++	*(COND_CALL_GENERIC_ENABLE_TYPE*) \
++		((char*)a+COND_CALL_GENERIC_ENABLE_IMMEDIATE_OFFSET)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'a' may be better as '(a)' to avoid precedence issues
+#104: FILE: include/linux/condcall.h:56:
++#define COND_CALL_GENERIC_ENABLE(a) \
++	*(COND_CALL_GENERIC_ENABLE_TYPE*) \
++		((char*)a+COND_CALL_GENERIC_ENABLE_IMMEDIATE_OFFSET)
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#105: FILE: include/linux/condcall.h:57:
++	*(COND_CALL_GENERIC_ENABLE_TYPE*) \
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#106: FILE: include/linux/condcall.h:58:
++		((char*)a+COND_CALL_GENERIC_ENABLE_IMMEDIATE_OFFSET)
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#106: FILE: include/linux/condcall.h:58:
++		((char*)a+COND_CALL_GENERIC_ENABLE_IMMEDIATE_OFFSET)
+ 		         ^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#131: FILE: include/linux/condcall.h:83:
++extern int cond_call_arm(const char *name);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#132: FILE: include/linux/condcall.h:84:
++extern int cond_call_disarm(const char *name);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#135: FILE: include/linux/condcall.h:87:
++extern int cond_call_query(const char *name);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#136: FILE: include/linux/condcall.h:88:
++extern int cond_call_list(const char *name);
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#159: FILE: include/asm-generic/vmlinux.lds.h:128:
++ ^I}^I^I^I^I^I^I^I^I\$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#159: FILE: include/asm-generic/vmlinux.lds.h:128:
++ ^I}^I^I^I^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#159: FILE: include/asm-generic/vmlinux.lds.h:128:
++ ^I}^I^I^I^I^I^I^I^I\$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#161: FILE: include/asm-generic/vmlinux.lds.h:130:
++        __cond_call_strings : AT(ADDR(__cond_call_strings) - LOAD_OFFSET) { \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#161: FILE: include/asm-generic/vmlinux.lds.h:130:
++        __cond_call_strings : AT(ADDR(__cond_call_strings) - LOAD_OFFSET) { \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#163: FILE: include/asm-generic/vmlinux.lds.h:132:
++ ^I}^I^I^I^I^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#163: FILE: include/asm-generic/vmlinux.lds.h:132:
++ ^I}^I^I^I^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#163: FILE: include/asm-generic/vmlinux.lds.h:132:
++ ^I}^I^I^I^I^I^I^I^I\$
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#212: FILE: kernel/module.c:145:
++extern const struct __cond_call_struct __start___cond_call[];
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#213: FILE: kernel/module.c:146:
++extern const struct __cond_call_struct __stop___cond_call[];
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#236: FILE: kernel/module.c:322:
++static int _cond_call_query_range(const char *name,
++	const struct __cond_call_struct *begin,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#257: FILE: kernel/module.c:343:
++static int _cond_call_arm_range(const char *name,
++	const struct __cond_call_struct *begin,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#274: FILE: kernel/module.c:360:
++static int _cond_call_disarm_range(const char *name,
++	const struct __cond_call_struct *begin,
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#290: FILE: kernel/module.c:376:
++ * (optimized or generic) and state (enabled or disabled). */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#292: FILE: kernel/module.c:378:
++static int _cond_call_list_range(const char *name,
++	const struct __cond_call_struct *begin,
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#302: FILE: kernel/module.c:388:
++		printk("name %s \n", iter->name);
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#302: FILE: kernel/module.c:388:
++		printk("name %s \n", iter->name);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#304: FILE: kernel/module.c:390:
++			printk("  enable %u optimized\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#305: FILE: kernel/module.c:391:
++			printk("  enable %u optimized\n",
++				COND_CALL_OPTIMIZED_ENABLE(iter->enable));
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#307: FILE: kernel/module.c:393:
++			printk("  enable %u generic\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#308: FILE: kernel/module.c:394:
++			printk("  enable %u generic\n",
++				COND_CALL_GENERIC_ENABLE(iter->enable));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#323: FILE: kernel/module.c:409:
++	ret = _cond_call_query_range(name,
++			__start___cond_call, __stop___cond_call);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#331: FILE: kernel/module.c:417:
++		ret = _cond_call_query_range(name,
++			mod->cond_calls, mod->cond_calls+mod->num_cond_calls);
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#331: FILE: kernel/module.c:417:
++			mod->cond_calls, mod->cond_calls+mod->num_cond_calls);
+ 			                                ^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#339: FILE: kernel/module.c:425:
++ * Returns 1 if enabled, 0 if disabled or not present. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#353: FILE: kernel/module.c:439:
++ * cond_call_arm. */
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#367: FILE: kernel/module.c:453:
++			mod->cond_calls, mod->cond_calls+mod->num_cond_calls);
+ 			                                ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#399: FILE: kernel/module.c:485:
++			mod->cond_calls, mod->cond_calls+mod->num_cond_calls);
+ 			                                ^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#418: FILE: kernel/module.c:504:
++ * TODO : should output this listing to a procfs file. */
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#426: FILE: kernel/module.c:512:
++	printk("Listing kernel cond_calls\n");
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#430: FILE: kernel/module.c:516:
++	printk("Listing module cond_calls\n");
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#433: FILE: kernel/module.c:519:
++			printk("Listing cond_calls for module %s\n", mod->name);
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#435: FILE: kernel/module.c:521:
++				mod->cond_calls+mod->num_cond_calls);
+ 				               ^
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '&=' should be on the previous line
+#480: FILE: kernel/module.c:2008:
++		sechdrs[condcallstringsindex].sh_flags
++					&= ~(unsigned long)SHF_ALLOC;
+
+Assignment operators should not be written at the start of a
+line but should follow the operand at the previous line.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000424890.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 7 errors, 25 warnings, 25 checks, 424 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000424890.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

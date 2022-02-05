@@ -1,0 +1,139 @@
+WARNING:EMAIL_SUBJECT: A patch subject line should describe the change not the tool that found it
+#19: 
+Subject: [PATCH] Staging: tm6000: Checkpatch cleanups
+
+Naming the tool that found the issue is not very useful in the
+subject line.  A good subject line summarizes the change that
+the patch brings.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#57: FILE: drivers/staging/tm6000/tm6000-alsa.c:80:
++MODULE_DESCRIPTION("ALSA driver module for tm5600/tm6000/tm6010 "
++		   "based TV cards");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#70: FILE: drivers/staging/tm6000/tm6000-i2c.c:43:
++#define i2c_dprintk(lvl, fmt, args...) if (i2c_debug >= lvl) do { \
+ 			printk(KERN_DEBUG "%s at %s: " fmt, \
++			dev->name, __func__ , ##args); } while (0)
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'lvl' may be better as '(lvl)' to avoid precedence issues
+#70: FILE: drivers/staging/tm6000/tm6000-i2c.c:43:
++#define i2c_dprintk(lvl, fmt, args...) if (i2c_debug >= lvl) do { \
+ 			printk(KERN_DEBUG "%s at %s: " fmt, \
++			dev->name, __func__ , ##args); } while (0)
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#73: FILE: drivers/staging/tm6000/tm6000-i2c.c:45:
++			dev->name, __func__ , ##args); } while (0)
+ 			                    ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'dev->caps.has_zl10353'
+#82: FILE: drivers/staging/tm6000/tm6000-i2c.c:61:
++	if ((dev->caps.has_zl10353) && (dev->demod_addr << 1 == addr)
++	    && (reg % 2 == 0)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#83: FILE: drivers/staging/tm6000/tm6000-i2c.c:62:
++	if ((dev->caps.has_zl10353) && (dev->demod_addr << 1 == addr)
++	    && (reg % 2 == 0)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#93: FILE: drivers/staging/tm6000/tm6000-i2c.c:103:
++		i2c_dprintk(2, "%s %s addr=0x%x len=%d:",
+ 			 (msgs[i].flags & I2C_M_RD) ? "read" : "write",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#103: FILE: drivers/staging/tm6000/tm6000-i2c.c:133:
++				rc = tm6000_i2c_recv_regs(dev, addr,
++					msgs[i].buf[0], msgs[i + 1].buf,
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:VxV)
+#148: FILE: drivers/staging/tm6000/tm6000-i2c.c:201:
++			bytes[i%16] = '.';
+ 			       ^
+
+CHECK:SPACING: No space is necessary after a cast
+#159: FILE: drivers/staging/tm6000/tm6000-i2c.c:238:
++	REQ_16_SET_GET_I2C_WR1_RDN, (reg<<8)+addr, 0x00, (u8 *) _val,	\
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#159: FILE: drivers/staging/tm6000/tm6000-i2c.c:238:
++	REQ_16_SET_GET_I2C_WR1_RDN, (reg<<8)+addr, 0x00, (u8 *) _val,	\
+ 	                                ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#159: FILE: drivers/staging/tm6000/tm6000-i2c.c:238:
++	REQ_16_SET_GET_I2C_WR1_RDN, (reg<<8)+addr, 0x00, (u8 *) _val,	\
+ 	                                    ^
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#164: FILE: drivers/staging/tm6000/tm6000-i2c.c:241:
++		printk(KERN_ERR "Error on line %d: %d\n", __LINE__, rc);\
+
+WARNING:MSLEEP: msleep < 20ms can sleep for up to 20ms; see Documentation/timers/timers-howto.rst
+#168: FILE: drivers/staging/tm6000/tm6000-i2c.c:244:
++	msleep(10);							\
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000002805.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 2 errors, 4 warnings, 9 checks, 146 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000002805.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

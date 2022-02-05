@@ -1,0 +1,202 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#45: 
+   + We can change the "default" level by boot option 'relax_domain_level='.
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#89: FILE: include/linux/sched.h:751:
++#define SD_ATTR_INIT	(struct sched_domain_attr) {	\
++	.relax_domain_level = -1,			\
++}
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#109: FILE: include/linux/sched.h:812:
++extern void partition_sched_domains(int ndoms_new, cpumask_t *doms_new,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:CONSIDER_KSTRTO: simple_strtoul is obsolete, use kstrtoul instead
+#126: FILE: kernel/sched.c:6589:
++	default_relax_domain_level = simple_strtoul(str, NULL, 0);
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+CHECK:UNDOCUMENTED_SETUP: __setup appears un-documented -- check Documentation/admin-guide/kernel-parameters.txt
+#129: FILE: kernel/sched.c:6592:
++__setup("relax_domain_level=", setup_relax_domain_level);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#136: FILE: kernel/sched.c:6599:
++	if (!attr || attr->relax_domain_level < 0) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:UNNECESSARY_ELSE: else is not generally useful after a break or return
+#139: FILE: kernel/sched.c:6602:
++			return;
++		else
+
+CHECK:BRACES: Unbalanced braces around else statement
+#141: FILE: kernel/sched.c:6604:
++	} else
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#145: FILE: kernel/sched.c:6608:
++		sd->flags &= ~(SD_WAKE_IDLE|SD_BALANCE_NEWIDLE);
+ 		                           ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#148: FILE: kernel/sched.c:6611:
++		sd->flags |= (SD_WAKE_IDLE_FAR|SD_BALANCE_NEWIDLE);
+ 		                              ^
+
+WARNING:TYPO_SPELLING: 'attribues' may be misspelled - perhaps 'attributes'?
+#225: FILE: kernel/sched.c:6891:
++static struct sched_domain_attr *dattr_cur;	/* attribues of custom domains
+                                            	   ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#226: FILE: kernel/sched.c:6892:
++static struct sched_domain_attr *dattr_cur;	/* attribues of custom domains
++						   in 'doms_cur' */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#226: FILE: kernel/sched.c:6892:
++						   in 'doms_cur' */
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#284: FILE: kernel/sched.c:7006:
++			if (cpus_equal(doms_cur[i], doms_new[j])
++			    && dattrs_equal(dattr_cur, i, dattr_new, j))
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#294: FILE: kernel/sched.c:7019:
++			if (cpus_equal(doms_new[i], doms_cur[j])
++			    && dattrs_equal(dattr_new, i, dattr_cur, j))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#300: FILE: kernel/sched.c:7024:
++		__build_sched_domains(doms_new + i,
++					dattr_new ? dattr_new + i : NULL);
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#324: FILE: kernel/sched_fair.c:961:
++		if ((sd->flags & SD_WAKE_IDLE)
++		    || ((sd->flags & SD_WAKE_IDLE_FAR)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#325: FILE: kernel/sched_fair.c:962:
++		    || ((sd->flags & SD_WAKE_IDLE_FAR)
++			&& !task_hot(p, task_rq(p)->clock, sd))) {
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#355: FILE: kernel/cpuset.c:492:
++	return;
++}
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*dattr)...) over kmalloc(sizeof(struct sched_domain_attr)...)
+#379: FILE: kernel/cpuset.c:584:
++		dattr = kmalloc(sizeof(struct sched_domain_attr), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kmalloc_array over kmalloc with multiply
+#391: FILE: kernel/cpuset.c:645:
++	dattr = kmalloc(ndoms * sizeof(struct sched_domain_attr), GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+WARNING:CONSIDER_KSTRTO: simple_strtol is obsolete, use kstrtol instead
+#434: FILE: kernel/cpuset.c:1041:
++	int val = simple_strtol(buf, NULL, 10);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#496: FILE: kernel/cpuset.c:1532:
++	if ((err = cgroup_add_file(cont, ss,
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#497: FILE: kernel/cpuset.c:1533:
++	if ((err = cgroup_add_file(cont, ss,
++					&cft_sched_relax_domain_level)) < 0)
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000299224.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 2 errors, 9 warnings, 13 checks, 433 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000299224.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,159 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#27: 
+Count lock contention events per lock class. Additionally track the first four
+
+WARNING:INCLUDE_LINUX: Use #include <linux/atomic.h> instead of <asm/atomic.h>
+#73: FILE: include/linux/lockdep.h:19:
++#include <asm/atomic.h>
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#108: FILE: include/linux/lockdep.h:298:
++extern void lock_contended(struct lockdep_map *lock, unsigned long ip);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_lock' - possible side-effects?
+#110: FILE: include/linux/lockdep.h:300:
++#define LOCK_CONTENDED(_lock, try, lock)			\
++do {								\
++	if (!try(_lock)) {					\
++		lock_contended(&(_lock)->dep_map, _RET_IP_);	\
++		lock(_lock);					\
++	}							\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'try' may be better as '(try)' to avoid precedence issues
+#110: FILE: include/linux/lockdep.h:300:
++#define LOCK_CONTENDED(_lock, try, lock)			\
++do {								\
++	if (!try(_lock)) {					\
++		lock_contended(&(_lock)->dep_map, _RET_IP_);	\
++		lock(_lock);					\
++	}							\
++} while (0)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#141: FILE: kernel/lockdep.c:2280:
++print_lock_contention_bug(struct task_struct *curr, struct lockdep_map *lock,
++			   unsigned long ip)
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#148: FILE: kernel/lockdep.c:2287:
++	printk("\n=================================\n");
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#149: FILE: kernel/lockdep.c:2288:
++	printk(  "[ BUG: bad contention detected! ]\n");
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#149: FILE: kernel/lockdep.c:2288:
++	printk(  "[ BUG: bad contention detected! ]\n");
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#150: FILE: kernel/lockdep.c:2289:
++	printk(  "---------------------------------\n");
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#150: FILE: kernel/lockdep.c:2289:
++	printk(  "---------------------------------\n");
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#151: FILE: kernel/lockdep.c:2290:
++	printk("%s/%d is trying to contend lock (",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#152: FILE: kernel/lockdep.c:2291:
++	printk("%s/%d is trying to contend lock (",
++		curr->comm, curr->pid);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#154: FILE: kernel/lockdep.c:2293:
++	printk(") at:\n");
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#156: FILE: kernel/lockdep.c:2295:
++	printk("but there are no locks held!\n");
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#157: FILE: kernel/lockdep.c:2296:
++	printk("\nother info that might help us debug this:\n");
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#160: FILE: kernel/lockdep.c:2299:
++	printk("\nstack backtrace:\n");
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#188: FILE: kernel/lockdep.c:2460:
++	for (i = depth-1; i >= 0; i--) {
+ 	              ^
+
+WARNING:INCLUDE_LINUX: Use #include <linux/uaccess.h> instead of <asm/uaccess.h>
+#283: FILE: kernel/lockdep_proc.c:18:
++#include <asm/uaccess.h>
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#313: FILE: kernel/lockdep_proc.c:368:
++				seq_printf(m, " [%d] [<%p>] %s",
++						atomic_read(&cp->count),
+
+WARNING:PREFER_SEQ_PUTS: Prefer seq_puts to seq_printf
+#316: FILE: kernel/lockdep_proc.c:371:
++			seq_printf(m, "\n");
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#329: FILE: kernel/lockdep_proc.c:384:
++ssize_t lock_contentions_write(struct file *file, const char __user *buf,
++		size_t count, loff_t *ppos)
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#371: FILE: kernel/lockdep_proc.c:431:
++	entry = create_proc_entry("lock_contentions", S_IRUSR, NULL);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#557: FILE: lib/Kconfig.debug:261:
++config LOCK_STAT
++	bool "Lock usage statisitics"
++	depends on DEBUG_KERNEL && TRACE_IRQFLAGS_SUPPORT && STACKTRACE_SUPPORT && LOCKDEP_SUPPORT
++	select LOCKDEP
++	select DEBUG_SPINLOCK
++	select DEBUG_MUTEXES
++	select DEBUG_LOCK_ALLOC
++	default n
++	help
++	 This feature enables tracking lock contention points
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:TYPO_SPELLING: 'statisitics' may be misspelled - perhaps 'statistics'?
+#558: FILE: lib/Kconfig.debug:262:
++	bool "Lock usage statisitics"
+ 	                 ^^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000427737.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 2 errors, 15 warnings, 8 checks, 452 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000427737.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

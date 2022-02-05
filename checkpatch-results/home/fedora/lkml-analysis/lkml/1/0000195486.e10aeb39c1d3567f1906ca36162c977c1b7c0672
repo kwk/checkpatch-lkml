@@ -1,0 +1,254 @@
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#165: FILE: arch/x86/kernel/io_apic.c:154:
++	BUG_ON(legacy_count > NR_IRQS_LEGACY);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#205: FILE: arch/x86/kernel/io_apic.c:184:
++	printk(KERN_DEBUG "  alloc irq_cfg on cpu %d node %d\n", cpu, node);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#243: FILE: arch/x86/kernel/io_apic.c:211:
++	printk(KERN_DEBUG "  alloc irq_2_pin on cpu %d node %d\n", cpu, node);
+
+WARNING:PREFER_DEV_LEVEL: Prefer dev_dbg(... to dev_printk(KERN_DEBUG, ...
+#627: FILE: arch/x86/kernel/io_apic.c:3228:
++	dev_printk(KERN_DEBUG, &dev->dev, "irq %d aka 0x%08x for MSI/MSI-X\n", irq, irq);
+
+WARNING:PREFER_DEV_LEVEL: Prefer dev_dbg(... to dev_printk(KERN_DEBUG, ...
+#709: FILE: arch/x86/kernel/io_apic.c:3560:
++		dev_printk(KERN_DEBUG, &dev->dev, "irq %d aka 0x%08x for HT\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#710: FILE: arch/x86/kernel/io_apic.c:3561:
++		dev_printk(KERN_DEBUG, &dev->dev, "irq %d aka 0x%08x for HT\n",
++				 irq, irq);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#931: FILE: drivers/pci/intr_remapping.c:33:
++	printk(KERN_DEBUG "alloc irq_2_iommu on cpu %d node %d\n", cpu, node);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#943: FILE: drivers/pci/intr_remapping.c:44:
++	BUG_ON(!desc);
+
+CHECK:CAMELCASE: Avoid CamelCase: <irq_2_iommuX>
+#973: FILE: drivers/pci/intr_remapping.c:74:
++static struct irq_2_iommu irq_2_iommuX[NR_IRQS];
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#982: FILE: drivers/pci/intr_remapping.c:83:
++}
++static struct irq_2_iommu *irq_2_iommu_alloc_cpu(unsigned int irq, int cpu)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1176: FILE: include/linux/irq.h:195:
++extern struct irq_desc *irq_to_desc(unsigned int irq);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1177: FILE: include/linux/irq.h:196:
++extern struct irq_desc *irq_to_desc_alloc_cpu(unsigned int irq, int cpu);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1178: FILE: include/linux/irq.h:197:
++extern struct irq_desc *irq_to_desc_alloc(unsigned int irq);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'irq' - possible side-effects?
+#1187: FILE: include/linux/irq.h:205:
++# define for_each_irq_desc(irq, desc)		\
++	for (irq = 0, desc = irq_desc; irq < nr_irqs; irq++, desc++)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'desc' - possible side-effects?
+#1187: FILE: include/linux/irq.h:205:
++# define for_each_irq_desc(irq, desc)		\
++	for (irq = 0, desc = irq_desc; irq < nr_irqs; irq++, desc++)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'irq' - possible side-effects?
+#1189: FILE: include/linux/irq.h:207:
++# define for_each_irq_desc_reverse(irq, desc)                          \
++	for (irq = nr_irqs - 1, desc = irq_desc + (nr_irqs - 1);        \
++	    irq >= 0; irq--, desc--)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'desc' - possible side-effects?
+#1189: FILE: include/linux/irq.h:207:
++# define for_each_irq_desc_reverse(irq, desc)                          \
++	for (irq = nr_irqs - 1, desc = irq_desc + (nr_irqs - 1);        \
++	    irq >= 0; irq--, desc--)
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#1205: FILE: include/linux/irq.h:222:
++#define for_each_irq_desc(irqX, desc)					\
++	rcu_read_lock();						\
++	for (desc = list_entry(rcu_dereference(sparse_irqs_head.next), typeof(*desc), list), irqX = desc->irq; \
++		prefetch(desc->list.next), &desc->list != &sparse_irqs_head; \
++		desc = list_entry(rcu_dereference(desc->list.next), typeof(*desc), list), irqX = desc ? desc->irq : -1U)
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'irqX' - possible side-effects?
+#1205: FILE: include/linux/irq.h:222:
++#define for_each_irq_desc(irqX, desc)					\
++	rcu_read_lock();						\
++	for (desc = list_entry(rcu_dereference(sparse_irqs_head.next), typeof(*desc), list), irqX = desc->irq; \
++		prefetch(desc->list.next), &desc->list != &sparse_irqs_head; \
++		desc = list_entry(rcu_dereference(desc->list.next), typeof(*desc), list), irqX = desc ? desc->irq : -1U)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'desc' - possible side-effects?
+#1205: FILE: include/linux/irq.h:222:
++#define for_each_irq_desc(irqX, desc)					\
++	rcu_read_lock();						\
++	for (desc = list_entry(rcu_dereference(sparse_irqs_head.next), typeof(*desc), list), irqX = desc->irq; \
++		prefetch(desc->list.next), &desc->list != &sparse_irqs_head; \
++		desc = list_entry(rcu_dereference(desc->list.next), typeof(*desc), list), irqX = desc ? desc->irq : -1U)
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#1207: FILE: include/linux/irq.h:224:
++	for (desc = list_entry(rcu_dereference(sparse_irqs_head.next), typeof(*desc), list), irqX = desc->irq; \
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:LONG_LINE: line length of 120 exceeds 100 columns
+#1209: FILE: include/linux/irq.h:226:
++		desc = list_entry(rcu_dereference(desc->list.next), typeof(*desc), list), irqX = desc ? desc->irq : -1U)
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#1211: FILE: include/linux/irq.h:228:
++#define for_each_irq_desc_reverse(irqX, desc)				\
++	rcu_read_lock();						\
++	for (desc = list_entry(rcu_dereference(sparse_irqs_head.prev), typeof(*desc), list), irqX = desc->irq; \
++		prefetch(desc->list.prev), &desc->list != &sparse_irqs_head; \
++		desc = list_entry(rcu_dereference(desc->list.prev), typeof(*desc), list), irqX = desc ? desc->irq : -1U)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'irqX' - possible side-effects?
+#1211: FILE: include/linux/irq.h:228:
++#define for_each_irq_desc_reverse(irqX, desc)				\
++	rcu_read_lock();						\
++	for (desc = list_entry(rcu_dereference(sparse_irqs_head.prev), typeof(*desc), list), irqX = desc->irq; \
++		prefetch(desc->list.prev), &desc->list != &sparse_irqs_head; \
++		desc = list_entry(rcu_dereference(desc->list.prev), typeof(*desc), list), irqX = desc ? desc->irq : -1U)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'desc' - possible side-effects?
+#1211: FILE: include/linux/irq.h:228:
++#define for_each_irq_desc_reverse(irqX, desc)				\
++	rcu_read_lock();						\
++	for (desc = list_entry(rcu_dereference(sparse_irqs_head.prev), typeof(*desc), list), irqX = desc->irq; \
++		prefetch(desc->list.prev), &desc->list != &sparse_irqs_head; \
++		desc = list_entry(rcu_dereference(desc->list.prev), typeof(*desc), list), irqX = desc ? desc->irq : -1U)
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#1213: FILE: include/linux/irq.h:230:
++	for (desc = list_entry(rcu_dereference(sparse_irqs_head.prev), typeof(*desc), list), irqX = desc->irq; \
+
+WARNING:LONG_LINE: line length of 120 exceeds 100 columns
+#1215: FILE: include/linux/irq.h:232:
++		desc = list_entry(rcu_dereference(desc->list.prev), typeof(*desc), list), irqX = desc ? desc->irq : -1U)
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1238: FILE: include/linux/kernel_stat.h:32:
++       unsigned int irqs[NR_IRQS];$
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1267: FILE: include/linux/kernel_stat.h:64:
++extern unsigned int kstat_irqs_cpu(unsigned int irq, int cpu);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#1387: FILE: kernel/irq/handle.c:88:
++	printk(KERN_DEBUG "  alloc kstat_irqs for %d aka %#x on cpu %d node %d\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1388: FILE: kernel/irq/handle.c:89:
++	printk(KERN_DEBUG "  alloc kstat_irqs for %d aka %#x on cpu %d node %d\n",
++		 irq, irq, cpu, node);
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#1409: FILE: kernel/irq/handle.c:110:
++#define SPARSEIRQHASH_SIZE          (1UL << SPARSEIRQHASH_BITS)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#1416: FILE: kernel/irq/handle.c:117:
++	[0 ... NR_IRQS_LEGACY-1] = {
+ 	                     ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#1505: FILE: kernel/irq/handle.c:206:
++	printk(KERN_DEBUG "  alloc irq_desc for %d aka %#x on cpu %d node %d\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1506: FILE: kernel/irq/handle.c:207:
++	printk(KERN_DEBUG "  alloc irq_desc for %d aka %#x on cpu %d node %d\n",
++		 irq, irq, cpu, node);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1545: FILE: kernel/irq/handle.c:252:
++}
++struct irq_desc *irq_to_desc_alloc_cpu(unsigned int irq, int cpu)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1549: FILE: kernel/irq/handle.c:256:
++}
++struct irq_desc *irq_to_desc_alloc(unsigned int irq)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1583: FILE: kernel/irq/handle.c:477:
++	struct irq_desc *desc = irq_to_desc(irq);
++	return desc->kstat_irqs[cpu];
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1772: FILE: arch/x86/include/asm/io_apic.h:213:
+ }
++static inline void early_irq_cfg_init_work(void)
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000195486.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 2 errors, 15 warnings, 22 checks, 1508 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000195486.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

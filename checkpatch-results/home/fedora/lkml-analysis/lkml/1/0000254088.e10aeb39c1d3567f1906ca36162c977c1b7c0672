@@ -1,0 +1,361 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#33: 
+Implementation of kernel tracepoints. Inspired from the Linux Kernel Markers.
+
+WARNING:TYPO_SPELLING: 'connexion' may be misspelled - perhaps 'connection'?
+#71: 
+  connexion of a probe with the wrong type to a tracepoint declared with
+  ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:UNKNOWN_COMMIT_ID: Unknown commit id '8686f2b37e7394b51dd6593678cbfd85ecd28c65', maybe rebased or not pulled?
+#206: 
+commit 8686f2b37e7394b51dd6593678cbfd85ecd28c65
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#240: FILE: init/Kconfig:785:
++config TRACEPOINTS
++	bool "Activate tracepoints"
++	default y
++	help
++	  Place an empty function call at each tracepoint site. Can be
++	  dynamically changed for a probe function.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#267: FILE: include/linux/tracepoint.h:1:
++#ifndef _LINUX_TRACEPOINT_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __aligned(8) over __attribute__((aligned(8)))
+#293: FILE: include/linux/tracepoint.h:27:
++} __attribute__((aligned(8)));
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#295: FILE: include/linux/tracepoint.h:29:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'proto' - possible side-effects?
+#324: FILE: include/linux/tracepoint.h:58:
++#define DEFINE_TRACE(name, proto, args)					\
++	static inline void trace_##name(proto)				\
++	{								\
++		static const char __tpstrtab_##name[]			\
++		__attribute__((section("__tracepoints_strings")))	\
++		= #name ":" #proto;					\
++		static struct tracepoint __tracepoint_##name		\
++		__attribute__((section("__tracepoints"), aligned(8))) =	\
++		{ __tpstrtab_##name, 0, NULL };				\
++		if (unlikely(__tracepoint_##name.state))		\
++			__DO_TRACE(&__tracepoint_##name,		\
++				TPPROTO(proto), TPARGS(args));		\
++	}								\
++	static inline int register_trace_##name(void (*probe)(proto))	\
++	{								\
++		return tracepoint_probe_register(#name ":" #proto,	\
++			(void *)probe);					\
++	}								\
++	static inline void unregister_trace_##name(void (*probe)(proto))\
++	{								\
++		tracepoint_probe_unregister(#name ":" #proto,		\
++			(void *)probe);					\
++	}
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__tracepoints_strings") over __attribute__((section("__tracepoints_strings")))
+#328: FILE: include/linux/tracepoint.h:62:
++		__attribute__((section("__tracepoints_strings")))	\
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#329: FILE: include/linux/tracepoint.h:63:
++		__attribute__((section("__tracepoints_strings")))	\
++		= #name ":" #proto;					\
+
+Assignment operators should not be written at the start of a
+line but should follow the operand at the previous line.
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__tracepoints") over __attribute__((section("__tracepoints")))
+#331: FILE: include/linux/tracepoint.h:65:
++		__attribute__((section("__tracepoints"), aligned(8))) =	\
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __aligned(8) over __attribute__((aligned(8)))
+#331: FILE: include/linux/tracepoint.h:65:
++		__attribute__((section("__tracepoints"), aligned(8))) =	\
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#348: FILE: include/linux/tracepoint.h:82:
++extern void tracepoint_update_probe_range(struct tracepoint *begin,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#349: FILE: include/linux/tracepoint.h:83:
++extern void tracepoint_update_probe_range(struct tracepoint *begin,
++	struct tracepoint *end);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'proto' - possible side-effects?
+#352: FILE: include/linux/tracepoint.h:86:
++#define DEFINE_TRACE(name, proto, args)			\
++	static inline void _do_trace_##name(struct tracepoint *tp, proto) \
++	{ }								\
++	static inline void trace_##name(proto)				\
++	{ }								\
++	static inline int register_trace_##name(void (*probe)(proto))	\
++	{								\
++		return -ENOSYS;						\
++	}								\
++	static inline void unregister_trace_##name(void (*probe)(proto))\
++	{ }
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#359: FILE: include/linux/tracepoint.h:93:
++		return -ENOSYS;						\
+
+ENOSYS means that a nonexistent system call was called.
+Earlier, it was wrongly used for things like invalid operations on
+otherwise valid syscalls.  This should be avoided in new code.
+
+See: https://lore.kernel.org/lkml/5eb299021dec23c1a48fa7d9f2c8b794e967766d.1408730669.git.luto@amacapital.net/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#365: FILE: include/linux/tracepoint.h:99:
++static inline void tracepoint_update_probe_range(struct tracepoint *begin,
++	struct tracepoint *end)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#373: FILE: include/linux/tracepoint.h:107:
++extern int tracepoint_probe_register(const char *name, void *probe);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#379: FILE: include/linux/tracepoint.h:113:
++extern int tracepoint_probe_unregister(const char *name, void *probe);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#386: FILE: include/linux/tracepoint.h:120:
++extern void tracepoint_iter_start(struct tracepoint_iter *iter);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#387: FILE: include/linux/tracepoint.h:121:
++extern void tracepoint_iter_next(struct tracepoint_iter *iter);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#388: FILE: include/linux/tracepoint.h:122:
++extern void tracepoint_iter_stop(struct tracepoint_iter *iter);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#389: FILE: include/linux/tracepoint.h:123:
++extern void tracepoint_iter_reset(struct tracepoint_iter *iter);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#390: FILE: include/linux/tracepoint.h:124:
++extern int tracepoint_get_iter_range(struct tracepoint **tracepoint,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#391: FILE: include/linux/tracepoint.h:125:
++extern int tracepoint_get_iter_range(struct tracepoint **tracepoint,
++	struct tracepoint *begin, struct tracepoint *end);
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:ExV)
+#414: FILE: include/asm-generic/vmlinux.lds.h:67:
++		*(__tracepoints_strings)/* Tracepoints: strings */	\
+ 		^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#423: FILE: kernel/tracepoint.c:1:
++/*
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#437: FILE: kernel/tracepoint.c:15:
++ * along with this program; if not, write to the Free Software$
+
+Kernel maintainers reject new instances of the GPL boilerplate paragraph
+directing people to write to the FSF for a copy of the GPL, since the
+FSF has moved in the past and may do so again.
+So do not write paragraphs about writing to the Free Software Foundation's
+mailing address.
+
+See: https://lore.kernel.org/lkml/20131006222342.GT19510@leaf/
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#438: FILE: kernel/tracepoint.c:16:
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.$
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#451: FILE: kernel/tracepoint.c:29:
++extern struct tracepoint __stop___tracepoints[];
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#467: FILE: kernel/tracepoint.c:45:
++#define TRACEPOINT_TABLE_SIZE (1 << TRACEPOINT_HASH_BITS)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+WARNING:REPEATED_WORD: Possible repeated word: 'to'
+#471: FILE: kernel/tracepoint.c:49:
++ * It is used to to delay the free of multiple probes array until a quiescent
+
+WARNING:DEPRECATED_API: Deprecated use of 'call_rcu_sched', prefer 'call_rcu' instead
+#505: FILE: kernel/tracepoint.c:83:
++	call_rcu_sched(&entry->rcu, free_old_closure);
+
+Usage of a deprecated RCU API is detected.  It is recommended to replace
+old flavourful RCU APIs by their new vanilla-RCU counterparts.
+
+The full list of available RCU APIs can be viewed from the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/RCU/whatisRCU.html#full-list-of-rcu-apis
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#516: FILE: kernel/tracepoint.c:94:
++		printk(KERN_DEBUG "Probe %d : %p\n", i, entry->funcs[i]);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!new"
+#537: FILE: kernel/tracepoint.c:115:
++	if (new == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:UNNECESSARY_ELSE: else is not generally useful after a break or return
+#569: FILE: kernel/tracepoint.c:147:
++		return old;
++	} else {
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!new"
+#575: FILE: kernel/tracepoint.c:153:
++		if (new == NULL)
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#599: FILE: kernel/tracepoint.c:177:
++	head = &tracepoint_table[hash & ((1 << TRACEPOINT_HASH_BITS)-1)];
+ 	                                                            ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#617: FILE: kernel/tracepoint.c:195:
++	u32 hash = jhash(name, name_len-1, 0);
+ 	                               ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#619: FILE: kernel/tracepoint.c:197:
++	head = &tracepoint_table[hash & ((1 << TRACEPOINT_HASH_BITS)-1)];
+ 	                                                            ^
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#622: FILE: kernel/tracepoint.c:200:
++			printk(KERN_NOTICE
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*e)...) over kmalloc(sizeof(struct tracepoint_entry)...)
+#631: FILE: kernel/tracepoint.c:209:
++	e = kmalloc(sizeof(struct tracepoint_entry) + name_len, GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#653: FILE: kernel/tracepoint.c:231:
++	u32 hash = jhash(name, len-1, 0);
+ 	                          ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#655: FILE: kernel/tracepoint.c:233:
++	head = &tracepoint_table[hash & ((1 << TRACEPOINT_HASH_BITS)-1)];
+ 	                                                            ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#678: FILE: kernel/tracepoint.c:256:
++static void set_tracepoint(struct tracepoint_entry **entry,
++	struct tracepoint *elem, int active)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#712: FILE: kernel/tracepoint.c:290:
++void tracepoint_update_probe_range(struct tracepoint *begin,
++	struct tracepoint *end)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#722: FILE: kernel/tracepoint.c:300:
++			set_tracepoint(&mark_entry, iter,
++					!!mark_entry->refcount);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#737: FILE: kernel/tracepoint.c:315:
++	tracepoint_update_probe_range(__start___tracepoints,
++		__stop___tracepoints);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#837: FILE: kernel/tracepoint.c:415:
++int tracepoint_get_iter_range(struct tracepoint **tracepoint,
++	struct tracepoint *begin, struct tracepoint *end)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#856: FILE: kernel/tracepoint.c:434:
++		found = tracepoint_get_iter_range(&iter->tracepoint,
++				__start___tracepoints, __stop___tracepoints);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#923: FILE: kernel/module.c:2125:
++	tracepointsstringsindex = find_sec(hdr, sechdrs, secstrings,
++					"__tracepoints_strings");
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#952: FILE: kernel/module.c:2184:
++		tracepoint_update_probe_range(mod->tracepoints,
++			mod->tracepoints + mod->num_tracepoints);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#972: FILE: kernel/module.c:2747:
++			tracepoint_update_probe_range(mod->tracepoints,
++				mod->tracepoints + mod->num_tracepoints);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#996: FILE: kernel/module.c:2771:
++			found = tracepoint_get_iter_range(&iter->tracepoint,
++				iter_mod->tracepoints,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1036: FILE: include/linux/module.h:462:
++extern void module_update_tracepoints(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1037: FILE: include/linux/module.h:463:
++extern int module_get_iter_tracepoints(struct tracepoint_iter *iter);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000254088.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 2 errors, 17 warnings, 37 checks, 782 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000254088.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

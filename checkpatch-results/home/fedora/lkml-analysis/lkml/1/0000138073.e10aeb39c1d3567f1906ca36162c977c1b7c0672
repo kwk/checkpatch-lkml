@@ -1,0 +1,72 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'proto' - possible side-effects?
+#59: FILE: include/linux/tracepoint.h:44:
++#define DEFINE_DO_TRACE(name, proto, args)				\
++	void __do_trace_##name(struct tracepoint *tp, TP_PROTO(proto))	\
++	{								\
+ 		void **it_func;						\
+ 									\
+ 		rcu_read_lock_sched_notrace();				\
++		it_func = rcu_dereference(tp->funcs);			\
+ 		if (it_func) {						\
+ 			do {						\
+ 				((void(*)(proto))(*it_func))(args);	\
+ 			} while (*(++it_func));				\
+ 		}							\
+ 		rcu_read_unlock_sched_notrace();			\
++	}
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#82: FILE: include/linux/tracepoint.h:66:
++	extern void __do_trace_##name(struct tracepoint *tp,		\
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#102: FILE: include/linux/tracepoint.h:156:
++extern void tracepoint_synchronize_unregister(void);
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#119: FILE: include/trace/define_trace.h:31:
++#define TRACE_FORMAT(name, proto, args, print)			\
++	DEFINE_DO_TRACE(name, TP_PROTO(proto), TP_ARGS(args))	\
+ 	DEFINE_TRACE(name)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#119: FILE: include/trace/define_trace.h:31:
++#define TRACE_FORMAT(name, proto, args, print)			\
++	DEFINE_DO_TRACE(name, TP_PROTO(proto), TP_ARGS(args))	\
+ 	DEFINE_TRACE(name)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#125: FILE: include/trace/define_trace.h:36:
++#define DECLARE_TRACE(name, proto, args)			\
++	DEFINE_DO_TRACE(name, TP_PROTO(proto), TP_ARGS(args))	\
+ 	DEFINE_TRACE(name)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#125: FILE: include/trace/define_trace.h:36:
++#define DECLARE_TRACE(name, proto, args)			\
++	DEFINE_DO_TRACE(name, TP_PROTO(proto), TP_ARGS(args))	\
+ 	DEFINE_TRACE(name)
+
+WARNING:DEPRECATED_API: Deprecated use of 'synchronize_sched', prefer 'synchronize_rcu' instead
+#140: FILE: kernel/tracepoint.c:550:
++	synchronize_sched();
+
+Usage of a deprecated RCU API is detected.  It is recommended to replace
+old flavourful RCU APIs by their new vanilla-RCU counterparts.
+
+The full list of available RCU APIs can be viewed from the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/RCU/whatisRCU.html#full-list-of-rcu-apis
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000138073.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 2 errors, 1 warnings, 5 checks, 88 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000138073.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

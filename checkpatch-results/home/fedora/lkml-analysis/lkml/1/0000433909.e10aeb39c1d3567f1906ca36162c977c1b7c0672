@@ -1,0 +1,79 @@
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#43: FILE: include/asm-i386/scatterlist.h:11:
++    struct scatterlist^I*next;$
+
+ERROR:DEFINE_ARCH_HAS: #define of 'ARCH_HAS_SG_CHAIN' is wrong - use Kconfig variables or standard guards instead
+#46: FILE: include/asm-i386/scatterlist.h:14:
++#define ARCH_HAS_SG_CHAIN
+
+The ARCH_HAS_xyz and ARCH_HAVE_xyz patterns are wrong.
+
+For big conceptual features use Kconfig symbols instead.  And for
+smaller things where we have compatibility fallback functions but
+want architectures able to override them with optimized ones, we
+should either use weak functions (appropriate for some cases), or
+the symbol that protects them should be the same symbol we use.
+
+See: https://lore.kernel.org/lkml/CA+55aFycQ9XJvEOsiM3txHL5bjUc8CeKWJNR_H+MiicaddB42Q@mail.gmail.com/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sg' - possible side-effects?
+#77: FILE: include/linux/scatterlist.h:30:
++#define sg_next(sg)	(sg_chain_ptr((sg)) ? : (sg) + 1)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#105: FILE: include/linux/scatterlist.h:58:
++#define sg_chain(prv, nents, sgl)	BUG()
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around sg[nents - 1]
+#107: FILE: include/linux/scatterlist.h:60:
++#define sg_last(sg, nents)		(&(sg[nents - 1]))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'nents' may be better as '(nents)' to avoid precedence issues
+#107: FILE: include/linux/scatterlist.h:60:
++#define sg_last(sg, nents)		(&(sg[nents - 1]))
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000433909.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 2 warnings, 3 checks, 65 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000433909.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

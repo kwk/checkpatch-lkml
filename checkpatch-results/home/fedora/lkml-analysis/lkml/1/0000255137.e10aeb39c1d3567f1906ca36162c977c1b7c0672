@@ -1,0 +1,123 @@
+WARNING:TYPO_SPELLING: 'similary' may be misspelled - perhaps 'similarly'?
+#38: 
+* part_round_stats() is updated similary.  It handles part0 stats
+                                ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#257: FILE: block/genhd.c:582:
++			printk("%s%s %10llu %s\n", is_part0 ? "" : "  ",
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "sgp->driverfs_dev"
+#262: FILE: block/genhd.c:587:
++				if (sgp->driverfs_dev != NULL &&
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "sgp->driverfs_dev->driver"
+#263: FILE: block/genhd.c:588:
++				    sgp->driverfs_dev->driver != NULL)
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#264: FILE: block/genhd.c:589:
++					printk(" driver: %s\n",
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#267: FILE: block/genhd.c:592:
++					printk(" (driver?)\n");
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'part_stat_show' to 'stat_show'
+#323: FILE: block/genhd.c:738:
++static DEVICE_ATTR(stat, S_IRUGO, part_stat_show, NULL);
+
+The function names used in DEVICE_ATTR is unusual.
+Typically, the store and show functions are used with <attr>_store and
+<attr>_show, where <attr> is a named attribute variable of the device.
+
+Consider the following examples::
+
+  static DEVICE_ATTR(type, 0444, type_show, NULL);
+  static DEVICE_ATTR(power, 0644, power_show, power_store);
+
+The function names should preferably follow the above pattern.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#323: FILE: block/genhd.c:738:
++static DEVICE_ATTR(stat, S_IRUGO, part_stat_show, NULL);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 32)
+#374: FILE: block/genhd.c:962:
+ 		if (!disk->__part) {
++				free_part_stats(&disk->part0);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#636: FILE: include/linux/genhd.h:224:
++#define __part_stat_add(part, field, addnd)				\
++	(per_cpu_ptr((part)->dkstats, smp_processor_id())->field += (addnd))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#683: FILE: include/linux/genhd.h:260:
++#define __part_stat_add(part, field, addnd)				\
++	((part)->dkstats.field += (addnd))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'part' - possible side-effects?
+#751: FILE: include/linux/genhd.h:281:
++#define part_stat_add(part, field, addnd)				\
++({									\
++	__part_stat_add((part), field, addnd);				\
++	if ((part)->partno)						\
++		__part_stat_add(&part_to_disk((part))->part0, field, addnd); \
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#751: FILE: include/linux/genhd.h:281:
++#define part_stat_add(part, field, addnd)				\
++({									\
++	__part_stat_add((part), field, addnd);				\
++	if ((part)->partno)						\
++		__part_stat_add(&part_to_disk((part))->part0, field, addnd); \
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'addnd' - possible side-effects?
+#751: FILE: include/linux/genhd.h:281:
++#define part_stat_add(part, field, addnd)				\
++({									\
++	__part_stat_add((part), field, addnd);				\
++	if ((part)->partno)						\
++		__part_stat_add(&part_to_disk((part))->part0, field, addnd); \
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'subnd' may be better as '(subnd)' to avoid precedence issues
+#761: FILE: include/linux/genhd.h:290:
++#define part_stat_sub(part, field, subnd) part_stat_add((part), field, -subnd)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#789: FILE: include/linux/genhd.h:515:
++extern ssize_t part_stat_show(struct device *dev,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000255137.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 7 warnings, 9 checks, 637 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000255137.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

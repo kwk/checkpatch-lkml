@@ -1,0 +1,708 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#48: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#53: FILE: kernel/power/tuxonice_block_io.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:EMBEDDED_FILENAME: It's generally not useful to have the filename in the file
+#54: FILE: kernel/power/tuxonice_block_io.c:2:
++ * kernel/power/tuxonice_block_io.c
+
+Embedding the complete filename path inside the file isn't particularly
+useful as often the path is moved around and becomes incorrect.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'index' - possible side-effects?
+#88: FILE: kernel/power/tuxonice_block_io.c:36:
++#define my_mutex_lock(index, the_lock) do { \
++	int have_mutex; \
++	have_mutex = mutex_trylock(the_lock); \
++	if (!have_mutex) { \
++		mutex_lock(the_lock); \
++		mutex_times[index][0][smp_processor_id()]++; \
++	} else { \
++		mutex_times[index][1][smp_processor_id()]++; \
++	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'the_lock' - possible side-effects?
+#88: FILE: kernel/power/tuxonice_block_io.c:36:
++#define my_mutex_lock(index, the_lock) do { \
++	int have_mutex; \
++	have_mutex = mutex_trylock(the_lock); \
++	if (!have_mutex) { \
++		mutex_lock(the_lock); \
++		mutex_times[index][0][smp_processor_id()]++; \
++	} else { \
++		mutex_times[index][1][smp_processor_id()]++; \
++	}
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#98: FILE: kernel/power/tuxonice_block_io.c:46:
++#define my_mutex_unlock(index, the_lock) \
++	mutex_unlock(the_lock); \
++} while (0)
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#130: FILE: kernel/power/tuxonice_block_io.c:78:
++ * writing the header */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#197: FILE: kernel/power/tuxonice_block_io.c:145:
++		wait_event(num_in_progress_wait,
++			!atomic_read(&toi_io_in_progress) ||
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#216: FILE: kernel/power/tuxonice_block_io.c:164:
++	while (unlikely(free_pages < free_mem_throttle) &&
++			atomic_read(&toi_io_in_progress)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#224: FILE: kernel/power/tuxonice_block_io.c:172:
++	while (!(flags & MEMORY_ONLY) && throughput_throttle &&
++		TOTAL_OUTSTANDING_IO >= throughput_throttle) {
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#224: FILE: kernel/power/tuxonice_block_io.c:172:
++		TOTAL_OUTSTANDING_IO >= throughput_throttle) {
+
+Comparisons with a constant or upper case identifier on the left
+side of the test should be avoided.
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#226: FILE: kernel/power/tuxonice_block_io.c:174:
++		int result = toi_bio_queue_flush_pages(0);
++		if (result)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#230: FILE: kernel/power/tuxonice_block_io.c:178:
++		wait_event(num_in_progress_wait,
++			!atomic_read(&toi_io_in_progress) ||
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#231: FILE: kernel/power/tuxonice_block_io.c:179:
++			TOTAL_OUTSTANDING_IO < throughput_throttle);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#254: FILE: kernel/power/tuxonice_block_io.c:202:
++	int done = atomic_read(&toi_io_done);
++	throughput_throttle = done / jif_index / 5;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#265: FILE: kernel/power/tuxonice_block_io.c:213:
++	int result = toi_bio_queue_flush_pages(0);
++	wait_event(num_in_progress_wait, !TOTAL_OUTSTANDING_IO);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#285: FILE: kernel/power/tuxonice_block_io.c:233:
++	BUG_ON(!test_bit(BIO_UPTODATE, &bio->bi_flags));
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:SPACING: No space is necessary after a cast
+#296: FILE: kernel/power/tuxonice_block_io.c:244:
++		toi__free_page((int) ((unsigned long) bio->bi_private) , page);
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#296: FILE: kernel/power/tuxonice_block_io.c:244:
++		toi__free_page((int) ((unsigned long) bio->bi_private) , page);
+ 		                                                       ^
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#313: FILE: kernel/power/tuxonice_block_io.c:261:
++ * ^Iand which will be used in freeing the page from the completion$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#314: FILE: kernel/power/tuxonice_block_io.c:262:
++ * ^Iroutine.$
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#324: FILE: kernel/power/tuxonice_block_io.c:272:
++static int submit(int writing, struct block_device *dev, sector_t first_block,
++		struct page *page, int free_group)
+
+CHECK:SPACING: No space is necessary after a cast
+#350: FILE: kernel/power/tuxonice_block_io.c:298:
++	bio->bi_private = (void *) ((unsigned long) free_group);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#354: FILE: kernel/power/tuxonice_block_io.c:302:
++		printk(KERN_DEBUG "ERROR: adding page to bio at %lld\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#355: FILE: kernel/power/tuxonice_block_io.c:303:
++		printk(KERN_DEBUG "ERROR: adding page to bio at %lld\n",
++				(unsigned long long) first_block);
+
+CHECK:SPACING: No space is necessary after a cast
+#355: FILE: kernel/power/tuxonice_block_io.c:303:
++				(unsigned long long) first_block);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#371: FILE: kernel/power/tuxonice_block_io.c:319:
++
++
+
+CHECK:BRACES: Unbalanced braces around else statement
+#376: FILE: kernel/power/tuxonice_block_io.c:324:
++	} else
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#401: FILE: kernel/power/tuxonice_block_io.c:349:
++static int toi_do_io(int writing, struct block_device *bdev, long block0,
++	struct page *page, int is_readahead, int syncio, int free_group)
+
+CHECK:SPACING: No space is necessary after a cast
+#410: FILE: kernel/power/tuxonice_block_io.c:358:
++			readahead_list_tail->private = (unsigned long) page;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#445: FILE: kernel/power/tuxonice_block_io.c:393:
++static int toi_bdev_page_io(int writing, struct block_device *bdev,
++		long pos, struct page *page)
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#473: FILE: kernel/power/tuxonice_block_io.c:421:
++	int len = scnprintf(buffer, size, "- Max outstanding reads %d. Max "
++			"writes %d.\n", max_outstanding_reads,
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:SPACING: No space is necessary after a cast
+#479: FILE: kernel/power/tuxonice_block_io.c:427:
++		PAGE_SIZE, (unsigned int) sizeof(struct request),
+
+CHECK:SPACING: No space is necessary after a cast
+#480: FILE: kernel/power/tuxonice_block_io.c:428:
++		(unsigned int) sizeof(struct bio), toi_bio_memory_needed());
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#502: FILE: kernel/power/tuxonice_block_io.c:450:
++
++	}
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#538: FILE: kernel/power/tuxonice_block_io.c:486:
++		printk(KERN_DEBUG "Chain %d:", i);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#541: FILE: kernel/power/tuxonice_block_io.c:489:
++			printk(" [%lu-%lu]%s", this->start,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#542: FILE: kernel/power/tuxonice_block_io.c:490:
++			printk(" [%lu-%lu]%s", this->start,
++					this->end, this->next ? "," : "");
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#546: FILE: kernel/power/tuxonice_block_io.c:494:
++		printk("\n");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#550: FILE: kernel/power/tuxonice_block_io.c:498:
++		printk(KERN_DEBUG "Posn %d: Chain %d, extent %d, offset %lu.\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#551: FILE: kernel/power/tuxonice_block_io.c:499:
++		printk(KERN_DEBUG "Posn %d: Chain %d, extent %d, offset %lu.\n",
++				i, toi_writer_posn_save[i].chain_num,
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#561: FILE: kernel/power/tuxonice_block_io.c:509:
++	printk(KERN_DEBUG "Image header too big for size allocated!\n");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#563: FILE: kernel/power/tuxonice_block_io.c:511:
++	printk(KERN_DEBUG "Page flags : %d.\n", toi_pageflags_space_needed());
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#564: FILE: kernel/power/tuxonice_block_io.c:512:
++	printk(KERN_DEBUG "toi_header : %ld.\n", sizeof(struct toi_header));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#565: FILE: kernel/power/tuxonice_block_io.c:513:
++	printk(KERN_DEBUG "Total unowned : %d.\n", unowned);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#566: FILE: kernel/power/tuxonice_block_io.c:514:
++	printk(KERN_DEBUG "Total used : %d (%ld pages).\n", total_header_bytes,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#567: FILE: kernel/power/tuxonice_block_io.c:515:
++	printk(KERN_DEBUG "Total used : %d (%ld pages).\n", total_header_bytes,
++			DIV_ROUND_UP(total_header_bytes, PAGE_SIZE));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#568: FILE: kernel/power/tuxonice_block_io.c:516:
++	printk(KERN_DEBUG "Space needed now : %ld.\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#569: FILE: kernel/power/tuxonice_block_io.c:517:
++	printk(KERN_DEBUG "Space needed now : %ld.\n",
++			get_header_storage_needed());
+
+WARNING:TYPO_SPELLING: 'foward' may be misspelled - perhaps 'forward'?
+#616: FILE: kernel/power/tuxonice_block_io.c:564:
++	/* Nope. Go foward a page - or maybe two */
+ 	            ^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#623: FILE: kernel/power/tuxonice_block_io.c:571:
++			printk(KERN_DEBUG "Extent state eof. "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#624: FILE: kernel/power/tuxonice_block_io.c:572:
++			printk(KERN_DEBUG "Extent state eof. "
++				"Expected compression ratio too optimistic?\n");
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#661: FILE: kernel/power/tuxonice_block_io.c:609:
++static int toi_bio_rw_page(int writing, struct page *page,
++		int is_readahead, int free_group)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#688: FILE: kernel/power/tuxonice_block_io.c:636:
++		toi_extent_state_restore(&toi_writer_posn,
++				&toi_writer_posn_save[stream_number]);
+
+CHECK:SPACING: No space is necessary after a cast
+#693: FILE: kernel/power/tuxonice_block_io.c:641:
++	toi_writer_buffer = (char *) toi_get_zeroed_page(11, TOI_ATOMIC_GFP);
+
+CHECK:SPACING: No space is necessary after a cast
+#710: FILE: kernel/power/tuxonice_block_io.c:658:
++	toi_writer_buffer = (char *) toi_get_zeroed_page(11, TOI_ATOMIC_GFP);
+
+CHECK:SPACING: No space is necessary after a cast
+#734: FILE: kernel/power/tuxonice_block_io.c:682:
++		bio_queue_tail->private = (unsigned long) page;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#769: FILE: kernel/power/tuxonice_block_io.c:717:
++			toi_extent_state_save(&toi_writer_posn,
++					&toi_writer_posn_save[1]);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#772: FILE: kernel/power/tuxonice_block_io.c:720:
++			toi_extent_state_save(&toi_writer_posn,
++					&toi_writer_posn_save[3]);
+
+CHECK:SPACING: No space is necessary after a cast
+#778: FILE: kernel/power/tuxonice_block_io.c:726:
++		void *next = (void *) readahead_list_head->private;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#779: FILE: kernel/power/tuxonice_block_io.c:727:
++		void *next = (void *) readahead_list_head->private;
++		toi__free_page(12, readahead_list_head);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#791: FILE: kernel/power/tuxonice_block_io.c:739:
++		printk(KERN_DEBUG "Waited for i/o due to %s %d times.\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#792: FILE: kernel/power/tuxonice_block_io.c:740:
++		printk(KERN_DEBUG "Waited for i/o due to %s %d times.\n",
++				reason_name[i], atomic_read(&reasons[i]));
+
+CHECK:SPACING: No space is necessary after a cast
+#820: FILE: kernel/power/tuxonice_block_io.c:768:
++		buffer = (char *) toi_get_zeroed_page(12,
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#867: FILE: kernel/power/tuxonice_block_io.c:815:
++		if (last_result) {
+[...]
++		} else
+[...]
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#871: FILE: kernel/power/tuxonice_block_io.c:819:
++			printk(KERN_DEBUG
+
+CHECK:BRACES: Unbalanced braces around else statement
+#874: FILE: kernel/power/tuxonice_block_io.c:822:
++		} else
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#891: FILE: kernel/power/tuxonice_block_io.c:839:
++{
++
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#916: FILE: kernel/power/tuxonice_block_io.c:864:
++		printk(KERN_DEBUG "No readahead and toi_start_one_readahead "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#917: FILE: kernel/power/tuxonice_block_io.c:865:
++		printk(KERN_DEBUG "No readahead and toi_start_one_readahead "
++				"returned non-zero.\n");
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#922: FILE: kernel/power/tuxonice_block_io.c:870:
++		BUG_ON(!more_readahead);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#924: FILE: kernel/power/tuxonice_block_io.c:872:
++			printk(KERN_DEBUG "No readahead and "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#925: FILE: kernel/power/tuxonice_block_io.c:873:
++			printk(KERN_DEBUG "No readahead and "
++			 "toi_start_one_readahead returned non-zero.\n");
+
+CHECK:SPACING: No space is necessary after a cast
+#938: FILE: kernel/power/tuxonice_block_io.c:886:
++	next = (struct page *) readahead_list_head->private;
+
+CHECK:SPACING: No space is necessary after a cast
+#978: FILE: kernel/power/tuxonice_block_io.c:926:
++		bio_queue_head = (struct page *) page->private;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#978: FILE: kernel/power/tuxonice_block_io.c:926:
++		struct page *page = bio_queue_head;
++		bio_queue_head = (struct page *) page->private;
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#986: FILE: kernel/power/tuxonice_block_io.c:934:
++			toi__free_page(11 , page);
+ 			                  ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#993: FILE: kernel/power/tuxonice_block_io.c:941:
++		wait_event(toi_io_queue_flusher, bio_queue_head ||
++				toi_bio_queue_flusher_should_finish);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1010: FILE: kernel/power/tuxonice_block_io.c:958:
++	int result = throttle_if_needed(THROTTLE_WAIT);
++	if (result)
+
+CHECK:SPACING: No space is necessary after a cast
+#1014: FILE: kernel/power/tuxonice_block_io.c:962:
++		*full_buffer = (char *) toi_get_zeroed_page(11, TOI_ATOMIC_GFP);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1032: FILE: kernel/power/tuxonice_block_io.c:980:
++static int toi_rw_buffer(int writing, char *buffer, int buffer_size,
++		int no_readahead)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1059: FILE: kernel/power/tuxonice_block_io.c:1007:
++			int result = toi_bio_get_next_page_read(no_readahead);
++			if (result)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1085: FILE: kernel/power/tuxonice_block_io.c:1033:
++static int toi_bio_read_page(unsigned long *pfn, struct page *buffer_page,
++		unsigned int *buf_size)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1096: FILE: kernel/power/tuxonice_block_io.c:1044:
++		int result2 = toi_start_new_readahead(0);
++		if (result2) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#1097: FILE: kernel/power/tuxonice_block_io.c:1045:
++			printk(KERN_DEBUG "Queue flusher and "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1098: FILE: kernel/power/tuxonice_block_io.c:1046:
++			printk(KERN_DEBUG "Queue flusher and "
++			 "toi_start_one_readahead returned non-zero.\n");
+
+CHECK:SPACING: No space is necessary after a cast
+#1111: FILE: kernel/power/tuxonice_block_io.c:1059:
++	if (toi_rw_buffer(READ, (char *) pfn, sizeof(unsigned long), 0) ||
+
+CHECK:SPACING: No space is necessary after a cast
+#1112: FILE: kernel/power/tuxonice_block_io.c:1060:
++	    toi_rw_buffer(READ, (char *) buf_size, sizeof(int), 0) ||
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1134: FILE: kernel/power/tuxonice_block_io.c:1082:
++static int toi_bio_write_page(unsigned long pfn, struct page *buffer_page,
++		unsigned int buf_size)
+
+CHECK:SPACING: No space is necessary after a cast
+#1156: FILE: kernel/power/tuxonice_block_io.c:1104:
++	if (toi_rw_buffer(WRITE, (char *) &pfn, sizeof(unsigned long), 0) ||
+
+CHECK:SPACING: No space is necessary after a cast
+#1157: FILE: kernel/power/tuxonice_block_io.c:1105:
++	    toi_rw_buffer(WRITE, (char *) &buf_size, sizeof(int), 0) ||
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#1159: FILE: kernel/power/tuxonice_block_io.c:1107:
++		printk(KERN_DEBUG "toi_rw_buffer returned non-zero to "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1160: FILE: kernel/power/tuxonice_block_io.c:1108:
++		printk(KERN_DEBUG "toi_rw_buffer returned non-zero to "
++				"toi_bio_write_page.\n");
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'toi_bio_write_page', this function's name, in a string
+#1160: FILE: kernel/power/tuxonice_block_io.c:1108:
++				"toi_bio_write_page.\n");
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1186: FILE: kernel/power/tuxonice_block_io.c:1134:
++static int _toi_rw_header_chunk(int writing, struct toi_module_ops *owner,
++		char *buffer, int buffer_size, int no_readahead)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1193: FILE: kernel/power/tuxonice_block_io.c:1141:
++		toi_message(TOI_HEADER, TOI_LOW, 1,
++			"Header: %s : %d bytes (%d/%d).\n",
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_emerg([subsystem]dev, ... then dev_emerg(dev, ... then pr_emerg(...  to printk(KERN_EMERG ...
+#1198: FILE: kernel/power/tuxonice_block_io.c:1146:
++			printk(KERN_EMERG "TuxOnIce module %s is using more "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1199: FILE: kernel/power/tuxonice_block_io.c:1147:
++			printk(KERN_EMERG "TuxOnIce module %s is using more "
++				"header space (%u) than it requested (%u).\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1208: FILE: kernel/power/tuxonice_block_io.c:1156:
++		toi_message(TOI_HEADER, TOI_LOW, 1,
++			"Header: (No owner): %d bytes (%d total so far)\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1217: FILE: kernel/power/tuxonice_block_io.c:1165:
++		result = toi_rw_buffer(writing, buffer, buffer_size,
++				no_readahead);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1224: FILE: kernel/power/tuxonice_block_io.c:1172:
++static int toi_rw_header_chunk(int writing, struct toi_module_ops *owner,
++		char *buffer, int size)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1230: FILE: kernel/power/tuxonice_block_io.c:1178:
++static int toi_rw_header_chunk_noreadahead(int writing,
++		struct toi_module_ops *owner, char *buffer, int size)
+
+CHECK:SPACING: No space is necessary after a cast
+#1266: FILE: kernel/power/tuxonice_block_io.c:1214:
++	int *ints = (int *) buf;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1267: FILE: kernel/power/tuxonice_block_io.c:1215:
++	int *ints = (int *) buf;
++	ints[0] = target_outstanding_io;
+
+CHECK:SPACING: No space is necessary after a cast
+#1278: FILE: kernel/power/tuxonice_block_io.c:1226:
++	int *ints = (int *) buf;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1279: FILE: kernel/power/tuxonice_block_io.c:1227:
++	int *ints = (int *) buf;
++	target_outstanding_io  = ints[0];
+
+CHECK:SPACING: No space is necessary after a cast
+#1315: FILE: kernel/power/tuxonice_block_io.c:1263:
++		toi_free_page(11, (unsigned long) toi_writer_buffer);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1340: FILE: kernel/power/tuxonice_block_io.c:1288:
++	SYSFS_INT("target_outstanding_io", SYSFS_RW, &target_outstanding_io,
++			0, 16384, 0, NULL),
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1378: FILE: kernel/power/tuxonice_block_io.h:1:
++/*
+
+WARNING:EMBEDDED_FILENAME: It's generally not useful to have the filename in the file
+#1379: FILE: kernel/power/tuxonice_block_io.h:2:
++ * kernel/power/tuxonice_block_io.h
+
+WARNING:SPACING: Unnecessary space before function pointer arguments
+#1406: FILE: kernel/power/tuxonice_block_io.h:29:
++	int (*bdev_page_io) (int rw, struct block_device *bdev, long pos,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1407: FILE: kernel/power/tuxonice_block_io.h:30:
++	int (*bdev_page_io) (int rw, struct block_device *bdev, long pos,
++			struct page *page);
+
+WARNING:SPACING: Unnecessary space before function pointer arguments
+#1408: FILE: kernel/power/tuxonice_block_io.h:31:
++	void (*check_io_stats) (void);
+
+WARNING:SPACING: Unnecessary space before function pointer arguments
+#1409: FILE: kernel/power/tuxonice_block_io.h:32:
++	void (*reset_io_stats) (void);
+
+WARNING:SPACING: Unnecessary space before function pointer arguments
+#1410: FILE: kernel/power/tuxonice_block_io.h:33:
++	void (*update_throughput_throttle) (int jif_index);
+
+WARNING:SPACING: Unnecessary space before function pointer arguments
+#1411: FILE: kernel/power/tuxonice_block_io.h:34:
++	int (*finish_all_io) (void);
+
+WARNING:SPACING: Unnecessary space before function pointer arguments
+#1412: FILE: kernel/power/tuxonice_block_io.h:35:
++	int (*forward_one_page) (int writing, int section_barrier);
+
+WARNING:SPACING: Unnecessary space before function pointer arguments
+#1413: FILE: kernel/power/tuxonice_block_io.h:36:
++	void (*set_extra_page_forward) (void);
+
+WARNING:SPACING: Unnecessary space before function pointer arguments
+#1414: FILE: kernel/power/tuxonice_block_io.h:37:
++	void (*set_devinfo) (struct toi_bdev_info *info);
+
+WARNING:SPACING: Unnecessary space before function pointer arguments
+#1415: FILE: kernel/power/tuxonice_block_io.h:38:
++	int (*read_page) (unsigned long *index, struct page *buffer_page,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1416: FILE: kernel/power/tuxonice_block_io.h:39:
++	int (*read_page) (unsigned long *index, struct page *buffer_page,
++			unsigned int *buf_size);
+
+WARNING:SPACING: Unnecessary space before function pointer arguments
+#1417: FILE: kernel/power/tuxonice_block_io.h:40:
++	int (*write_page) (unsigned long index, struct page *buffer_page,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1418: FILE: kernel/power/tuxonice_block_io.h:41:
++	int (*write_page) (unsigned long index, struct page *buffer_page,
++			unsigned int buf_size);
+
+WARNING:SPACING: Unnecessary space before function pointer arguments
+#1419: FILE: kernel/power/tuxonice_block_io.h:42:
++	void (*read_header_init) (void);
+
+WARNING:SPACING: Unnecessary space before function pointer arguments
+#1420: FILE: kernel/power/tuxonice_block_io.h:43:
++	int (*rw_header_chunk) (int rw, struct toi_module_ops *owner,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1421: FILE: kernel/power/tuxonice_block_io.h:44:
++	int (*rw_header_chunk) (int rw, struct toi_module_ops *owner,
++			char *buffer, int buffer_size);
+
+WARNING:SPACING: Unnecessary space before function pointer arguments
+#1422: FILE: kernel/power/tuxonice_block_io.h:45:
++	int (*rw_header_chunk_noreadahead) (int rw,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1423: FILE: kernel/power/tuxonice_block_io.h:46:
++	int (*rw_header_chunk_noreadahead) (int rw,
++			struct toi_module_ops *owner,
+
+WARNING:SPACING: Unnecessary space before function pointer arguments
+#1425: FILE: kernel/power/tuxonice_block_io.h:48:
++	int (*write_header_chunk_finish) (void);
+
+WARNING:SPACING: Unnecessary space before function pointer arguments
+#1426: FILE: kernel/power/tuxonice_block_io.h:49:
++	int (*rw_init) (int rw, int stream_number);
+
+WARNING:SPACING: Unnecessary space before function pointer arguments
+#1427: FILE: kernel/power/tuxonice_block_io.h:50:
++	int (*rw_cleanup) (int rw);
+
+WARNING:SPACING: Unnecessary space before function pointer arguments
+#1428: FILE: kernel/power/tuxonice_block_io.h:51:
++	int (*io_flusher) (int rw);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000129172.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 3 errors, 67 warnings, 62 checks, 1378 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000129172.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

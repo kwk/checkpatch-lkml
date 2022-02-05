@@ -1,0 +1,135 @@
+WARNING:TYPO_SPELLING: 'happend' may be misspelled - perhaps 'happened'?
+#67: 
+that the starvation can't happend the other way (if there were wait
+                          ^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#108: FILE: fs/inode.c:219:
++	bit_mutex_init(&inode->i_data.flags, AS_STARVATION_BARRIER, &inode->i_data.starvation_barrier);
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#149: FILE: include/linux/pagemap.h:428:
++#define starvation_protection_head(n)				\
++	long pages_to_process = (n);				\
++	pages_to_process += (pages_to_process >> 3) + 16;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#153: FILE: include/linux/pagemap.h:432:
++#define starvation_protection_step(mapping)			\
++	if (pages_to_process >= 0)				\
++		if (!pages_to_process--)			\
++			bit_mutex_lock(&(mapping)->flags, AS_STARVATION_BARRIER, &(mapping)->starvation_barrier);
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'mapping' - possible side-effects?
+#153: FILE: include/linux/pagemap.h:432:
++#define starvation_protection_step(mapping)			\
++	if (pages_to_process >= 0)				\
++		if (!pages_to_process--)			\
++			bit_mutex_lock(&(mapping)->flags, AS_STARVATION_BARRIER, &(mapping)->starvation_barrier);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#153: FILE: include/linux/pagemap.h:432:
++#define starvation_protection_step(mapping)			\
++	if (pages_to_process >= 0)				\
++		if (!pages_to_process--)			\
++			bit_mutex_lock(&(mapping)->flags, AS_STARVATION_BARRIER, &(mapping)->starvation_barrier);
+
+WARNING:LONG_LINE: line length of 113 exceeds 100 columns
+#156: FILE: include/linux/pagemap.h:435:
++			bit_mutex_lock(&(mapping)->flags, AS_STARVATION_BARRIER, &(mapping)->starvation_barrier);
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#158: FILE: include/linux/pagemap.h:437:
++#define starvation_protection_end(mapping)			\
++	if (pages_to_process < 0)				\
++		bit_mutex_unlock(&(mapping)->flags, AS_STARVATION_BARRIER, &(mapping)->starvation_barrier);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'mapping' - possible side-effects?
+#158: FILE: include/linux/pagemap.h:437:
++#define starvation_protection_end(mapping)			\
++	if (pages_to_process < 0)				\
++		bit_mutex_unlock(&(mapping)->flags, AS_STARVATION_BARRIER, &(mapping)->starvation_barrier);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#158: FILE: include/linux/pagemap.h:437:
++#define starvation_protection_end(mapping)			\
++	if (pages_to_process < 0)				\
++		bit_mutex_unlock(&(mapping)->flags, AS_STARVATION_BARRIER, &(mapping)->starvation_barrier);
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#160: FILE: include/linux/pagemap.h:439:
++		bit_mutex_unlock(&(mapping)->flags, AS_STARVATION_BARRIER, &(mapping)->starvation_barrier);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#202: FILE: mm/page-writeback.c:439:
++	if (unlikely(bit_mutex_is_locked(&mapping->flags, AS_STARVATION_BARRIER,
++	    &mapping->starvation_barrier))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#204: FILE: mm/page-writeback.c:441:
++		bit_mutex_lock(&mapping->flags, AS_STARVATION_BARRIER,
++			&mapping->starvation_barrier);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#206: FILE: mm/page-writeback.c:443:
++		bit_mutex_unlock(&mapping->flags, AS_STARVATION_BARRIER,
++			&mapping->starvation_barrier);
+
+WARNING:LONG_LINE: line length of 133 exceeds 100 columns
+#251: FILE: mm/swap_state.c:46:
++	.starvation_barrier = __BIT_MUTEX_INITIALIZER(&swapper_space.flags, AS_STARVATION_BARRIER, swapper_space.starvation_barrier),
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000220652.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 2 errors, 8 warnings, 5 checks, 148 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000220652.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

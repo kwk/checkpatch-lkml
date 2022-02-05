@@ -1,0 +1,308 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#54: 
+MODULE_ALIAS("dmi:*:svnMICRO-STARINT'LCO.,LTD:pnMS-1013:pvr0131*:cvnMICRO-STARINT'LCO.,LTD:ct10:*");
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#100: FILE: drivers/firmware/Kconfig:87:
++config DMIID
++    bool "Export DMI identification via sysfs to userspace"
++    depends on DMI
++    default y
++	help
++	  Say Y here if you want to query SMBIOS/DMI system identification
++	  information from userspace through /sys/class/dmi/id/ or if you want
++	  DMI-based module auto-loading.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#120: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#125: FILE: drivers/firmware/dmi-id.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#140: FILE: drivers/firmware/dmi-id.c:16:
++#define DEFINE_DMI_ATTR(_name, _mode, _show)		\
++static struct device_attribute sys_dmi_##_name##_attr =	\
++	__ATTR(_name, _mode, _show, NULL);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#144: FILE: drivers/firmware/dmi-id.c:20:
++#define DEFINE_DMI_ATTR_WITH_SHOW(_name, _mode, _field)			\
++static ssize_t sys_dmi_##_name##_show(struct device *dev,		\
++				      struct device_attribute *attr,	\
++				      char *page)			\
++{									\
++	ssize_t len;							\
++	len = scnprintf(page, PAGE_SIZE, "%s\n", dmi_get_system_info(_field)); \
++	page[len-1] = '\n';						\
++	return len;							\
++}									\
++DEFINE_DMI_ATTR(_name, _mode, sys_dmi_##_name##_show);
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#151: FILE: drivers/firmware/dmi-id.c:27:
++	page[len-1] = '\n';						\
+ 	        ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#242: FILE: drivers/firmware/dmi-id.c:118:
++	ssize_t r;
++	r = get_modalias(page, PAGE_SIZE-1);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#242: FILE: drivers/firmware/dmi-id.c:118:
++	r = get_modalias(page, PAGE_SIZE-1);
+ 	                                ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#244: FILE: drivers/firmware/dmi-id.c:120:
++	page[r+1] = 0;
+ 	      ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#245: FILE: drivers/firmware/dmi-id.c:121:
++	return r+1;
+ 	        ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#250: FILE: drivers/firmware/dmi-id.c:126:
++static struct attribute *sys_dmi_attributes[DMI_STRING_MAX+2];
+                                                           ^
+
+ERROR:POINTER_LOCATION: "foo* bar" should be "foo *bar"
+#256: FILE: drivers/firmware/dmi-id.c:132:
++static struct attribute_group* sys_dmi_attribute_groups[] = {
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#262: FILE: drivers/firmware/dmi-id.c:138:
++static int dmi_dev_uevent(struct device *dev, char **envp,
++			    int num_envp, char *buffer, int buffer_size)
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#265: FILE: drivers/firmware/dmi-id.c:141:
++	get_modalias(buffer+9, buffer_size-9);
+ 	                   ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#265: FILE: drivers/firmware/dmi-id.c:141:
++	get_modalias(buffer+9, buffer_size-9);
+ 	                                  ^
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#282: FILE: drivers/firmware/dmi-id.c:158:
++#define ADD_DMI_ATTR(_name, _field) \
++	if (dmi_get_system_info(_field)) \
++		sys_dmi_attributes[i++] = & sys_dmi_##_name##_attr.attr;
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#282: FILE: drivers/firmware/dmi-id.c:158:
++#define ADD_DMI_ATTR(_name, _field) \
++	if (dmi_get_system_info(_field)) \
++		sys_dmi_attributes[i++] = & sys_dmi_##_name##_attr.attr;
+
+ERROR:SPACING: space prohibited after that '&' (ctx:WxW)
+#284: FILE: drivers/firmware/dmi-id.c:160:
++		sys_dmi_attributes[i++] = & sys_dmi_##_name##_attr.attr;
+ 		                          ^
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#286: FILE: drivers/firmware/dmi-id.c:162:
++extern int dmi_available;
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#297: FILE: drivers/firmware/dmi-id.c:173:
++	 * what's available */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:SPACING: No space is necessary after a cast
+#365: FILE: drivers/firmware/dmi_scan.c:108:
++	u8 *d = (u8*) dm + index;
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#365: FILE: drivers/firmware/dmi_scan.c:108:
++	u8 *d = (u8*) dm + index;
+
+ERROR:SPACING: space required before the open parenthesis '('
+#373: FILE: drivers/firmware/dmi_scan.c:116:
++		if(d[i] != 0x00) is_ff = 0;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#373: FILE: drivers/firmware/dmi_scan.c:116:
++		if(d[i] != 0x00) is_ff = 0;
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:SPACING: space required before the open parenthesis '('
+#374: FILE: drivers/firmware/dmi_scan.c:117:
++		if(d[i] != 0xFF) is_00 = 0;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#374: FILE: drivers/firmware/dmi_scan.c:117:
++		if(d[i] != 0xFF) is_00 = 0;
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#380: FILE: drivers/firmware/dmi_scan.c:123:
++	s = dmi_alloc(16*2+4+1);
+ 	                ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#380: FILE: drivers/firmware/dmi_scan.c:123:
++	s = dmi_alloc(16*2+4+1);
+ 	                  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#380: FILE: drivers/firmware/dmi_scan.c:123:
++	s = dmi_alloc(16*2+4+1);
+ 	                    ^
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#389: FILE: drivers/firmware/dmi_scan.c:132:
++        dmi_ident[slot] = s;$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#389: FILE: drivers/firmware/dmi_scan.c:132:
++        dmi_ident[slot] = s;$
+
+CHECK:SPACING: No space is necessary after a cast
+#394: FILE: drivers/firmware/dmi_scan.c:137:
++	u8 *d = (u8*) dm + index;
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#394: FILE: drivers/firmware/dmi_scan.c:137:
++	u8 *d = (u8*) dm + index;
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#495: FILE: drivers/misc/msi-laptop.c:288:
++        printk("msi-laptop: Identified laptop model '%s'.\n", id->ident);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#495: FILE: drivers/misc/msi-laptop.c:288:
++        printk("msi-laptop: Identified laptop model '%s'.\n", id->ident);$
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#495: FILE: drivers/misc/msi-laptop.c:288:
++        printk("msi-laptop: Identified laptop model '%s'.\n", id->ident);
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#496: FILE: drivers/misc/msi-laptop.c:289:
++        return 0;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#496: FILE: drivers/misc/msi-laptop.c:289:
++        return 0;$
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000407502.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 12 errors, 14 warnings, 13 checks, 450 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000407502.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,67 @@
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/uaccess.h> instead of <asm/uaccess.h>
+#52: FILE: arch/powerpc/sysdev/fsl_rio.c:35:
++#include <asm/uaccess.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#69: FILE: arch/powerpc/sysdev/fsl_rio.c:220:
++#define __fsl_read_rio_config(x, addr, err, op)		\
++	__asm__ __volatile__(				\
++		"1:	"op" %1,0(%2)\n"		\
++		"	eieio\n"			\
++		"2:\n"					\
++		".section .fixup,\"ax\"\n"		\
++		"3:	li %1,-1\n"			\
++		"	li %0,%3\n"			\
++		"	b 2b\n"				\
++		".section __ex_table,\"a\"\n"		\
++		"	.align 2\n"			\
++		"	.long 1b,3b\n"			\
++		".text"					\
++		: "=r" (err), "=r" (x)			\
++		: "b" (addr), "i" (-EFAULT), "0" (err))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'err' - possible side-effects?
+#69: FILE: arch/powerpc/sysdev/fsl_rio.c:220:
++#define __fsl_read_rio_config(x, addr, err, op)		\
++	__asm__ __volatile__(				\
++		"1:	"op" %1,0(%2)\n"		\
++		"	eieio\n"			\
++		"2:\n"					\
++		".section .fixup,\"ax\"\n"		\
++		"3:	li %1,-1\n"			\
++		"	li %0,%3\n"			\
++		"	b 2b\n"				\
++		".section __ex_table,\"a\"\n"		\
++		"	.align 2\n"			\
++		"	.long 1b,3b\n"			\
++		".text"					\
++		: "=r" (err), "=r" (x)			\
++		: "b" (addr), "i" (-EFAULT), "0" (err))
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#71: FILE: arch/powerpc/sysdev/fsl_rio.c:222:
++		"1:	"op" %1,0(%2)\n"		\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000008011.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 0 warnings, 3 checks, 123 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000008011.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

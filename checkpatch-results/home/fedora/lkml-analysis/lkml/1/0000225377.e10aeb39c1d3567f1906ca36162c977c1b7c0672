@@ -1,0 +1,114 @@
+CHECK:SPACING: No space is necessary after a cast
+#124: FILE: arch/x86/kvm/x86.c:145:
++		(struct kvm_assigned_dev_kernel *) dev_id;
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#189: FILE: arch/x86/kvm/x86.c:210:
++			printk(KERN_INFO "%s: couldn't allocate irq for pv "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#190: FILE: arch/x86/kvm/x86.c:211:
++			printk(KERN_INFO "%s: couldn't allocate irq for pv "
++			       "device\n", __func__);
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*match)...) over kzalloc(sizeof(struct kvm_assigned_dev_kernel)...)
+#219: FILE: arch/x86/kvm/x86.c:240:
++	match = kzalloc(sizeof(struct kvm_assigned_dev_kernel), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!match"
+#220: FILE: arch/x86/kvm/x86.c:241:
++	if (match == NULL) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#221: FILE: arch/x86/kvm/x86.c:242:
++		printk(KERN_INFO "%s: Couldn't allocate memory\n",
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#221: FILE: arch/x86/kvm/x86.c:242:
++	if (match == NULL) {
++		printk(KERN_INFO "%s: Couldn't allocate memory\n",
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#229: FILE: arch/x86/kvm/x86.c:250:
++		printk(KERN_INFO "%s: host device not found\n", __func__);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#234: FILE: arch/x86/kvm/x86.c:255:
++		printk(KERN_INFO "%s: Could not enable PCI device\n", __func__);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#240: FILE: arch/x86/kvm/x86.c:261:
++		printk(KERN_INFO "%s: Could not get access to device regions\n",
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'assigned_dev->ack_notifier'
+#282: FILE: arch/x86/kvm/x86.c:303:
++							&assigned_dev->
++							ack_notifier);
+
+A single dereferencing identifier spanned on multiple lines like::
+
+  struct_identifier->member[index].
+  member = <foo>;
+
+is generally hard to follow. It can easily lead to typos and so makes
+the code vulnerable to bugs.
+
+If fixing the multiple line dereferencing leads to an 80 column
+violation, then either rewrite the code in a more simple way or if the
+starting part of the dereferencing identifier is the same and used at
+multiple places then store it in a temporary variable, and use that
+temporary variable only at all the places. For example, if there are
+two dereferencing identifiers::
+
+  member1->member2->member3.foo1;
+  member1->member2->member3.foo2;
+
+then store the member1->member2->member3 part in a temporary variable.
+It not only helps to avoid the 80 column violation but also reduces
+the program size by removing the unnecessary dereferences.
+
+But if none of the above methods work then ignore the 80 column
+violation because it is much easier to read a dereferencing identifier
+on a single line.
+
+WARNING:SIZEOF_PARENTHESIS: sizeof assigned_dev should be sizeof(assigned_dev)
+#310: FILE: arch/x86/kvm/x86.c:1992:
++		if (copy_from_user(&assigned_dev, argp, sizeof assigned_dev))
+
+WARNING:SIZEOF_PARENTHESIS: sizeof assigned_irq should be sizeof(assigned_irq)
+#321: FILE: arch/x86/kvm/x86.c:2003:
++		if (copy_from_user(&assigned_irq, argp, sizeof assigned_irq))
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000225377.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 10 warnings, 3 checks, 348 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000225377.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

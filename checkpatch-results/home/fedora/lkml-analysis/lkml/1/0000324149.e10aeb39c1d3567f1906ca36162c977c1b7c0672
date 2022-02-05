@@ -1,0 +1,205 @@
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#92: FILE: arch/s390/kernel/traps.c:63:
++extern pgm_check_handler_t do_asce_exception;
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/mmu_context.h> instead of <asm/mmu_context.h>
+#113: FILE: arch/s390/mm/fault.c:35:
++#include <asm/mmu_context.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+WARNING:IN_ATOMIC: use of in_atomic() is incorrect outside core kernel code
+#133: FILE: arch/s390/mm/fault.c:460:
++	if (unlikely(space == 0 || in_atomic() || !mm))
+
+in_atomic() is not for driver use so any such use is reported as an ERROR.
+Also in_atomic() is often used to determine if sleeping is permitted,
+but it is not reliable in this use model.  Therefore its use is
+strongly discouraged.
+
+However, in_atomic() is ok for core kernel use.
+
+See: https://lore.kernel.org/lkml/20080320201723.b87b3732.akpm@linux-foundation.org/
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#207: FILE: arch/s390/mm/mmap.c:93:
++s390_get_unmapped_area(struct file *filp, unsigned long addr,
+                                     ^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#208: FILE: arch/s390/mm/mmap.c:94:
++s390_get_unmapped_area(struct file *filp, unsigned long addr,
++		unsigned long len, unsigned long pgoff, unsigned long flags)
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#213: FILE: arch/s390/mm/mmap.c:99:
++	addr = arch_get_unmapped_area(filp, addr, len, pgoff, flags);
+ 	                              ^^^^
+
+CHECK:SPACING: No space is necessary after a cast
+#219: FILE: arch/s390/mm/mmap.c:105:
++			return (unsigned long) rc;
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#225: FILE: arch/s390/mm/mmap.c:111:
++s390_get_unmapped_area_topdown(struct file *filp, const unsigned long addr0,
+                                             ^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#226: FILE: arch/s390/mm/mmap.c:112:
++s390_get_unmapped_area_topdown(struct file *filp, const unsigned long addr0,
++			  const unsigned long len, const unsigned long pgoff,
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#233: FILE: arch/s390/mm/mmap.c:119:
++	addr = arch_get_unmapped_area_topdown(filp, addr, len, pgoff, flags);
+ 	                                      ^^^^
+
+CHECK:SPACING: No space is necessary after a cast
+#239: FILE: arch/s390/mm/mmap.c:125:
++			return (unsigned long) rc;
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#243: FILE: arch/s390/mm/mmap.c:129:
++}
++/*
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/mmu_context.h> instead of <asm/mmu_context.h>
+#274: FILE: arch/s390/mm/pgtable.c:26:
++#include <asm/mmu_context.h>
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#288: FILE: arch/s390/mm/pgtable.c:80:
++	BUG_ON(limit > (1UL << 53));
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:SPACING: No space is necessary after a cast
+#295: FILE: arch/s390/mm/pgtable.c:87:
++		pgd = (unsigned long *) mm->pgd;
+
+CHECK:SPACING: No space is necessary after a cast
+#310: FILE: arch/s390/mm/pgtable.c:102:
++		pgd_populate(mm, (pgd_t *) table, (pud_t *) pgd);
+
+CHECK:SPACING: No space is necessary after a cast
+#311: FILE: arch/s390/mm/pgtable.c:103:
++		mm->pgd = (pgd_t *) table;
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#346: FILE: arch/s390/mm/pgtable.c:138:
++			BUG();
+
+CHECK:SPACING: No space is necessary after a cast
+#348: FILE: arch/s390/mm/pgtable.c:140:
++		mm->pgd = (pgd_t *) (pgd_val(*pgd) & _REGION_ENTRY_ORIGIN);
+
+CHECK:SPACING: No space is necessary after a cast
+#349: FILE: arch/s390/mm/pgtable.c:141:
++		crst_table_free(mm, (unsigned long *) pgd);
+
+CHECK:SPACING: No space is necessary after a cast
+#384: FILE: include/asm-s390/mmu_context.h:25:
++	crst_table_init((unsigned long *) mm->pgd, pgd_entry_type(mm));
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct mm_struct *' should also have an identifier name
+#439: FILE: include/asm-s390/pgalloc.h:84:
++void crst_table_downgrade(struct mm_struct *, unsigned long limit);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+CHECK:SPACING: No space is necessary after a cast
+#474: FILE: include/asm-s390/pgalloc.h:142:
++	return (pgd_t *) crst_table_alloc(mm, s390_noexec);
+
+CHECK:SPACING: No space is necessary after a cast
+#568: FILE: include/asm-s390/pgtable.h:864:
++	pud_t *pud = (pud_t *) pgd;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#569: FILE: include/asm-s390/pgtable.h:865:
++	pud_t *pud = (pud_t *) pgd;
++	if ((pgd_val(*pgd) & _REGION_ENTRY_TYPE_MASK) == _REGION_ENTRY_TYPE_R2)
+
+CHECK:SPACING: No space is necessary after a cast
+#570: FILE: include/asm-s390/pgtable.h:866:
++		pud = (pud_t *) pgd_deref(*pgd);
+
+CHECK:SPACING: No space is necessary after a cast
+#577: FILE: include/asm-s390/pgtable.h:872:
++	pmd_t *pmd = (pmd_t *) pud;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#578: FILE: include/asm-s390/pgtable.h:873:
++	pmd_t *pmd = (pmd_t *) pud;
++	if ((pud_val(*pud) & _REGION_ENTRY_TYPE_MASK) == _REGION_ENTRY_TYPE_R3)
+
+CHECK:SPACING: No space is necessary after a cast
+#579: FILE: include/asm-s390/pgtable.h:874:
++		pmd = (pmd_t *) pud_deref(*pud);
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#591: FILE: include/asm-s390/processor.h:84:
++#define STACK_TOP_MAX		(1UL << 31)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:SPACING: spaces required around that ':' (ctx:VxV)
+#594: FILE: include/asm-s390/processor.h:86:
++#define STACK_TOP		(1UL << (test_thread_flag(TIF_31BIT) ? 31:42))
+                  		                                         ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#595: FILE: include/asm-s390/processor.h:87:
++#define STACK_TOP_MAX		(1UL << 42)
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000324149.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 11 warnings, 21 checks, 536 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000324149.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

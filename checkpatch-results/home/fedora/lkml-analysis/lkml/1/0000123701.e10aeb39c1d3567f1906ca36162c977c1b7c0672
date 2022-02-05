@@ -1,0 +1,136 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#29: 
+1. Intercept one page in MMIO region of device. So that we can get guest desired
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#94: FILE: include/linux/kvm.h:619:
++#define KVM_DEV_IRQ_ASSIGN_ENABLE_MSIX  (1 << 1)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#95: FILE: include/linux/kvm.h:620:
++#define KVM_DEV_IRQ_ASSIGN_MASK_MSIX    (1 << 2)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#112: FILE: virt/kvm/kvm_main.c:241:
++		int i;
++		for (i = 0; i < assigned_dev->entries_nr; i++)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'assigned_dev->host_msix_entries[i].vector'
+#114: FILE: virt/kvm/kvm_main.c:243:
++			disable_irq_nosync(assigned_dev->
++					   host_msix_entries[i].vector);
+
+A single dereferencing identifier spanned on multiple lines like::
+
+  struct_identifier->member[index].
+  member = <foo>;
+
+is generally hard to follow. It can easily lead to typos and so makes
+the code vulnerable to bugs.
+
+If fixing the multiple line dereferencing leads to an 80 column
+violation, then either rewrite the code in a more simple way or if the
+starting part of the dereferencing identifier is the same and used at
+multiple places then store it in a temporary variable, and use that
+temporary variable only at all the places. For example, if there are
+two dereferencing identifiers::
+
+  member1->member2->member3.foo1;
+  member1->member2->member3.foo2;
+
+then store the member1->member2->member3 part in a temporary variable.
+It not only helps to avoid the 80 column violation but also reduces
+the program size by removing the unnecessary dereferences.
+
+But if none of the above methods work then ignore the 80 column
+violation because it is much easier to read a dereferencing identifier
+on a single line.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#149: FILE: virt/kvm/kvm_main.c:398:
++static int assigned_device_update_msix(struct kvm *kvm,
++			struct kvm_assigned_dev_kernel *adev,
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#174: FILE: virt/kvm/kvm_main.c:423:
++		 * initialized */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#221: FILE: virt/kvm/kvm_main.c:506:
++			printk(KERN_WARNING "kvm: failed to execute "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#222: FILE: virt/kvm/kvm_main.c:507:
++			printk(KERN_WARNING "kvm: failed to execute "
++					"MSI-X action!\n");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 8)
+#225: FILE: virt/kvm/kvm_main.c:510:
++	} else
+[...]
+ 	if ((changed_flags & KVM_DEV_IRQ_ASSIGN_MSI_ACTION) ||
+
+CHECK:BRACES: Unbalanced braces around else statement
+#225: FILE: virt/kvm/kvm_main.c:510:
++	} else
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000123701.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 7 warnings, 4 checks, 150 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000123701.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

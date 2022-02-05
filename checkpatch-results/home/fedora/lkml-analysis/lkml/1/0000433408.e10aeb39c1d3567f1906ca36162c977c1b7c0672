@@ -1,0 +1,452 @@
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#68: FILE: include/linux/marker.h:1:
++#ifndef _LINUX_MARKER_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __packed over __attribute__((packed))
+#98: FILE: include/linux/marker.h:31:
++} __attribute__((packed));
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __packed over __attribute__((packed))
+#103: FILE: include/linux/marker.h:36:
++} __attribute__((packed));
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#109: FILE: include/linux/marker.h:42:
++ * used at reentrancy-unfriendly sites. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#110: FILE: include/linux/marker.h:43:
++#define MF_OPTIMIZED	(1 << 0)	/* Use optimized markers */
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#111: FILE: include/linux/marker.h:44:
++#define MF_LOCKDEP	(1 << 1)	/* Can call lockdep */
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#112: FILE: include/linux/marker.h:45:
++#define MF_PRINTK	(1 << 2)	/* vprintk can be called in the probe */
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'format' - possible side-effects?
+#116: FILE: include/linux/marker.h:49:
++#define trace_mark_generic(flags, name, format, args...) \
++	do { \
++		static const char __mstrtab_name_##name[] \
++		__attribute__((section("__markers_strings"))) \
++		= #name; \
++		static const char __mstrtab_format_##name[] \
++		__attribute__((section("__markers_strings"))) \
++		= format; \
++		static const char __mstrtab_args_##name[] \
++		__attribute__((section("__markers_strings"))) \
++		= #args; \
++		static struct __mark_marker_data __mark_data_##name \
++		__attribute__((section("__markers_data"))) = \
++		{ __mstrtab_name_##name,  __mstrtab_format_##name, \
++		__mstrtab_args_##name, \
++		(flags) & ~MF_OPTIMIZED, __mark_empty_function, NULL }; \
++		static char __marker_enable_##name = 0; \
++		static const struct __mark_marker __mark_##name \
++			__attribute__((section("__markers"))) = \
++			{ &__mark_data_##name, &__marker_enable_##name } ; \
++		asm volatile ( "" : : "i" (&__mark_##name)); \
++		__mark_check_format(format, ## args); \
++		if (unlikely(__marker_enable_##name)) { \
++			preempt_disable(); \
++			(*__mark_data_##name.call)(&__mark_data_##name, \
++						format, ## args); \
++			preempt_enable(); \
++		} \
++	} while (0)
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__markers_strings") over __attribute__((section("__markers_strings")))
+#119: FILE: include/linux/marker.h:52:
++		__attribute__((section("__markers_strings"))) \
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#120: FILE: include/linux/marker.h:53:
++		__attribute__((section("__markers_strings"))) \
++		= #name; \
+
+Assignment operators should not be written at the start of a
+line but should follow the operand at the previous line.
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__markers_strings") over __attribute__((section("__markers_strings")))
+#122: FILE: include/linux/marker.h:55:
++		__attribute__((section("__markers_strings"))) \
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#123: FILE: include/linux/marker.h:56:
++		__attribute__((section("__markers_strings"))) \
++		= format; \
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__markers_strings") over __attribute__((section("__markers_strings")))
+#125: FILE: include/linux/marker.h:58:
++		__attribute__((section("__markers_strings"))) \
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#126: FILE: include/linux/marker.h:59:
++		__attribute__((section("__markers_strings"))) \
++		= #args; \
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__markers_data") over __attribute__((section("__markers_data")))
+#128: FILE: include/linux/marker.h:61:
++		__attribute__((section("__markers_data"))) = \
+
+ERROR:INITIALISED_STATIC: do not initialise statics to 0
+#132: FILE: include/linux/marker.h:65:
++		static char __marker_enable_##name = 0; \
+
+Static variables should not be initialized explicitly to zero.
+Your compiler (or rather your loader) automatically does
+it for you.
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__markers") over __attribute__((section("__markers")))
+#134: FILE: include/linux/marker.h:67:
++			__attribute__((section("__markers"))) = \
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#136: FILE: include/linux/marker.h:69:
++		asm volatile ( "" : : "i" (&__mark_##name)); \
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#149: FILE: include/linux/marker.h:82:
++#define MARK_GENERIC_ENABLE(a) \
++	*(MARK_GENERIC_ENABLE_TYPE*) \
++		((char*)a+MARK_GENERIC_ENABLE_IMMEDIATE_OFFSET)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'a' may be better as '(a)' to avoid precedence issues
+#149: FILE: include/linux/marker.h:82:
++#define MARK_GENERIC_ENABLE(a) \
++	*(MARK_GENERIC_ENABLE_TYPE*) \
++		((char*)a+MARK_GENERIC_ENABLE_IMMEDIATE_OFFSET)
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#150: FILE: include/linux/marker.h:83:
++	*(MARK_GENERIC_ENABLE_TYPE*) \
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#151: FILE: include/linux/marker.h:84:
++		((char*)a+MARK_GENERIC_ENABLE_IMMEDIATE_OFFSET)
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#151: FILE: include/linux/marker.h:84:
++		((char*)a+MARK_GENERIC_ENABLE_IMMEDIATE_OFFSET)
+ 		         ^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#181: FILE: include/linux/marker.h:114:
++extern int _marker_set_probe(int flags, const char *name, const char *format,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#182: FILE: include/linux/marker.h:115:
++extern int _marker_set_probe(int flags, const char *name, const char *format,
++				marker_probe_func *probe, void *pdata);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#187: FILE: include/linux/marker.h:120:
++extern int marker_remove_probe(const char *name);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#188: FILE: include/linux/marker.h:121:
++extern int marker_list_probe(marker_probe_func *probe);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#210: FILE: include/linux/module.h:473:
++extern void list_modules(void);
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#222: FILE: kernel/module.c:145:
++extern const struct __mark_marker __start___markers[];
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#223: FILE: kernel/module.c:146:
++extern const struct __mark_marker __stop___markers[];
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#236: FILE: kernel/module.c:312:
++ * operations that modifies the execution flow of preemptible code. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#238: FILE: kernel/module.c:314:
++void __mark_empty_function(const struct __mark_marker_data *mdata,
++	const char *fmt, ...)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#259: FILE: kernel/module.c:335:
++static int _marker_set_probe_range(int flags, const char *name,
++	const char *format,
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#271: FILE: kernel/module.c:347:
++			if (format
++				&& strcmp(format, iter->mdata->format) != 0) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#272: FILE: kernel/module.c:348:
++				printk(KERN_NOTICE
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#274: FILE: kernel/module.c:350:
++					"Format mismatch for probe %s "
++					"(%s), marker (%s)\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (24, 40)
+#280: FILE: kernel/module.c:356:
++			if (flags & MF_LOCKDEP
+[...]
++					printk(KERN_NOTICE
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#281: FILE: kernel/module.c:357:
++			if (flags & MF_LOCKDEP
++				&& !(iter->mdata->flags & MF_LOCKDEP)) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#282: FILE: kernel/module.c:358:
++					printk(KERN_NOTICE
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#284: FILE: kernel/module.c:360:
++					"Incompatible lockdep flags for "
++					"probe %s\n",
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (24, 40)
+#288: FILE: kernel/module.c:364:
++			if (flags & MF_PRINTK
+[...]
++					printk(KERN_NOTICE
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#289: FILE: kernel/module.c:365:
++			if (flags & MF_PRINTK
++				&& !(iter->mdata->flags & MF_PRINTK)) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#290: FILE: kernel/module.c:366:
++					printk(KERN_NOTICE
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#292: FILE: kernel/module.c:368:
++					"Incompatible printk flags for "
++					"probe %s\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#303: FILE: kernel/module.c:379:
++				marker_set_enable(iter->enable, 0,
++					iter->mdata->flags);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#308: FILE: kernel/module.c:384:
++						printk(KERN_NOTICE
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#310: FILE: kernel/module.c:386:
++							"Marker %s busy, "
++							"probe %p already "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#311: FILE: kernel/module.c:387:
++							"probe %p already "
++							"installed\n",
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#321: FILE: kernel/module.c:397:
++				smp_wmb();
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#323: FILE: kernel/module.c:399:
++				marker_set_enable(iter->enable, 1,
++					iter->mdata->flags);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#332: FILE: kernel/module.c:408:
++ * provide the empty callback. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#334: FILE: kernel/module.c:410:
++static int marker_remove_probe_range(const char *name,
++	const struct __mark_marker *begin,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#343: FILE: kernel/module.c:419:
++			marker_set_enable(iter->enable, 0,
++				iter->mdata->flags);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#353: FILE: kernel/module.c:429:
++ * string. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#355: FILE: kernel/module.c:431:
++static int marker_list_probe_range(marker_probe_func *probe,
++	const struct __mark_marker *begin,
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#363: FILE: kernel/module.c:439:
++			if (probe != iter->mdata->call) continue;
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#364: FILE: kernel/module.c:440:
++		printk("name %s \n", iter->mdata->name);
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#364: FILE: kernel/module.c:440:
++		printk("name %s \n", iter->mdata->name);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#366: FILE: kernel/module.c:442:
++			printk("  enable %u optimized ",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#367: FILE: kernel/module.c:443:
++			printk("  enable %u optimized ",
++				MARK_OPTIMIZED_ENABLE(iter->enable));
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#369: FILE: kernel/module.c:445:
++			printk("  enable %u generic ",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#370: FILE: kernel/module.c:446:
++			printk("  enable %u generic ",
++				MARK_GENERIC_ENABLE(iter->enable));
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#371: FILE: kernel/module.c:447:
++		printk("  func 0x%p format \"%s\"\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#372: FILE: kernel/module.c:448:
++		printk("  func 0x%p format \"%s\"\n",
++			iter->mdata->call, iter->mdata->format);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#379: FILE: kernel/module.c:455:
++ * Marker enabling/disabling use the modlist_lock to synchronise. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#381: FILE: kernel/module.c:457:
++int _marker_set_probe(int flags, const char *name, const char *format,
++				marker_probe_func *probe,
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#397: FILE: kernel/module.c:473:
++			mod->markers, mod->markers+mod->num_markers);
+ 			                          ^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#405: FILE: kernel/module.c:481:
++ * Marker enabling/disabling use the modlist_lock to synchronise. */
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#419: FILE: kernel/module.c:495:
++				mod->markers, mod->markers+mod->num_markers);
+ 				                          ^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#428: FILE: kernel/module.c:504:
++ * TODO : should output this listing to a procfs file. */
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#436: FILE: kernel/module.c:512:
++	printk("Listing kernel markers\n");
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#440: FILE: kernel/module.c:516:
++	printk("Listing module markers\n");
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#443: FILE: kernel/module.c:519:
++			printk("Listing markers for module %s\n", mod->name);
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#445: FILE: kernel/module.c:521:
++				mod->markers, mod->markers+mod->num_markers);
+ 				                          ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#474: FILE: kernel/module.c:1989:
++	markersstringsindex = find_sec(hdr, sechdrs, secstrings,
++				"__markers_strings");
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '&=' should be on the previous line
+#496: FILE: kernel/module.c:2014:
++		sechdrs[markersstringsindex].sh_flags
++					&= ~(unsigned long)SHF_ALLOC;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#531: FILE: kernel/module.c:2669:
++		trace_mark(list_module, "%s %d %lu",
++				mod->name, mod->state, refcount);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000433408.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 6 errors, 37 warnings, 34 checks, 474 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000433408.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

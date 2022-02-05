@@ -1,0 +1,209 @@
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#162: FILE: block/blk-core.c:880:
++	if (!blk_is_io_cpu(q)) {
+[...]
++	} else if (!blk_queue_plugged(q))
+[...]
+ 	else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#215: FILE: block/blk-settings.c:410:
++	if (cpu == -1)
+[...]
++	else if (!cpu_isset(cpu, cpu_possible_map)) {
+[...]
++	} else {
+[...]
+
+WARNING:UNNECESSARY_ELSE: else is not generally useful after a break or return
+#220: FILE: block/blk-settings.c:415:
++		return -EINVAL;
++	} else {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#295: FILE: block/blk-softirq.c:39:
++	if (!list_empty(list)) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#301: FILE: block/blk-softirq.c:45:
++	} else
+
+WARNING:MISPLACED_INIT: __cpuinitdata should be placed after blk_cpu_notifier
+#325: FILE: block/blk-softirq.c:80:
++static struct notifier_block __cpuinitdata blk_cpu_notifier = {
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#367: FILE: block/blk-softirq.c:101:
++	BUG_ON(!q->softirq_done_fn);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#382: FILE: block/blk-softirq.c:113:
++	if (ccpu == cpu) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#390: FILE: block/blk-softirq.c:121:
++	} else
+
+CHECK:SPACING: No space is necessary after a cast
+#421: FILE: block/blk-sysfs.c:149:
++	char *p = (char *) page;
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:CONSIDER_KSTRTO: simple_strtol is obsolete, use kstrtol instead
+#424: FILE: block/blk-sysfs.c:152:
++	val = simple_strtol(p, &p, 10);
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+CHECK:SPACING: No space is necessary after a cast
+#442: FILE: block/blk-sysfs.c:170:
++	char *p = (char *) page;
+
+WARNING:CONSIDER_KSTRTO: simple_strtol is obsolete, use kstrtol instead
+#445: FILE: block/blk-sysfs.c:173:
++	val = simple_strtol(p, &p, 10);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#483: FILE: block/blk-sysfs.c:239:
++	.attr = {.name = "completion_affinity", .mode = S_IRUGO | S_IWUSR },
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#489: FILE: block/blk-sysfs.c:245:
++	.attr = {.name = "queue_affinity", .mode = S_IRUGO | S_IWUSR },
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#495: FILE: block/blk-sysfs.c:251:
++	.attr = {.name = "rq_affinity", .mode = S_IRUGO | S_IWUSR },
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#573: FILE: include/linux/blkdev.h:719:
++extern int blk_queue_set_queue_cpu(struct request_queue *, int);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request_queue *' should also have an identifier name
+#573: FILE: include/linux/blkdev.h:719:
++extern int blk_queue_set_queue_cpu(struct request_queue *, int);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#573: FILE: include/linux/blkdev.h:719:
++extern int blk_queue_set_queue_cpu(struct request_queue *, int);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#574: FILE: include/linux/blkdev.h:720:
++extern int blk_queue_set_completion_cpu(struct request_queue *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request_queue *' should also have an identifier name
+#574: FILE: include/linux/blkdev.h:720:
++extern int blk_queue_set_completion_cpu(struct request_queue *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#574: FILE: include/linux/blkdev.h:720:
++extern int blk_queue_set_completion_cpu(struct request_queue *, int);
+
+CHECK:SPACING: No space is necessary after a cast
+#592: FILE: include/linux/elevator.h:179:
++#define rq_fifo_time(rq)	((unsigned long) (rq)->csd.list.next)
+
+CHECK:SPACING: No space is necessary after a cast
+#593: FILE: include/linux/elevator.h:180:
++#define rq_set_fifo_time(rq,exp)	((rq)->csd.list.next = (void *) (exp))
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#593: FILE: include/linux/elevator.h:180:
++#define rq_set_fifo_time(rq,exp)	((rq)->csd.list.next = (void *) (exp))
+                            ^
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000308374.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 12 warnings, 12 checks, 503 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000308374.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

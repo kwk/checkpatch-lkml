@@ -1,0 +1,225 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#41: 
+Make marker infrastructure use dynamic channels, adding a new (first) parameter
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#92: FILE: include/linux/marker.h:66:
+ 		__attribute__((section("__markers_strings")))		\
++		= #channel "\0" #name "\0" format;			\
+
+Assignment operators should not be written at the start of a
+line but should follow the operand at the previous line.
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'generic' may be better as '(generic)' to avoid precedence issues
+#122: FILE: include/linux/marker.h:92:
++#define __trace_mark(generic, channel, name, call_private, format, args...) \
+ 	do {								\
++		DEFINE_MARKER(channel, name, format);			\
+ 		__mark_check_format(format, ## args);			\
+ 		if (!generic) {						\
++			if (unlikely(imv_read(				\
++					__mark_##channel##_##name.state))) \
++				(*__mark_##channel##_##name.call)	\
++					(&__mark_##channel##_##name,	\
++					call_private, ## args);		\
+ 		} else {						\
++			if (unlikely(_imv_read(				\
++					__mark_##channel##_##name.state))) \
++				(*__mark_##channel##_##name.call)	\
++					(&__mark_##channel##_##name,	\
++					call_private, ## args);		\
+ 		}							\
+ 	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'call_private' - possible side-effects?
+#122: FILE: include/linux/marker.h:92:
++#define __trace_mark(generic, channel, name, call_private, format, args...) \
+ 	do {								\
++		DEFINE_MARKER(channel, name, format);			\
+ 		__mark_check_format(format, ## args);			\
+ 		if (!generic) {						\
++			if (unlikely(imv_read(				\
++					__mark_##channel##_##name.state))) \
++				(*__mark_##channel##_##name.call)	\
++					(&__mark_##channel##_##name,	\
++					call_private, ## args);		\
+ 		} else {						\
++			if (unlikely(_imv_read(				\
++					__mark_##channel##_##name.state))) \
++				(*__mark_##channel##_##name.call)	\
++					(&__mark_##channel##_##name,	\
++					call_private, ## args);		\
+ 		}							\
+ 	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'format' - possible side-effects?
+#122: FILE: include/linux/marker.h:92:
++#define __trace_mark(generic, channel, name, call_private, format, args...) \
+ 	do {								\
++		DEFINE_MARKER(channel, name, format);			\
+ 		__mark_check_format(format, ## args);			\
+ 		if (!generic) {						\
++			if (unlikely(imv_read(				\
++					__mark_##channel##_##name.state))) \
++				(*__mark_##channel##_##name.call)	\
++					(&__mark_##channel##_##name,	\
++					call_private, ## args);		\
+ 		} else {						\
++			if (unlikely(_imv_read(				\
++					__mark_##channel##_##name.state))) \
++				(*__mark_##channel##_##name.call)	\
++					(&__mark_##channel##_##name,	\
++					call_private, ## args);		\
+ 		}							\
+ 	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'tp_cb' - possible side-effects?
+#151: FILE: include/linux/marker.h:111:
++#define __trace_mark_tp(channel, name, call_private, tp_name, tp_cb,	\
++			format, args...)				\
+ 	do {								\
+ 		void __check_tp_type(void)				\
+ 		{							\
+ 			register_trace_##tp_name(tp_cb);		\
+ 		}							\
++		DEFINE_MARKER_TP(channel, name, tp_name, tp_cb, format);\
+ 		__mark_check_format(format, ## args);			\
++		(*__mark_##channel##_##name.call)(&__mark_##channel##_##name, \
++			call_private, ## args);				\
+ 	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'format' - possible side-effects?
+#151: FILE: include/linux/marker.h:111:
++#define __trace_mark_tp(channel, name, call_private, tp_name, tp_cb,	\
++			format, args...)				\
+ 	do {								\
+ 		void __check_tp_type(void)				\
+ 		{							\
+ 			register_trace_##tp_name(tp_cb);		\
+ 		}							\
++		DEFINE_MARKER_TP(channel, name, tp_name, tp_cb, format);\
+ 		__mark_check_format(format, ## args);			\
++		(*__mark_##channel##_##name.call)(&__mark_##channel##_##name, \
++			call_private, ## args);				\
+ 	} while (0)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#243: FILE: include/linux/marker.h:196:
++extern void lock_markers(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#244: FILE: include/linux/marker.h:197:
++extern void unlock_markers(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#246: FILE: include/linux/marker.h:199:
++extern void markers_compact_event_ids(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#257: FILE: include/linux/marker.h:221:
++extern int marker_probe_register(const char *channel, const char *name,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#258: FILE: include/linux/marker.h:222:
++extern int marker_probe_register(const char *channel, const char *name,
++	const char *format, marker_probe_func *probe, void *probe_private);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#264: FILE: include/linux/marker.h:227:
++extern int marker_probe_unregister(const char *channel, const char *name,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#265: FILE: include/linux/marker.h:228:
++extern int marker_probe_unregister(const char *channel, const char *name,
+ 	marker_probe_func *probe, void *probe_private);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#274: FILE: include/linux/marker.h:235:
++extern void *marker_get_private_data(const char *channel, const char *name,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#275: FILE: include/linux/marker.h:236:
++extern void *marker_get_private_data(const char *channel, const char *name,
++	marker_probe_func *probe, int num);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#283: FILE: include/linux/marker.h:258:
++extern int is_marker_enabled(const char *channel, const char *name);
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#357: FILE: kernel/marker.c:386:
++	hash = jhash(channel, channel_len-1, 0) ^ jhash(name, name_len-1, 0);
+ 	                                 ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#357: FILE: kernel/marker.c:386:
++	hash = jhash(channel, channel_len-1, 0) ^ jhash(name, name_len-1, 0);
+ 	                                                              ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#371: FILE: kernel/marker.c:400:
++static struct marker_entry *add_marker(const char *channel, const char *name,
++		const char *format)
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#382: FILE: kernel/marker.c:410:
++	hash = jhash(channel, channel_len-1, 0) ^ jhash(name, name_len-1, 0);
+ 	                                 ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#382: FILE: kernel/marker.c:410:
++	hash = jhash(channel, channel_len-1, 0) ^ jhash(name, name_len-1, 0);
+ 	                                                              ^
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*e)...) over kmalloc(sizeof(struct marker_entry)...)
+#401: FILE: kernel/marker.c:425:
++	e = kmalloc(sizeof(struct marker_entry)
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#426: FILE: kernel/marker.c:471:
++	hash = jhash(channel, channel_len-1, 0) ^ jhash(name, name_len-1, 0);
+ 	                                 ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#426: FILE: kernel/marker.c:471:
++	hash = jhash(channel, channel_len-1, 0) ^ jhash(name, name_len-1, 0);
+ 	                                                              ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#637: FILE: kernel/marker.c:952:
++	hash = jhash(channel, channel_len-1, 0) ^ jhash(name, name_len-1, 0);
+ 	                                 ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#637: FILE: kernel/marker.c:952:
++	hash = jhash(channel, channel_len-1, 0) ^ jhash(name, name_len-1, 0);
+ 	                                                              ^
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000158724.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 1 warnings, 26 checks, 586 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000158724.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

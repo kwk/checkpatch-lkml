@@ -1,0 +1,85 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#56: 
+Content-Type: text/x-patch; name="init_mounts_alt_root.diff"; charset="UTF-8"
+
+WARNING:MISPLACED_INIT: __initdata should be placed after alt_saved_root_name[64]
+#68: FILE: linux-2.6.30-ep1/init/do_mounts.c:30:
++static char __initdata alt_saved_root_name[64];
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+WARNING:STRLCPY: Prefer strscpy over strlcpy - see: https://lore.kernel.org/r/CAHk-=wgfRnXz0W3D37d01q3JFkr_i_uTL=V6A6G1oUZcprmknw@mail.gmail.com/
+#78: FILE: linux-2.6.30-ep1/init/do_mounts.c:158:
++	strlcpy(alt_saved_root_name, line, sizeof(alt_saved_root_name));
+
+CHECK:UNDOCUMENTED_SETUP: __setup appears un-documented -- check Documentation/admin-guide/kernel-parameters.txt
+#82: FILE: linux-2.6.30-ep1/init/do_mounts.c:162:
++__setup("alt_root=", alt_root_dev_setup);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'ROOT_DEV == 0'
+#91: FILE: linux-2.6.30-ep1/init/do_mounts.c:424:
++	if ((ROOT_DEV == 0) && alt_saved_root_name[0]) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#92: FILE: linux-2.6.30-ep1/init/do_mounts.c:425:
++		printk(KERN_WARNING "VFS: Unable to find root device %s. Trying alternative device %s.\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#93: FILE: linux-2.6.30-ep1/init/do_mounts.c:426:
++		printk(KERN_WARNING "VFS: Unable to find root device %s. Trying alternative device %s.\n",
++			root_device_name, alt_saved_root_name);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#135: FILE: linux-2.6.30-ep1/init/do_mounts_initrd.c:109:
++			printk(KERN_ERR "Error %d handling initrd.\n", error);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000109148.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 5 warnings, 3 checks, 78 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000109148.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,145 @@
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#74: FILE: drivers/net/tun.c:267:
++ * Users will learn not to do that. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#86: FILE: drivers/net/tun.c:279:
++		unsigned long base, len;
++		base = (unsigned long)iv->iov_base;
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#95: FILE: drivers/net/tun.c:288:
++		npages = 1 + (base + len - 1)/PAGE_SIZE - base/PAGE_SIZE;
+ 		                             ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#95: FILE: drivers/net/tun.c:288:
++		npages = 1 + (base + len - 1)/PAGE_SIZE - base/PAGE_SIZE;
+ 		                                              ^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#147: FILE: drivers/net/tun.c:340:
++ * much to copy (rest is pinned).  */
+
+WARNING:CONSTANT_CONVERSION: __constant_htons should be htons
+#151: FILE: drivers/net/tun.c:344:
++	struct tun_pi pi = { 0, __constant_htons(ETH_P_IP) };
+
+Use of __constant_<foo> form is discouraged for the following functions::
+
+  __constant_cpu_to_be[x]
+  __constant_cpu_to_le[x]
+  __constant_be[x]_to_cpu
+  __constant_le[x]_to_cpu
+  __constant_htons
+  __constant_ntohs
+
+Using any of these outside of include/uapi/ is not preferred as using the
+function without __constant_ is identical when the argument is a
+constant.
+
+In big endian systems, the macros like __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to the same expression::
+
+  #define __constant_cpu_to_be32(x) ((__force __be32)(__u32)(x))
+  #define __cpu_to_be32(x)          ((__force __be32)(__u32)(x))
+
+In little endian systems, the macros __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to __constant_swab32 and __swab32.  __swab32
+has a __builtin_constant_p check::
+
+  #define __swab32(x)				\
+    (__builtin_constant_p((__u32)(x)) ?	\
+    ___constant_swab32(x) :			\
+    __fswab32(x))
+
+So ultimately they have a special case for constants.
+Similar is the case with all of the macros in the list.  Thus
+using the __constant_... forms are unnecessarily verbose and
+not preferred outside of include/uapi.
+
+See: https://lore.kernel.org/lkml/1400106425.12666.6.camel@joe-AO725/
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#218: FILE: drivers/net/tun.c:411:
++		int err = get_user_skb_frags(iv, len - copylen, sinfo->frags);
++		if (err < 0)
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#298: FILE: drivers/net/tun.c:581:
++	struct iovec iov[1+MAX_SKB_FRAGS];
+ 	                  ^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#338: FILE: drivers/net/tun.c:621:
++			struct skb_tun_hdr *tunh = (void *)skb->head;
++			shinfo->destructor = shinfo_finished;
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#342: FILE: drivers/net/tun.c:625:
++			vring_used_buffer(tun->outring, id, sizeof(h)+skb->len);
+ 			                                             ^
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#414: FILE: drivers/net/tun.c:728:
++}
++static int set_xmit_vring(struct tun_struct *tun, int fd)
+
+CHECK:BRACES: Unbalanced braces around else statement
+#517: FILE: drivers/net/tun.c:1368:
++	else {
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000294002.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 6 warnings, 6 checks, 478 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000294002.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

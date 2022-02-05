@@ -1,0 +1,109 @@
+CHECK:BRACES: Unbalanced braces around else statement
+#136: FILE: arch/s390/kernel/traps.c:331:
++		else {
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#187: FILE: include/asm-s390/bug.h:1:
++#ifndef _ASM_S390_BUG_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#211: FILE: include/asm-s390/bug.h:16:
++#define __EMIT_BUG(x) do {					\
++	asm volatile(						\
++		"0:	j	0b+2\n"				\
++		"1:\n"						\
++		".section .rodata.str,\"aMS\",@progbits,1\n"	\
++		"2:	.asciz	\""__FILE__"\"\n"		\
++		".previous\n"					\
++		".section __bug_table,\"a\"\n"			\
++		"3:\t"	S390_LONG "\t1b,2b\n"			\
++		"	.short	%0,%1\n"			\
++		"	.org	3b+%2\n"			\
++		".previous\n"					\
++		: : "i" (__LINE__),				\
++		    "i" (x),					\
++		    "i" (sizeof(struct bug_entry)));		\
+ } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#216: FILE: include/asm-s390/bug.h:21:
++		"2:	.asciz	\""__FILE__"\"\n"		\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#230: FILE: include/asm-s390/bug.h:35:
++#define __EMIT_BUG(x) do {				\
++	asm volatile(					\
++		"0:	j	0b+2\n"			\
++		"1:\n"					\
++		".section __bug_table,\"a\"\n"		\
++		"2:\t"	S390_LONG "\t1b\n"		\
++		"	.short	%0\n"			\
++		"	.org	2b+%1\n"		\
++		".previous\n"				\
++		: : "i" (x),				\
++		    "i" (sizeof(struct bug_entry)));	\
++} while (0)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#245: FILE: include/asm-s390/bug.h:50:
++#define BUG()	__EMIT_BUG(0)
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000460327.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 4 warnings, 2 checks, 189 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000460327.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

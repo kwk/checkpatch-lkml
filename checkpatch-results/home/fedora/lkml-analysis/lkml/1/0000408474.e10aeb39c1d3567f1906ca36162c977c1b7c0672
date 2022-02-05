@@ -1,0 +1,292 @@
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#158: FILE: arch/s390/kernel/early.c:190:
++#define ADDR2G		(1UL << 31)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:SPACING: No space is necessary after a cast
+#187: FILE: arch/s390/kernel/early.c:289:
++		find_memory_chunks((unsigned long) memsize);
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#316: FILE: arch/s390/kernel/process.c:97:
++				   (void *)(long) smp_processor_id());
+
+CHECK:SPACING: No space is necessary after a cast
+#325: FILE: arch/s390/kernel/process.c:118:
++					S390_CPU_IDLE, (void *)(long) cpu);
+
+WARNING:NR_CPUS: usage of NR_CPUS is often wrong - consider using cpu_possible(), num_possible_cpus(), for_each_possible_cpu(), etc
+#376: FILE: arch/s390/kernel/smp.c:417:
++	if (cpu >= NR_CPUS) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#377: FILE: arch/s390/kernel/smp.c:418:
++		printk(KERN_WARNING "Registers for cpu %i not saved since dump "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#378: FILE: arch/s390/kernel/smp.c:419:
++		printk(KERN_WARNING "Registers for cpu %i not saved since dump "
++		       "kernel was compiled with NR_CPUS=%i\n", cpu, NR_CPUS);
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:NR_CPUS: usage of NR_CPUS is often wrong - consider using cpu_possible(), num_possible_cpus(), for_each_possible_cpu(), etc
+#378: FILE: arch/s390/kernel/smp.c:419:
++		       "kernel was compiled with NR_CPUS=%i\n", cpu, NR_CPUS);
+
+CHECK:SPACING: No space is necessary after a cast
+#382: FILE: arch/s390/kernel/smp.c:423:
++	__cpu_logical_map[1] = (__u16) phy_cpu;
+
+CHECK:SPACING: No space is necessary after a cast
+#386: FILE: arch/s390/kernel/smp.c:427:
++	       (void *)(unsigned long) store_prefix() + SAVE_AREA_BASE,
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __packed over __attribute__((packed))
+#539: FILE: drivers/s390/char/sclp.h:80:
++} __attribute__((packed));
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __packed over __attribute__((packed))
+#594: FILE: drivers/s390/char/sclp_info.c:28:
++} __attribute__((packed, aligned(4096)));
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __aligned(4096) over __attribute__((aligned(4096)))
+#594: FILE: drivers/s390/char/sclp_info.c:28:
++} __attribute__((packed, aligned(4096)));
+
+WARNING:MISPLACED_INIT: __initdata should be placed after early_readinfo_sccb
+#596: FILE: drivers/s390/char/sclp_info.c:30:
++static struct sclp_readinfo_sccb __initdata early_readinfo_sccb;
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+WARNING:MISPLACED_INIT: __initdata should be placed after early_readinfo_sccb_valid
+#597: FILE: drivers/s390/char/sclp_info.c:31:
++static int __initdata early_readinfo_sccb_valid;
+
+CHECK:SPACING: No space is necessary after a cast
+#952: FILE: drivers/s390/crypto/ap_bus.c:836:
++			    (unsigned long) ap_dev);
+
+CHECK:SPACING: No space is necessary after a cast
+#1039: FILE: drivers/s390/crypto/ap_bus.c:1224:
++	struct ap_device *ap_dev = (struct ap_device *) data;
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#1056: FILE: drivers/s390/crypto/ap_bus.h:36:
++#define AP_RESET_TIMEOUT (HZ/2)	/* Time in ticks for reset timeouts. */
+                             ^
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!info"
+#1364: FILE: fs/partitions/ibm.c:68:
++	if (info == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*geo)...) over kmalloc(sizeof(struct hd_geometry)...)
+#1367: FILE: fs/partitions/ibm.c:70:
++	geo = kmalloc(sizeof(struct hd_geometry), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!geo"
+#1368: FILE: fs/partitions/ibm.c:71:
++	if (geo == NULL)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!label"
+#1372: FILE: fs/partitions/ibm.c:74:
++	if (label == NULL)
+
+WARNING:TYPO_SPELLING: 'unformated' may be misspelled - perhaps 'unformatted'?
+#1385: FILE: fs/partitions/ibm.c:102:
++	 * Three different formats: LDL, CDL and unformated disk
+ 	                                         ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:TYPO_SPELLING: 'unformated' may be misspelled - perhaps 'unformatted'?
+#1389: FILE: fs/partitions/ibm.c:106:
++	 * unformated disks we do not have to care about
+ 	   ^^^^^^^^^^
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#1407: FILE: fs/partitions/ibm.c:114:
++				printk("CMS1/%8s(MDSK):", name);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#1414: FILE: fs/partitions/ibm.c:121:
++				printk("CMS1/%8s:", name);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#1424: FILE: fs/partitions/ibm.c:130:
++				printk ("LNX1/%8s:", name);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#1424: FILE: fs/partitions/ibm.c:130:
++				printk ("LNX1/%8s:", name);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#1426: FILE: fs/partitions/ibm.c:132:
++				printk("(nonl)");
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#1434: FILE: fs/partitions/ibm.c:137:
++				      size-offset*(blocksize >> 9));
+ 				          ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1434: FILE: fs/partitions/ibm.c:137:
++				      size-offset*(blocksize >> 9));
+ 				                 ^
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#1497: FILE: fs/partitions/ibm.c:150:
++			printk("VOL1/%8s:", name);
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#1504: FILE: fs/partitions/ibm.c:157:
++			data = read_dev_sector(bdev, blk * (blocksize/512),
+ 			                                             ^
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "data"
+#1506: FILE: fs/partitions/ibm.c:159:
++			while (data != NULL) {
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1515: FILE: fs/partitions/ibm.c:168:
++				if (f1.DS1FMTID == _ascebc['4']
++				    || f1.DS1FMTID == _ascebc['5']
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1516: FILE: fs/partitions/ibm.c:169:
++				    || f1.DS1FMTID == _ascebc['5']
++				    || f1.DS1FMTID == _ascebc['7']) {
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#1519: FILE: fs/partitions/ibm.c:172:
++							       (blocksize/512),
+ 							                 ^
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#1540: FILE: fs/partitions/ibm.c:193:
++						       blk * (blocksize/512),
+ 						                       ^
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1547: FILE: fs/partitions/ibm.c:200:
++		} else
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#1548: FILE: fs/partitions/ibm.c:201:
++			printk(KERN_WARNING "Warning, expected Label VOL1 not "
+
+WARNING:TYPO_SPELLING: 'formated' may be misspelled - perhaps 'formatted'?
+#1549: FILE: fs/partitions/ibm.c:202:
++			       "found, treating as CDL formated Disk");
+ 			                               ^^^^^^^^
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1549: FILE: fs/partitions/ibm.c:202:
++			printk(KERN_WARNING "Warning, expected Label VOL1 not "
++			       "found, treating as CDL formated Disk");
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'n0' may be better as '(n0)' to avoid precedence issues
+#1693: FILE: include/asm-s390/sfp-util.h:55:
++#define udiv_qrnnd(q, r, n1, n0, d)			\
++  do { unsigned long __n;				\
++       unsigned int __r, __d;				\
++    __n = ((unsigned long)(n1) << 32) + n0;		\
++    __d = (d);						\
++    (q) = __n / __d;					\
++    (r) = __n % __d;					\
++  } while (0)
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1694: FILE: include/asm-s390/sfp-util.h:56:
++  do { unsigned long __n;^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1695: FILE: include/asm-s390/sfp-util.h:57:
++       unsigned int __r, __d;^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1696: FILE: include/asm-s390/sfp-util.h:58:
++    __n = ((unsigned long)(n1) << 32) + n0;^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1697: FILE: include/asm-s390/sfp-util.h:59:
++    __d = (d);^I^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1698: FILE: include/asm-s390/sfp-util.h:60:
++    (q) = __n / __d;^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1699: FILE: include/asm-s390/sfp-util.h:61:
++    (r) = __n % __d;^I^I^I^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1700: FILE: include/asm-s390/sfp-util.h:62:
++  } while (0)$
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000408474.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 27 warnings, 23 checks, 1406 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000408474.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

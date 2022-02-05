@@ -1,0 +1,83 @@
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#289: FILE: drivers/ide/ide-disk.c:234:
++	BUG_ON(drive->dev_flags & IDE_DFLAG_BLOCKED);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!best"
+#707: FILE: drivers/ide/ide-io.c:947:
++			if (best == NULL ||
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!drive->id"
+#1043: FILE: drivers/ide/ide-probe.c:565:
++	if (drive->id == NULL) {
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'flag' may be better as '(flag)' to avoid precedence issues
+#1887: FILE: include/linux/ide.h:843:
++#define ide_devset_get_flag(name, flag) \
++static int get_##name(ide_drive_t *drive) \
++{ \
++	return !!(drive->dev_flags & flag); \
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'flag' - possible side-effects?
+#1893: FILE: include/linux/ide.h:849:
++#define ide_devset_set_flag(name, flag) \
++static int set_##name(ide_drive_t *drive, int arg) \
++{ \
++	if (arg) \
++		drive->dev_flags |= flag; \
++	else \
++		drive->dev_flags &= ~flag; \
++	return 0; \
++}
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#1910: FILE: include/linux/ide.h:894:
++#define ide_devset_rw_flag(_name, _field) \
++ide_devset_get_flag(_name, _field); \
++ide_devset_set_flag(_name, _field); \
++IDE_DEVSET(_name, DS_SYNC, get_##_name, set_##_name)
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_name' - possible side-effects?
+#1910: FILE: include/linux/ide.h:894:
++#define ide_devset_rw_flag(_name, _field) \
++ide_devset_get_flag(_name, _field); \
++ide_devset_set_flag(_name, _field); \
++IDE_DEVSET(_name, DS_SYNC, get_##_name, set_##_name)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_field' - possible side-effects?
+#1910: FILE: include/linux/ide.h:894:
++#define ide_devset_rw_flag(_name, _field) \
++ide_devset_get_flag(_name, _field); \
++ide_devset_set_flag(_name, _field); \
++IDE_DEVSET(_name, DS_SYNC, get_##_name, set_##_name)
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000239162.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 1 warnings, 6 checks, 1610 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000239162.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

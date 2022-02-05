@@ -1,0 +1,195 @@
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#87: FILE: drivers/xen/events.c:94:
+ };
++#define PIRQ_NEEDS_EOI	(1 << 0)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#87: FILE: drivers/xen/events.c:94:
++#define PIRQ_NEEDS_EOI	(1 << 0)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#103: FILE: drivers/xen/events.c:227:
++static bool pirq_needs_eoi(unsigned irq)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#107: FILE: drivers/xen/events.c:231:
++	BUG_ON(info->type != IRQT_PIRQ);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#128: FILE: drivers/xen/events.c:368:
++static bool identity_mapped_irq(unsigned irq)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#140: FILE: drivers/xen/events.c:380:
++		int rc = HYPERVISOR_physdev_op(PHYSDEVOP_eoi, &eoi);
++		WARN_ON(rc);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#149: FILE: drivers/xen/events.c:389:
++	BUG_ON(info->type != IRQT_PIRQ);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!desc->action"
+#164: FILE: drivers/xen/events.c:404:
++	return desc && desc->action == NULL;
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#173: FILE: drivers/xen/events.c:413:
++	BUG_ON(info->type != IRQT_PIRQ);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#183: FILE: drivers/xen/events.c:423:
++			printk(KERN_INFO "Failed to obtain physical IRQ %d\n",
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#208: FILE: drivers/xen/events.c:448:
++	BUG_ON(info->type != IRQT_PIRQ);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#217: FILE: drivers/xen/events.c:457:
++		BUG();
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#253: FILE: drivers/xen/events.c:493:
++	if ((desc->status & (IRQ_DISABLED|IRQ_PENDING)) ==
+ 	                                 ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#254: FILE: drivers/xen/events.c:494:
++	    (IRQ_DISABLED|IRQ_PENDING)) {
+ 	                 ^
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#262: FILE: drivers/xen/events.c:502:
++static int find_irq_by_gsi(unsigned gsi)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!info"
+#269: FILE: drivers/xen/events.c:509:
++		if (info == NULL || info->type != IRQT_PIRQ)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#284: FILE: drivers/xen/events.c:524:
++int xen_allocate_pirq(unsigned gsi)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#293: FILE: drivers/xen/events.c:533:
++		printk(KERN_INFO "xen_allocate_pirq: returning irq %d for gsi %u\n",
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'xen_allocate_pirq', this function's name, in a string
+#293: FILE: drivers/xen/events.c:533:
++		printk(KERN_INFO "xen_allocate_pirq: returning irq %d for gsi %u\n",
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#298: FILE: drivers/xen/events.c:538:
++	if (identity_mapped_irq(gsi)) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#301: FILE: drivers/xen/events.c:541:
++	} else
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#322: FILE: drivers/xen/events.c:562:
++int xen_vector_from_irq(unsigned irq)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#327: FILE: drivers/xen/events.c:567:
++int xen_gsi_from_irq(unsigned irq)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#371: FILE: include/xen/events.h:62:
++/* Allocate an irq for a physical interrupt, given a gsi.  "Legacy"
++   GSIs are identity mapped; others are dynamically allocated as
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#372: FILE: include/xen/events.h:63:
++   usual. */
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#373: FILE: include/xen/events.h:64:
++int xen_allocate_pirq(unsigned gsi);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#376: FILE: include/xen/events.h:67:
++int xen_vector_from_irq(unsigned pirq);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#379: FILE: include/xen/events.h:70:
++int xen_gsi_from_irq(unsigned pirq);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000119746.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 20 warnings, 8 checks, 311 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000119746.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

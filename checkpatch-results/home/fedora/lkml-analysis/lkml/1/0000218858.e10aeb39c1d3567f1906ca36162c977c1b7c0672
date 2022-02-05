@@ -1,0 +1,197 @@
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#151: FILE: drivers/gpio/gpiolib.c:68:
++	 * notification mode is */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#162: FILE: drivers/gpio/gpiolib.c:79:
++	unsigned		gpio;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#191: FILE: drivers/gpio/gpiolib.c:214:
++	unsigned		gpio = poll->gpio;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#234: FILE: drivers/gpio/gpiolib.c:344:
++static ssize_t gpio_notify_show(struct device *dev,
++		struct device_attribute *attr, char *buf)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#253: FILE: drivers/gpio/gpiolib.c:363:
++static ssize_t gpio_notify_store(struct device *dev,
++		struct device_attribute *attr, const char *buf, size_t size)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#256: FILE: drivers/gpio/gpiolib.c:366:
++	unsigned		gpio = desc - gpio_desc;
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#263: FILE: drivers/gpio/gpiolib.c:373:
++	if (sysfs_streq(buf, "irq"))
+[...]
++	else if (sysfs_streq(buf, "none"))
+[...]
++	else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#267: FILE: drivers/gpio/gpiolib.c:377:
++	else {
+
+WARNING:CONSIDER_KSTRTO: strict_strtol is obsolete, use kstrtol instead
+#268: FILE: drivers/gpio/gpiolib.c:378:
++		status = strict_strtol(buf, 0, &value);
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#281: FILE: drivers/gpio/gpiolib.c:391:
++	if (test_and_clear_bit(ASYNC_MODE_IRQ, &desc->flags))
+[...]
++	else if (test_and_clear_bit(ASYNC_MODE_POLL, &desc->flags)) {
+[...]
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#284: FILE: drivers/gpio/gpiolib.c:394:
++		BUG_ON(!desc->poll);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#294: FILE: drivers/gpio/gpiolib.c:404:
++			 * underlying hardware"? */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#302: FILE: drivers/gpio/gpiolib.c:412:
++		 * irq handler.  How many devices don't support this..?? */
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#308: FILE: drivers/gpio/gpiolib.c:418:
++	} else if (new == ASYNC_MODE_POLL) {
++
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*desc->poll)...) over kmalloc(sizeof(struct poll_desc)...)
+#309: FILE: drivers/gpio/gpiolib.c:419:
++		desc->poll = kmalloc(sizeof(struct poll_desc), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'gpio_notify_show' to 'notify_show' 'gpio_notify_store' to 'notify_store'
+#333: FILE: drivers/gpio/gpiolib.c:443:
++}
+
+The function names used in DEVICE_ATTR is unusual.
+Typically, the store and show functions are used with <attr>_store and
+<attr>_show, where <attr> is a named attribute variable of the device.
+
+Consider the following examples::
+
+  static DEVICE_ATTR(type, 0444, type_show, NULL);
+  static DEVICE_ATTR(power, 0644, power_show, power_store);
+
+The function names should preferably follow the above pattern.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#339: FILE: drivers/gpio/gpiolib.c:449:
++static ssize_t gpio_notify_filter_show(struct device *dev,
++		struct device_attribute *attr, char *buf)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#347: FILE: drivers/gpio/gpiolib.c:457:
++	if (test_bit(ASYNC_FALLING, &desc->flags) &&
++			test_bit(ASYNC_RISING, &desc->flags))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#359: FILE: drivers/gpio/gpiolib.c:469:
++static ssize_t gpio_notify_filter_store(struct device *dev,
++		struct device_attribute *attr, const char *buf, size_t size)
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#366: FILE: drivers/gpio/gpiolib.c:476:
++	if (sysfs_streq(buf, "rising")) {
+[...]
++	} else if (sysfs_streq(buf, "falling")) {
+[...]
++	} else if (sysfs_streq(buf, "both")) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#375: FILE: drivers/gpio/gpiolib.c:485:
++	} else
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'gpio_notify_filter_show' to 'notify_filter_show' 'gpio_notify_filter_store' to 'notify_filter_store'
+#380: FILE: drivers/gpio/gpiolib.c:490:
++}
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#402: FILE: drivers/gpio/gpiolib.c:615:
++		BUG_ON(!gpio_desc[gpio].poll);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000218858.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 11 warnings, 12 checks, 360 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000218858.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

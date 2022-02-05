@@ -1,0 +1,125 @@
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#72: FILE: arch/x86/include/asm/tsc.h:12:
+ 
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'delta' - possible side-effects?
+#73: FILE: arch/x86/include/asm/tsc.h:13:
++#define update_tsc(wrmsr, delta)	\
++({									\
++	asm volatile(							\
++			"movl $0x10, %%ecx\n\t"				\
++			"rdmsr\n\t"					\
++			"addl %%edi, %%eax\n\t"				\
++			"adcl %%esi, %%edx\n\t"				\
++			wrmsr "\n\t"					\
++			: /* no output */				\
++			: "D" ((u32)delta), "S"((u32)(delta >> 32))	\
++			: "ax", "cx", "dx", "cc");			\
++})
+
+WARNING:MISPLACED_INIT: __cpuinitdata should be placed after resync_lock
+#106: FILE: arch/x86/kernel/tsc_sync.c:40:
++static __cpuinitdata raw_spinlock_t resync_lock = __RAW_SPIN_LOCK_UNLOCKED;
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#191: FILE: arch/x86/kernel/tsc_sync.c:187:
++		if (cpu_can_resync() && !atomic_read(&resync_ran)) {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_cont([subsystem]dev, ... then dev_cont(dev, ... then pr_cont(...  to printk(KERN_CONT ...
+#192: FILE: arch/x86/kernel/tsc_sync.c:188:
++			printk(KERN_CONT " failed.\n");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#192: FILE: arch/x86/kernel/tsc_sync.c:188:
++			printk(KERN_CONT " failed.\n");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#193: FILE: arch/x86/kernel/tsc_sync.c:189:
++			printk(KERN_WARNING "TSC out of sync, resynching.\n");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_cont([subsystem]dev, ... then dev_cont(dev, ... then pr_cont(...  to printk(KERN_CONT ...
+#201: FILE: arch/x86/kernel/tsc_sync.c:197:
++			printk(KERN_CONT "\n");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#201: FILE: arch/x86/kernel/tsc_sync.c:197:
++			printk(KERN_CONT "\n");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#202: FILE: arch/x86/kernel/tsc_sync.c:198:
++			printk(KERN_WARNING "Measured %lld cycles TSC warp "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#203: FILE: arch/x86/kernel/tsc_sync.c:199:
++			printk(KERN_WARNING "Measured %lld cycles TSC warp "
++			       "between CPUs, turning off TSC clock.\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'check_tsc_sync_source', this function's name, in a string
+#205: FILE: arch/x86/kernel/tsc_sync.c:201:
++			mark_tsc_unstable("check_tsc_sync_source failed");
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#229: FILE: arch/x86/kernel/tsc_sync.c:221:
+ 
++
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000206061.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 9 warnings, 4 checks, 177 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000206061.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

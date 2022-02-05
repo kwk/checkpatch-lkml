@@ -1,0 +1,172 @@
+WARNING:TYPO_SPELLING: 'similary' may be misspelled - perhaps 'similarly'?
+#38: 
+* part_round_stats() is updated similary.  It handles part0 stats
+                                ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#282: FILE: block/genhd.c:589:
++			printk("%s%s %10llu %s", is_part0 ? "" : "  ",
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#286: FILE: block/genhd.c:593:
++			if (is_part0) {
+[...]
++			} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "disk->driverfs_dev"
+#287: FILE: block/genhd.c:594:
++				if (disk->driverfs_dev != NULL &&
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "disk->driverfs_dev->driver"
+#288: FILE: block/genhd.c:595:
++				    disk->driverfs_dev->driver != NULL)
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#289: FILE: block/genhd.c:596:
++					printk(" driver: %s\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#290: FILE: block/genhd.c:597:
++					printk(" driver: %s\n",
++					      disk->driverfs_dev->driver->name);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#292: FILE: block/genhd.c:599:
++					printk(" (driver?)\n");
+
+CHECK:BRACES: Unbalanced braces around else statement
+#293: FILE: block/genhd.c:600:
++			} else
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#294: FILE: block/genhd.c:601:
++				printk("\n");
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'part_stat_show' to 'stat_show'
+#351: FILE: block/genhd.c:773:
++static DEVICE_ATTR(stat, S_IRUGO, part_stat_show, NULL);
+
+The function names used in DEVICE_ATTR is unusual.
+Typically, the store and show functions are used with <attr>_store and
+<attr>_show, where <attr> is a named attribute variable of the device.
+
+Consider the following examples::
+
+  static DEVICE_ATTR(type, 0444, type_show, NULL);
+  static DEVICE_ATTR(power, 0644, power_show, power_store);
+
+The function names should preferably follow the above pattern.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#351: FILE: block/genhd.c:773:
++static DEVICE_ATTR(stat, S_IRUGO, part_stat_show, NULL);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 32)
+#408: FILE: block/genhd.c:962:
+ 		if (!disk->__part) {
++				free_part_stats(&disk->part0);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#720: FILE: include/linux/genhd.h:241:
++#define __part_stat_add(cpu, part, field, addnd)			\
++	(per_cpu_ptr((part)->dkstats, (cpu))->field += (addnd))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#800: FILE: include/linux/genhd.h:279:
++#define __part_stat_add(cpu, part, field, addnd)				\
++	((part)->dkstats.field += addnd)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cpu' - possible side-effects?
+#844: FILE: include/linux/genhd.h:300:
++#define part_stat_add(cpu, part, field, addnd)	do {			\
++	__part_stat_add((cpu), (part), field, addnd);			\
++	if ((part)->partno)						\
++		__part_stat_add((cpu), &part_to_disk((part))->part0,	\
++				field, addnd);				\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'part' - possible side-effects?
+#844: FILE: include/linux/genhd.h:300:
++#define part_stat_add(cpu, part, field, addnd)	do {			\
++	__part_stat_add((cpu), (part), field, addnd);			\
++	if ((part)->partno)						\
++		__part_stat_add((cpu), &part_to_disk((part))->part0,	\
++				field, addnd);				\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#844: FILE: include/linux/genhd.h:300:
++#define part_stat_add(cpu, part, field, addnd)	do {			\
++	__part_stat_add((cpu), (part), field, addnd);			\
++	if ((part)->partno)						\
++		__part_stat_add((cpu), &part_to_disk((part))->part0,	\
++				field, addnd);				\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'addnd' - possible side-effects?
+#844: FILE: include/linux/genhd.h:300:
++#define part_stat_add(cpu, part, field, addnd)	do {			\
++	__part_stat_add((cpu), (part), field, addnd);			\
++	if ((part)->partno)						\
++		__part_stat_add((cpu), &part_to_disk((part))->part0,	\
++				field, addnd);				\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'subnd' may be better as '(subnd)' to avoid precedence issues
+#856: FILE: include/linux/genhd.h:311:
++#define part_stat_sub(cpu, gendiskp, field, subnd)			\
++	part_stat_add(cpu, gendiskp, field, -subnd)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#885: FILE: include/linux/genhd.h:537:
++extern ssize_t part_stat_show(struct device *dev,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000235993.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 8 warnings, 13 checks, 728 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000235993.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

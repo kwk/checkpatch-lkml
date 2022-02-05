@@ -1,0 +1,181 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#39: 
+using TOP_MEM2 msr to get memory top, and try to scan fam10h mmio routing to
+
+WARNING:MISPLACED_INIT: __cpuinitdata should be placed after fam10h_pci_mmconf_base
+#77: FILE: arch/x86/kernel/setup_64.c:608:
++static u64 __cpuinitdata fam10h_pci_mmconf_base;
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+WARNING:MISPLACED_INIT: __cpuinitdata should be placed after fam10h_pci_mmconf_base_status
+#78: FILE: arch/x86/kernel/setup_64.c:609:
++static int __cpuinitdata fam10h_pci_mmconf_base_status;
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#104: FILE: arch/x86/kernel/setup_64.c:635:
++#define FAM10H_PCI_MMCONF_BASE (0xfcULL<<32)
+                                        ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'b' - possible side-effects?
+#105: FILE: arch/x86/kernel/setup_64.c:636:
++#define BASE_VALID(b) ((b != (0xfdULL << 32)) && (b != (0xfeULL << 32)))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'b' may be better as '(b)' to avoid precedence issues
+#105: FILE: arch/x86/kernel/setup_64.c:636:
++#define BASE_VALID(b) ((b != (0xfdULL << 32)) && (b != (0xfeULL << 32)))
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#109: FILE: arch/x86/kernel/setup_64.c:640:
++	unsigned bus;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#110: FILE: arch/x86/kernel/setup_64.c:641:
++	unsigned slot;
+
+CHECK:SPACING: spaces preferred around that '>>' (ctx:VxV)
+#140: FILE: arch/x86/kernel/setup_64.c:671:
++		device = (id>>16) & 0xffff;
+ 		            ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#156: FILE: arch/x86/kernel/setup_64.c:687:
++	if (!(val & (1<<21))) {
+ 	              ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#162: FILE: arch/x86/kernel/setup_64.c:693:
++		tom2 = val & (0xffffULL<<32);
+ 		                       ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#166: FILE: arch/x86/kernel/setup_64.c:697:
++		base = tom2 + (1ULL<<32);
+ 		                   ^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#177: FILE: arch/x86/kernel/setup_64.c:708:
++		u64 end;
++		reg = read_pci_config(bus, slot, 1, 0x80 + (i << 3));
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'base > tom2'
+#206: FILE: arch/x86/kernel/setup_64.c:737:
++	if ((base > tom2) && BASE_VALID(base))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'base > tom2'
+#209: FILE: arch/x86/kernel/setup_64.c:740:
++	if ((base > tom2) && BASE_VALID(base))
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 8)
+#212: FILE: arch/x86/kernel/setup_64.c:743:
++	if (hi_mmio_num > 1)
++	for (i = 0; i < hi_mmio_num - 1; i++) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'base > tom2'
+#216: FILE: arch/x86/kernel/setup_64.c:747:
++			if ((base > tom2) && BASE_VALID(base))
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#242: FILE: arch/x86/kernel/setup_64.c:773:
++		u64 base;
++		base = val & (0xffffULL << 32);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#243: FILE: arch/x86/kernel/setup_64.c:774:
++		if (fam10h_pci_mmconf_base_status <= 0) {
+[...]
++		} else if (fam10h_pci_mmconf_base ==  base)
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#259: FILE: arch/x86/kernel/setup_64.c:790:
++	printk(KERN_INFO "Enable MMCONFIG on AMD Family 10h\n");
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#260: FILE: arch/x86/kernel/setup_64.c:791:
++	val &= ~((FAM10H_MMIO_CONF_BASE_MASK<<FAM10H_MMIO_CONF_BASE_SHIFT) |
+ 	                                    ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#261: FILE: arch/x86/kernel/setup_64.c:792:
++	     (FAM10H_MMIO_CONF_BUSRANGE_MASK<<FAM10H_MMIO_CONF_BUSRANGE_SHIFT));
+ 	                                    ^
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000336291.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 9 warnings, 13 checks, 228 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000336291.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

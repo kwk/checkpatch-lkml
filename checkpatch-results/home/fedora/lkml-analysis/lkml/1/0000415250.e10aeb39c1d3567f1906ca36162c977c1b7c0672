@@ -1,0 +1,101 @@
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#135: FILE: drivers/base/dd.c:27:
++	spinlock_t lock;
+
+CHECK:SPACING: No space is necessary after a cast
+#155: FILE: drivers/base/dd.c:47:
++	if (probe_thread_num <= 0 || probe_thread_num > (unsigned short) ~0U)
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:UNDOCUMENTED_SETUP: __setup appears un-documented -- check Documentation/admin-guide/kernel-parameters.txt
+#160: FILE: drivers/base/dd.c:52:
++__setup("probe_thread_num=", set_probe_thread_num);
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:VxV)
+#211: FILE: drivers/base/dd.c:103:
++		&probe_queues[probe_queue_no%probe_thread_num];
+ 		                            ^
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*simple_probe)...) over kmalloc(sizeof(struct simple_probe)...)
+#238: FILE: drivers/base/dd.c:130:
++	simple_probe = kmalloc(sizeof(struct simple_probe), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kmalloc_array over kmalloc with multiply
+#256: FILE: drivers/base/dd.c:148:
++	probe_queues = kmalloc(probe_thread_num * sizeof(struct probe_queue),
++			       GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+WARNING:YIELD: Using yield() is generally wrong. See yield() kernel-doc (sched/core.c)
+#314: FILE: drivers/base/dd.c:265:
++		yield();
+
+WARNING:SPACING: Unnecessary space after function pointer open parenthesis
+#380: FILE: include/linux/device.h:536:
++	int ( * probe_func)(struct probe *probe);
+
+WARNING:SPACING: Unnecessary space before function pointer name
+#380: FILE: include/linux/device.h:536:
++	int ( * probe_func)(struct probe *probe);
+
+ERROR:SPACING: space prohibited after that '*' (ctx:WxW)
+#380: FILE: include/linux/device.h:536:
++	int ( * probe_func)(struct probe *probe);
+ 	      ^
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#380: FILE: include/linux/device.h:536:
++	int ( * probe_func)(struct probe *probe);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_probe' - possible side-effects?
+#387: FILE: include/linux/device.h:543:
++#define INIT_PROBE(_probe, _probe_func)				\
++	do {							\
++		INIT_LIST_HEAD(&(_probe)->entry);		\
++		(_probe)->probe_func = (_probe_func);		\
++		(_probe)->probe_queue_no = 0;			\
++	 } while (0);
+
+WARNING:DO_WHILE_MACRO_WITH_TRAILING_SEMICOLON: do {} while (0) macros should not be semicolon terminated
+#387: FILE: include/linux/device.h:543:
++#define INIT_PROBE(_probe, _probe_func)				\
++	do {							\
++		INIT_LIST_HEAD(&(_probe)->entry);		\
++		(_probe)->probe_func = (_probe_func);		\
++		(_probe)->probe_queue_no = 0;			\
++	 } while (0);
+
+do {} while(0) macros should not have a trailing semicolon.
+
+WARNING:TABSTOP: Statements should start on a tabstop
+#392: FILE: include/linux/device.h:548:
++	 } while (0);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000415250.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 2 errors, 6 warnings, 6 checks, 258 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000415250.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

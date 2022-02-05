@@ -1,0 +1,356 @@
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#172: FILE: arch/x86/kernel/efi_tables.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'bt' - possible side-effects?
+#192: FILE: arch/x86/kernel/efi_tables.c:21:
++#define EFI_TABLE_PARSE(bt)						\
++static void __init efi_tables_parse ## bt(void)				\
++{									\
++	struct efi_config_table ## bt *config_tables;			\
++	struct efi_system_table ## bt systab, *psystab;			\
++	efi_char16_t *c16;						\
++	char vendor[100] = "unknown";					\
++	u64 n;								\
++	int i;								\
++	void *tmp;							\
++									\
++	n = boot_params.efi_info.efi_systab;				\
++	if (bt == 64)							\
++		n |= ((u64)boot_params.efi_info.efi_systab_hi<<32);	\
++	if (!EFI_CHECK_ADDR(n))						\
++		return;							\
++	psystab = efi_early_ioremap(n, sizeof(systab));			\
++	if (psystab == NULL) {						\
++		printk(KERN_ERR "Could not map the EFI system table!\n"); \
++		return;							\
++	}								\
++	memcpy(&systab, psystab, sizeof(systab));			\
++	efi_early_iounmap(psystab, sizeof(systab));			\
++									\
++	if (systab.hdr.signature != EFI_SYSTEM_TABLE_SIGNATURE) {	\
++		printk(KERN_ERR "EFI system table signature "		\
++		       "incorrect!\n");					\
++		return;							\
++	}								\
++	if ((systab.hdr.revision >> 16) == 0) {				\
++		printk(KERN_ERR "Warning: EFI system table version "	\
++		       "%d.%02d, expected 1.00 or greater!\n",		\
++		       systab.hdr.revision >> 16,			\
++		       systab.hdr.revision & 0xffff);			\
++		return;							\
++	}								\
++									\
++	if (EFI_CHECK_ADDR(systab.fw_vendor)) {				\
++		c16 = tmp = efi_early_ioremap(systab.fw_vendor, 2);	\
++		if (c16 == NULL) {					\
++			printk(KERN_ERR "Could not map the EFI "	\
++			       "firmware vendor!\n");			\
++			return;						\
++		}							\
++		for (i = 0; i < sizeof(vendor) && *c16; ++i)		\
++			vendor[i] = *c16++;				\
++		vendor[i] = '\0';					\
++		efi_early_iounmap(tmp, 2);				\
++	}								\
++									\
++	printk(KERN_INFO "EFI %u v%u.%.02u by %s \n",			\
++	       bt, systab.hdr.revision >> 16,				\
++	       systab.hdr.revision & 0xffff, vendor);			\
++									\
++	if (!EFI_CHECK_ADDR(systab.tables))				\
++		return;							\
++									\
++	config_tables = efi_early_ioremap(				\
++		systab.tables,						\
++		systab.nr_tables * sizeof(struct efi_config_table ## bt)); \
++	if (config_tables == NULL) {					\
++		printk(KERN_ERR "Could not map EFI Configuration "	\
++		       "Table!\n");					\
++		return;							\
++	}								\
++									\
++	printk(KERN_INFO);						\
++	for (i = 0; i < systab.nr_tables; i++) {			\
++		efi_guid_t guid = config_tables[i].guid;		\
++		unsigned long table = config_tables[i].table;		\
++		if (!EFI_CHECK_ADDR(config_tables[i].table))		\
++			continue;					\
++		if (!efi_guidcmp(guid, MPS_TABLE_GUID)) {		\
++			efi_tables.mps = table;				\
++			printk(" MPS=0x%lx ", table);			\
++		} else if (!efi_guidcmp(guid, ACPI_20_TABLE_GUID)) {	\
++			efi_tables.acpi20 = table;			\
++			printk(" ACPI 2.0=0x%lx ", table);		\
++		} else if (!efi_guidcmp(guid, ACPI_TABLE_GUID)) {	\
++			efi_tables.acpi = table;			\
++			printk(" ACPI=0x%lx ", table);			\
++		} else if (!efi_guidcmp(guid, SMBIOS_TABLE_GUID)) {	\
++			efi_tables.smbios = table;			\
++			printk(" SMBIOS=0x%lx ", table);		\
++		} else if (!efi_guidcmp(guid, HCDP_TABLE_GUID)) {	\
++			efi_tables.hcdp = table;			\
++			printk(" HCDP=0x%lx ", table);			\
++		} else if (!efi_guidcmp(guid, UGA_IO_PROTOCOL_GUID)) {	\
++			efi_tables.uga = table;				\
++			printk(" UGA=0x%lx ", table);			\
++		}							\
++	}								\
++	printk("\n");							\
++	efi_early_iounmap(						\
++		config_tables,						\
++		systab.nr_tables * sizeof(struct efi_config_table ## bt)); \
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'bt' may be better as '(bt)' to avoid precedence issues
+#192: FILE: arch/x86/kernel/efi_tables.c:21:
++#define EFI_TABLE_PARSE(bt)						\
++static void __init efi_tables_parse ## bt(void)				\
++{									\
++	struct efi_config_table ## bt *config_tables;			\
++	struct efi_system_table ## bt systab, *psystab;			\
++	efi_char16_t *c16;						\
++	char vendor[100] = "unknown";					\
++	u64 n;								\
++	int i;								\
++	void *tmp;							\
++									\
++	n = boot_params.efi_info.efi_systab;				\
++	if (bt == 64)							\
++		n |= ((u64)boot_params.efi_info.efi_systab_hi<<32);	\
++	if (!EFI_CHECK_ADDR(n))						\
++		return;							\
++	psystab = efi_early_ioremap(n, sizeof(systab));			\
++	if (psystab == NULL) {						\
++		printk(KERN_ERR "Could not map the EFI system table!\n"); \
++		return;							\
++	}								\
++	memcpy(&systab, psystab, sizeof(systab));			\
++	efi_early_iounmap(psystab, sizeof(systab));			\
++									\
++	if (systab.hdr.signature != EFI_SYSTEM_TABLE_SIGNATURE) {	\
++		printk(KERN_ERR "EFI system table signature "		\
++		       "incorrect!\n");					\
++		return;							\
++	}								\
++	if ((systab.hdr.revision >> 16) == 0) {				\
++		printk(KERN_ERR "Warning: EFI system table version "	\
++		       "%d.%02d, expected 1.00 or greater!\n",		\
++		       systab.hdr.revision >> 16,			\
++		       systab.hdr.revision & 0xffff);			\
++		return;							\
++	}								\
++									\
++	if (EFI_CHECK_ADDR(systab.fw_vendor)) {				\
++		c16 = tmp = efi_early_ioremap(systab.fw_vendor, 2);	\
++		if (c16 == NULL) {					\
++			printk(KERN_ERR "Could not map the EFI "	\
++			       "firmware vendor!\n");			\
++			return;						\
++		}							\
++		for (i = 0; i < sizeof(vendor) && *c16; ++i)		\
++			vendor[i] = *c16++;				\
++		vendor[i] = '\0';					\
++		efi_early_iounmap(tmp, 2);				\
++	}								\
++									\
++	printk(KERN_INFO "EFI %u v%u.%.02u by %s \n",			\
++	       bt, systab.hdr.revision >> 16,				\
++	       systab.hdr.revision & 0xffff, vendor);			\
++									\
++	if (!EFI_CHECK_ADDR(systab.tables))				\
++		return;							\
++									\
++	config_tables = efi_early_ioremap(				\
++		systab.tables,						\
++		systab.nr_tables * sizeof(struct efi_config_table ## bt)); \
++	if (config_tables == NULL) {					\
++		printk(KERN_ERR "Could not map EFI Configuration "	\
++		       "Table!\n");					\
++		return;							\
++	}								\
++									\
++	printk(KERN_INFO);						\
++	for (i = 0; i < systab.nr_tables; i++) {			\
++		efi_guid_t guid = config_tables[i].guid;		\
++		unsigned long table = config_tables[i].table;		\
++		if (!EFI_CHECK_ADDR(config_tables[i].table))		\
++			continue;					\
++		if (!efi_guidcmp(guid, MPS_TABLE_GUID)) {		\
++			efi_tables.mps = table;				\
++			printk(" MPS=0x%lx ", table);			\
++		} else if (!efi_guidcmp(guid, ACPI_20_TABLE_GUID)) {	\
++			efi_tables.acpi20 = table;			\
++			printk(" ACPI 2.0=0x%lx ", table);		\
++		} else if (!efi_guidcmp(guid, ACPI_TABLE_GUID)) {	\
++			efi_tables.acpi = table;			\
++			printk(" ACPI=0x%lx ", table);			\
++		} else if (!efi_guidcmp(guid, SMBIOS_TABLE_GUID)) {	\
++			efi_tables.smbios = table;			\
++			printk(" SMBIOS=0x%lx ", table);		\
++		} else if (!efi_guidcmp(guid, HCDP_TABLE_GUID)) {	\
++			efi_tables.hcdp = table;			\
++			printk(" HCDP=0x%lx ", table);			\
++		} else if (!efi_guidcmp(guid, UGA_IO_PROTOCOL_GUID)) {	\
++			efi_tables.uga = table;				\
++			printk(" UGA=0x%lx ", table);			\
++		}							\
++	}								\
++	printk("\n");							\
++	efi_early_iounmap(						\
++		config_tables,						\
++		systab.nr_tables * sizeof(struct efi_config_table ## bt)); \
++}
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#205: FILE: arch/x86/kernel/efi_tables.c:34:
++		n |= ((u64)boot_params.efi_info.efi_systab_hi<<32);	\
+ 		                                             ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!psystab"
+#209: FILE: arch/x86/kernel/efi_tables.c:38:
++	if (psystab == NULL) {						\
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#210: FILE: arch/x86/kernel/efi_tables.c:39:
++		printk(KERN_ERR "Could not map the EFI system table!\n"); \
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#217: FILE: arch/x86/kernel/efi_tables.c:46:
++		printk(KERN_ERR "EFI system table signature "		\
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#222: FILE: arch/x86/kernel/efi_tables.c:51:
++		printk(KERN_ERR "Warning: EFI system table version "	\
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#230: FILE: arch/x86/kernel/efi_tables.c:59:
++		c16 = tmp = efi_early_ioremap(systab.fw_vendor, 2);	\
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!c16"
+#231: FILE: arch/x86/kernel/efi_tables.c:60:
++		if (c16 == NULL) {					\
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#232: FILE: arch/x86/kernel/efi_tables.c:61:
++			printk(KERN_ERR "Could not map the EFI "	\
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#242: FILE: arch/x86/kernel/efi_tables.c:71:
++	printk(KERN_INFO "EFI %u v%u.%.02u by %s \n",			\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#242: FILE: arch/x86/kernel/efi_tables.c:71:
++	printk(KERN_INFO "EFI %u v%u.%.02u by %s \n",			\
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!config_tables"
+#252: FILE: arch/x86/kernel/efi_tables.c:81:
++	if (config_tables == NULL) {					\
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#253: FILE: arch/x86/kernel/efi_tables.c:82:
++		printk(KERN_ERR "Could not map EFI Configuration "	\
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#258: FILE: arch/x86/kernel/efi_tables.c:87:
++	printk(KERN_INFO);						\
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#266: FILE: arch/x86/kernel/efi_tables.c:95:
++			printk(" MPS=0x%lx ", table);			\
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#269: FILE: arch/x86/kernel/efi_tables.c:98:
++			printk(" ACPI 2.0=0x%lx ", table);		\
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#272: FILE: arch/x86/kernel/efi_tables.c:101:
++			printk(" ACPI=0x%lx ", table);			\
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#275: FILE: arch/x86/kernel/efi_tables.c:104:
++			printk(" SMBIOS=0x%lx ", table);		\
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#278: FILE: arch/x86/kernel/efi_tables.c:107:
++			printk(" HCDP=0x%lx ", table);			\
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#281: FILE: arch/x86/kernel/efi_tables.c:110:
++			printk(" UGA=0x%lx ", table);			\
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#284: FILE: arch/x86/kernel/efi_tables.c:113:
++	printk("\n");							\
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#391: FILE: include/asm-x86/efi.h:116:
++extern void efi_tables_parse(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#392: FILE: include/asm-x86/efi.h:117:
++extern void efi_check_bios_type(void);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!efi.systab"
+#534: FILE: arch/x86/kernel/efi.c:256:
++	if (efi.systab == NULL) {
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!runtime"
+#634: FILE: arch/x86/kernel/efi.c:280:
++	if (runtime == NULL) {
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!memmap.map"
+#656: FILE: arch/x86/kernel/efi.c:301:
++	if (memmap.map == NULL) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#744: FILE: drivers/firmware/efivars.c:677:
++		printk(KERN_ERR "efivars: Sysfs attribute export failed "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#745: FILE: drivers/firmware/efivars.c:678:
++		printk(KERN_ERR "efivars: Sysfs attribute export failed "
++		       "with error %d.\n", error);
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#752: FILE: drivers/firmware/efivars.c:685:
++	printk(KERN_INFO "EFI Variables Facility v%s %s\n", EFIVARS_VERSION,
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#921: FILE: drivers/firmware/pcdp.c:99:
++	printk(KERN_INFO "PCDP: v%d at 0x%lx\n", pcdp->rev, efi_tables.hcdp);
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000342752.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 20 warnings, 12 checks, 769 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000342752.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

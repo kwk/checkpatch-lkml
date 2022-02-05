@@ -1,0 +1,55 @@
+WARNING:MISPLACED_INIT: __initconst should be placed after amd_pmu
+#267: FILE: arch/x86/kernel/cpu/perf_event_amd.c:359:
++static __initconst struct x86_pmu amd_pmu = {
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+ERROR:INIT_ATTRIBUTE: Use of __initconst requires a separate use of const
+#267: FILE: arch/x86/kernel/cpu/perf_event_amd.c:359:
++static __initconst struct x86_pmu amd_pmu = {
+
+Const init definitions should use __initconst instead of
+__initdata.
+
+Similarly init definitions without const require a separate
+use of const.
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#369: FILE: include/linux/perf_event.h:967:
++#define perf_cpu_notifier(fn) ^I^I^I^I^I\$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fn' - possible side-effects?
+#369: FILE: include/linux/perf_event.h:967:
++#define perf_cpu_notifier(fn) 					\
++do {								\
++	static struct notifier_block fn##_nb __cpuinitdata =	\
++		{ .notifier_call = fn, .priority = 20 };	\
++	fn(&fn##_nb, (unsigned long)CPU_UP_PREPARE,		\
++		(void *)(unsigned long)smp_processor_id());	\
++	fn(&fn##_nb, (unsigned long)CPU_STARTING,		\
++		(void *)(unsigned long)smp_processor_id());	\
++	fn(&fn##_nb, (unsigned long)CPU_ONLINE,			\
++		(void *)(unsigned long)smp_processor_id());	\
++	register_cpu_notifier(&fn##_nb);			\
++} while (0)
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000003703.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 1 errors, 2 warnings, 1 checks, 326 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000003703.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

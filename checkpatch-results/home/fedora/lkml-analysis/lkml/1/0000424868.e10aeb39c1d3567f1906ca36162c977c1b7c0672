@@ -1,0 +1,249 @@
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#41: FILE: include/asm-i386/condcall.h:1:
++#ifndef _ASM_I386_CONDCALL_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#53: FILE: include/asm-i386/condcall.h:13:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#60: FILE: include/asm-i386/condcall.h:20:
++ * parameter in the structure. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'flags' - possible side-effects?
+#61: FILE: include/asm-i386/condcall.h:21:
++#define cond_call_optimized(flags, name, func) \
++	({ \
++		static const char __cstrtab_name_##name[] \
++		__attribute__((section("__cond_call_strings"))) = #name; \
++		char condition; \
++		asm (	".section __cond_call, \"a\", @progbits;\n\t" \
++					".long %1, 0f, %2;\n\t" \
++					".previous;\n\t" \
++					".align 2\n\t" \
++					"0:\n\t" \
++					"movb %3,%0;\n\t" \
++				: "=r" (condition) \
++				: "m" (*__cstrtab_name_##name), \
++				  "m" (*(char*)flags), \
++				  "i" ((flags) & CF_STATIC_ENABLE)); \
++		(likely(!condition)) ? \
++			(__typeof__(func))0 : \
++			(func); \
++	})
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__cond_call_strings") over __attribute__((section("__cond_call_strings")))
+#64: FILE: include/asm-i386/condcall.h:24:
++		__attribute__((section("__cond_call_strings"))) = #name; \
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#66: FILE: include/asm-i386/condcall.h:26:
++		asm (	".section __cond_call, \"a\", @progbits;\n\t" \
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#74: FILE: include/asm-i386/condcall.h:34:
++				  "m" (*(char*)flags), \
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#82: FILE: include/asm-i386/condcall.h:42:
++ * depending on the flags specified. */
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'flags' - possible side-effects?
+#83: FILE: include/asm-i386/condcall.h:43:
++#define _cond_call(flags, name, func) \
++({ \
++	(((flags) & CF_LOCKDEP) && ((flags) & CF_OPTIMIZED)) ? \
++		cond_call_optimized(flags, name, func) : \
++		cond_call_generic(flags, name, func); \
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#83: FILE: include/asm-i386/condcall.h:43:
++#define _cond_call(flags, name, func) \
++({ \
++	(((flags) & CF_LOCKDEP) && ((flags) & CF_OPTIMIZED)) ? \
++		cond_call_optimized(flags, name, func) : \
++		cond_call_generic(flags, name, func); \
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'func' - possible side-effects?
+#83: FILE: include/asm-i386/condcall.h:43:
++#define _cond_call(flags, name, func) \
++({ \
++	(((flags) & CF_LOCKDEP) && ((flags) & CF_OPTIMIZED)) ? \
++		cond_call_optimized(flags, name, func) : \
++		cond_call_generic(flags, name, func); \
++})
+
+WARNING:TYPO_SPELLING: 'dependant' may be misspelled - perhaps 'dependent'?
+#93: FILE: include/asm-i386/condcall.h:53:
++/* Architecture dependant cond_call information, used internally for cond_call
+                 ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#94: FILE: include/asm-i386/condcall.h:54:
++ * activation. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#97: FILE: include/asm-i386/condcall.h:57:
++ * bytes. */
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#101: FILE: include/asm-i386/condcall.h:61:
++#define COND_CALL_OPTIMIZED_ENABLE(a) \
++	*(COND_CALL_OPTIMIZED_ENABLE_TYPE*) \
++		((char*)a+COND_CALL_OPTIMIZED_ENABLE_IMMEDIATE_OFFSET)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'a' may be better as '(a)' to avoid precedence issues
+#101: FILE: include/asm-i386/condcall.h:61:
++#define COND_CALL_OPTIMIZED_ENABLE(a) \
++	*(COND_CALL_OPTIMIZED_ENABLE_TYPE*) \
++		((char*)a+COND_CALL_OPTIMIZED_ENABLE_IMMEDIATE_OFFSET)
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#102: FILE: include/asm-i386/condcall.h:62:
++	*(COND_CALL_OPTIMIZED_ENABLE_TYPE*) \
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#103: FILE: include/asm-i386/condcall.h:63:
++		((char*)a+COND_CALL_OPTIMIZED_ENABLE_IMMEDIATE_OFFSET)
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#103: FILE: include/asm-i386/condcall.h:63:
++		((char*)a+COND_CALL_OPTIMIZED_ENABLE_IMMEDIATE_OFFSET)
+ 		         ^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#105: FILE: include/asm-i386/condcall.h:65:
++extern int cond_call_optimized_set_enable(void *address, char enable);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#126: FILE: arch/i386/kernel/condcall.c:1:
++/* condcall.c
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/cacheflush.h> instead of <asm/cacheflush.h>
+#181: FILE: arch/i386/kernel/condcall.c:56:
++#include <asm/cacheflush.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+ERROR:INITIALISED_STATIC: do not initialise statics to 0
+#187: FILE: arch/i386/kernel/condcall.c:62:
++static long target_eip = 0;
+
+Static variables should not be initialized explicitly to zero.
+Your compiler (or rather your loader) automatically does
+it for you.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#204: FILE: arch/i386/kernel/condcall.c:79:
++static int cond_call_notifier(struct notifier_block *nb,
++	unsigned long val, void *data)
+
+CHECK:SPACING: No space is necessary after a cast
+#206: FILE: arch/i386/kernel/condcall.c:81:
++	enum die_val die_val = (enum die_val) val;
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#240: FILE: arch/i386/kernel/condcall.c:115:
++	wmb();
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#242: FILE: arch/i386/kernel/condcall.c:117:
++	 * Acts as a memory barrier. */
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#244: FILE: arch/i386/kernel/condcall.c:119:
++	BUG_ON(ret != 0);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#247: FILE: arch/i386/kernel/condcall.c:122:
++	wmb();
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#250: FILE: arch/i386/kernel/condcall.c:125:
++		/* Wait for all int3 handlers to end
++		   (interrupts are disabled in int3).
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#256: FILE: arch/i386/kernel/condcall.c:131:
++		   synchronize_sched has memory barriers */
+
+WARNING:DEPRECATED_API: Deprecated use of 'synchronize_sched', prefer 'synchronize_rcu' instead
+#257: FILE: arch/i386/kernel/condcall.c:132:
++	synchronize_sched();
+
+Usage of a deprecated RCU API is detected.  It is recommended to replace
+old flavourful RCU APIs by their new vanilla-RCU counterparts.
+
+The full list of available RCU APIs can be viewed from the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/RCU/whatisRCU.html#full-list-of-rcu-apis
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000424868.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 6 errors, 15 warnings, 11 checks, 216 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000424868.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

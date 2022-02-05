@@ -1,0 +1,190 @@
+WARNING:BAD_SIGN_OFF: Non-standard signature: 'Signed-of-by:' - perhaps 'Signed-off-by:'?
+#30: 
+Signed-of-by: Mike Travis <travis@sgi.com>
+
+The signed-off-by line does not fall in line with the standards
+specified by the community.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#95: FILE: include/linux/cpumask_alloc.h:1:
++#ifndef __LINUX_CPUMASK_ALLOC_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "d"
+#112: FILE: include/linux/cpumask_alloc.h:18:
++	return (d != NULL);
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:IF_0: Consider removing the code enclosed by this #if 0 and its #endif
+#140: FILE: include/linux/cpumask_alloc.h:46:
++#if 0
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'size' - possible side-effects?
+#148: FILE: include/linux/cpumask_alloc.h:54:
++#define DEFINE_PER_CPUMASK_POOL(name, size)		\
++	DEFINE_PER_CPU(					\
++		struct {				\
++			unsigned long	length;		\
++			unsigned long	allocated;	\
++			cpumask_data	pool[size];	\
++		}, name ) = { .length = size, }
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#154: FILE: include/linux/cpumask_alloc.h:60:
++		}, name ) = { .length = size, }
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#158: FILE: include/linux/cpumask_alloc.h:64:
++#define	cpumask_pool_put(m, p)	__cpumask_pool_put(m, &__get_cpu_var(p));
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#167: FILE: include/linux/cpumask_alloc.h:73:
++	while ((n = find_first_bit(&p->allocated, p->length)) < p->length &&
++		!test_and_set_bit(n, &p->allocated)) {
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#168: FILE: include/linux/cpumask_alloc.h:74:
++		!test_and_set_bit(n, &p->allocated)) {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around p->pool[n]
+#169: FILE: include/linux/cpumask_alloc.h:75:
++		*m = &(p->pool[n]);
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#182: FILE: include/linux/cpumask_alloc.h:88:
++	BUG_ON(n >= p->length);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'm' - possible side-effects?
+#212: FILE: include/linux/cpumask_alloc.h:118:
++#define	CPUMASK_ALLOC(m)	struct m *m = kmalloc(sizeof(*m), GFP_KERNEL)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'm' may be better as '(m)' to avoid precedence issues
+#212: FILE: include/linux/cpumask_alloc.h:118:
++#define	CPUMASK_ALLOC(m)	struct m *m = kmalloc(sizeof(*m), GFP_KERNEL)
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#214: FILE: include/linux/cpumask_alloc.h:120:
++#define^ICPUMASK_PTR(v, m) ^Icpumask_var v = (m->v)$
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#214: FILE: include/linux/cpumask_alloc.h:120:
++#define	CPUMASK_PTR(v, m) 	cpumask_var v = (m->v)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'v' - possible side-effects?
+#214: FILE: include/linux/cpumask_alloc.h:120:
++#define	CPUMASK_PTR(v, m) 	cpumask_var v = (m->v)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'm' may be better as '(m)' to avoid precedence issues
+#214: FILE: include/linux/cpumask_alloc.h:120:
++#define	CPUMASK_PTR(v, m) 	cpumask_var v = (m->v)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'm' - possible side-effects?
+#216: FILE: include/linux/cpumask_alloc.h:122:
++#define	CPUMASK_ALLOC(m)	struct m m
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#218: FILE: include/linux/cpumask_alloc.h:124:
++#define^ICPUMASK_PTR(v, m) ^Icpumask_var v$
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#218: FILE: include/linux/cpumask_alloc.h:124:
++#define	CPUMASK_PTR(v, m) 	cpumask_var v
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000223042.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 3 errors, 7 warnings, 10 checks, 179 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000223042.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

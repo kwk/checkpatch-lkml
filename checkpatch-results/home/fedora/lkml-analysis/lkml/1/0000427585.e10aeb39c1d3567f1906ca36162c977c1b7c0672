@@ -1,0 +1,282 @@
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#65: FILE: arch/i386/Kconfig:310:
++config FAIR_USER_SCHED
++	bool "Fair user scheduler"
++	default n
++	help
++		Fair user scheduler
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#82: FILE: arch/x86_64/Kconfig:333:
++config FAIR_USER_SCHED
++	bool "Fair user scheduler"
++	default n
++	help
++		Fair user scheduler
++
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#206: FILE: kernel/sched.c:611:
++extern struct sched_class rt_sched_class;
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'rq' - possible side-effects?
+#233: FILE: kernel/sched.c:771:
++#define for_each_lrq(rq, lrq) \
++	for (lrq = container_of((rq)->lrq.lrq_list.next, struct lrq, lrq_list);\
++	     prefetch(rcu_dereference(lrq->lrq_list.next)), lrq != &(rq)->lrq;\
++	     lrq = container_of(lrq->lrq_list.next, struct lrq, lrq_list))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'lrq' - possible side-effects?
+#233: FILE: kernel/sched.c:771:
++#define for_each_lrq(rq, lrq) \
++	for (lrq = container_of((rq)->lrq.lrq_list.next, struct lrq, lrq_list);\
++	     prefetch(rcu_dereference(lrq->lrq_list.next)), lrq != &(rq)->lrq;\
++	     lrq = container_of(lrq->lrq_list.next, struct lrq, lrq_list))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'rq' may be better as '(rq)' to avoid precedence issues
+#240: FILE: kernel/sched.c:778:
++#define for_each_lrq(rq, lrq) \
++		for (lrq = &rq->lrq; lrq != NULL; lrq = NULL)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'lrq' - possible side-effects?
+#240: FILE: kernel/sched.c:778:
++#define for_each_lrq(rq, lrq) \
++		for (lrq = &rq->lrq; lrq != NULL; lrq = NULL)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "lrq"
+#241: FILE: kernel/sched.c:779:
++		for (lrq = &rq->lrq; lrq != NULL; lrq = NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#287: FILE: kernel/sched.c:939:
++		cpl += lrq->cpu_load[type-1];
+ 		                         ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#309: FILE: kernel/sched.c:959:
++		cpl += lrq->cpu_load[type-1];
+ 		                         ^
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*new->se)...) over kzalloc(sizeof(struct sched_entity)...)
+#469: FILE: kernel/sched.c:6229:
++	new->se = kzalloc(sizeof(struct sched_entity) * i, GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#469: FILE: kernel/sched.c:6229:
++	new->se = kzalloc(sizeof(struct sched_entity) * i, GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*new->lrq)...) over kzalloc(sizeof(struct lrq)...)
+#473: FILE: kernel/sched.c:6233:
++	new->lrq = kzalloc(sizeof(struct lrq) * i, GFP_KERNEL);
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#473: FILE: kernel/sched.c:6233:
++	new->lrq = kzalloc(sizeof(struct lrq) * i, GFP_KERNEL);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#531: FILE: kernel/sched.c:6291:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 't' may be better as '(t)' to avoid precedence issues
+#563: FILE: kernel/sched_fair.c:49:
++#define entity_is_task(t)      (!t->my_q)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#633: FILE: kernel/sched_fair.c:110:
++static inline struct rb_node * first_fair(struct lrq *lrq)
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#647: FILE: kernel/sched_fair.c:119:
++static struct sched_entity * __pick_next_entity(struct lrq *lrq)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#661: FILE: kernel/sched_fair.c:133:
++static u64 niced_granularity(struct lrq *lrq, struct sched_entity *curr,
++				 unsigned long granularity)
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#681: FILE: kernel/sched_fair.c:149:
++	unsigned long load = lrq->cpu_load[CPU_LOAD_IDX_MAX-1] + 1;
+ 	                                                   ^
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around lrq->sched_granularity
+#698: FILE: kernel/sched_fair.c:162:
++	s64 limit = *(lrq->sched_granularity);
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1169: FILE: kernel/sched_fair.c:518:
++static struct sched_entity * pick_next_entity(struct lrq *lrq, u64 now)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'c == lrq->rq->idle'
+#1230: FILE: kernel/sched_fair.c:579:
++		if ((c == lrq->rq->idle) || (rt_prio(n->prio) &&
++						(n->prio < c->prio)))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'n->prio < c->prio'
+#1230: FILE: kernel/sched_fair.c:579:
++		if ((c == lrq->rq->idle) || (rt_prio(n->prio) &&
++						(n->prio < c->prio)))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1231: FILE: kernel/sched_fair.c:580:
++		if ((c == lrq->rq->idle) || (rt_prio(n->prio) &&
++						(n->prio < c->prio)))
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1233: FILE: kernel/sched_fair.c:582:
++	} else
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around lrq->sched_granularity
+#1235: FILE: kernel/sched_fair.c:584:
++					  *(lrq->sched_granularity));
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1287: FILE: kernel/sched_fair.c:636:
++		this_rq->cpu_load[i] = (old_load*(scale-1) + new_load) >> i;
+ 		                                ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#1287: FILE: kernel/sched_fair.c:636:
++		this_rq->cpu_load[i] = (old_load*(scale-1) + new_load) >> i;
+ 		                                       ^
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1293: FILE: kernel/sched_fair.c:642:
++static inline struct lrq * task_grp_lrq(const struct task_struct *p)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#1350: FILE: kernel/sched_fair.c:699:
++static struct task_struct * pick_next_task_fair(struct rq *rq, u64 now)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'curr == rq->idle'
+#1415: FILE: kernel/sched_fair.c:764:
++	if ((curr == rq->idle) || rt_prio(p->prio)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'curr->se.parent == p->se.parent'
+#1420: FILE: kernel/sched_fair.c:769:
++		if (!curr->se.parent || (curr->se.parent == p->se.parent)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1429: FILE: kernel/sched_fair.c:778:
++		__check_preempt_curr_fair(&rq->lrq, cse, nse,
++					sysctl_sched_wakeup_granularity);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1439: FILE: kernel/sched_fair.c:788:
++	if (curtask->sched_class != &fair_sched_class ||
++			curtask == lrq->rq->idle || !curtask->se.on_rq)
+
+WARNING:IF_0: Consider removing the code enclosed by this #if 0 and its #endif
+#1634: FILE: kernel/sched_fair.c:950:
++#if 0
+
+WARNING:IF_0: Consider removing the code enclosed by this #if 0 and its #endif
+#1648: FILE: kernel/sched_fair.c:968:
++#if 0
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000427585.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 5 errors, 7 warnings, 25 checks, 1636 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000427585.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,160 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#28: 
+Declare a 5-bytes mov in the inline assembly stub and change it for a 5-bytes
+
+WARNING:REPEATED_WORD: Possible repeated word: 'the'
+#135: FILE: include/asm-x86/immediate.h:127:
++ * Note : Patching the the 4 bytes immediate value with 1 byte variable
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#142: FILE: include/asm-x86/immediate.h:132:
++		uint32_t value;						\
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#172: FILE: include/asm-x86/immediate.h:158:
++#define imv_cond_end()							\
++	do {								\
++		asm (".section __imv_cond_end,\"a\",@progbits\n\t"	\
++				_ASM_PTR "1f\n\t"			\
++				".previous\n\t"				\
++				"1:\n\t"				\
++				: : : "eax", "cc");			\
++	} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#192: FILE: include/linux/immediate.h:40:
++extern int _is_imv_cond_end(unsigned long *begin, unsigned long *end,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#193: FILE: include/linux/immediate.h:41:
++extern int _is_imv_cond_end(unsigned long *begin, unsigned long *end,
++		unsigned long addr1, unsigned long addr2);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#194: FILE: include/linux/immediate.h:42:
++extern int is_imv_cond_end(unsigned long addr1, unsigned long addr2);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#238: FILE: include/linux/module.h:586:
++extern int is_imv_cond_end_module(unsigned long addr1, unsigned long addr2);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#246: FILE: include/linux/module.h:594:
+ }
++static inline int is_imv_cond_end_module(unsigned long addr1,
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#247: FILE: include/linux/module.h:595:
++static inline int is_imv_cond_end_module(unsigned long addr1,
++		unsigned long addr2)
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#262: FILE: kernel/immediate.c:32:
++extern unsigned long __start___imv_cond_end[];
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#263: FILE: kernel/immediate.c:33:
++extern unsigned long __stop___imv_cond_end[];
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#272: FILE: kernel/immediate.c:109:
++int _is_imv_cond_end(unsigned long *begin, unsigned long *end,
++		unsigned long addr1, unsigned long addr2)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#327: FILE: kernel/module.c:1824:
++	immediatecondendindex = find_sec(hdr, sechdrs, secstrings,
++		"__imv_cond_end");
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#358: FILE: kernel/module.c:2667:
++	struct module *mod = __module_text_address(addr1);
++	return _is_imv_cond_end(mod->immediate_cond_end,
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#389: FILE: arch/x86/kernel/immediate.c:159:
++					 * following the breakpoint. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#408: FILE: arch/x86/kernel/immediate.c:189:
++	uint8_t *addr1, *addr2;
+
+WARNING:UNNECESSARY_KERN_LEVEL: Possible unnecessary KERN_DEBUG
+#427: FILE: arch/x86/kernel/immediate.c:202:
++	printk_dbg(KERN_DEBUG "Found test %%eax,%%eax at %p\n", addr + 5);
+
+WARNING:UNNECESSARY_KERN_LEVEL: Possible unnecessary KERN_DEBUG
+#433: FILE: arch/x86/kernel/immediate.c:205:
++		printk_dbg(KERN_DEBUG "Found jne rel8 at %p\n", addr + 7);
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#488: FILE: arch/x86/kernel/immediate.c:254:
++	uint8_t *addr1, *addr2;
+
+WARNING:UNNECESSARY_KERN_LEVEL: Possible unnecessary KERN_DEBUG
+#503: FILE: arch/x86/kernel/immediate.c:265:
++	printk_dbg(KERN_DEBUG "Found test %%eax,%%eax at %p\n", addr + 5);
+
+WARNING:UNNECESSARY_KERN_LEVEL: Possible unnecessary KERN_DEBUG
+#509: FILE: arch/x86/kernel/immediate.c:268:
++		printk_dbg(KERN_DEBUG "Found je rel8 at %p\n", addr + 7);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#668: FILE: arch/x86/kernel/immediate.c:439:
++		if (*(uint8_t *)(imv->imv - 1) == JMP_REL32 &&
++				*(int *)imv->imv == newoff)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#696: FILE: arch/x86/kernel/immediate.c:519:
++	BUG_ON(imv->var_size > imv->size);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000289540.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 12 warnings, 12 checks, 596 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000289540.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

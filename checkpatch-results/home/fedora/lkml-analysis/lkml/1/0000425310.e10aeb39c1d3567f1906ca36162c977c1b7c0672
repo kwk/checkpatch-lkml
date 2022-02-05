@@ -1,0 +1,163 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#25: 
+PowerPC optimization of the cond_calls which uses a li instruction, patched with
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#39: FILE: include/asm-powerpc/condcall.h:1:
++#ifndef _ASM_POWERPC_CONDCALL_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'flags' - possible side-effects?
+#58: FILE: include/asm-powerpc/condcall.h:20:
++#define cond_call_optimized(flags, name, func) \
++	({ \
++		static const char __cstrtab_name_##name[] \
++		__attribute__((section("__cond_call_strings"))) = #name; \
++		char condition; \
++		asm (	".section __cond_call, \"a\", @progbits;\n\t" \
++					PPC_LONG "%1, 0f, %2;\n\t" \
++					".previous;\n\t" \
++					".align 4\n\t" \
++					"0:\n\t" \
++					"li %0,%3;\n\t" \
++				: "=r" (condition) \
++				: "i" (__cstrtab_name_##name), \
++				  "i" (flags), \
++				  "i" ((flags) & CF_STATIC_ENABLE)); \
++		(unlikely(condition)) ? \
++			(func) : \
++			(__typeof__(func))0; \
++	})
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__cond_call_strings") over __attribute__((section("__cond_call_strings")))
+#61: FILE: include/asm-powerpc/condcall.h:23:
++		__attribute__((section("__cond_call_strings"))) = #name; \
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#63: FILE: include/asm-powerpc/condcall.h:25:
++		asm (	".section __cond_call, \"a\", @progbits;\n\t" \
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#79: FILE: include/asm-powerpc/condcall.h:41:
++ * depending on the flags specified. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'flags' - possible side-effects?
+#80: FILE: include/asm-powerpc/condcall.h:42:
++#define _cond_call(flags, name, func) \
++({ \
++	((flags) & CF_OPTIMIZED) ? \
++		cond_call_optimized(flags, name, func) : \
++		cond_call_generic(flags, name, func); \
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#80: FILE: include/asm-powerpc/condcall.h:42:
++#define _cond_call(flags, name, func) \
++({ \
++	((flags) & CF_OPTIMIZED) ? \
++		cond_call_optimized(flags, name, func) : \
++		cond_call_generic(flags, name, func); \
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'func' - possible side-effects?
+#80: FILE: include/asm-powerpc/condcall.h:42:
++#define _cond_call(flags, name, func) \
++({ \
++	((flags) & CF_OPTIMIZED) ? \
++		cond_call_optimized(flags, name, func) : \
++		cond_call_generic(flags, name, func); \
++})
+
+WARNING:TYPO_SPELLING: 'dependant' may be misspelled - perhaps 'dependent'?
+#90: FILE: include/asm-powerpc/condcall.h:52:
++/* Architecture dependant cond_call information, used internally for cond_call
+                 ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#91: FILE: include/asm-powerpc/condcall.h:53:
++ * activation. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#94: FILE: include/asm-powerpc/condcall.h:56:
++ * of the li mnemonic), in bytes. */
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#98: FILE: include/asm-powerpc/condcall.h:60:
++#define COND_CALL_OPTIMIZED_ENABLE(a) \
++	*(COND_CALL_OPTIMIZED_ENABLE_TYPE*) \
++		((char*)a+COND_CALL_OPTIMIZED_ENABLE_IMMEDIATE_OFFSET)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'a' may be better as '(a)' to avoid precedence issues
+#98: FILE: include/asm-powerpc/condcall.h:60:
++#define COND_CALL_OPTIMIZED_ENABLE(a) \
++	*(COND_CALL_OPTIMIZED_ENABLE_TYPE*) \
++		((char*)a+COND_CALL_OPTIMIZED_ENABLE_IMMEDIATE_OFFSET)
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#99: FILE: include/asm-powerpc/condcall.h:61:
++	*(COND_CALL_OPTIMIZED_ENABLE_TYPE*) \
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#100: FILE: include/asm-powerpc/condcall.h:62:
++		((char*)a+COND_CALL_OPTIMIZED_ENABLE_IMMEDIATE_OFFSET)
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#100: FILE: include/asm-powerpc/condcall.h:62:
++		((char*)a+COND_CALL_OPTIMIZED_ENABLE_IMMEDIATE_OFFSET)
+ 		         ^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#102: FILE: include/asm-powerpc/condcall.h:64:
++extern int cond_call_optimized_set_enable(void *address, char enable);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000425310.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 4 errors, 7 warnings, 7 checks, 68 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000425310.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

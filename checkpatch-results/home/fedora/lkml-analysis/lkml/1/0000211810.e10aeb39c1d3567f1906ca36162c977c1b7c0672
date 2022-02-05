@@ -1,0 +1,201 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#43: 
+> > > > > While working on freezing fuse filesystems, I found that if a filesystem
+
+WARNING:IF_0: Consider removing the code enclosed by this #if 0 and its #endif
+#103: FILE: fs/buffer.c:250:
++#if 0
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#104: FILE: fs/buffer.c:251:
++#define FS_PRINTK(fmt, args...) printk(fmt, ## args)
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#114: FILE: fs/buffer.c:261:
++ * @which:^IWhat combination of fuse & non-fuse to freeze. $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:TYPO_SPELLING: 'dependant' may be misspelled - perhaps 'dependent'?
+#123: FILE: fs/buffer.c:270:
++	 * Freeze in reverse order so filesystems dependant upon others are
+ 	                                          ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#128: FILE: fs/buffer.c:275:
++		FS_PRINTK(KERN_INFO "Considering %s.%s: (root %p, bdev %x)",
++			sb->s_type->name ? sb->s_type->name : "?",
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'sb->s_frozen == SB_FREEZE_TRANS'
+#141: FILE: fs/buffer.c:288:
++		if (!sb->s_root || !sb->s_bdev ||
++		    (sb->s_frozen == SB_FREEZE_TRANS) ||
++		    (sb->s_flags & MS_RDONLY) ||
++		    (sb->s_flags & MS_FROZEN) ||
++		    !(which & FS_FREEZER_NORMAL)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#161: FILE: fs/buffer.c:308:
++ * @which:^IWhat combination of fuse & non-fuse to thaw. $
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#237: FILE: fs/fuse/dev.c:877:
++	FUSE_MIGHT_FREEZE(iocb->ki_filp->f_mapping->host->i_sb,
++			"fuse_dev_write");
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#424: FILE: fs/fuse/fuse.h:1:
++#define FUSE_MIGHT_FREEZE(superblock, desc) \
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'superblock' may be better as '(superblock)' to avoid precedence issues
+#424: FILE: fs/fuse/fuse.h:1:
++#define FUSE_MIGHT_FREEZE(superblock, desc) \
++do { \
++	int printed = 0; \
++	while (superblock->s_frozen != SB_UNFROZEN) { \
++		if (!printed) { \
++			printk(KERN_INFO "%d frozen in " desc ".\n", \
++						current->pid); \
++			printed = 1; \
++		} \
++		try_to_freeze(); \
++		yield(); \
++	} \
++} while (0)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#429: FILE: fs/fuse/fuse.h:6:
++			printk(KERN_INFO "%d frozen in " desc ".\n", \
+
+WARNING:YIELD: Using yield() is generally wrong. See yield() kernel-doc (sched/core.c)
+#434: FILE: fs/fuse/fuse.h:11:
++		yield(); \
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#503: FILE: include/linux/freezer.h:150:
++extern void thaw_kernel_threads(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#540: FILE: include/linux/fs.h:133:
++#define MS_FROZEN	(1<<24)	/* Frozen by freeze_filesystems() */
+                  	  ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#540: FILE: include/linux/fs.h:133:
++#define MS_FROZEN	(1<<24)	/* Frozen by freeze_filesystems() */
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sb' - possible side-effects?
+#550: FILE: include/linux/fs.h:1147:
++#define vfs_check_frozen(sb, level) do { \
++	freezer_do_not_count(); \
++	wait_event((sb)->s_wait_unfrozen, ((sb)->s_frozen < (level))); \
++	freezer_count(); \
++} while (0)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#576: FILE: kernel/power/process.c:207:
++				printk(KERN_ERR " %s (%d) failed to freeze.\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#577: FILE: kernel/power/process.c:208:
++				printk(KERN_ERR " %s (%d) failed to freeze.\n",
++						p->comm, p->pid);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#586: FILE: kernel/power/process.c:228:
++	printk(KERN_INFO "Stopping fuse filesystems.\n");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#589: FILE: kernel/power/process.c:231:
++	printk(KERN_INFO "Freezing user space processes ... ");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#594: FILE: kernel/power/process.c:235:
++	printk(KERN_INFO "done.\n");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#598: FILE: kernel/power/process.c:238:
++	printk(KERN_INFO "Stopping normal filesystems.\n");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#601: FILE: kernel/power/process.c:241:
++	printk(KERN_INFO "Freezing remaining freezable tasks ... ");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#627: FILE: kernel/power/process.c:283:
++	printk(KERN_INFO "Restarting all filesystems ...\n");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#630: FILE: kernel/power/process.c:286:
++	printk(KERN_INFO "Restarting tasks ... ");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#644: FILE: kernel/power/process.c:300:
++	printk(KERN_INFO "Restarting normal filesystems.\n");
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000211810.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 2 errors, 16 warnings, 9 checks, 479 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000211810.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

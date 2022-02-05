@@ -1,0 +1,116 @@
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#78: FILE: include/asm-x86/uaccess.h:182:
++#define __put_user_x(size, x, ptr, __ret_pu)			\
++	asm volatile("call __put_user_" #size : "=a" (__ret_pu)	\
++		     :"0" ((typeof(*(ptr)))(x)), "c" (ptr) : "ebx")
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#78: FILE: include/asm-x86/uaccess.h:182:
++#define __put_user_x(size, x, ptr, __ret_pu)			\
++	asm volatile("call __put_user_" #size : "=a" (__ret_pu)	\
++		     :"0" ((typeof(*(ptr)))(x)), "c" (ptr) : "ebx")
+
+ERROR:SPACING: spaces required around that ':' (ctx:ExV)
+#80: FILE: include/asm-x86/uaccess.h:184:
++		     :"0" ((typeof(*(ptr)))(x)), "c" (ptr) : "ebx")
+ 		     ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#82: FILE: include/asm-x86/uaccess.h:186:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#92: FILE: include/asm-x86/uaccess.h:202:
++#define __put_user_x8(x, ptr, __ret_pu)				\
++	asm volatile("call __put_user_8" : "=a" (__ret_pu)	\
++		     : "A" ((typeof(*(ptr)))(x)), "c" (ptr) : "ebx")
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#92: FILE: include/asm-x86/uaccess.h:202:
++#define __put_user_x8(x, ptr, __ret_pu)				\
++	asm volatile("call __put_user_8" : "=a" (__ret_pu)	\
++		     : "A" ((typeof(*(ptr)))(x)), "c" (ptr) : "ebx")
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#101: FILE: include/asm-x86/uaccess.h:211:
++extern void __put_user_bad(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#107: FILE: include/asm-x86/uaccess.h:217:
++extern void __put_user_1(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#108: FILE: include/asm-x86/uaccess.h:218:
++extern void __put_user_2(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#109: FILE: include/asm-x86/uaccess.h:219:
++extern void __put_user_4(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#110: FILE: include/asm-x86/uaccess.h:220:
++extern void __put_user_8(void);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#130: FILE: include/asm-x86/uaccess.h:240:
++#define put_user(x, ptr)					\
++({								\
++	int __ret_pu;						\
++	__typeof__(*(ptr)) __pu_val;				\
++	__chk_user_ptr(ptr);					\
++	__pu_val = x;						\
++	switch (sizeof(*(ptr))) {				\
++	case 1:							\
++		__put_user_x(1, __pu_val, ptr, __ret_pu);	\
++		break;						\
++	case 2:							\
++		__put_user_x(2, __pu_val, ptr, __ret_pu);	\
++		break;						\
++	case 4:							\
++		__put_user_x(4, __pu_val, ptr, __ret_pu);	\
++		break;						\
++	case 8:							\
++		__put_user_x8(__pu_val, ptr, __ret_pu);		\
++		break;						\
++	default:						\
++		__put_user_x(X, __pu_val, ptr, __ret_pu);	\
++		break;						\
++	}							\
++	__ret_pu;						\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#163: FILE: include/asm-x86/uaccess.h:299:
++#define put_user(x, ptr)					\
++({								\
++	int __ret_pu;						\
++	__typeof__(*(ptr))__pus_tmp = x;			\
++	__ret_pu = 0;						\
++	if (unlikely(__copy_to_user_ll(ptr, &__pus_tmp,		\
++				       sizeof(*(ptr))) != 0))	\
++		__ret_pu = -EFAULT;				\
++	__ret_pu;						\
++})
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000261863.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 3 errors, 0 warnings, 10 checks, 232 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000261863.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

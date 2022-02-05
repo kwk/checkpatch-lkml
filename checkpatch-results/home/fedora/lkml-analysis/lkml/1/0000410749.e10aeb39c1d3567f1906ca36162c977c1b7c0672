@@ -1,0 +1,61 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#35: 
+[PATCH 3/4] net: make forcedeth to use kmalloc_node and __netdev_alloc_skb for skb allocation
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc_node(sizeof(*rx_skbuff)...) over kmalloc_node(sizeof(struct nv_skb_map)...)
+#69: FILE: drivers/net/forcedeth.c:3981:
++	rx_skbuff = kmalloc_node(sizeof(struct nv_skb_map) * ring->rx_pending,
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc_node(sizeof(*tx_skbuff)...) over kmalloc_node(sizeof(struct nv_skb_map)...)
+#71: FILE: drivers/net/forcedeth.c:3983:
++	tx_skbuff = kmalloc_node(sizeof(struct nv_skb_map) * ring->tx_pending,
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#89: FILE: drivers/net/forcedeth.c:4983:
++	printk(KERN_INFO "nv_probe: numa_node : %02d\n",
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'nv_probe', this function's name, in a string
+#89: FILE: drivers/net/forcedeth.c:4983:
++	printk(KERN_INFO "nv_probe: numa_node : %02d\n",
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#90: FILE: drivers/net/forcedeth.c:4984:
++	printk(KERN_INFO "nv_probe: numa_node : %02d\n",
++		dev_to_node(&pci_dev->dev));
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc_node(sizeof(*np->rx_skb)...) over kmalloc_node(sizeof(struct nv_skb_map)...)
+#100: FILE: drivers/net/forcedeth.c:5004:
++	np->rx_skb = kmalloc_node(sizeof(struct nv_skb_map) * np->rx_ring_size,
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc_node(sizeof(*np->tx_skb)...) over kmalloc_node(sizeof(struct nv_skb_map)...)
+#102: FILE: drivers/net/forcedeth.c:5006:
++	np->tx_skb = kmalloc_node(sizeof(struct nv_skb_map) * np->tx_ring_size,
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000410749.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 0 errors, 3 warnings, 5 checks, 59 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000410749.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

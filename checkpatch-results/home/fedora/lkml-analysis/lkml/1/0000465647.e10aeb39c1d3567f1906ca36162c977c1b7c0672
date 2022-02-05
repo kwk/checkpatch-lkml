@@ -1,0 +1,199 @@
+WARNING:TYPO_SPELLING: 'framwork' may be misspelled - perhaps 'framework'?
+#20: 
+Subject: [PATCH 1/3] i386: extend alternative instruction framwork
+                                                          ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#82: FILE: arch/i386/kernel/alternative.c:161:
+ 	for (a = start; a < end; a++) {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#91: FILE: arch/i386/kernel/alternative.c:170:
++			BUG_ON(instr == NULL);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!instr"
+#91: FILE: arch/i386/kernel/alternative.c:170:
++			BUG_ON(instr == NULL);
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#95: FILE: arch/i386/kernel/alternative.c:174:
++			BUG_ON(instr == NULL);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!instr"
+#95: FILE: arch/i386/kernel/alternative.c:174:
++			BUG_ON(instr == NULL);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!instr"
+#100: FILE: arch/i386/kernel/alternative.c:179:
++		if (instr == NULL || new_instr == NULL)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!new_instr"
+#100: FILE: arch/i386/kernel/alternative.c:179:
++		if (instr == NULL || new_instr == NULL)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#104: FILE: arch/i386/kernel/alternative.c:182:
++		BUG_ON(new_instr_len > instr_len);
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#119: FILE: arch/i386/kernel/alternative.c:195:
++		instr = new_instr = NULL;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#148: FILE: include/asm-i386/alternative.h:27:
++	u8  used;               /* count the number of replacements in
++				   this struct (only for succeeding entries) */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#148: FILE: include/asm-i386/alternative.h:27:
++				   this struct (only for succeeding entries) */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#150: FILE: include/asm-i386/alternative.h:29:
++	u8  instr_cpuid;        /* cpuid bit set if instr is used
++				   as replacement */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#150: FILE: include/asm-i386/alternative.h:29:
++				   as replacement */
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __packed over __attribute__((packed))
+#157: FILE: include/asm-i386/alternative.h:34:
++} __attribute__ ((packed));
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#168: FILE: include/asm-i386/alternative.h:59:
++#define ALTERNATIVE_OUTPUT2(a,b) a,b
+                              ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#168: FILE: include/asm-i386/alternative.h:59:
++#define ALTERNATIVE_OUTPUT2(a,b) a,b
+                                   ^
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#168: FILE: include/asm-i386/alternative.h:59:
++#define ALTERNATIVE_OUTPUT2(a,b) a,b
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#197: FILE: include/asm-i386/alternative.h:116:
++#define alternative_io(oldinstr, newinstr, feature, output, input...) \
++	asm volatile ("661:\n\t" oldinstr "\n662:\n"                    \
++		      ".section .altinstructions,\"a\"\n"               \
++		      "  .align 4\n"                                    \
++		      "  .long 661b\n"            /* label */           \
++		      "  .long 663f\n"            /* new instruction */ \
++		      "  .byte 0x00\n"            /* first entry */ \
++		      "  .byte 0x00\n"            /* zero for first entry */ \
++		      "  .byte %c[feat]\n"        /* feature bit */     \
++		      "  .byte 662b-661b\n"       /* sourcelen */       \
++		      "  .byte 664f-663f\n"       /* replacementlen */  \
++		      ".previous\n"                                     \
++		      ".section .altinstr_replacement,\"ax\"\n"         \
++		      "663:\n\t" newinstr "\n664:\n"   /* replacement */ \
++		      ".previous" : output : [feat] "i" (feature), ##input)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#221: FILE: include/asm-i386/alternative.h:140:
++#define alternative_add_one(newinstr2, feature2) \
++	asm volatile(".section .altinstructions,\"a\"\n" \
++		     "  .align 4\n" \
++		     "  .long 661f\n" \
++		     "  .long 0x00\n" \
++		     "  .byte 0x01\n" \
++		     "  .byte %c[feat2]\n" \
++		     "  .byte 0x00\n" \
++		     "  .byte 662f-661f\n" \
++		     "  .byte 0x00\n" \
++		     ".previous\n" \
++		     ".section .altinstr_replacement,\"ax\"\n" \
++		     "661:\n\t" newinstr2 "\n662:\n" \
++		     ".previous" : : [feat2] "i" (feature2) )
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#234: FILE: include/asm-i386/alternative.h:153:
++		     ".previous" : : [feat2] "i" (feature2) )
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#236: FILE: include/asm-i386/alternative.h:155:
++#define alternative_add_two(newinstr2, feature2, newinstr3, feature3) \
++	asm volatile(".section .altinstructions,\"a\"\n" \
++		     "  .align 4\n" \
++		     "  .long 661f\n" \
++		     "  .long 663f\n" \
++		     "  .byte 0x02\n" \
++		     "  .byte %c[feat2]\n" \
++		     "  .byte %c[feat3]\n" \
++		     "  .byte 662f-661f\n" \
++		     "  .byte 664f-663f\n" \
++		     ".previous\n" \
++		     ".section .altinstr_replacement,\"ax\"\n" \
++		     "661:\n\t" newinstr2 "\n662:\n" \
++		     "663:\n\t" newinstr3 "\n664:\n" \
++		    ".previous" : : [feat2] "i" (feature2), [feat3] "i" (feature3))
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000465647.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 total: 7 errors, 9 warnings, 6 checks, 179 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.JOzjvdpBcb//home/fedora/lkml-analysis/lkml/1/patch.offset.0000465647.commit.e10aeb39c1d3567f1906ca36162c977c1b7c0672 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.
