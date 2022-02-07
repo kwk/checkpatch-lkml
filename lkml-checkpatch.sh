@@ -121,23 +121,28 @@ EOF
     mkdir -p $logdir
     
     end_offset=$((opt_start_offset + opt_num_messages - 1))
-    seq $opt_start_offset $end_offset | parallel -j $opt_num_parallel_jobs "
+
+    # run parallel jobs and stop when the first job failed. Running ones will not be killed
+    seq $opt_start_offset $end_offset | parallel -j $opt_num_parallel_jobs --halt soon,fail=1 --bar "
         if [ "$opt_verbose" == "1" ]; then
             set -x;
         fi
-        set -e;
         offset={};
         offset_str=\$(printf \"%010d\" \$offset);
-        echo \"======= start-offset: $opt_start_offset end-offset: $end_offset offset:\$offset_str bashpid: \$BASHPID =======\";
+        #echo \"======= start-offset: $opt_start_offset end-offset: $end_offset offset:\$offset_str bashpid: \$BASHPID  job-slot: {%}=======\";
         sha1=\$(git -C $(realpath $opt_lkml_path) log --format=\"%H\" -n1 HEAD~$offset);
         patchfile=$tempdir/patch.offset.\$offset_str.commit.\$sha1;
         git -C $opt_lkml_path show HEAD~{}:m > \$patchfile;
-        tmplogfile=$tempdir/checkpatch.log.\$BASHPID;
-        $opt_linux_tree_root/scripts/checkpatch.pl --root=$opt_linux_tree_root $fixed_checkpatch_opts $opt_checkpatch_opts \$patchfile 2>&1 | tee \$tmplogfile;
+	if [ \"\$?\" != \"0\" ]; then
+            kill -SIGHUP \$PARALLEL_PID; # stops parallel but does not kill running jobs
+        else
+            tmplogfile=$tempdir/checkpatch.log.\$BASHPID;
+            $opt_linux_tree_root/scripts/checkpatch.pl --root=$opt_linux_tree_root $fixed_checkpatch_opts $opt_checkpatch_opts \$patchfile 2>&1 > \$tmplogfile;
+            if [ -s \$tmplogfile ]; then
+                mv \$tmplogfile $logdir/\$offset_str.\$sha1;
+            fi;
+	fi;
         rm -f \$patchfile;
-        if [ -s \$tmplogfile ]; then
-            mv -v \$tmplogfile $logdir/\$offset_str.\$sha1;
-        fi;
         rm -f \$tmplogfile;"
 }
 
