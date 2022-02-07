@@ -124,7 +124,7 @@ EOF
 
     # run parallel jobs and stop when the first job failed. Running ones will not be killed
     seq $opt_start_offset $end_offset | parallel -j $opt_num_parallel_jobs --halt soon,fail=1 --bar "
-        if [ "$opt_verbose" == "1" ]; then
+        if [ \"$opt_verbose\" == \"1\" ]; then
             set -x;
         fi
         offset={};
