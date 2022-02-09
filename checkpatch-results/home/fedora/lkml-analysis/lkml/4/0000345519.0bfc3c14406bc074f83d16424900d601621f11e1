@@ -1,0 +1,164 @@
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#44: FILE: lib/Kconfig.debug:1631:
++config TEST_PARSE_INTEGER
++	tristate "Test parse_integer() function at runtime"
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#63: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#68: FILE: lib/test-parse-integer.c:1:
++#include <linux/errno.h>
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:INCLUDE_LINUX: Use #include <linux/bug.h> instead of <asm/bug.h>
+#72: FILE: lib/test-parse-integer.c:5:
++#include <asm/bug.h>
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#74: FILE: lib/test-parse-integer.c:7:
++#define for_each_test(i, test)  \
++	for (i = 0; i < ARRAY_SIZE(test); i++)
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#77: FILE: lib/test-parse-integer.c:10:
++#define DEFINE_TEST_OK(type, test_type, test)	\
++test_type {					\
++	const char *str;			\
++	unsigned int base;			\
++	int expected_rv;			\
++	type expected_val;			\
++};						\
++static const test_type test[] __initconst =
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'test_type' - possible side-effects?
+#77: FILE: lib/test-parse-integer.c:10:
++#define DEFINE_TEST_OK(type, test_type, test)	\
++test_type {					\
++	const char *str;			\
++	unsigned int base;			\
++	int expected_rv;			\
++	type expected_val;			\
++};						\
++static const test_type test[] __initconst =
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fmt' - possible side-effects?
+#86: FILE: lib/test-parse-integer.c:19:
++#define TEST_OK(type, fmt, test)				\
++{								\
++	unsigned int i;						\
++								\
++	for_each_test(i, test) {				\
++		const typeof(test[0]) *t = &test[i];		\
++		type val;					\
++		int rv;						\
++								\
++		rv = parse_integer(t->str, t->base, &val);	\
++		if (rv != t->expected_rv || val != t->expected_val) {				\
++			WARN(1, "str '%s', base %u, expected %d/"fmt", got %d/"fmt"\n",		\
++				t->str, t->base, t->expected_rv, t->expected_val, rv, val);	\
++		}						\
++	}							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'test' - possible side-effects?
+#86: FILE: lib/test-parse-integer.c:19:
++#define TEST_OK(type, fmt, test)				\
++{								\
++	unsigned int i;						\
++								\
++	for_each_test(i, test) {				\
++		const typeof(test[0]) *t = &test[i];		\
++		type val;					\
++		int rv;						\
++								\
++		rv = parse_integer(t->str, t->base, &val);	\
++		if (rv != t->expected_rv || val != t->expected_val) {				\
++			WARN(1, "str '%s', base %u, expected %d/"fmt", got %d/"fmt"\n",		\
++				t->str, t->base, t->expected_rv, t->expected_val, rv, val);	\
++		}						\
++	}							\
++}
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#97: FILE: lib/test-parse-integer.c:30:
++			WARN(1, "str '%s', base %u, expected %d/"fmt", got %d/"fmt"\n",		\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'test' - possible side-effects?
+#111: FILE: lib/test-parse-integer.c:44:
++#define TEST_FAIL(type, fmt, test)				\
++{								\
++	unsigned int i;						\
++								\
++	for_each_test(i, test) {				\
++		const typeof(test[0]) *t = &test[i];		\
++		type val;					\
++		int rv;						\
++								\
++		val = 113;					\
++		rv = parse_integer(t->str, t->base, &val);	\
++		if (rv >= 0 || val != 113) {			\
++			WARN(1, "str '%s', base %u, expected -E, got %d/"fmt"\n",\
++				t->str, t->base, rv, val);	\
++		}						\
++	}							\
++}
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#123: FILE: lib/test-parse-integer.c:56:
++			WARN(1, "str '%s', base %u, expected -E, got %d/"fmt"\n",\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#353: FILE: lib/test-parse-integer.c:286:
++	{"-9223372036854775808",10,	20,	LLONG_MIN},
+ 	                       ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000345519.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 2 errors, 4 warnings, 7 checks, 579 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000345519.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

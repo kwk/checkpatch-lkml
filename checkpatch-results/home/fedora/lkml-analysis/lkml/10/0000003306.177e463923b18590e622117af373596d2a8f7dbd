@@ -1,0 +1,79 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'lname' - possible side-effects?
+#111: FILE: arch/x86/kvm/vmx/vmx.h:446:
++#define BUILD_CONTROLS_SHADOW(lname, uname, bits)			\
++static inline								\
++void lname##_controls_set(struct vcpu_vmx *vmx, u##bits val)		\
++{									\
++	if (vmx->loaded_vmcs->controls_shadow.lname != val) {		\
++		vmcs_write##bits(uname, val);				\
++		vmx->loaded_vmcs->controls_shadow.lname = val;		\
++	}								\
++}									\
++static inline u##bits __##lname##_controls_get(struct loaded_vmcs *vmcs)\
++{									\
++	return vmcs->controls_shadow.lname;				\
++}									\
++static inline u##bits lname##_controls_get(struct vcpu_vmx *vmx)	\
++{									\
++	return __##lname##_controls_get(vmx->loaded_vmcs);		\
++}									\
++static inline								\
++void lname##_controls_setbit(struct vcpu_vmx *vmx, u##bits val)		\
++{									\
++	lname##_controls_set(vmx, lname##_controls_get(vmx) | val);	\
++}									\
++static inline								\
++void lname##_controls_clearbit(struct vcpu_vmx *vmx, u##bits val)	\
++{									\
++	lname##_controls_set(vmx, lname##_controls_get(vmx) & ~val);	\
+ }
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'lname' may be better as '(lname)' to avoid precedence issues
+#111: FILE: arch/x86/kvm/vmx/vmx.h:446:
++#define BUILD_CONTROLS_SHADOW(lname, uname, bits)			\
++static inline								\
++void lname##_controls_set(struct vcpu_vmx *vmx, u##bits val)		\
++{									\
++	if (vmx->loaded_vmcs->controls_shadow.lname != val) {		\
++		vmcs_write##bits(uname, val);				\
++		vmx->loaded_vmcs->controls_shadow.lname = val;		\
++	}								\
++}									\
++static inline u##bits __##lname##_controls_get(struct loaded_vmcs *vmcs)\
++{									\
++	return vmcs->controls_shadow.lname;				\
++}									\
++static inline u##bits lname##_controls_get(struct vcpu_vmx *vmx)	\
++{									\
++	return __##lname##_controls_get(vmx->loaded_vmcs);		\
++}									\
++static inline								\
++void lname##_controls_setbit(struct vcpu_vmx *vmx, u##bits val)		\
++{									\
++	lname##_controls_set(vmx, lname##_controls_get(vmx) | val);	\
++}									\
++static inline								\
++void lname##_controls_clearbit(struct vcpu_vmx *vmx, u##bits val)	\
++{									\
++	lname##_controls_set(vmx, lname##_controls_get(vmx) & ~val);	\
+ }
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#143: FILE: arch/x86/kvm/vmx/vmx.h:473:
+ }
++BUILD_CONTROLS_SHADOW(vm_entry, VM_ENTRY_CONTROLS, 32)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.3ThM2397W7//home/fedora/lkml-analysis/lkml/10/patch.offset.0000003306.commit.177e463923b18590e622117af373596d2a8f7dbd total: 0 errors, 0 warnings, 3 checks, 66 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.3ThM2397W7//home/fedora/lkml-analysis/lkml/10/patch.offset.0000003306.commit.177e463923b18590e622117af373596d2a8f7dbd has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

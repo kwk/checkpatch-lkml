@@ -1,0 +1,40 @@
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#92: FILE: include/linux/locallock.h:64:
++#define local_lock_bh(lvar)					\
++	do { __local_lock_bh(&get_local_var(lvar)); } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'lvar' - possible side-effects?
+#119: FILE: include/linux/locallock.h:122:
++#define local_unlock_bh(lvar)					\
++	do {							\
++		__local_unlock_bh(this_cpu_ptr(&lvar));		\
++		put_local_var(lvar);				\
++	} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'lvar' may be better as '(lvar)' to avoid precedence issues
+#119: FILE: include/linux/locallock.h:122:
++#define local_unlock_bh(lvar)					\
++	do {							\
++		__local_unlock_bh(this_cpu_ptr(&lvar));		\
++		put_local_var(lvar);				\
++	} while (0)
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000200477.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 0 errors, 1 warnings, 2 checks, 60 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000200477.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

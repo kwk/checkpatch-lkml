@@ -1,0 +1,2917 @@
+WARNING:MAINTAINERS_STYLE: Misordered MAINTAINERS entry - list 'L:' before 'F:'
+#245: FILE: MAINTAINERS:15520:
++F:	tools/testing/selftests/wireguard/
++L:	wireguard@lists.zx2c4.com
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#259: FILE: drivers/net/Kconfig:73:
++config WIREGUARD
++	tristate "WireGuard secure network tunnel"
++	depends on NET && INET
++	select NET_UDP_TUNNEL
++	select DST_CACHE
++	select ZINC
++	default m
++	---help---
++	  WireGuard is a secure, fast, and easy to use replacement for IPSec
++	  that uses modern cryptography and clever networking tricks. It's
++	  designed to be fairly general purpose and abstract enough to fit most
++	  use cases, while at the same time remaining extremely simple to
++	  configure. See www.wireguard.com for more info.
++
++	  It's safe to say Y or M here, as the driver is very lightweight and
++	  is only in use when an administrator chooses to add an interface.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#276: FILE: drivers/net/Kconfig:90:
++config WIREGUARD_DEBUG
++	bool "Debugging checks and verbose messages"
++	depends on WIREGUARD
++	---help---
++	  This will write log messages for handshake and other events
++	  that occur for a WireGuard interface. It will also perform some
++	  extra validation checks and unit tests at various points. This is
++	  only useful for debugging.
++
++	  Say N here unless you know what you're doing.
++
+ config EQUALIZER
+ 	tristate "EQL (serial line load balancing) support"
+ 	---help---
+
+WARNING:SPDX_LICENSE_TAG: Improper SPDX comment style for 'drivers/net/wireguard/allowedips.c', please use '//' instead
+#318: FILE: drivers/net/wireguard/allowedips.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#318: FILE: drivers/net/wireguard/allowedips.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#340: FILE: drivers/net/wireguard/allowedips.c:23:
++	if (bits == 32)
+[...]
++	else if (bits == 128) {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'parent' - possible side-effects?
+#359: FILE: drivers/net/wireguard/allowedips.c:42:
++#define choose_node(parent, key) parent->bit[(key[parent->bit_at_a] >> parent->bit_at_b) & 1]
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'parent' may be better as '(parent)' to avoid precedence issues
+#359: FILE: drivers/net/wireguard/allowedips.c:42:
++#define choose_node(parent, key) parent->bit[(key[parent->bit_at_a] >> parent->bit_at_b) & 1]
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#366: FILE: drivers/net/wireguard/allowedips.c:49:
++#define push(stack, p, len) ({ \
++	if (rcu_access_pointer(p)) { \
++		BUG_ON(len >= 128); \
++		stack[len++] = rcu_dereference_protected(p, lockdep_is_held(lock)); \
++	} \
++	true; \
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'len' - possible side-effects?
+#366: FILE: drivers/net/wireguard/allowedips.c:49:
++#define push(stack, p, len) ({ \
++	if (rcu_access_pointer(p)) { \
++		BUG_ON(len >= 128); \
++		stack[len++] = rcu_dereference_protected(p, lockdep_is_held(lock)); \
++	} \
++	true; \
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'len' may be better as '(len)' to avoid precedence issues
+#366: FILE: drivers/net/wireguard/allowedips.c:49:
++#define push(stack, p, len) ({ \
++	if (rcu_access_pointer(p)) { \
++		BUG_ON(len >= 128); \
++		stack[len++] = rcu_dereference_protected(p, lockdep_is_held(lock)); \
++	} \
++	true; \
++})
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#368: FILE: drivers/net/wireguard/allowedips.c:51:
++		BUG_ON(len >= 128); \
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:LONG_LINE: line length of 147 exceeds 100 columns
+#378: FILE: drivers/net/wireguard/allowedips.c:61:
++	for (len = 0, push(stack, top, len); len > 0 && (node = stack[--len]) && push(stack, node->bit[0], len) && push(stack, node->bit[1], len);)
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:DEPRECATED_API: Deprecated use of 'call_rcu_bh', prefer 'call_rcu' instead
+#379: FILE: drivers/net/wireguard/allowedips.c:62:
++		call_rcu_bh(&node->rcu, node_free_rcu);
+
+Usage of a deprecated RCU API is detected.  It is recommended to replace
+old flavourful RCU APIs by their new vanilla-RCU counterparts.
+
+The full list of available RCU APIs can be viewed from the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/RCU/whatisRCU.html#full-list-of-rcu-apis
+
+WARNING:LONG_LINE: line length of 220 exceeds 100 columns
+#382: FILE: drivers/net/wireguard/allowedips.c:65:
++static int walk_by_peer(struct allowedips_node __rcu *top, u8 bits, struct allowedips_cursor *cursor, struct wireguard_peer *peer, int (*func)(void *ctx, const u8 *ip, u8 cidr, int family), void *ctx, struct mutex *lock)
+
+WARNING:LONG_LINE: line length of 187 exceeds 100 columns
+#394: FILE: drivers/net/wireguard/allowedips.c:77:
++	for (; cursor->len > 0 && (node = cursor->stack[cursor->len - 1]); --cursor->len, push(cursor->stack, node->bit[0], cursor->len), push(cursor->stack, node->bit[1], cursor->len)) {
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#409: FILE: drivers/net/wireguard/allowedips.c:92:
++}
++#undef push
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'p' may be better as '(p)' to avoid precedence issues
+#412: FILE: drivers/net/wireguard/allowedips.c:95:
++#define deref(p) rcu_dereference_protected(*p, lockdep_is_held(lock))
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#413: FILE: drivers/net/wireguard/allowedips.c:96:
++#define push(p) ({ BUG_ON(len >= 128); stack[len++] = p; })
+
+WARNING:LONG_LINE: line length of 116 exceeds 100 columns
+#414: FILE: drivers/net/wireguard/allowedips.c:97:
++static void walk_remove_by_peer(struct allowedips_node __rcu **top, struct wireguard_peer *peer, struct mutex *lock)
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#442: FILE: drivers/net/wireguard/allowedips.c:125:
++					rcu_assign_pointer(*nptr, deref(&node->bit[!ref(node->bit[0])]));
+
+WARNING:DEPRECATED_API: Deprecated use of 'call_rcu_bh', prefer 'call_rcu' instead
+#443: FILE: drivers/net/wireguard/allowedips.c:126:
++					call_rcu_bh(&node->rcu, node_free_rcu);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#451: FILE: drivers/net/wireguard/allowedips.c:134:
++}
++#undef ref
+
+WARNING:LONG_LINE: line length of 145 exceeds 100 columns
+#465: FILE: drivers/net/wireguard/allowedips.c:148:
++		return 128U - fls128(*(const u64 *)&node->bits[0] ^ *(const u64 *)&key[0], *(const u64 *)&node->bits[8] ^ *(const u64 *)&key[8]);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'node' - possible side-effects?
+#474: FILE: drivers/net/wireguard/allowedips.c:157:
++#define prefix_matches(node, key, bits) (common_bits(node, key, bits) >= node->cidr)
+
+WARNING:LONG_LINE: line length of 110 exceeds 100 columns
+#476: FILE: drivers/net/wireguard/allowedips.c:159:
++static __always_inline struct allowedips_node *find_node(struct allowedips_node *trie, u8 bits, const u8 *key)
+
+WARNING:LONG_LINE: line length of 116 exceeds 100 columns
+#491: FILE: drivers/net/wireguard/allowedips.c:174:
++static __always_inline struct wireguard_peer *lookup(struct allowedips_node __rcu *root, u8 bits, const void *be_ip)
+
+WARNING:LONG_LINE: line length of 154 exceeds 100 columns
+#508: FILE: drivers/net/wireguard/allowedips.c:191:
++static inline bool node_placement(struct allowedips_node __rcu *trie, const u8 *key, u8 cidr, u8 bits, struct allowedips_node **rnode, struct mutex *lock)
+
+WARNING:LONG_LINE: line length of 110 exceeds 100 columns
+#511: FILE: drivers/net/wireguard/allowedips.c:194:
++	struct allowedips_node *parent = NULL, *node = rcu_dereference_protected(trie, lockdep_is_held(lock));
+
+WARNING:LONG_LINE: line length of 136 exceeds 100 columns
+#525: FILE: drivers/net/wireguard/allowedips.c:208:
++static int add(struct allowedips_node __rcu **trie, u8 bits, const u8 *be_key, u8 cidr, struct wireguard_peer *peer, struct mutex *lock)
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#555: FILE: drivers/net/wireguard/allowedips.c:238:
++	if (!node)
+[...]
++	else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#557: FILE: drivers/net/wireguard/allowedips.c:240:
++	else {
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#593: FILE: drivers/net/wireguard/allowedips.c:276:
++	table->root4 = table->root6 = NULL;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+WARNING:LONG_LINE: line length of 134 exceeds 100 columns
+#607: FILE: drivers/net/wireguard/allowedips.c:290:
++int allowedips_insert_v4(struct allowedips *table, const struct in_addr *ip, u8 cidr, struct wireguard_peer *peer, struct mutex *lock)
+
+WARNING:LONG_LINE: line length of 135 exceeds 100 columns
+#613: FILE: drivers/net/wireguard/allowedips.c:296:
++int allowedips_insert_v6(struct allowedips *table, const struct in6_addr *ip, u8 cidr, struct wireguard_peer *peer, struct mutex *lock)
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#619: FILE: drivers/net/wireguard/allowedips.c:302:
++void allowedips_remove_by_peer(struct allowedips *table, struct wireguard_peer *peer, struct mutex *lock)
+
+WARNING:LONG_LINE: line length of 206 exceeds 100 columns
+#626: FILE: drivers/net/wireguard/allowedips.c:309:
++int allowedips_walk_by_peer(struct allowedips *table, struct allowedips_cursor *cursor, struct wireguard_peer *peer, int (*func)(void *ctx, const u8 *ip, u8 cidr, int family), void *ctx, struct mutex *lock)
+
+WARNING:LONG_LINE: line length of 135 exceeds 100 columns
+#702: FILE: drivers/net/wireguard/allowedips.h:31:
++int allowedips_insert_v4(struct allowedips *table, const struct in_addr *ip, u8 cidr, struct wireguard_peer *peer, struct mutex *lock);
+
+WARNING:LONG_LINE: line length of 136 exceeds 100 columns
+#703: FILE: drivers/net/wireguard/allowedips.h:32:
++int allowedips_insert_v6(struct allowedips *table, const struct in6_addr *ip, u8 cidr, struct wireguard_peer *peer, struct mutex *lock);
+
+WARNING:LONG_LINE: line length of 106 exceeds 100 columns
+#704: FILE: drivers/net/wireguard/allowedips.h:33:
++void allowedips_remove_by_peer(struct allowedips *table, struct wireguard_peer *peer, struct mutex *lock);
+
+WARNING:LONG_LINE: line length of 207 exceeds 100 columns
+#705: FILE: drivers/net/wireguard/allowedips.h:34:
++int allowedips_walk_by_peer(struct allowedips *table, struct allowedips_cursor *cursor, struct wireguard_peer *peer, int (*func)(void *ctx, const u8 *ip, u8 cidr, int family), void *ctx, struct mutex *lock);
+
+WARNING:SPDX_LICENSE_TAG: Improper SPDX comment style for 'drivers/net/wireguard/cookie.c', please use '//' instead
+#722: FILE: drivers/net/wireguard/cookie.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#722: FILE: drivers/net/wireguard/cookie.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:LONG_LINE: line length of 136 exceeds 100 columns
+#752: FILE: drivers/net/wireguard/cookie.c:31:
++static void precompute_key(u8 key[NOISE_SYMMETRIC_KEY_LEN], const u8 pubkey[NOISE_PUBLIC_KEY_LEN], const u8 label[COOKIE_KEY_LABEL_LEN])
+
+WARNING:LONG_LINE: line length of 129 exceeds 100 columns
+#766: FILE: drivers/net/wireguard/cookie.c:45:
++		precompute_key(checker->cookie_encryption_key, checker->device->static_identity.static_public, cookie_key_label);
+
+WARNING:LONG_LINE: line length of 122 exceeds 100 columns
+#767: FILE: drivers/net/wireguard/cookie.c:46:
++		precompute_key(checker->message_mac1_key, checker->device->static_identity.static_public, mac1_key_label);
+
+WARNING:LONG_LINE: line length of 115 exceeds 100 columns
+#776: FILE: drivers/net/wireguard/cookie.c:55:
++	precompute_key(peer->latest_cookie.cookie_decryption_key, peer->handshake.remote_static, cookie_key_label);
+
+WARNING:LONG_LINE: line length of 108 exceeds 100 columns
+#777: FILE: drivers/net/wireguard/cookie.c:56:
++	precompute_key(peer->latest_cookie.message_mac1_key, peer->handshake.remote_static, mac1_key_label);
+
+WARNING:LONG_LINE: line length of 117 exceeds 100 columns
+#786: FILE: drivers/net/wireguard/cookie.c:65:
++static void compute_mac1(u8 mac1[COOKIE_LEN], const void *message, size_t len, const u8 key[NOISE_SYMMETRIC_KEY_LEN])
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#792: FILE: drivers/net/wireguard/cookie.c:71:
++static void compute_mac2(u8 mac2[COOKIE_LEN], const void *message, size_t len, const u8 cookie[COOKIE_LEN])
+
+WARNING:LONG_LINE: line length of 116 exceeds 100 columns
+#822: FILE: drivers/net/wireguard/cookie.c:101:
++enum cookie_mac_state cookie_validate_packet(struct cookie_checker *checker, struct sk_buff *skb, bool check_cookie)
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#827: FILE: drivers/net/wireguard/cookie.c:106:
++	struct message_macs *macs = (struct message_macs *)(skb->data + skb->len - sizeof(struct message_macs));
+
+WARNING:LONG_LINE: line length of 111 exceeds 100 columns
+#857: FILE: drivers/net/wireguard/cookie.c:136:
++	struct message_macs *macs = (struct message_macs *)((u8 *)message + len - sizeof(struct message_macs));
+
+WARNING:LONG_LINE: line length of 135 exceeds 100 columns
+#866: FILE: drivers/net/wireguard/cookie.c:145:
++	if (peer->latest_cookie.is_valid && !has_expired(peer->latest_cookie.birthdate, COOKIE_SECRET_MAX_AGE - COOKIE_SECRET_LATENCY))
+
+WARNING:LONG_LINE: line length of 131 exceeds 100 columns
+#873: FILE: drivers/net/wireguard/cookie.c:152:
++void cookie_message_create(struct message_handshake_cookie *dst, struct sk_buff *skb, __le32 index, struct cookie_checker *checker)
+
+WARNING:LONG_LINE: line length of 118 exceeds 100 columns
+#875: FILE: drivers/net/wireguard/cookie.c:154:
++	struct message_macs *macs = (struct message_macs *)((u8 *)skb->data + skb->len - sizeof(struct message_macs));
+
+WARNING:LONG_LINE: line length of 145 exceeds 100 columns
+#883: FILE: drivers/net/wireguard/cookie.c:162:
++	xchacha20poly1305_encrypt(dst->encrypted_cookie, cookie, COOKIE_LEN, macs->mac1, COOKIE_LEN, dst->nonce, checker->cookie_encryption_key);
+
+WARNING:LONG_LINE: line length of 135 exceeds 100 columns
+#892: FILE: drivers/net/wireguard/cookie.c:171:
++	entry = index_hashtable_lookup(&wg->index_hashtable, INDEX_HASHTABLE_HANDSHAKE | INDEX_HASHTABLE_KEYPAIR, src->receiver_index);
+
+WARNING:LONG_LINE: line length of 219 exceeds 100 columns
+#901: FILE: drivers/net/wireguard/cookie.c:180:
++	ret = xchacha20poly1305_decrypt(cookie, src->encrypted_cookie, sizeof(src->encrypted_cookie), entry->peer->latest_cookie.last_mac1_sent, COOKIE_LEN, src->nonce, entry->peer->latest_cookie.cookie_decryption_key);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#904: FILE: drivers/net/wireguard/cookie.c:183:
++	if (ret) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#911: FILE: drivers/net/wireguard/cookie.c:190:
++	} else
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#912: FILE: drivers/net/wireguard/cookie.c:191:
++		net_dbg_ratelimited("%s: Could not decrypt invalid cookie response\n", wg->dev->name);
+
+WARNING:LONG_LINE: line length of 117 exceeds 100 columns
+#968: FILE: drivers/net/wireguard/cookie.h:46:
++enum cookie_mac_state cookie_validate_packet(struct cookie_checker *checker, struct sk_buff *skb, bool check_cookie);
+
+WARNING:LONG_LINE: line length of 132 exceeds 100 columns
+#971: FILE: drivers/net/wireguard/cookie.h:49:
++void cookie_message_create(struct message_handshake_cookie *src, struct sk_buff *skb, __le32 index, struct cookie_checker *checker);
+
+WARNING:SPDX_LICENSE_TAG: Improper SPDX comment style for 'drivers/net/wireguard/device.c', please use '//' instead
+#981: FILE: drivers/net/wireguard/device.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#981: FILE: drivers/net/wireguard/device.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#1056: FILE: drivers/net/wireguard/device.c:76:
++			noise_keypairs_clear(&peer->keypairs);
+ 			                            ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:DEPRECATED_API: Deprecated use of 'rcu_barrier_bh', prefer 'rcu_barrier' instead
+#1063: FILE: drivers/net/wireguard/device.c:83:
++	rcu_barrier_bh();
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1066: FILE: drivers/net/wireguard/device.c:86:
++}
++static struct notifier_block pm_notifier = { .notifier_call = pm_notification };
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#1079: FILE: drivers/net/wireguard/device.c:99:
++		noise_keypairs_clear(&peer->keypairs);
+ 		                            ^^^^^^^^
+
+WARNING:LONG_LINE: line length of 111 exceeds 100 columns
+#1080: FILE: drivers/net/wireguard/device.c:100:
++		peer->last_sent_handshake = ktime_get_boot_fast_ns() - (u64)(REKEY_TIMEOUT + 1) * NSEC_PER_SEC;
+
+WARNING:LONG_LINE: line length of 123 exceeds 100 columns
+#1108: FILE: drivers/net/wireguard/device.c:128:
++			net_dbg_ratelimited("%s: No peer has allowed IPs matching %pI4\n", dev->name, &ip_hdr(skb)->daddr);
+
+WARNING:LONG_LINE: line length of 125 exceeds 100 columns
+#1110: FILE: drivers/net/wireguard/device.c:130:
++			net_dbg_ratelimited("%s: No peer has allowed IPs matching %pI6\n", dev->name, &ipv6_hdr(skb)->daddr);
+
+WARNING:LONG_LINE: line length of 141 exceeds 100 columns
+#1117: FILE: drivers/net/wireguard/device.c:137:
++		net_dbg_ratelimited("%s: No valid endpoint has been configured or discovered for peer %llu\n", dev->name, peer->internal_id);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1124: FILE: drivers/net/wireguard/device.c:144:
++	if (!skb_is_gso(skb))
+[...]
++	else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1126: FILE: drivers/net/wireguard/device.c:146:
++	else {
+
+WARNING:LIKELY_MISUSE: nested (un)?likely() calls, IS_ERR already uses unlikely() internally
+#1129: FILE: drivers/net/wireguard/device.c:149:
++		if (unlikely(IS_ERR(segs))) {
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#1138: FILE: drivers/net/wireguard/device.c:158:
++		skb->next = skb->prev = NULL;
+
+WARNING:LONG_LINE_COMMENT: line length of 104 exceeds 100 columns
+#1155: FILE: drivers/net/wireguard/device.c:175:
++	/* If the queue is getting too big, we start removing the oldest packets until it's small again.
+
+A comment starts before but extends beyond the maximum line length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:LONG_LINE_COMMENT: line length of 103 exceeds 100 columns
+#1156: FILE: drivers/net/wireguard/device.c:176:
++	 * We do this before adding the new packet, so we don't remove GSO segments that are in excess.
+
+WARNING:LONG_LINE_COMMENT: line length of 108 exceeds 100 columns
+#1198: FILE: drivers/net/wireguard/device.c:218:
++	peer_remove_all(wg); /* The final references are cleared in the below calls to destroy_workqueue. */
+
+WARNING:DEPRECATED_API: Deprecated use of 'rcu_barrier_bh', prefer 'rcu_barrier' instead
+#1204: FILE: drivers/net/wireguard/device.c:224:
++	rcu_barrier_bh(); /* Wait for all the peers to be actually freed. */
+
+WARNING:LONG_LINE: line length of 139 exceeds 100 columns
+#1225: FILE: drivers/net/wireguard/device.c:245:
++	enum { WG_NETDEV_FEATURES = NETIF_F_HW_CSUM | NETIF_F_RXCSUM | NETIF_F_SG | NETIF_F_GSO | NETIF_F_GSO_SOFTWARE | NETIF_F_HIGHDMA };
+
+WARNING:LONG_LINE: line length of 133 exceeds 100 columns
+#1239: FILE: drivers/net/wireguard/device.c:259:
++	dev->mtu = ETH_DATA_LEN - MESSAGE_MINIMUM_LENGTH - sizeof(struct udphdr) - max(sizeof(struct ipv6hdr), sizeof(struct iphdr));
+
+WARNING:LONG_LINE: line length of 139 exceeds 100 columns
+#1250: FILE: drivers/net/wireguard/device.c:270:
++static int newlink(struct net *src_net, struct net_device *dev, struct nlattr *tb[], struct nlattr *data[], struct netlink_ext_ack *extack)
+
+WARNING:LONG_LINE: line length of 115 exceeds 100 columns
+#1271: FILE: drivers/net/wireguard/device.c:291:
++	wg->incoming_handshakes_worker = packet_alloc_percpu_multicore_worker(packet_handshake_receive_worker, wg);
+
+WARNING:LONG_LINE: line length of 111 exceeds 100 columns
+#1275: FILE: drivers/net/wireguard/device.c:295:
++	wg->handshake_receive_wq = alloc_workqueue("wg-kex-%s", WQ_CPU_INTENSIVE | WQ_FREEZABLE, 0, dev->name);
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#1279: FILE: drivers/net/wireguard/device.c:299:
++	wg->handshake_send_wq = alloc_workqueue("wg-kex-%s", WQ_UNBOUND | WQ_FREEZABLE, 0, dev->name);
+
+WARNING:LONG_LINE: line length of 110 exceeds 100 columns
+#1283: FILE: drivers/net/wireguard/device.c:303:
++	wg->packet_crypt_wq = alloc_workqueue("wg-crypt-%s", WQ_CPU_INTENSIVE | WQ_MEM_RECLAIM, 0, dev->name);
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#1287: FILE: drivers/net/wireguard/device.c:307:
++	if (packet_queue_init(&wg->encrypt_queue, packet_encrypt_worker, true, MAX_QUEUED_PACKETS) < 0)
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#1290: FILE: drivers/net/wireguard/device.c:310:
++	if (packet_queue_init(&wg->decrypt_queue, packet_decrypt_worker, true, MAX_QUEUED_PACKETS) < 0)
+
+WARNING:DEPRECATED_API: Deprecated use of 'rcu_barrier_bh', prefer 'rcu_barrier' instead
+#1396: FILE: drivers/net/wireguard/device.c:416:
++	rcu_barrier_bh();
+
+WARNING:SPDX_LICENSE_TAG: Improper SPDX comment style for 'drivers/net/wireguard/hashtables.c', please use '//' instead
+#1474: FILE: drivers/net/wireguard/hashtables.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1474: FILE: drivers/net/wireguard/hashtables.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:LONG_LINE: line length of 117 exceeds 100 columns
+#1483: FILE: drivers/net/wireguard/hashtables.c:10:
++static inline struct hlist_head *pubkey_bucket(struct pubkey_hashtable *table, const u8 pubkey[NOISE_PUBLIC_KEY_LEN])
+
+WARNING:LONG_LINE: line length of 121 exceeds 100 columns
+#1488: FILE: drivers/net/wireguard/hashtables.c:15:
++	return &table->hashtable[siphash(pubkey, NOISE_PUBLIC_KEY_LEN, &table->key) & (HASH_SIZE(table->hashtable) - 1)];
+
+WARNING:LONG_LINE: line length of 117 exceeds 100 columns
+#1513: FILE: drivers/net/wireguard/hashtables.c:40:
++struct wireguard_peer *pubkey_hashtable_lookup(struct pubkey_hashtable *table, const u8 pubkey[NOISE_PUBLIC_KEY_LEN])
+
+WARNING:LONG_LINE_COMMENT: line length of 101 exceeds 100 columns
+#1580: FILE: drivers/net/wireguard/hashtables.c:107:
++			goto search_unused_slot; /* If it's already in use, we continue searching. */
+
+WARNING:LONG_LINE: line length of 129 exceeds 100 columns
+#1602: FILE: drivers/net/wireguard/hashtables.c:129:
++bool index_hashtable_replace(struct index_hashtable *table, struct index_hashtable_entry *old, struct index_hashtable_entry *new)
+
+WARNING:LONG_LINE: line length of 146 exceeds 100 columns
+#1622: FILE: drivers/net/wireguard/hashtables.c:149:
++struct index_hashtable_entry *index_hashtable_lookup(struct index_hashtable *table, const enum index_hashtable_type type_mask, const __le32 index)
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#1668: FILE: drivers/net/wireguard/hashtables.h:21:
++	struct mutex lock;
+
+WARNING:LONG_LINE: line length of 118 exceeds 100 columns
+#1674: FILE: drivers/net/wireguard/hashtables.h:27:
++struct wireguard_peer *pubkey_hashtable_lookup(struct pubkey_hashtable *table, const u8 pubkey[NOISE_PUBLIC_KEY_LEN]);
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#1679: FILE: drivers/net/wireguard/hashtables.h:32:
++	spinlock_t lock;
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1693: FILE: drivers/net/wireguard/hashtables.h:46:
++};
++void index_hashtable_init(struct index_hashtable *table);
+
+WARNING:LONG_LINE: line length of 130 exceeds 100 columns
+#1695: FILE: drivers/net/wireguard/hashtables.h:48:
++bool index_hashtable_replace(struct index_hashtable *table, struct index_hashtable_entry *old, struct index_hashtable_entry *new);
+
+WARNING:LONG_LINE: line length of 147 exceeds 100 columns
+#1697: FILE: drivers/net/wireguard/hashtables.h:50:
++struct index_hashtable_entry *index_hashtable_lookup(struct index_hashtable *table, const enum index_hashtable_type type_mask, const __le32 index);
+
+WARNING:SPDX_LICENSE_TAG: Improper SPDX comment style for 'drivers/net/wireguard/main.c', please use '//' instead
+#1706: FILE: drivers/net/wireguard/main.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1706: FILE: drivers/net/wireguard/main.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'plain_len' may be better as '(plain_len)' to avoid precedence issues
+#1800: FILE: drivers/net/wireguard/messages.h:25:
++#define noise_encrypted_len(plain_len) (plain_len + NOISE_AUTHTAG_LEN)
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#1894: FILE: drivers/net/wireguard/messages.h:119:
++#define SKB_HEADER_LEN (max(sizeof(struct iphdr), sizeof(struct ipv6hdr)) + sizeof(struct udphdr) + NET_SKB_PAD)
+
+WARNING:SPDX_LICENSE_TAG: Improper SPDX comment style for 'drivers/net/wireguard/netlink.c', please use '//' instead
+#1908: FILE: drivers/net/wireguard/netlink.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1908: FILE: drivers/net/wireguard/netlink.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxW)
+#1931: FILE: drivers/net/wireguard/netlink.c:24:
++	[WGDEVICE_A_PRIVATE_KEY]= { .len = NOISE_PUBLIC_KEY_LEN },
+ 	                        ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxW)
+#1934: FILE: drivers/net/wireguard/netlink.c:27:
++	[WGDEVICE_A_LISTEN_PORT]= { .type = NLA_U16 },
+ 	                        ^
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxW)
+#1944: FILE: drivers/net/wireguard/netlink.c:37:
++	[WGPEER_A_PERSISTENT_KEEPALIVE_INTERVAL]= { .type = NLA_U16 },
+ 	                                        ^
+
+WARNING:LONG_LINE: line length of 115 exceeds 100 columns
+#1969: FILE: drivers/net/wireguard/netlink.c:62:
++	if (!dev->rtnl_link_ops || !dev->rtnl_link_ops->kind || strcmp(dev->rtnl_link_ops->kind, KBUILD_MODNAME)) {
+
+WARNING:LONG_LINE: line length of 123 exceeds 100 columns
+#1990: FILE: drivers/net/wireguard/netlink.c:83:
++	if (nla_put_u8(actx->skb, WGALLOWEDIP_A_CIDR_MASK, cidr) || nla_put_u16(actx->skb, WGALLOWEDIP_A_FAMILY, family) ||
+
+WARNING:LONG_LINE: line length of 130 exceeds 100 columns
+#1991: FILE: drivers/net/wireguard/netlink.c:84:
++	    nla_put(actx->skb, WGALLOWEDIP_A_IPADDR, family == AF_INET6 ? sizeof(struct in6_addr) : sizeof(struct in_addr), ip)) {
+
+WARNING:LONG_LINE: line length of 126 exceeds 100 columns
+#2000: FILE: drivers/net/wireguard/netlink.c:93:
++static int get_peer(struct wireguard_peer *peer, unsigned int index, struct allowedips_cursor *rt_cursor, struct sk_buff *skb)
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#2010: FILE: drivers/net/wireguard/netlink.c:103:
++	fail = nla_put(skb, WGPEER_A_PUBLIC_KEY, NOISE_PUBLIC_KEY_LEN, peer->handshake.remote_static);
+
+WARNING:LONG_LINE: line length of 116 exceeds 100 columns
+#2017: FILE: drivers/net/wireguard/netlink.c:110:
++		fail = nla_put(skb, WGPEER_A_PRESHARED_KEY, NOISE_SYMMETRIC_KEY_LEN, peer->handshake.preshared_key);
+
+WARNING:LONG_LINE: line length of 219 exceeds 100 columns
+#2022: FILE: drivers/net/wireguard/netlink.c:115:
++		if (nla_put(skb, WGPEER_A_LAST_HANDSHAKE_TIME, sizeof(struct timespec), &peer->walltime_last_handshake) || nla_put_u16(skb, WGPEER_A_PERSISTENT_KEEPALIVE_INTERVAL, peer->persistent_keepalive_interval) ||
+
+WARNING:LONG_LINE: line length of 185 exceeds 100 columns
+#2023: FILE: drivers/net/wireguard/netlink.c:116:
++				nla_put_u64_64bit(skb, WGPEER_A_TX_BYTES, peer->tx_bytes, WGPEER_A_UNSPEC) || nla_put_u64_64bit(skb, WGPEER_A_RX_BYTES, peer->rx_bytes, WGPEER_A_UNSPEC))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2023: FILE: drivers/net/wireguard/netlink.c:116:
++		if (nla_put(skb, WGPEER_A_LAST_HANDSHAKE_TIME, sizeof(struct timespec), &peer->walltime_last_handshake) || nla_put_u16(skb, WGPEER_A_PERSISTENT_KEEPALIVE_INTERVAL, peer->persistent_keepalive_interval) ||
++				nla_put_u64_64bit(skb, WGPEER_A_TX_BYTES, peer->tx_bytes, WGPEER_A_UNSPEC) || nla_put_u64_64bit(skb, WGPEER_A_RX_BYTES, peer->rx_bytes, WGPEER_A_UNSPEC))
+
+WARNING:LONG_LINE: line length of 114 exceeds 100 columns
+#2028: FILE: drivers/net/wireguard/netlink.c:121:
++			fail = nla_put(skb, WGPEER_A_ENDPOINT, sizeof(struct sockaddr_in), &peer->endpoint.addr4);
+
+WARNING:LONG_LINE: line length of 115 exceeds 100 columns
+#2030: FILE: drivers/net/wireguard/netlink.c:123:
++			fail = nla_put(skb, WGPEER_A_ENDPOINT, sizeof(struct sockaddr_in6), &peer->endpoint.addr6);
+
+WARNING:LONG_LINE: line length of 144 exceeds 100 columns
+#2039: FILE: drivers/net/wireguard/netlink.c:132:
++	if (allowedips_walk_by_peer(&peer->device->peer_allowedips, rt_cursor, peer, get_allowedips, &ctx, &peer->device->device_update_lock)) {
+
+WARNING:LONG_LINE: line length of 123 exceeds 100 columns
+#2057: FILE: drivers/net/wireguard/netlink.c:150:
++	int ret = nlmsg_parse(cb->nlh, GENL_HDRLEN + genl_family.hdrsize, attrs, genl_family.maxattr, device_policy, NULL);
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*cb->args[2])...) over kzalloc(sizeof(struct allowedips_cursor)...)
+#2061: FILE: drivers/net/wireguard/netlink.c:154:
++	cb->args[2] = (long)kzalloc(sizeof(struct allowedips_cursor), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:LONG_LINE: line length of 120 exceeds 100 columns
+#2077: FILE: drivers/net/wireguard/netlink.c:170:
++	struct wireguard_peer *peer, *next_peer_cursor = NULL, *last_peer_cursor = (struct wireguard_peer *)cb->args[1];
+
+WARNING:LONG_LINE: line length of 125 exceeds 100 columns
+#2089: FILE: drivers/net/wireguard/netlink.c:182:
++	hdr = genlmsg_put(skb, NETLINK_CB(cb->skb).portid, cb->nlh->nlmsg_seq, &genl_family, NLM_F_MULTI, WG_CMD_GET_DEVICE);
+
+WARNING:LONG_LINE: line length of 246 exceeds 100 columns
+#2095: FILE: drivers/net/wireguard/netlink.c:188:
++		if (nla_put_u16(skb, WGDEVICE_A_LISTEN_PORT, wg->incoming_port) || nla_put_u32(skb, WGDEVICE_A_FWMARK, wg->fwmark) || nla_put_u32(skb, WGDEVICE_A_IFINDEX, wg->dev->ifindex) || nla_put_string(skb, WGDEVICE_A_IFNAME, wg->dev->name))
+
+WARNING:LONG_LINE: line length of 221 exceeds 100 columns
+#2100: FILE: drivers/net/wireguard/netlink.c:193:
++			if (nla_put(skb, WGDEVICE_A_PRIVATE_KEY, NOISE_PUBLIC_KEY_LEN, wg->static_identity.static_private) || nla_put(skb, WGDEVICE_A_PUBLIC_KEY, NOISE_PUBLIC_KEY_LEN, wg->static_identity.static_public)) {
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#2116: FILE: drivers/net/wireguard/netlink.c:209:
++	if (list_empty(&wg->peer_list) || (last_peer_cursor && list_empty(&last_peer_cursor->peer_list))) {
+
+WARNING:LONG_LINE: line length of 108 exceeds 100 columns
+#2190: FILE: drivers/net/wireguard/netlink.c:283:
++	if (!attrs[WGALLOWEDIP_A_FAMILY] || !attrs[WGALLOWEDIP_A_IPADDR] || !attrs[WGALLOWEDIP_A_CIDR_MASK])
+
+WARNING:LONG_LINE: line length of 110 exceeds 100 columns
+#2195: FILE: drivers/net/wireguard/netlink.c:288:
++	if (family == AF_INET && cidr <= 32 && nla_len(attrs[WGALLOWEDIP_A_IPADDR]) == sizeof(struct in_addr))
+
+WARNING:LONG_LINE: line length of 161 exceeds 100 columns
+#2196: FILE: drivers/net/wireguard/netlink.c:289:
++		ret = allowedips_insert_v4(&peer->device->peer_allowedips, nla_data(attrs[WGALLOWEDIP_A_IPADDR]), cidr, peer, &peer->device->device_update_lock);
+
+WARNING:LONG_LINE: line length of 118 exceeds 100 columns
+#2197: FILE: drivers/net/wireguard/netlink.c:290:
++	else if (family == AF_INET6 && cidr <= 128 && nla_len(attrs[WGALLOWEDIP_A_IPADDR]) == sizeof(struct in6_addr))
+
+WARNING:LONG_LINE: line length of 161 exceeds 100 columns
+#2198: FILE: drivers/net/wireguard/netlink.c:291:
++		ret = allowedips_insert_v6(&peer->device->peer_allowedips, nla_data(attrs[WGALLOWEDIP_A_IPADDR]), cidr, peer, &peer->device->device_update_lock);
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#2211: FILE: drivers/net/wireguard/netlink.c:304:
++	if (attrs[WGPEER_A_PUBLIC_KEY] && nla_len(attrs[WGPEER_A_PUBLIC_KEY]) == NOISE_PUBLIC_KEY_LEN)
+
+WARNING:LONG_LINE: line length of 111 exceeds 100 columns
+#2215: FILE: drivers/net/wireguard/netlink.c:308:
++	if (attrs[WGPEER_A_PRESHARED_KEY] && nla_len(attrs[WGPEER_A_PRESHARED_KEY]) == NOISE_SYMMETRIC_KEY_LEN)
+
+WARNING:LONG_LINE: line length of 161 exceeds 100 columns
+#2227: FILE: drivers/net/wireguard/netlink.c:320:
++		if (wg->static_identity.has_identity && !memcmp(nla_data(attrs[WGPEER_A_PUBLIC_KEY]), wg->static_identity.static_public, NOISE_PUBLIC_KEY_LEN)) {
+
+WARNING:LONG_LINE_COMMENT: line length of 125 exceeds 100 columns
+#2228: FILE: drivers/net/wireguard/netlink.c:321:
++			/* We silently ignore peers that have the same public key as the device. The reason we do it silently
+
+WARNING:LONG_LINE_COMMENT: line length of 115 exceeds 100 columns
+#2229: FILE: drivers/net/wireguard/netlink.c:322:
++			 * is that we'd like for people to be able to reuse the same set of API calls across peers.
+
+WARNING:LONG_LINE: line length of 159 exceeds 100 columns
+#2261: FILE: drivers/net/wireguard/netlink.c:354:
++		if ((len == sizeof(struct sockaddr_in) && addr->sa_family == AF_INET) || (len == sizeof(struct sockaddr_in6) && addr->sa_family == AF_INET6)) {
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#2277: FILE: drivers/net/wireguard/netlink.c:370:
++			ret = nla_parse_nested(allowedip, WGALLOWEDIP_A_MAX, attr, allowedip_policy, NULL);
+
+WARNING:LONG_LINE: line length of 117 exceeds 100 columns
+#2287: FILE: drivers/net/wireguard/netlink.c:380:
++		const u16 persistent_keepalive_interval = nla_get_u16(attrs[WGPEER_A_PERSISTENT_KEEPALIVE_INTERVAL]);
+
+WARNING:LONG_LINE: line length of 140 exceeds 100 columns
+#2288: FILE: drivers/net/wireguard/netlink.c:381:
++		const bool send_keepalive = !peer->persistent_keepalive_interval && persistent_keepalive_interval && netif_running(wg->dev);
+
+WARNING:LONG_LINE: line length of 114 exceeds 100 columns
+#2301: FILE: drivers/net/wireguard/netlink.c:394:
++		memzero_explicit(nla_data(attrs[WGPEER_A_PRESHARED_KEY]), nla_len(attrs[WGPEER_A_PRESHARED_KEY]));
+
+WARNING:LONG_LINE: line length of 115 exceeds 100 columns
+#2333: FILE: drivers/net/wireguard/netlink.c:426:
++	if (info->attrs[WGDEVICE_A_FLAGS] && nla_get_u32(info->attrs[WGDEVICE_A_FLAGS]) & WGDEVICE_F_REPLACE_PEERS)
+
+WARNING:LONG_LINE: line length of 122 exceeds 100 columns
+#2336: FILE: drivers/net/wireguard/netlink.c:429:
++	if (info->attrs[WGDEVICE_A_PRIVATE_KEY] && nla_len(info->attrs[WGDEVICE_A_PRIVATE_KEY]) == NOISE_PUBLIC_KEY_LEN) {
+
+WARNING:LONG_LINE: line length of 114 exceeds 100 columns
+#2338: FILE: drivers/net/wireguard/netlink.c:431:
++		u8 public_key[NOISE_PUBLIC_KEY_LEN], *private_key = nla_data(info->attrs[WGDEVICE_A_PRIVATE_KEY]);
+
+WARNING:LONG_LINE_COMMENT: line length of 104 exceeds 100 columns
+#2340: FILE: drivers/net/wireguard/netlink.c:433:
++		/* We remove before setting, to prevent race, which means doing two 25519-genpub ops. */
+
+WARNING:LONG_LINE: line length of 126 exceeds 100 columns
+#2380: FILE: drivers/net/wireguard/netlink.c:473:
++		memzero_explicit(nla_data(info->attrs[WGDEVICE_A_PRIVATE_KEY]), nla_len(info->attrs[WGDEVICE_A_PRIVATE_KEY]));
+
+WARNING:SPDX_LICENSE_TAG: Improper SPDX comment style for 'drivers/net/wireguard/noise.c', please use '//' instead
+#2443: FILE: drivers/net/wireguard/noise.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2443: FILE: drivers/net/wireguard/noise.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:LONG_LINE: line length of 110 exceeds 100 columns
+#2480: FILE: drivers/net/wireguard/noise.c:38:
++	blake2s(handshake_init_chaining_key, handshake_name, NULL, NOISE_HASH_LEN, sizeof(handshake_name), 0);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#2491: FILE: drivers/net/wireguard/noise.c:49:
++	bool ret = true;
++	down_write(&peer->handshake.lock);
+
+WARNING:LONG_LINE: line length of 156 exceeds 100 columns
+#2493: FILE: drivers/net/wireguard/noise.c:51:
++		ret = curve25519(peer->handshake.precomputed_static_static, peer->handshake.static_identity->static_private, peer->handshake.remote_static);
+
+WARNING:LONG_LINE: line length of 238 exceeds 100 columns
+#2500: FILE: drivers/net/wireguard/noise.c:58:
++bool noise_handshake_init(struct noise_handshake *handshake, struct noise_static_identity *static_identity, const u8 peer_public_key[NOISE_PUBLIC_KEY_LEN], const u8 peer_preshared_key[NOISE_SYMMETRIC_KEY_LEN], struct wireguard_peer *peer)
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2535: FILE: drivers/net/wireguard/noise.c:93:
++	struct noise_keypair *keypair = kzalloc(sizeof(struct noise_keypair), GFP_KERNEL);
+ 	                      ^^^^^^^
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*keypair)...) over kzalloc(sizeof(struct noise_keypair)...)
+#2535: FILE: drivers/net/wireguard/noise.c:93:
++	struct noise_keypair *keypair = kzalloc(sizeof(struct noise_keypair), GFP_KERNEL);
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2537: FILE: drivers/net/wireguard/noise.c:95:
++	if (unlikely(!keypair))
+ 	              ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2543: FILE: drivers/net/wireguard/noise.c:101:
++	return keypair;
+ 	       ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2548: FILE: drivers/net/wireguard/noise.c:106:
++	struct noise_keypair *keypair = container_of(rcu, struct noise_keypair, rcu);
+ 	                      ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'Keypair' may be misspelled - perhaps 'Key pair'?
+#2550: FILE: drivers/net/wireguard/noise.c:108:
++	net_dbg_ratelimited("%s: Keypair %llu destroyed for peer %llu\n", keypair->entry.peer->device->dev->name, keypair->internal_id, keypair->entry.peer->internal_id);
+ 	                         ^^^^^^^
+
+WARNING:LONG_LINE: line length of 170 exceeds 100 columns
+#2550: FILE: drivers/net/wireguard/noise.c:108:
++	net_dbg_ratelimited("%s: Keypair %llu destroyed for peer %llu\n", keypair->entry.peer->device->dev->name, keypair->internal_id, keypair->entry.peer->internal_id);
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2551: FILE: drivers/net/wireguard/noise.c:109:
++	kzfree(keypair);
+ 	       ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2556: FILE: drivers/net/wireguard/noise.c:114:
++	struct noise_keypair *keypair = container_of(kref, struct noise_keypair, refcount);
+ 	                      ^^^^^^^
+
+WARNING:DEPRECATED_API: Deprecated use of 'call_rcu_bh', prefer 'call_rcu' instead
+#2559: FILE: drivers/net/wireguard/noise.c:117:
++	call_rcu_bh(&keypair->rcu, keypair_free_rcu);
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2562: FILE: drivers/net/wireguard/noise.c:120:
++void noise_keypair_put(struct noise_keypair *keypair)
+                                              ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2564: FILE: drivers/net/wireguard/noise.c:122:
++	if (unlikely(!keypair))
+ 	              ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2569: FILE: drivers/net/wireguard/noise.c:127:
++struct noise_keypair *noise_keypair_get(struct noise_keypair *keypair)
+                                                               ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2571: FILE: drivers/net/wireguard/noise.c:129:
++	RCU_LOCKDEP_WARN(!rcu_read_lock_bh_held(), "Taking noise keypair reference without holding the RCU BH read lock");
+ 	                                                         ^^^^^^^
+
+WARNING:LONG_LINE_STRING: line length of 122 exceeds 100 columns
+#2571: FILE: drivers/net/wireguard/noise.c:129:
++	RCU_LOCKDEP_WARN(!rcu_read_lock_bh_held(), "Taking noise keypair reference without holding the RCU BH read lock");
+
+A string starts before but extends beyond the maximum line length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2572: FILE: drivers/net/wireguard/noise.c:130:
++	if (unlikely(!keypair || !kref_get_unless_zero(&keypair->refcount)))
+ 	              ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2574: FILE: drivers/net/wireguard/noise.c:132:
++	return keypair;
+ 	       ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#2577: FILE: drivers/net/wireguard/noise.c:135:
++void noise_keypairs_clear(struct noise_keypairs *keypairs)
+                                                  ^^^^^^^^
+
+WARNING:LONG_LINE: line length of 117 exceeds 100 columns
+#2582: FILE: drivers/net/wireguard/noise.c:140:
++	old = rcu_dereference_protected(keypairs->previous_keypair, lockdep_is_held(&keypairs->keypair_update_lock));
+
+WARNING:LONG_LINE: line length of 113 exceeds 100 columns
+#2585: FILE: drivers/net/wireguard/noise.c:143:
++	old = rcu_dereference_protected(keypairs->next_keypair, lockdep_is_held(&keypairs->keypair_update_lock));
+
+WARNING:LONG_LINE: line length of 116 exceeds 100 columns
+#2588: FILE: drivers/net/wireguard/noise.c:146:
++	old = rcu_dereference_protected(keypairs->current_keypair, lockdep_is_held(&keypairs->keypair_update_lock));
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#2594: FILE: drivers/net/wireguard/noise.c:152:
++static void add_new_keypair(struct noise_keypairs *keypairs, struct noise_keypair *new_keypair)
+                                                    ^^^^^^^^
+
+WARNING:LONG_LINE: line length of 130 exceeds 100 columns
+#2599: FILE: drivers/net/wireguard/noise.c:157:
++	previous_keypair = rcu_dereference_protected(keypairs->previous_keypair, lockdep_is_held(&keypairs->keypair_update_lock));
+
+WARNING:LONG_LINE: line length of 122 exceeds 100 columns
+#2600: FILE: drivers/net/wireguard/noise.c:158:
++	next_keypair = rcu_dereference_protected(keypairs->next_keypair, lockdep_is_held(&keypairs->keypair_update_lock));
+
+WARNING:LONG_LINE: line length of 129 exceeds 100 columns
+#2601: FILE: drivers/net/wireguard/noise.c:159:
++	current_keypair =  rcu_dereference_protected(keypairs->current_keypair, lockdep_is_held(&keypairs->keypair_update_lock));
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2604: FILE: drivers/net/wireguard/noise.c:162:
++		 * a confirmation response, which means this new keypair can now be used.
+ 		                                                 ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2607: FILE: drivers/net/wireguard/noise.c:165:
++			/* If there already was a next keypair pending, we demote it to be
+ 			                               ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2608: FILE: drivers/net/wireguard/noise.c:166:
++			 * the previous keypair, and free the existing current.
+ 			                ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2611: FILE: drivers/net/wireguard/noise.c:169:
++			 * next keypair instead of putting it in the previous slot, but this
+ 			        ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2617: FILE: drivers/net/wireguard/noise.c:175:
++		} else	/* If there wasn't an existing next keypair, we replace the
+ 		      	                                    ^^^^^^^
+
+CHECK:BRACES: Unbalanced braces around else statement
+#2617: FILE: drivers/net/wireguard/noise.c:175:
++		} else	/* If there wasn't an existing next keypair, we replace the
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2621: FILE: drivers/net/wireguard/noise.c:179:
++		/* At this point we can get rid of the old previous keypair, and set up
+ 		                                                    ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2622: FILE: drivers/net/wireguard/noise.c:180:
++		 * the new keypair.
+ 		           ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#2627: FILE: drivers/net/wireguard/noise.c:185:
++		/* If we're the responder, it means we can't use the new keypair until
+ 		                                                         ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#2640: FILE: drivers/net/wireguard/noise.c:198:
++bool noise_received_with_keypair(struct noise_keypairs *keypairs, struct noise_keypair *received_keypair)
+                                                         ^^^^^^^^
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#2640: FILE: drivers/net/wireguard/noise.c:198:
++bool noise_received_with_keypair(struct noise_keypairs *keypairs, struct noise_keypair *received_keypair)
+
+WARNING:LONG_LINE: line length of 143 exceeds 100 columns
+#2652: FILE: drivers/net/wireguard/noise.c:210:
++	if (unlikely(received_keypair != rcu_dereference_protected(keypairs->next_keypair, lockdep_is_held(&keypairs->keypair_update_lock)))) {
+
+WARNING:LONG_LINE: line length of 125 exceeds 100 columns
+#2661: FILE: drivers/net/wireguard/noise.c:219:
++	old_keypair = rcu_dereference_protected(keypairs->previous_keypair, lockdep_is_held(&keypairs->keypair_update_lock));
+
+WARNING:LONG_LINE: line length of 158 exceeds 100 columns
+#2662: FILE: drivers/net/wireguard/noise.c:220:
++	rcu_assign_pointer(keypairs->previous_keypair, rcu_dereference_protected(keypairs->current_keypair, lockdep_is_held(&keypairs->keypair_update_lock)));
+
+WARNING:LONG_LINE: line length of 133 exceeds 100 columns
+#2672: FILE: drivers/net/wireguard/noise.c:230:
++void noise_set_static_identity_private_key(struct noise_static_identity *static_identity, const u8 private_key[NOISE_PUBLIC_KEY_LEN])
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#2675: FILE: drivers/net/wireguard/noise.c:233:
++	static_identity->has_identity = curve25519_generate_public(static_identity->static_public, private_key);
+
+WARNING:LONG_LINE: line length of 188 exceeds 100 columns
+#2682: FILE: drivers/net/wireguard/noise.c:240:
++static void kdf(u8 *first_dst, u8 *second_dst, u8 *third_dst, const u8 *data, size_t first_len, size_t second_len, size_t third_len, size_t data_len, const u8 chaining_key[NOISE_HASH_LEN])
+
+WARNING:LONG_LINE: line length of 260 exceeds 100 columns
+#2688: FILE: drivers/net/wireguard/noise.c:246:
++	BUG_ON(first_len > BLAKE2S_OUTBYTES || second_len > BLAKE2S_OUTBYTES || third_len > BLAKE2S_OUTBYTES || ((second_len || second_dst || third_len || third_dst) && (!first_len || !first_dst)) || ((third_len || third_dst) && (!second_len || !second_dst)));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2688: FILE: drivers/net/wireguard/noise.c:246:
++	BUG_ON(first_len > BLAKE2S_OUTBYTES || second_len > BLAKE2S_OUTBYTES || third_len > BLAKE2S_OUTBYTES || ((second_len || second_dst || third_len || third_dst) && (!first_len || !first_dst)) || ((third_len || third_dst) && (!second_len || !second_dst)));
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#2707: FILE: drivers/net/wireguard/noise.c:265:
++	blake2s_hmac(output, output, secret, BLAKE2S_OUTBYTES, BLAKE2S_OUTBYTES + 1, BLAKE2S_OUTBYTES);
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#2715: FILE: drivers/net/wireguard/noise.c:273:
++	blake2s_hmac(output, output, secret, BLAKE2S_OUTBYTES, BLAKE2S_OUTBYTES + 1, BLAKE2S_OUTBYTES);
+
+WARNING:LONG_LINE: line length of 141 exceeds 100 columns
+#2733: FILE: drivers/net/wireguard/noise.c:291:
++static void derive_keys(struct noise_symmetric_key *first_dst, struct noise_symmetric_key *second_dst, const u8 chaining_key[NOISE_HASH_LEN])
+
+WARNING:LONG_LINE: line length of 127 exceeds 100 columns
+#2735: FILE: drivers/net/wireguard/noise.c:293:
++	kdf(first_dst->key, second_dst->key, NULL, NULL, NOISE_SYMMETRIC_KEY_LEN, NOISE_SYMMETRIC_KEY_LEN, 0, 0, chaining_key);
+
+WARNING:LONG_LINE: line length of 176 exceeds 100 columns
+#2740: FILE: drivers/net/wireguard/noise.c:298:
++static bool __must_check mix_dh(u8 chaining_key[NOISE_HASH_LEN], u8 key[NOISE_SYMMETRIC_KEY_LEN], const u8 private[NOISE_PUBLIC_KEY_LEN], const u8 public[NOISE_PUBLIC_KEY_LEN])
+
+WARNING:LONG_LINE: line length of 133 exceeds 100 columns
+#2746: FILE: drivers/net/wireguard/noise.c:304:
++	kdf(chaining_key, key, NULL, dh_calculation, NOISE_HASH_LEN, NOISE_SYMMETRIC_KEY_LEN, 0, NOISE_PUBLIC_KEY_LEN, chaining_key);
+
+WARNING:LONG_LINE: line length of 149 exceeds 100 columns
+#2761: FILE: drivers/net/wireguard/noise.c:319:
++static void mix_psk(u8 chaining_key[NOISE_HASH_LEN], u8 hash[NOISE_HASH_LEN], u8 key[NOISE_SYMMETRIC_KEY_LEN], const u8 psk[NOISE_SYMMETRIC_KEY_LEN])
+
+WARNING:LONG_LINE: line length of 143 exceeds 100 columns
+#2765: FILE: drivers/net/wireguard/noise.c:323:
++	kdf(chaining_key, temp_hash, key, psk, NOISE_HASH_LEN, NOISE_HASH_LEN, NOISE_SYMMETRIC_KEY_LEN, NOISE_SYMMETRIC_KEY_LEN, chaining_key);
+
+WARNING:LONG_LINE: line length of 130 exceeds 100 columns
+#2770: FILE: drivers/net/wireguard/noise.c:328:
++static void handshake_init(u8 chaining_key[NOISE_HASH_LEN], u8 hash[NOISE_HASH_LEN], const u8 remote_static[NOISE_PUBLIC_KEY_LEN])
+
+WARNING:LONG_LINE: line length of 146 exceeds 100 columns
+#2777: FILE: drivers/net/wireguard/noise.c:335:
++static void message_encrypt(u8 *dst_ciphertext, const u8 *src_plaintext, size_t src_len, u8 key[NOISE_SYMMETRIC_KEY_LEN], u8 hash[NOISE_HASH_LEN])
+
+WARNING:LONG_LINE: line length of 134 exceeds 100 columns
+#2779: FILE: drivers/net/wireguard/noise.c:337:
++	chacha20poly1305_encrypt(dst_ciphertext, src_plaintext, src_len, hash, NOISE_HASH_LEN, 0 /* Always zero for Noise_IK */, key);
+
+WARNING:LONG_LINE: line length of 146 exceeds 100 columns
+#2783: FILE: drivers/net/wireguard/noise.c:341:
++static bool message_decrypt(u8 *dst_plaintext, const u8 *src_ciphertext, size_t src_len, u8 key[NOISE_SYMMETRIC_KEY_LEN], u8 hash[NOISE_HASH_LEN])
+
+WARNING:LONG_LINE: line length of 139 exceeds 100 columns
+#2785: FILE: drivers/net/wireguard/noise.c:343:
++	if (!chacha20poly1305_decrypt(dst_plaintext, src_ciphertext, src_len, hash, NOISE_HASH_LEN, 0 /* Always zero for Noise_IK */, key))
+
+WARNING:LONG_LINE: line length of 173 exceeds 100 columns
+#2791: FILE: drivers/net/wireguard/noise.c:349:
++static void message_ephemeral(u8 ephemeral_dst[NOISE_PUBLIC_KEY_LEN], const u8 ephemeral_src[NOISE_PUBLIC_KEY_LEN], u8 chaining_key[NOISE_HASH_LEN], u8 hash[NOISE_HASH_LEN])
+
+WARNING:LONG_LINE: line length of 111 exceeds 100 columns
+#2796: FILE: drivers/net/wireguard/noise.c:354:
++	kdf(chaining_key, NULL, NULL, ephemeral_src, NOISE_HASH_LEN, 0, 0, NOISE_PUBLIC_KEY_LEN, chaining_key);
+
+WARNING:LONG_LINE: line length of 115 exceeds 100 columns
+#2809: FILE: drivers/net/wireguard/noise.c:367:
++bool noise_handshake_create_initiation(struct message_handshake_initiation *dst, struct noise_handshake *handshake)
+
+WARNING:LONG_LINE: line length of 124 exceeds 100 columns
+#2834: FILE: drivers/net/wireguard/noise.c:392:
++	message_ephemeral(dst->unencrypted_ephemeral, dst->unencrypted_ephemeral, handshake->chaining_key, handshake->hash);
+
+WARNING:LONG_LINE: line length of 106 exceeds 100 columns
+#2837: FILE: drivers/net/wireguard/noise.c:395:
++	if (!mix_dh(handshake->chaining_key, key, handshake->ephemeral_private, handshake->remote_static))
+
+WARNING:LONG_LINE: line length of 134 exceeds 100 columns
+#2841: FILE: drivers/net/wireguard/noise.c:399:
++	message_encrypt(dst->encrypted_static, handshake->static_identity->static_public, NOISE_PUBLIC_KEY_LEN, key, handshake->hash);
+
+WARNING:LONG_LINE: line length of 177 exceeds 100 columns
+#2844: FILE: drivers/net/wireguard/noise.c:402:
++	kdf(handshake->chaining_key, key, NULL, handshake->precomputed_static_static, NOISE_HASH_LEN, NOISE_SYMMETRIC_KEY_LEN, 0, NOISE_PUBLIC_KEY_LEN, handshake->chaining_key);
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#2848: FILE: drivers/net/wireguard/noise.c:406:
++	message_encrypt(dst->encrypted_timestamp, timestamp, NOISE_TIMESTAMP_LEN, key, handshake->hash);
+
+WARNING:LONG_LINE: line length of 119 exceeds 100 columns
+#2850: FILE: drivers/net/wireguard/noise.c:408:
++	dst->sender_index = index_hashtable_insert(&handshake->entry.peer->device->index_hashtable, &handshake->entry);
+
+WARNING:LONG_LINE: line length of 128 exceeds 100 columns
+#2862: FILE: drivers/net/wireguard/noise.c:420:
++struct wireguard_peer *noise_handshake_consume_initiation(struct message_handshake_initiation *src, struct wireguard_device *wg)
+
+WARNING:LONG_LINE: line length of 155 exceeds 100 columns
+#2898: FILE: drivers/net/wireguard/noise.c:456:
++	kdf(chaining_key, key, NULL, handshake->precomputed_static_static, NOISE_HASH_LEN, NOISE_SYMMETRIC_KEY_LEN, 0, NOISE_PUBLIC_KEY_LEN, chaining_key);
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#2901: FILE: drivers/net/wireguard/noise.c:459:
++	if (!message_decrypt(t, src->encrypted_timestamp, sizeof(src->encrypted_timestamp), key, hash))
+
+WARNING:LONG_LINE: line length of 129 exceeds 100 columns
+#2906: FILE: drivers/net/wireguard/noise.c:464:
++	flood_attack = handshake->last_initiation_consumption + NSEC_PER_SEC / INITIATIONS_PER_SECOND > ktime_get_boot_fast_ns();
+
+WARNING:LONG_LINE: line length of 111 exceeds 100 columns
+#2933: FILE: drivers/net/wireguard/noise.c:491:
++bool noise_handshake_create_response(struct message_handshake_response *dst, struct noise_handshake *handshake)
+
+WARNING:LONG_LINE: line length of 124 exceeds 100 columns
+#2956: FILE: drivers/net/wireguard/noise.c:514:
++	message_ephemeral(dst->unencrypted_ephemeral, dst->unencrypted_ephemeral, handshake->chaining_key, handshake->hash);
+
+WARNING:LONG_LINE: line length of 110 exceeds 100 columns
+#2959: FILE: drivers/net/wireguard/noise.c:517:
++	if (!mix_dh(handshake->chaining_key, NULL, handshake->ephemeral_private, handshake->remote_ephemeral))
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#2963: FILE: drivers/net/wireguard/noise.c:521:
++	if (!mix_dh(handshake->chaining_key, NULL, handshake->ephemeral_private, handshake->remote_static))
+
+WARNING:LONG_LINE: line length of 119 exceeds 100 columns
+#2972: FILE: drivers/net/wireguard/noise.c:530:
++	dst->sender_index = index_hashtable_insert(&handshake->entry.peer->device->index_hashtable, &handshake->entry);
+
+WARNING:LONG_LINE: line length of 124 exceeds 100 columns
+#2984: FILE: drivers/net/wireguard/noise.c:542:
++struct wireguard_peer *noise_handshake_consume_response(struct message_handshake_response *src, struct wireguard_device *wg)
+
+WARNING:LONG_LINE: line length of 139 exceeds 100 columns
+#3001: FILE: drivers/net/wireguard/noise.c:559:
++	handshake = (struct noise_handshake *)index_hashtable_lookup(&wg->index_hashtable, INDEX_HASHTABLE_HANDSHAKE, src->receiver_index);
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#3030: FILE: drivers/net/wireguard/noise.c:588:
++	if (!message_decrypt(NULL, src->encrypted_nothing, sizeof(src->encrypted_nothing), key, hash))
+
+WARNING:LONG_LINE_COMMENT: line length of 103 exceeds 100 columns
+#3035: FILE: drivers/net/wireguard/noise.c:593:
++	/* It's important to check that the state is still the same, while we have an exclusive lock */
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#3061: FILE: drivers/net/wireguard/noise.c:619:
++bool noise_handshake_begin_session(struct noise_handshake *handshake, struct noise_keypairs *keypairs)
+                                                                                              ^^^^^^^^
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#3061: FILE: drivers/net/wireguard/noise.c:619:
++bool noise_handshake_begin_session(struct noise_handshake *handshake, struct noise_keypairs *keypairs)
+
+WARNING:LONG_LINE: line length of 110 exceeds 100 columns
+#3066: FILE: drivers/net/wireguard/noise.c:624:
++	if (handshake->state != HANDSHAKE_CREATED_RESPONSE && handshake->state != HANDSHAKE_CONSUMED_RESPONSE)
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#3076: FILE: drivers/net/wireguard/noise.c:634:
++		derive_keys(&new_keypair->sending, &new_keypair->receiving, handshake->chaining_key);
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#3078: FILE: drivers/net/wireguard/noise.c:636:
++		derive_keys(&new_keypair->receiving, &new_keypair->sending, handshake->chaining_key);
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#3081: FILE: drivers/net/wireguard/noise.c:639:
++	add_new_keypair(keypairs, new_keypair);
+ 	                ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'Keypair' may be misspelled - perhaps 'Key pair'?
+#3082: FILE: drivers/net/wireguard/noise.c:640:
++	net_dbg_ratelimited("%s: Keypair %llu created for peer %llu\n", new_keypair->entry.peer->device->dev->name, new_keypair->internal_id, new_keypair->entry.peer->internal_id);
+ 	                         ^^^^^^^
+
+WARNING:LONG_LINE: line length of 180 exceeds 100 columns
+#3082: FILE: drivers/net/wireguard/noise.c:640:
++	net_dbg_ratelimited("%s: Keypair %llu created for peer %llu\n", new_keypair->entry.peer->device->dev->name, new_keypair->internal_id, new_keypair->entry.peer->internal_id);
+
+WARNING:LONG_LINE: line length of 131 exceeds 100 columns
+#3083: FILE: drivers/net/wireguard/noise.c:641:
++	WARN_ON(!index_hashtable_replace(&handshake->entry.peer->device->index_hashtable, &handshake->entry, &new_keypair->entry));
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#3120: FILE: drivers/net/wireguard/noise.h:23:
++		spinlock_t lock;
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#3147: FILE: drivers/net/wireguard/noise.h:50:
++	spinlock_t keypair_update_lock;
+
+WARNING:LONG_LINE_COMMENT: line length of 143 exceeds 100 columns
+#3186: FILE: drivers/net/wireguard/noise.h:89:
++	/* Protects all members except the immutable (after noise_handshake_init): remote_static, precomputed_static_static, static_identity */
+
+WARNING:LONG_LINE: line length of 239 exceeds 100 columns
+#3193: FILE: drivers/net/wireguard/noise.h:96:
++bool noise_handshake_init(struct noise_handshake *handshake, struct noise_static_identity *static_identity, const u8 peer_public_key[NOISE_PUBLIC_KEY_LEN], const u8 peer_preshared_key[NOISE_SYMMETRIC_KEY_LEN], struct wireguard_peer *peer);
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#3195: FILE: drivers/net/wireguard/noise.h:98:
++void noise_keypair_put(struct noise_keypair *keypair);
+                                              ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#3196: FILE: drivers/net/wireguard/noise.h:99:
++struct noise_keypair *noise_keypair_get(struct noise_keypair *keypair);
+                                                               ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#3197: FILE: drivers/net/wireguard/noise.h:100:
++void noise_keypairs_clear(struct noise_keypairs *keypairs);
+                                                  ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#3198: FILE: drivers/net/wireguard/noise.h:101:
++bool noise_received_with_keypair(struct noise_keypairs *keypairs, struct noise_keypair *received_keypair);
+                                                         ^^^^^^^^
+
+WARNING:LONG_LINE: line length of 106 exceeds 100 columns
+#3198: FILE: drivers/net/wireguard/noise.h:101:
++bool noise_received_with_keypair(struct noise_keypairs *keypairs, struct noise_keypair *received_keypair);
+
+WARNING:LONG_LINE: line length of 134 exceeds 100 columns
+#3200: FILE: drivers/net/wireguard/noise.h:103:
++void noise_set_static_identity_private_key(struct noise_static_identity *static_identity, const u8 private_key[NOISE_PUBLIC_KEY_LEN]);
+
+WARNING:LONG_LINE: line length of 116 exceeds 100 columns
+#3203: FILE: drivers/net/wireguard/noise.h:106:
++bool noise_handshake_create_initiation(struct message_handshake_initiation *dst, struct noise_handshake *handshake);
+
+WARNING:LONG_LINE: line length of 129 exceeds 100 columns
+#3204: FILE: drivers/net/wireguard/noise.h:107:
++struct wireguard_peer *noise_handshake_consume_initiation(struct message_handshake_initiation *src, struct wireguard_device *wg);
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#3206: FILE: drivers/net/wireguard/noise.h:109:
++bool noise_handshake_create_response(struct message_handshake_response *dst, struct noise_handshake *handshake);
+
+WARNING:LONG_LINE: line length of 125 exceeds 100 columns
+#3207: FILE: drivers/net/wireguard/noise.h:110:
++struct wireguard_peer *noise_handshake_consume_response(struct message_handshake_response *src, struct wireguard_device *wg);
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#3209: FILE: drivers/net/wireguard/noise.h:112:
++bool noise_handshake_begin_session(struct noise_handshake *handshake, struct noise_keypairs *keypairs);
+                                                                                              ^^^^^^^^
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#3209: FILE: drivers/net/wireguard/noise.h:112:
++bool noise_handshake_begin_session(struct noise_handshake *handshake, struct noise_keypairs *keypairs);
+
+WARNING:SPDX_LICENSE_TAG: Improper SPDX comment style for 'drivers/net/wireguard/peer.c', please use '//' instead
+#3218: FILE: drivers/net/wireguard/peer.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#3218: FILE: drivers/net/wireguard/peer.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:LONG_LINE: line length of 155 exceeds 100 columns
+#3237: FILE: drivers/net/wireguard/peer.c:20:
++struct wireguard_peer *peer_create(struct wireguard_device *wg, const u8 public_key[NOISE_PUBLIC_KEY_LEN], const u8 preshared_key[NOISE_SYMMETRIC_KEY_LEN])
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*peer)...) over kzalloc(sizeof(struct wireguard_peer)...)
+#3247: FILE: drivers/net/wireguard/peer.c:30:
++	peer = kzalloc(sizeof(struct wireguard_peer), GFP_KERNEL);
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#3260: FILE: drivers/net/wireguard/peer.c:43:
++	if (!noise_handshake_init(&peer->handshake, &wg->static_identity, public_key, preshared_key, peer)) {
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#3266: FILE: drivers/net/wireguard/peer.c:49:
++	spin_lock_init(&peer->keypairs.keypair_update_lock);
+ 	                      ^^^^^^^^
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#3275: FILE: drivers/net/wireguard/peer.c:58:
++	peer->last_sent_handshake = ktime_get_boot_fast_ns() - (u64)(REKEY_TIMEOUT + 1) * NSEC_PER_SEC;
+
+WARNING:LONG_LINE_STRING: line length of 110 exceeds 100 columns
+#3285: FILE: drivers/net/wireguard/peer.c:68:
++	RCU_LOCKDEP_WARN(!rcu_read_lock_bh_held(), "Taking peer reference without holding the RCU read lock");
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#3300: FILE: drivers/net/wireguard/peer.c:83:
++	allowedips_remove_by_peer(&peer->device->peer_allowedips, peer, &peer->device->device_update_lock);
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#3304: FILE: drivers/net/wireguard/peer.c:87:
++	noise_keypairs_clear(&peer->keypairs);
+ 	                            ^^^^^^^^
+
+WARNING:LONG_LINE_COMMENT: line length of 101 exceeds 100 columns
+#3307: FILE: drivers/net/wireguard/peer.c:90:
++	flush_workqueue(peer->device->packet_crypt_wq); /* The first flush is for encrypt/decrypt. */
+
+WARNING:LONG_LINE_COMMENT: line length of 130 exceeds 100 columns
+#3308: FILE: drivers/net/wireguard/peer.c:91:
++	flush_workqueue(peer->device->packet_crypt_wq); /* The second.1 flush is for send (but not receive, since that's napi). */
+
+WARNING:LONG_LINE_COMMENT: line length of 107 exceeds 100 columns
+#3309: FILE: drivers/net/wireguard/peer.c:92:
++	napi_disable(&peer->napi); /* The second.2 flush is for receive (but not send, since that's wq). */
+
+WARNING:LONG_LINE: line length of 123 exceeds 100 columns
+#3320: FILE: drivers/net/wireguard/peer.c:103:
++	pr_debug("%s: Peer %llu (%pISpfsc) destroyed\n", peer->device->dev->name, peer->internal_id, &peer->endpoint.addr);
+
+WARNING:DEPRECATED_API: Deprecated use of 'call_rcu_bh', prefer 'call_rcu' instead
+#3333: FILE: drivers/net/wireguard/peer.c:116:
++	call_rcu_bh(&peer->rcu, rcu_release);
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#3397: FILE: drivers/net/wireguard/peer.h:41:
++	struct noise_keypairs keypairs;
+ 	                      ^^^^^^^^
+
+WARNING:LONG_LINE: line length of 149 exceeds 100 columns
+#3407: FILE: drivers/net/wireguard/peer.h:51:
++	struct timer_list timer_retransmit_handshake, timer_send_keepalive, timer_new_handshake, timer_zero_key_material, timer_persistent_keepalive;
+
+WARNING:LONG_LINE: line length of 156 exceeds 100 columns
+#3419: FILE: drivers/net/wireguard/peer.h:63:
++struct wireguard_peer *peer_create(struct wireguard_device *wg, const u8 public_key[NOISE_PUBLIC_KEY_LEN], const u8 preshared_key[NOISE_SYMMETRIC_KEY_LEN]);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#3426: FILE: drivers/net/wireguard/peer.h:70:
++}
++void peer_put(struct wireguard_peer *peer);
+
+WARNING:SPDX_LICENSE_TAG: Improper SPDX comment style for 'drivers/net/wireguard/queueing.c', please use '//' instead
+#3439: FILE: drivers/net/wireguard/queueing.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#3439: FILE: drivers/net/wireguard/queueing.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#3446: FILE: drivers/net/wireguard/queueing.c:8:
++struct multicore_worker __percpu *packet_alloc_percpu_multicore_worker(work_func_t function, void *ptr)
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#3461: FILE: drivers/net/wireguard/queueing.c:23:
++int packet_queue_init(struct crypt_queue *queue, work_func_t function, bool multicore, unsigned int len)
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#3470: FILE: drivers/net/wireguard/queueing.c:32:
++		if (multicore) {
+[...]
++		} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#3474: FILE: drivers/net/wireguard/queueing.c:36:
++		} else
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#3514: FILE: drivers/net/wireguard/queueing.h:22:
++int packet_queue_init(struct crypt_queue *queue, work_func_t function, bool multicore, unsigned int len);
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#3516: FILE: drivers/net/wireguard/queueing.h:24:
++struct multicore_worker __percpu *packet_alloc_percpu_multicore_worker(work_func_t function, void *ptr);
+
+WARNING:LONG_LINE: line length of 116 exceeds 100 columns
+#3529: FILE: drivers/net/wireguard/queueing.h:37:
++void packet_send_handshake_cookie(struct wireguard_device *wg, struct sk_buff *initiating_skb, __le32 sender_index);
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#3540: FILE: drivers/net/wireguard/queueing.h:48:
++	struct noise_keypair *keypair;
+ 	                      ^^^^^^^
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#3545: FILE: drivers/net/wireguard/queueing.h:53:
++};
++#define PACKET_PEER(skb) (((struct packet_cb *)skb->cb)->keypair->entry.peer)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'skb' may be better as '(skb)' to avoid precedence issues
+#3545: FILE: drivers/net/wireguard/queueing.h:53:
++#define PACKET_PEER(skb) (((struct packet_cb *)skb->cb)->keypair->entry.peer)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'skb' may be better as '(skb)' to avoid precedence issues
+#3546: FILE: drivers/net/wireguard/queueing.h:54:
++#define PACKET_CB(skb) ((struct packet_cb *)skb->cb)
+
+WARNING:LONG_LINE: line length of 155 exceeds 100 columns
+#3551: FILE: drivers/net/wireguard/queueing.h:59:
++	if (skb_network_header(skb) >= skb->head && (skb_network_header(skb) + sizeof(struct iphdr)) <= skb_tail_pointer(skb) && ip_hdr(skb)->version == 4)
+
+WARNING:LONG_LINE: line length of 159 exceeds 100 columns
+#3553: FILE: drivers/net/wireguard/queueing.h:61:
++	if (skb_network_header(skb) >= skb->head && (skb_network_header(skb) + sizeof(struct ipv6hdr)) <= skb_tail_pointer(skb) && ipv6_hdr(skb)->version == 6)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3561: FILE: drivers/net/wireguard/queueing.h:69:
++	const int pfmemalloc = skb->pfmemalloc;
++	skb_scrub_packet(skb, true);
+
+WARNING:LONG_LINE: line length of 120 exceeds 100 columns
+#3562: FILE: drivers/net/wireguard/queueing.h:70:
++	memset(&skb->headers_start, 0, offsetof(struct sk_buff, headers_end) - offsetof(struct sk_buff, headers_start));
+
+WARNING:LONG_LINE: line length of 182 exceeds 100 columns
+#3611: FILE: drivers/net/wireguard/queueing.h:119:
++static inline int queue_enqueue_per_device_and_peer(struct crypt_queue *device_queue, struct crypt_queue *peer_queue, struct sk_buff *skb, struct workqueue_struct *wq, int *next_cpu)
+
+WARNING:LONG_LINE: line length of 114 exceeds 100 columns
+#3625: FILE: drivers/net/wireguard/queueing.h:133:
++static inline void queue_enqueue_per_peer(struct crypt_queue *queue, struct sk_buff *skb, enum packet_state state)
+
+WARNING:LONG_LINE: line length of 169 exceeds 100 columns
+#3628: FILE: drivers/net/wireguard/queueing.h:136:
++	queue_work_on(cpumask_choose_online(&PACKET_PEER(skb)->serial_work_cpu, PACKET_PEER(skb)->internal_id), PACKET_PEER(skb)->device->packet_crypt_wq, &queue->work);
+
+WARNING:LONG_LINE: line length of 119 exceeds 100 columns
+#3631: FILE: drivers/net/wireguard/queueing.h:139:
++static inline void queue_enqueue_per_peer_napi(struct crypt_queue *queue, struct sk_buff *skb, enum packet_state state)
+
+WARNING:SPDX_LICENSE_TAG: Improper SPDX comment style for 'drivers/net/wireguard/ratelimiter.c', please use '//' instead
+#3648: FILE: drivers/net/wireguard/ratelimiter.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#3648: FILE: drivers/net/wireguard/ratelimiter.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#3677: FILE: drivers/net/wireguard/ratelimiter.c:30:
++	spinlock_t lock;
+
+WARNING:LONG_LINE: line length of 190 exceeds 100 columns
+#3807: FILE: drivers/net/wireguard/ratelimiter.c:160:
++	table_size = (totalram_pages > (1U << 30) / PAGE_SIZE) ? 8192 : max_t(unsigned long, 16, roundup_pow_of_two((totalram_pages << PAGE_SHIFT) / (1U << 14) / sizeof(struct hlist_head)));
+
+WARNING:SPDX_LICENSE_TAG: Improper SPDX comment style for 'drivers/net/wireguard/receive.c', please use '//' instead
+#3886: FILE: drivers/net/wireguard/receive.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#3886: FILE: drivers/net/wireguard/receive.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:LONG_LINE: line length of 135 exceeds 100 columns
+#3927: FILE: drivers/net/wireguard/receive.c:42:
++	if (SKB_TYPE_LE32(skb) == cpu_to_le32(MESSAGE_HANDSHAKE_INITIATION) && skb->len == sizeof(struct message_handshake_initiation))
+
+WARNING:LONG_LINE: line length of 131 exceeds 100 columns
+#3929: FILE: drivers/net/wireguard/receive.c:44:
++	if (SKB_TYPE_LE32(skb) == cpu_to_le32(MESSAGE_HANDSHAKE_RESPONSE) && skb->len == sizeof(struct message_handshake_response))
+
+WARNING:LONG_LINE: line length of 127 exceeds 100 columns
+#3931: FILE: drivers/net/wireguard/receive.c:46:
++	if (SKB_TYPE_LE32(skb) == cpu_to_le32(MESSAGE_HANDSHAKE_COOKIE) && skb->len == sizeof(struct message_handshake_cookie))
+
+WARNING:LONG_LINE: line length of 193 exceeds 100 columns
+#3941: FILE: drivers/net/wireguard/receive.c:56:
++	if (unlikely(skb_examine_untrusted_ip_hdr(skb) != skb->protocol || skb_transport_header(skb) < skb->head || (skb_transport_header(skb) + sizeof(struct udphdr)) > skb_tail_pointer(skb)))
+
+WARNING:LONG_LINE_COMMENT: line length of 118 exceeds 100 columns
+#3946: FILE: drivers/net/wireguard/receive.c:61:
++		return -EINVAL;  /* Packet has offset at impossible location or isn't big enough to have UDP fields */
+
+WARNING:LONG_LINE_COMMENT: line length of 106 exceeds 100 columns
+#3949: FILE: drivers/net/wireguard/receive.c:64:
++		return -EINVAL;  /* UDP packet is reporting too small of a size or lying about its size */
+
+WARNING:LONG_LINE: line length of 133 exceeds 100 columns
+#3952: FILE: drivers/net/wireguard/receive.c:67:
++	if (unlikely(!pskb_may_pull(skb, data_offset + sizeof(struct message_header)) || pskb_trim(skb, data_len + data_offset) < 0))
+
+WARNING:LONG_LINE_COMMENT: line length of 119 exceeds 100 columns
+#3969: FILE: drivers/net/wireguard/receive.c:84:
++	static u64 last_under_load; /* Yes this is global, so that our load calculation applies to the whole system. */
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#3976: FILE: drivers/net/wireguard/receive.c:91:
++		net_dbg_skb_ratelimited("%s: Receiving cookie response from %pISpfsc\n", wg->dev->name, skb);
+
+WARNING:LONG_LINE: line length of 120 exceeds 100 columns
+#3987: FILE: drivers/net/wireguard/receive.c:102:
++	if ((under_load && mac_state == VALID_MAC_WITH_COOKIE) || (!under_load && mac_state == VALID_MAC_BUT_NO_COOKIE))
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#3987: FILE: drivers/net/wireguard/receive.c:102:
++	if ((under_load && mac_state == VALID_MAC_WITH_COOKIE) || (!under_load && mac_state == VALID_MAC_BUT_NO_COOKIE))
+[...]
++	else if (under_load && mac_state == VALID_MAC_BUT_NO_COOKIE)
+[...]
++	else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#3991: FILE: drivers/net/wireguard/receive.c:106:
++	else {
+
+WARNING:LONG_LINE: line length of 125 exceeds 100 columns
+#3992: FILE: drivers/net/wireguard/receive.c:107:
++		net_dbg_skb_ratelimited("%s: Invalid MAC of handshake, dropping packet from %pISpfsc\n", wg->dev->name, skb);
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#3998: FILE: drivers/net/wireguard/receive.c:113:
++		struct message_handshake_initiation *message = (struct message_handshake_initiation *)skb->data;
+
+WARNING:LONG_LINE: line length of 120 exceeds 100 columns
+#4006: FILE: drivers/net/wireguard/receive.c:121:
++			net_dbg_skb_ratelimited("%s: Invalid handshake initiation from %pISpfsc\n", wg->dev->name, skb);
+
+WARNING:LONG_LINE: line length of 158 exceeds 100 columns
+#4010: FILE: drivers/net/wireguard/receive.c:125:
++		net_dbg_ratelimited("%s: Receiving handshake initiation from peer %llu (%pISpfsc)\n", wg->dev->name, peer->internal_id, &peer->endpoint.addr);
+
+WARNING:LONG_LINE: line length of 108 exceeds 100 columns
+#4015: FILE: drivers/net/wireguard/receive.c:130:
++		struct message_handshake_response *message = (struct message_handshake_response *)skb->data;
+
+WARNING:LONG_LINE: line length of 118 exceeds 100 columns
+#4023: FILE: drivers/net/wireguard/receive.c:138:
++			net_dbg_skb_ratelimited("%s: Invalid handshake response from %pISpfsc\n", wg->dev->name, skb);
+
+WARNING:LONG_LINE: line length of 156 exceeds 100 columns
+#4027: FILE: drivers/net/wireguard/receive.c:142:
++		net_dbg_ratelimited("%s: Receiving handshake response from peer %llu (%pISpfsc)\n", wg->dev->name, peer->internal_id, &peer->endpoint.addr);
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#4028: FILE: drivers/net/wireguard/receive.c:143:
++		if (noise_handshake_begin_session(&peer->handshake, &peer->keypairs)) {
+ 		                                                           ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#4070: FILE: drivers/net/wireguard/receive.c:185:
++	struct noise_keypair *keypair;
+ 	                      ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#4077: FILE: drivers/net/wireguard/receive.c:192:
++	keypair = rcu_dereference_bh(peer->keypairs.current_keypair);
+ 	^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#4077: FILE: drivers/net/wireguard/receive.c:192:
++	keypair = rcu_dereference_bh(peer->keypairs.current_keypair);
+ 	                                   ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#4078: FILE: drivers/net/wireguard/receive.c:193:
++	if (likely(keypair && keypair->sending.is_valid) && keypair->i_am_the_initiator &&
+ 	           ^^^^^^^
+
+WARNING:LONG_LINE: line length of 117 exceeds 100 columns
+#4079: FILE: drivers/net/wireguard/receive.c:194:
++	    unlikely(has_expired(keypair->sending.birthdate, REJECT_AFTER_TIME - KEEPALIVE_TIMEOUT - REKEY_TIMEOUT)))
+
+WARNING:LONG_LINE: line length of 146 exceeds 100 columns
+#4099: FILE: drivers/net/wireguard/receive.c:214:
++	if (unlikely(!key->is_valid || has_expired(key->birthdate, REJECT_AFTER_TIME) || key->counter.receive.counter >= REJECT_AFTER_MESSAGES)) {
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#4122: FILE: drivers/net/wireguard/receive.c:237:
++	if (!chacha20poly1305_decrypt_sg(sg, sg, skb->len, NULL, 0, PACKET_CB(skb)->nonce, key->key, have_simd))
+
+WARNING:LONG_LINE: line length of 118 exceeds 100 columns
+#4144: FILE: drivers/net/wireguard/receive.c:259:
++	if (unlikely(counter->receive.counter >= REJECT_AFTER_MESSAGES + 1 || their_counter >= REJECT_AFTER_MESSAGES))
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#4156: FILE: drivers/net/wireguard/receive.c:271:
++		top = min_t(unsigned long, index - index_current, COUNTER_BITS_TOTAL / BITS_PER_LONG);
+
+WARNING:LONG_LINE: line length of 121 exceeds 100 columns
+#4158: FILE: drivers/net/wireguard/receive.c:273:
++			counter->receive.backtrack[(i + index_current) & ((COUNTER_BITS_TOTAL / BITS_PER_LONG) - 1)] = 0;
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#4163: FILE: drivers/net/wireguard/receive.c:278:
++	ret = !test_and_set_bit(their_counter & (BITS_PER_LONG - 1), &counter->receive.backtrack[index]);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4169: FILE: drivers/net/wireguard/receive.c:284:
++}
++#include "selftest/counter.h"
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#4179: FILE: drivers/net/wireguard/receive.c:294:
++	if (unlikely(noise_received_with_keypair(&peer->keypairs, PACKET_CB(skb)->keypair))) {
+ 	                                                ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#4179: FILE: drivers/net/wireguard/receive.c:294:
++	if (unlikely(noise_received_with_keypair(&peer->keypairs, PACKET_CB(skb)->keypair))) {
+ 	                                                                          ^^^^^^^
+
+WARNING:LONG_LINE: line length of 150 exceeds 100 columns
+#4192: FILE: drivers/net/wireguard/receive.c:307:
++		net_dbg_ratelimited("%s: Receiving keepalive packet from peer %llu (%pISpfsc)\n", dev->name, peer->internal_id, &peer->endpoint.addr);
+
+WARNING:LONG_LINE: line length of 190 exceeds 100 columns
+#4200: FILE: drivers/net/wireguard/receive.c:315:
++	if (unlikely(!(pskb_network_may_pull(skb, sizeof(struct iphdr)) && (ip_hdr(skb)->version == 4 || (ip_hdr(skb)->version == 6 && pskb_network_may_pull(skb, sizeof(struct ipv6hdr)))))))
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#4206: FILE: drivers/net/wireguard/receive.c:321:
++	if (skb->protocol == htons(ETH_P_IP)) {
+[...]
++	} else if (skb->protocol == htons(ETH_P_IPV6)) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#4216: FILE: drivers/net/wireguard/receive.c:331:
++	} else
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#4231: FILE: drivers/net/wireguard/receive.c:346:
++	if (unlikely(napi_gro_receive(&peer->napi, skb) == GRO_DROP)) {
+[...]
++	} else
+[...]
+
+WARNING:LONG_LINE: line length of 158 exceeds 100 columns
+#4233: FILE: drivers/net/wireguard/receive.c:348:
++		net_dbg_ratelimited("%s: Failed to give packet to userspace from peer %llu (%pISpfsc)\n", dev->name, peer->internal_id, &peer->endpoint.addr);
+
+CHECK:BRACES: Unbalanced braces around else statement
+#4234: FILE: drivers/net/wireguard/receive.c:349:
++	} else
+
+WARNING:LONG_LINE: line length of 160 exceeds 100 columns
+#4239: FILE: drivers/net/wireguard/receive.c:354:
++	net_dbg_skb_ratelimited("%s: Packet has unallowed src IP (%pISc) from peer %llu (%pISpfsc)\n", dev->name, skb, peer->internal_id, &peer->endpoint.addr);
+
+WARNING:LONG_LINE: line length of 147 exceeds 100 columns
+#4244: FILE: drivers/net/wireguard/receive.c:359:
++	net_dbg_ratelimited("%s: Packet is neither ipv4 nor ipv6 from peer %llu (%pISpfsc)\n", dev->name, peer->internal_id, &peer->endpoint.addr);
+
+WARNING:LONG_LINE: line length of 141 exceeds 100 columns
+#4249: FILE: drivers/net/wireguard/receive.c:364:
++	net_dbg_ratelimited("%s: Packet has incorrect size from peer %llu (%pISpfsc)\n", dev->name, peer->internal_id, &peer->endpoint.addr);
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#4261: FILE: drivers/net/wireguard/receive.c:376:
++	struct noise_keypair *keypair;
+ 	                      ^^^^^^^
+
+WARNING:LONG_LINE: line length of 138 exceeds 100 columns
+#4271: FILE: drivers/net/wireguard/receive.c:386:
++	while ((skb = __ptr_ring_peek(&queue->ring)) != NULL && (state = atomic_read(&PACKET_CB(skb)->state)) != PACKET_STATE_UNCRYPTED) {
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#4274: FILE: drivers/net/wireguard/receive.c:389:
++		keypair = PACKET_CB(skb)->keypair;
+ 		^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#4274: FILE: drivers/net/wireguard/receive.c:389:
++		keypair = PACKET_CB(skb)->keypair;
+ 		                          ^^^^^^^
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#4280: FILE: drivers/net/wireguard/receive.c:395:
++		if (unlikely(!counter_validate(&keypair->receiving.counter, PACKET_CB(skb)->nonce))) {
+
+WARNING:LONG_LINE: line length of 186 exceeds 100 columns
+#4281: FILE: drivers/net/wireguard/receive.c:396:
++			net_dbg_ratelimited("%s: Packet has invalid nonce %llu (max %llu)\n", peer->device->dev->name, PACKET_CB(skb)->nonce, keypair->receiving.counter.receive.counter);
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#4293: FILE: drivers/net/wireguard/receive.c:408:
++		noise_keypair_put(keypair);
+ 		                  ^^^^^^^
+
+WARNING:LONG_LINE: line length of 158 exceeds 100 columns
+#4315: FILE: drivers/net/wireguard/receive.c:430:
++		enum packet_state state = likely(skb_decrypt(skb, &PACKET_CB(skb)->keypair->receiving, have_simd)) ? PACKET_STATE_CRYPTED : PACKET_STATE_DEAD;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4316: FILE: drivers/net/wireguard/receive.c:431:
++		enum packet_state state = likely(skb_decrypt(skb, &PACKET_CB(skb)->keypair->receiving, have_simd)) ? PACKET_STATE_CRYPTED : PACKET_STATE_DEAD;
++		queue_enqueue_per_peer_napi(&PACKET_PEER(skb)->rx_queue, skb, state);
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#4330: FILE: drivers/net/wireguard/receive.c:445:
++	PACKET_CB(skb)->keypair = noise_keypair_get((struct noise_keypair *)index_hashtable_lookup(&wg->index_hashtable, INDEX_HASHTABLE_KEYPAIR, idx));
+ 	                ^^^^^^^
+
+WARNING:LONG_LINE: line length of 152 exceeds 100 columns
+#4330: FILE: drivers/net/wireguard/receive.c:445:
++	PACKET_CB(skb)->keypair = noise_keypair_get((struct noise_keypair *)index_hashtable_lookup(&wg->index_hashtable, INDEX_HASHTABLE_KEYPAIR, idx));
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#4332: FILE: drivers/net/wireguard/receive.c:447:
++	if (unlikely(!PACKET_CB(skb)->keypair)) {
+ 	                              ^^^^^^^
+
+WARNING:LONG_LINE_COMMENT: line length of 130 exceeds 100 columns
+#4337: FILE: drivers/net/wireguard/receive.c:452:
++	/* The call to index_hashtable_lookup gives us a reference to its underlying peer, so we don't need to call peer_get(). */
+
+WARNING:LONG_LINE: line length of 140 exceeds 100 columns
+#4340: FILE: drivers/net/wireguard/receive.c:455:
++	ret = queue_enqueue_per_device_and_peer(&wg->decrypt_queue, &peer->rx_queue, skb, wg->packet_crypt_wq, &wg->decrypt_queue.last_cpu);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#4344: FILE: drivers/net/wireguard/receive.c:459:
++	if (ret == -EPIPE)
+[...]
++	else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#4346: FILE: drivers/net/wireguard/receive.c:461:
++	else {
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#4348: FILE: drivers/net/wireguard/receive.c:463:
++		noise_keypair_put(PACKET_CB(skb)->keypair);
+ 		                                  ^^^^^^^
+
+WARNING:LONG_LINE: line length of 130 exceeds 100 columns
+#4363: FILE: drivers/net/wireguard/receive.c:478:
++		if (skb_queue_len(&wg->incoming_handshakes) > MAX_QUEUED_INCOMING_HANDSHAKES || unlikely(!rng_is_initialized())) {
+
+WARNING:LONG_LINE: line length of 117 exceeds 100 columns
+#4364: FILE: drivers/net/wireguard/receive.c:479:
++			net_dbg_skb_ratelimited("%s: Dropping handshake packet from %pISpfsc\n", wg->dev->name, skb);
+
+WARNING:LONG_LINE: line length of 118 exceeds 100 columns
+#4370: FILE: drivers/net/wireguard/receive.c:485:
++		queue_work_on(cpu, wg->handshake_receive_wq, &per_cpu_ptr(wg->incoming_handshakes_worker, cpu)->work);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4417: FILE: drivers/net/wireguard/selftest/allowedips.h:26:
++	u8 ip1[16], ip2[16];
++	if (bits == 32) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4426: FILE: drivers/net/wireguard/selftest/allowedips.h:35:
++		hsiphash_key_t key = { 0 };
++		memcpy(&key, &node->peer, sizeof(node->peer));
+
+WARNING:LONG_LINE: line length of 153 exceeds 100 columns
+#4427: FILE: drivers/net/wireguard/selftest/allowedips.h:36:
++		color = hsiphash_1u32(0xdeadbeef, &key) % 200 << 16 | hsiphash_1u32(0xbabecafe, &key) % 200 << 8 | hsiphash_1u32(0xabad1dea, &key) % 200;
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#4431: FILE: drivers/net/wireguard/selftest/allowedips.h:40:
++	printk(fmt_declaration, ip1, node->cidr, style, color);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#4434: FILE: drivers/net/wireguard/selftest/allowedips.h:43:
++		printk(fmt_connection, ip1, node->cidr, ip2, node->bit[0]->cidr);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#4439: FILE: drivers/net/wireguard/selftest/allowedips.h:48:
++		printk(fmt_connection, ip1, node->cidr, ip2, node->bit[1]->cidr);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4443: FILE: drivers/net/wireguard/selftest/allowedips.h:52:
++}
++static __init void print_tree(struct allowedips_node *top, u8 bits)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#4445: FILE: drivers/net/wireguard/selftest/allowedips.h:54:
++	printk(KERN_DEBUG "digraph trie {\n");
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#4447: FILE: drivers/net/wireguard/selftest/allowedips.h:56:
++	printk(KERN_DEBUG "}\n");
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4460: FILE: drivers/net/wireguard/selftest/allowedips.h:69:
++};
++struct horrible_allowedips_node {
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#4464: FILE: drivers/net/wireguard/selftest/allowedips.h:73:
++	uint8_t ip_version;
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4467: FILE: drivers/net/wireguard/selftest/allowedips.h:76:
++};
++static __init void horrible_allowedips_init(struct horrible_allowedips *table)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4471: FILE: drivers/net/wireguard/selftest/allowedips.h:80:
++}
++static __init void horrible_allowedips_free(struct horrible_allowedips *table)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4475: FILE: drivers/net/wireguard/selftest/allowedips.h:84:
++	struct horrible_allowedips_node *node;
++	hlist_for_each_entry_safe(node, h, &table->head, table) {
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4480: FILE: drivers/net/wireguard/selftest/allowedips.h:89:
++}
++static __init inline union nf_inet_addr horrible_cidr_to_mask(uint8_t cidr)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4483: FILE: drivers/net/wireguard/selftest/allowedips.h:92:
++	union nf_inet_addr mask;
++	memset(&mask, 0x00, 128 / 8);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4489: FILE: drivers/net/wireguard/selftest/allowedips.h:98:
++}
++static __init inline uint8_t horrible_mask_to_cidr(union nf_inet_addr subnet)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4496: FILE: drivers/net/wireguard/selftest/allowedips.h:105:
++}
++static __init inline void horrible_mask_self(struct horrible_allowedips_node *node)
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#4498: FILE: drivers/net/wireguard/selftest/allowedips.h:107:
++	if (node->ip_version == 4)
+[...]
++	else if (node->ip_version == 6) {
+[...]
+
+WARNING:LONG_LINE: line length of 108 exceeds 100 columns
+#4507: FILE: drivers/net/wireguard/selftest/allowedips.h:116:
++static __init inline bool horrible_match_v4(const struct horrible_allowedips_node *node, struct in_addr *ip)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4507: FILE: drivers/net/wireguard/selftest/allowedips.h:116:
++}
++static __init inline bool horrible_match_v4(const struct horrible_allowedips_node *node, struct in_addr *ip)
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#4511: FILE: drivers/net/wireguard/selftest/allowedips.h:120:
++static __init inline bool horrible_match_v6(const struct horrible_allowedips_node *node, struct in6_addr *ip)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4511: FILE: drivers/net/wireguard/selftest/allowedips.h:120:
++}
++static __init inline bool horrible_match_v6(const struct horrible_allowedips_node *node, struct in6_addr *ip)
+
+WARNING:LONG_LINE: line length of 116 exceeds 100 columns
+#4518: FILE: drivers/net/wireguard/selftest/allowedips.h:127:
++static __init void horrible_insert_ordered(struct horrible_allowedips *table, struct horrible_allowedips_node *node)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4518: FILE: drivers/net/wireguard/selftest/allowedips.h:127:
++}
++static __init void horrible_insert_ordered(struct horrible_allowedips *table, struct horrible_allowedips_node *node)
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#4521: FILE: drivers/net/wireguard/selftest/allowedips.h:130:
++	uint8_t my_cidr = horrible_mask_to_cidr(node->mask);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4522: FILE: drivers/net/wireguard/selftest/allowedips.h:131:
++	uint8_t my_cidr = horrible_mask_to_cidr(node->mask);
++	hlist_for_each_entry(other, &table->head, table) {
+
+WARNING:LONG_LINE: line length of 129 exceeds 100 columns
+#4541: FILE: drivers/net/wireguard/selftest/allowedips.h:150:
++static __init int horrible_allowedips_insert_v4(struct horrible_allowedips *table, struct in_addr *ip, uint8_t cidr, void *value)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4541: FILE: drivers/net/wireguard/selftest/allowedips.h:150:
++}
++static __init int horrible_allowedips_insert_v4(struct horrible_allowedips *table, struct in_addr *ip, uint8_t cidr, void *value)
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#4543: FILE: drivers/net/wireguard/selftest/allowedips.h:152:
++	struct horrible_allowedips_node *node = kzalloc(sizeof(struct horrible_allowedips_node), GFP_KERNEL);
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*node)...) over kzalloc(sizeof(struct horrible_allowedips_node)...)
+#4543: FILE: drivers/net/wireguard/selftest/allowedips.h:152:
++	struct horrible_allowedips_node *node = kzalloc(sizeof(struct horrible_allowedips_node), GFP_KERNEL);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4544: FILE: drivers/net/wireguard/selftest/allowedips.h:153:
++	struct horrible_allowedips_node *node = kzalloc(sizeof(struct horrible_allowedips_node), GFP_KERNEL);
++	if (!node)
+
+WARNING:LONG_LINE: line length of 130 exceeds 100 columns
+#4554: FILE: drivers/net/wireguard/selftest/allowedips.h:163:
++static __init int horrible_allowedips_insert_v6(struct horrible_allowedips *table, struct in6_addr *ip, uint8_t cidr, void *value)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4554: FILE: drivers/net/wireguard/selftest/allowedips.h:163:
++}
++static __init int horrible_allowedips_insert_v6(struct horrible_allowedips *table, struct in6_addr *ip, uint8_t cidr, void *value)
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#4556: FILE: drivers/net/wireguard/selftest/allowedips.h:165:
++	struct horrible_allowedips_node *node = kzalloc(sizeof(struct horrible_allowedips_node), GFP_KERNEL);
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*node)...) over kzalloc(sizeof(struct horrible_allowedips_node)...)
+#4556: FILE: drivers/net/wireguard/selftest/allowedips.h:165:
++	struct horrible_allowedips_node *node = kzalloc(sizeof(struct horrible_allowedips_node), GFP_KERNEL);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4557: FILE: drivers/net/wireguard/selftest/allowedips.h:166:
++	struct horrible_allowedips_node *node = kzalloc(sizeof(struct horrible_allowedips_node), GFP_KERNEL);
++	if (!node)
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#4567: FILE: drivers/net/wireguard/selftest/allowedips.h:176:
++static __init void *horrible_allowedips_lookup_v4(struct horrible_allowedips *table, struct in_addr *ip)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4567: FILE: drivers/net/wireguard/selftest/allowedips.h:176:
++}
++static __init void *horrible_allowedips_lookup_v4(struct horrible_allowedips *table, struct in_addr *ip)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4571: FILE: drivers/net/wireguard/selftest/allowedips.h:180:
++	void *ret = NULL;
++	hlist_for_each_entry(node, &table->head, table) {
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#4581: FILE: drivers/net/wireguard/selftest/allowedips.h:190:
++static __init void *horrible_allowedips_lookup_v6(struct horrible_allowedips *table, struct in6_addr *ip)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4581: FILE: drivers/net/wireguard/selftest/allowedips.h:190:
++}
++static __init void *horrible_allowedips_lookup_v6(struct horrible_allowedips *table, struct in6_addr *ip)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4585: FILE: drivers/net/wireguard/selftest/allowedips.h:194:
++	void *ret = NULL;
++	hlist_for_each_entry(node, &table->head, table) {
+
+CHECK:UNCOMMENTED_DEFINITION: DEFINE_MUTEX definition without comment
+#4598: FILE: drivers/net/wireguard/selftest/allowedips.h:207:
++	DEFINE_MUTEX(mutex);
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#4613: FILE: drivers/net/wireguard/selftest/allowedips.h:222:
++	if (!peers) {
++		pr_info("allowedips random self-test: out of memory\n");
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*peers[i])...) over kzalloc(sizeof(struct wireguard_peer)...)
+#4617: FILE: drivers/net/wireguard/selftest/allowedips.h:226:
++		peers[i] = kzalloc(sizeof(struct wireguard_peer), GFP_KERNEL);
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#4619: FILE: drivers/net/wireguard/selftest/allowedips.h:228:
++		if (!peers[i]) {
++			pr_info("allowedips random self-test: out of memory\n");
+
+WARNING:LONG_LINE: line length of 118 exceeds 100 columns
+#4649: FILE: drivers/net/wireguard/selftest/allowedips.h:258:
++				mutated[k] = (mutated[k] & mutate_mask[k]) | (~mutate_mask[k] & prandom_u32_max(256));
+
+WARNING:LONG_LINE: line length of 106 exceeds 100 columns
+#4652: FILE: drivers/net/wireguard/selftest/allowedips.h:261:
++			if (allowedips_insert_v4(&t, (struct in_addr *)mutated, cidr, peer, &mutex) < 0) {
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#4656: FILE: drivers/net/wireguard/selftest/allowedips.h:265:
++			if (horrible_allowedips_insert_v4(&h, (struct in_addr *)mutated, cidr, peer)) {
+
+WARNING:LONG_LINE: line length of 118 exceeds 100 columns
+#4685: FILE: drivers/net/wireguard/selftest/allowedips.h:294:
++				mutated[k] = (mutated[k] & mutate_mask[k]) | (~mutate_mask[k] & prandom_u32_max(256));
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#4688: FILE: drivers/net/wireguard/selftest/allowedips.h:297:
++			if (allowedips_insert_v6(&t, (struct in6_addr *)mutated, cidr, peer, &mutex) < 0) {
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#4692: FILE: drivers/net/wireguard/selftest/allowedips.h:301:
++			if (horrible_allowedips_insert_v6(&h, (struct in6_addr *)mutated, cidr, peer)) {
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#4708: FILE: drivers/net/wireguard/selftest/allowedips.h:317:
++		if (lookup(t.root4, 32, ip) != horrible_allowedips_lookup_v4(&h, (struct in_addr *)ip)) {
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#4716: FILE: drivers/net/wireguard/selftest/allowedips.h:325:
++		if (lookup(t.root6, 128, ip) != horrible_allowedips_lookup_v6(&h, (struct in6_addr *)ip)) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4741: FILE: drivers/net/wireguard/selftest/allowedips.h:350:
++	u8 *split = (u8 *)&ip;
++	split[0] = a;
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4747: FILE: drivers/net/wireguard/selftest/allowedips.h:356:
++}
++static __init inline struct in6_addr *ip6(u32 a, u32 b, u32 c, u32 d)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4751: FILE: drivers/net/wireguard/selftest/allowedips.h:360:
++	__be32 *split = (__be32 *)&ip;
++	split[0] = cpu_to_be32(a);
+
+WARNING:LONG_LINE: line length of 113 exceeds 100 columns
+#4772: FILE: drivers/net/wireguard/selftest/allowedips.h:381:
++	else if (cidr == 128 && !memcmp(ip, ip6(0x26075300, 0x60006b00, 0, 0xc05f0543), sizeof(struct in6_addr)))
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#4776: FILE: drivers/net/wireguard/selftest/allowedips.h:385:
++	else if (cidr == 83 && !memcmp(ip, ip6(0x26075300, 0x6d8a6bf8, 0xdab1e000, 0), sizeof(struct in6_addr)))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#4786: FILE: drivers/net/wireguard/selftest/allowedips.h:395:
++#define init_peer(name) do { \
++	name = kzalloc(sizeof(struct wireguard_peer), GFP_KERNEL); \
++	if (!name) { \
++		pr_info("allowedips self-test: out of memory\n"); \
++		goto free; \
++	} \
++	kref_init(&name->refcount); \
++} while (0)
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#4786: FILE: drivers/net/wireguard/selftest/allowedips.h:395:
++#define init_peer(name) do { \
++	name = kzalloc(sizeof(struct wireguard_peer), GFP_KERNEL); \
++	if (!name) { \
++		pr_info("allowedips self-test: out of memory\n"); \
++		goto free; \
++	} \
++	kref_init(&name->refcount); \
++} while (0)
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*name)...) over kzalloc(sizeof(struct wireguard_peer)...)
+#4787: FILE: drivers/net/wireguard/selftest/allowedips.h:396:
++	name = kzalloc(sizeof(struct wireguard_peer), GFP_KERNEL); \
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#4789: FILE: drivers/net/wireguard/selftest/allowedips.h:398:
++	if (!name) { \
++		pr_info("allowedips self-test: out of memory\n"); \
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#4798: FILE: drivers/net/wireguard/selftest/allowedips.h:407:
++#define maybe_fail \
++	++i; \
++	if (!_s) { \
++		pr_info("allowedips self-test %zu: FAIL\n", i); \
++		success = false; \
++	}
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'version' may be better as '(version)' to avoid precedence issues
+#4805: FILE: drivers/net/wireguard/selftest/allowedips.h:414:
++#define test(version, mem, ipa, ipb, ipc, ipd) do { \
++	bool _s = lookup(t.root##version, version == 4 ? 32 : 128, ip##version(ipa, ipb, ipc, ipd)) == mem; \
++	maybe_fail \
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'mem' may be better as '(mem)' to avoid precedence issues
+#4805: FILE: drivers/net/wireguard/selftest/allowedips.h:414:
++#define test(version, mem, ipa, ipb, ipc, ipd) do { \
++	bool _s = lookup(t.root##version, version == 4 ? 32 : 128, ip##version(ipa, ipb, ipc, ipd)) == mem; \
++	maybe_fail \
++} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#4805: FILE: drivers/net/wireguard/selftest/allowedips.h:414:
++#define test(version, mem, ipa, ipb, ipc, ipd) do { \
++	bool _s = lookup(t.root##version, version == 4 ? 32 : 128, ip##version(ipa, ipb, ipc, ipd)) == mem; \
++	maybe_fail \
++} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#4806: FILE: drivers/net/wireguard/selftest/allowedips.h:415:
++	bool _s = lookup(t.root##version, version == 4 ? 32 : 128, ip##version(ipa, ipb, ipc, ipd)) == mem; \
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'version' may be better as '(version)' to avoid precedence issues
+#4810: FILE: drivers/net/wireguard/selftest/allowedips.h:419:
++#define test_negative(version, mem, ipa, ipb, ipc, ipd) do { \
++	bool _s = lookup(t.root##version, version == 4 ? 32 : 128, ip##version(ipa, ipb, ipc, ipd)) != mem; \
++	maybe_fail \
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'mem' may be better as '(mem)' to avoid precedence issues
+#4810: FILE: drivers/net/wireguard/selftest/allowedips.h:419:
++#define test_negative(version, mem, ipa, ipb, ipc, ipd) do { \
++	bool _s = lookup(t.root##version, version == 4 ? 32 : 128, ip##version(ipa, ipb, ipc, ipd)) != mem; \
++	maybe_fail \
++} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#4810: FILE: drivers/net/wireguard/selftest/allowedips.h:419:
++#define test_negative(version, mem, ipa, ipb, ipc, ipd) do { \
++	bool _s = lookup(t.root##version, version == 4 ? 32 : 128, ip##version(ipa, ipb, ipc, ipd)) != mem; \
++	maybe_fail \
++} while (0)
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#4811: FILE: drivers/net/wireguard/selftest/allowedips.h:420:
++	bool _s = lookup(t.root##version, version == 4 ? 32 : 128, ip##version(ipa, ipb, ipc, ipd)) != mem; \
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#4815: FILE: drivers/net/wireguard/selftest/allowedips.h:424:
++#define test_boolean(cond) do { \
++	bool _s = (cond); \
++	maybe_fail \
++} while (0)
+
+CHECK:UNCOMMENTED_DEFINITION: DEFINE_MUTEX definition without comment
+#4822: FILE: drivers/net/wireguard/selftest/allowedips.h:431:
++	DEFINE_MUTEX(mutex);
+
+WARNING:LONG_LINE: line length of 117 exceeds 100 columns
+#4826: FILE: drivers/net/wireguard/selftest/allowedips.h:435:
++	struct wireguard_peer *a = NULL, *b = NULL, *c = NULL, *d = NULL, *e = NULL, *f = NULL, *g = NULL, *h = NULL;
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4971: FILE: drivers/net/wireguard/selftest/allowedips.h:580:
++}
++#undef test_negative
+
+WARNING:LONG_LINE: line length of 120 exceeds 100 columns
+#4996: FILE: drivers/net/wireguard/selftest/counter.h:13:
++#define T_INIT do { memset(&counter, 0, sizeof(union noise_counter)); spin_lock_init(&counter.receive.lock); } while (0)
+
+WARNING:LONG_LINE: line length of 162 exceeds 100 columns
+#4998: FILE: drivers/net/wireguard/selftest/counter.h:15:
++#define T(n, v) do { ++test_num; if (counter_validate(&counter, n) != v) { pr_info("nonce counter self-test %u: FAIL\n", test_num); success = false; } } while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'v' may be better as '(v)' to avoid precedence issues
+#4998: FILE: drivers/net/wireguard/selftest/counter.h:15:
++#define T(n, v) do { ++test_num; if (counter_validate(&counter, n) != v) { pr_info("nonce counter self-test %u: FAIL\n", test_num); success = false; } } while (0)
+
+WARNING:LONG_LINE: line length of 106 exceeds 100 columns
+#5091: FILE: drivers/net/wireguard/selftest/ratelimiter.h:10:
++static const struct { bool result; unsigned int msec_to_sleep_before; } expected_results[] __initconst = {
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#5165: FILE: drivers/net/wireguard/selftest/ratelimiter.h:84:
++#define ensure_time do {\
++		if (time_is_before_jiffies(loop_start_time + maximum_jiffies_at_index(i))) { \
++			if (++tries >= 5000) \
++				goto err; \
++			gc_entries(NULL); \
++			rcu_barrier(); \
++			msleep(500); \
++			goto restart; \
++		}} while (0)
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#5190: FILE: drivers/net/wireguard/selftest/ratelimiter.h:109:
++		hdr6->saddr.in6_u.u6_addr32[2] = hdr6->saddr.in6_u.u6_addr32[3] = htonl(i);
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#5195: FILE: drivers/net/wireguard/selftest/ratelimiter.h:114:
++		hdr6->saddr.in6_u.u6_addr32[0] = htonl(ntohl(hdr6->saddr.in6_u.u6_addr32[0]) + i + 1);
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#5200: FILE: drivers/net/wireguard/selftest/ratelimiter.h:119:
++		hdr6->saddr.in6_u.u6_addr32[0] = htonl(ntohl(hdr6->saddr.in6_u.u6_addr32[0]) - i - 1);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'i != max_entries'
+#5216: FILE: drivers/net/wireguard/selftest/ratelimiter.h:135:
++		if (ratelimiter_allow(skb4, &init_net) != (i != max_entries)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+WARNING:SPDX_LICENSE_TAG: Improper SPDX comment style for 'drivers/net/wireguard/send.c', please use '//' instead
+#5252: FILE: drivers/net/wireguard/send.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#5252: FILE: drivers/net/wireguard/send.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:LONG_LINE: line length of 156 exceeds 100 columns
+#5286: FILE: drivers/net/wireguard/send.c:35:
++	net_dbg_ratelimited("%s: Sending handshake initiation to peer %llu (%pISpfsc)\n", peer->device->dev->name, peer->internal_id, &peer->endpoint.addr);
+
+WARNING:LONG_LINE: line length of 119 exceeds 100 columns
+#5292: FILE: drivers/net/wireguard/send.c:41:
++		socket_send_buffer_to_peer(peer, &packet, sizeof(struct message_handshake_initiation), HANDSHAKE_DSCP);
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#5299: FILE: drivers/net/wireguard/send.c:48:
++	struct wireguard_peer *peer = container_of(work, struct wireguard_peer, transmit_handshake_work);
+
+WARNING:LONG_LINE_COMMENT: line length of 104 exceeds 100 columns
+#5317: FILE: drivers/net/wireguard/send.c:66:
++	/* Queues up calling packet_send_queued_handshakes(peer), where we do a peer_put(peer) after: */
+
+WARNING:LONG_LINE_COMMENT: line length of 105 exceeds 100 columns
+#5319: FILE: drivers/net/wireguard/send.c:68:
++		peer_put(peer); /* If the work was already queued, we want to drop the extra reference */
+
+WARNING:LONG_LINE: line length of 154 exceeds 100 columns
+#5326: FILE: drivers/net/wireguard/send.c:75:
++	net_dbg_ratelimited("%s: Sending handshake response to peer %llu (%pISpfsc)\n", peer->device->dev->name, peer->internal_id, &peer->endpoint.addr);
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#5331: FILE: drivers/net/wireguard/send.c:80:
++		if (noise_handshake_begin_session(&peer->handshake, &peer->keypairs)) {
+ 		                                                           ^^^^^^^^
+
+WARNING:LONG_LINE: line length of 125 exceeds 100 columns
+#5335: FILE: drivers/net/wireguard/send.c:84:
++			socket_send_buffer_to_peer(peer, &packet, sizeof(struct message_handshake_response), HANDSHAKE_DSCP);
+
+WARNING:LONG_LINE: line length of 115 exceeds 100 columns
+#5340: FILE: drivers/net/wireguard/send.c:89:
++void packet_send_handshake_cookie(struct wireguard_device *wg, struct sk_buff *initiating_skb, __le32 sender_index)
+
+WARNING:LONG_LINE: line length of 138 exceeds 100 columns
+#5344: FILE: drivers/net/wireguard/send.c:93:
++	net_dbg_skb_ratelimited("%s: Sending cookie response for denied handshake message for %pISpfsc\n", wg->dev->name, initiating_skb);
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#5351: FILE: drivers/net/wireguard/send.c:100:
++	struct noise_keypair *keypair;
+ 	                      ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#5355: FILE: drivers/net/wireguard/send.c:104:
++	keypair = rcu_dereference_bh(peer->keypairs.current_keypair);
+ 	^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#5355: FILE: drivers/net/wireguard/send.c:104:
++	keypair = rcu_dereference_bh(peer->keypairs.current_keypair);
+ 	                                   ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#5356: FILE: drivers/net/wireguard/send.c:105:
++	if (likely(keypair && keypair->sending.is_valid) &&
+ 	           ^^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5357: FILE: drivers/net/wireguard/send.c:106:
++	if (likely(keypair && keypair->sending.is_valid) &&
++	   (unlikely(atomic64_read(&keypair->sending.counter.counter) > REKEY_AFTER_MESSAGES) ||
+
+WARNING:LONG_LINE: line length of 113 exceeds 100 columns
+#5358: FILE: drivers/net/wireguard/send.c:107:
++	   (keypair->i_am_the_initiator && unlikely(has_expired(keypair->sending.birthdate, REKEY_AFTER_TIME)))))
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#5380: FILE: drivers/net/wireguard/send.c:129:
++static inline bool skb_encrypt(struct sk_buff *skb, struct noise_keypair *keypair, bool have_simd)
+                                                                           ^^^^^^^
+
+WARNING:LONG_LINE_COMMENT: line length of 107 exceeds 100 columns
+#5405: FILE: drivers/net/wireguard/send.c:154:
++	/* We have to remember to add the checksum to the innerpacket, in case the receiver forwards it. */
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#5419: FILE: drivers/net/wireguard/send.c:168:
++	if (skb_to_sgvec(skb, sg, sizeof(struct message_data), noise_encrypted_len(plaintext_len)) <= 0)
+
+WARNING:LONG_LINE: line length of 131 exceeds 100 columns
+#5421: FILE: drivers/net/wireguard/send.c:170:
++	return chacha20poly1305_encrypt_sg(sg, sg, plaintext_len, NULL, 0, PACKET_CB(skb)->nonce, keypair->sending.key, have_simd);
+
+WARNING:LONG_LINE: line length of 160 exceeds 100 columns
+#5436: FILE: drivers/net/wireguard/send.c:185:
++		net_dbg_ratelimited("%s: Sending keepalive packet to peer %llu (%pISpfsc)\n", peer->device->dev->name, peer->internal_id, &peer->endpoint.addr);
+
+WARNING:LONG_LINE: line length of 134 exceeds 100 columns
+#5442: FILE: drivers/net/wireguard/send.c:191:
++#define skb_walk_null_queue_safe(first, skb, next) for (skb = first, next = skb->next; skb; skb = next, next = skb ? skb->next : NULL)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'skb' - possible side-effects?
+#5442: FILE: drivers/net/wireguard/send.c:191:
++#define skb_walk_null_queue_safe(first, skb, next) for (skb = first, next = skb->next; skb; skb = next, next = skb ? skb->next : NULL)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'next' - possible side-effects?
+#5442: FILE: drivers/net/wireguard/send.c:191:
++#define skb_walk_null_queue_safe(first, skb, next) for (skb = first, next = skb->next; skb; skb = next, next = skb ? skb->next : NULL)
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#5460: FILE: drivers/net/wireguard/send.c:209:
++		if (likely(!socket_send_skb_to_peer(peer, skb, PACKET_CB(skb)->ds) && !is_keepalive))
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#5474: FILE: drivers/net/wireguard/send.c:223:
++	struct noise_keypair *keypair;
+ 	                      ^^^^^^^
+
+WARNING:LONG_LINE: line length of 142 exceeds 100 columns
+#5478: FILE: drivers/net/wireguard/send.c:227:
++	while ((first = __ptr_ring_peek(&queue->ring)) != NULL && (state = atomic_read(&PACKET_CB(first)->state)) != PACKET_STATE_UNCRYPTED) {
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#5481: FILE: drivers/net/wireguard/send.c:230:
++		keypair = PACKET_CB(first)->keypair;
+ 		^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#5481: FILE: drivers/net/wireguard/send.c:230:
++		keypair = PACKET_CB(first)->keypair;
+ 		                            ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#5488: FILE: drivers/net/wireguard/send.c:237:
++		noise_keypair_put(keypair);
+ 		                  ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#5503: FILE: drivers/net/wireguard/send.c:252:
++			if (likely(skb_encrypt(skb, PACKET_CB(first)->keypair, have_simd)))
+ 			                                              ^^^^^^^
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#5503: FILE: drivers/net/wireguard/send.c:252:
++			if (likely(skb_encrypt(skb, PACKET_CB(first)->keypair, have_simd)))
+[...]
++			else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#5505: FILE: drivers/net/wireguard/send.c:254:
++			else {
+
+WARNING:LONG_LINE: line length of 142 exceeds 100 columns
+#5523: FILE: drivers/net/wireguard/send.c:272:
++	ret = queue_enqueue_per_device_and_peer(&wg->encrypt_queue, &peer->tx_queue, first, wg->packet_crypt_wq, &wg->encrypt_queue.last_cpu);
+
+WARNING:PREFER_FALLTHROUGH: Prefer 'fallthrough;' over fallthrough comment
+#5525: FILE: drivers/net/wireguard/send.c:274:
++		return; /* Successful. No need to fall through to drop references below. */
+
+Use the `fallthrough;` pseudo keyword instead of
+`/* fallthrough */` like comments.
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#5527: FILE: drivers/net/wireguard/send.c:276:
++	if (ret == -EPIPE)
+[...]
++	else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#5529: FILE: drivers/net/wireguard/send.c:278:
++	else {
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#5531: FILE: drivers/net/wireguard/send.c:280:
++		noise_keypair_put(PACKET_CB(first)->keypair);
+ 		                                    ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#5538: FILE: drivers/net/wireguard/send.c:287:
++	struct noise_keypair *keypair;
+ 	                      ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#5553: FILE: drivers/net/wireguard/send.c:302:
++	keypair = noise_keypair_get(rcu_dereference_bh(peer->keypairs.current_keypair));
+ 	^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#5553: FILE: drivers/net/wireguard/send.c:302:
++	keypair = noise_keypair_get(rcu_dereference_bh(peer->keypairs.current_keypair));
+ 	                                                     ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#5555: FILE: drivers/net/wireguard/send.c:304:
++	if (unlikely(!keypair))
+ 	              ^^^^^^^
+
+WARNING:LONG_LINE: line length of 148 exceeds 100 columns
+#5568: FILE: drivers/net/wireguard/send.c:317:
++		PACKET_CB(skb)->ds = ip_tunnel_ecn_encap(0 /* No outer TOS: no leak. TODO: should we use flowi->tos as outer? */, ip_hdr(skb), skb);
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#5576: FILE: drivers/net/wireguard/send.c:325:
++	PACKET_CB(packets.next)->keypair = keypair;
+ 	                         ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#5576: FILE: drivers/net/wireguard/send.c:325:
++	PACKET_CB(packets.next)->keypair = keypair;
+ 	                                   ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#5583: FILE: drivers/net/wireguard/send.c:332:
++	noise_keypair_put(keypair);
+ 	                  ^^^^^^^
+
+WARNING:SPDX_LICENSE_TAG: Improper SPDX comment style for 'drivers/net/wireguard/socket.c', please use '//' instead
+#5610: FILE: drivers/net/wireguard/socket.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#5610: FILE: drivers/net/wireguard/socket.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:LONG_LINE: line length of 132 exceeds 100 columns
+#5629: FILE: drivers/net/wireguard/socket.c:20:
++static inline int send4(struct wireguard_device *wg, struct sk_buff *skb, struct endpoint *endpoint, u8 ds, struct dst_cache *cache)
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#5642: FILE: drivers/net/wireguard/socket.c:33:
++	skb->next = skb->prev = NULL;
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#5661: FILE: drivers/net/wireguard/socket.c:52:
++		if (unlikely(!inet_confirm_addr(sock_net(sock), NULL, 0, fl.saddr, RT_SCOPE_HOST))) {
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#5662: FILE: drivers/net/wireguard/socket.c:53:
++			endpoint->src4.s_addr = *(__force __be32 *)&endpoint->src_if4 = fl.saddr = 0;
+
+WARNING:LONG_LINE: line length of 156 exceeds 100 columns
+#5667: FILE: drivers/net/wireguard/socket.c:58:
++		if (unlikely(endpoint->src_if4 && ((IS_ERR(rt) && PTR_ERR(rt) == -EINVAL) || (!IS_ERR(rt) && rt->dst.dev->ifindex != endpoint->src_if4)))) {
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#5668: FILE: drivers/net/wireguard/socket.c:59:
++			endpoint->src4.s_addr = *(__force __be32 *)&endpoint->src_if4 = fl.saddr = 0;
+
+WARNING:LIKELY_MISUSE: nested (un)?likely() calls, IS_ERR already uses unlikely() internally
+#5675: FILE: drivers/net/wireguard/socket.c:66:
++		if (unlikely(IS_ERR(rt))) {
+
+WARNING:LONG_LINE: line length of 121 exceeds 100 columns
+#5677: FILE: drivers/net/wireguard/socket.c:68:
++			net_dbg_ratelimited("%s: No route to %pISpfsc, error %d\n", wg->dev->name, &endpoint->addr, ret);
+
+WARNING:LONG_LINE: line length of 119 exceeds 100 columns
+#5682: FILE: drivers/net/wireguard/socket.c:73:
++			net_dbg_ratelimited("%s: Avoiding routing loop to %pISpfsc\n", wg->dev->name, &endpoint->addr);
+
+WARNING:LONG_LINE: line length of 140 exceeds 100 columns
+#5688: FILE: drivers/net/wireguard/socket.c:79:
++	udp_tunnel_xmit_skb(rt, sock, skb, fl.saddr, fl.daddr, ds, ip4_dst_hoplimit(&rt->dst), 0, fl.fl4_sport, fl.fl4_dport, false, false);
+
+WARNING:LONG_LINE: line length of 132 exceeds 100 columns
+#5698: FILE: drivers/net/wireguard/socket.c:89:
++static inline int send6(struct wireguard_device *wg, struct sk_buff *skb, struct endpoint *endpoint, u8 ds, struct dst_cache *cache)
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#5714: FILE: drivers/net/wireguard/socket.c:105:
++	skb->next = skb->prev = NULL;
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#5733: FILE: drivers/net/wireguard/socket.c:124:
++		if (unlikely(!ipv6_addr_any(&fl.saddr) && !ipv6_chk_addr(sock_net(sock), &fl.saddr, NULL, 0))) {
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#5734: FILE: drivers/net/wireguard/socket.c:125:
++			endpoint->src6 = fl.saddr = in6addr_any;
+
+WARNING:LONG_LINE: line length of 121 exceeds 100 columns
+#5740: FILE: drivers/net/wireguard/socket.c:131:
++			net_dbg_ratelimited("%s: No route to %pISpfsc, error %d\n", wg->dev->name, &endpoint->addr, ret);
+
+WARNING:LONG_LINE: line length of 119 exceeds 100 columns
+#5745: FILE: drivers/net/wireguard/socket.c:136:
++			net_dbg_ratelimited("%s: Avoiding routing loop to %pISpfsc\n", wg->dev->name, &endpoint->addr);
+
+WARNING:LONG_LINE: line length of 142 exceeds 100 columns
+#5752: FILE: drivers/net/wireguard/socket.c:143:
++	udp_tunnel6_xmit_skb(dst, sock, skb, skb->dev, &fl.saddr, &fl.daddr, ds, ip6_dst_hoplimit(dst), 0, fl.fl6_sport, fl.fl6_dport, false);
+
+WARNING:LONG_LINE: line length of 117 exceeds 100 columns
+#5797: FILE: drivers/net/wireguard/socket.c:188:
++int socket_send_buffer_as_reply_to_skb(struct wireguard_device *wg, struct sk_buff *in_skb, void *buffer, size_t len)
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#5828: FILE: drivers/net/wireguard/socket.c:219:
++	if (skb->protocol == htons(ETH_P_IP)) {
+[...]
++	} else if (skb->protocol == htons(ETH_P_IPV6)) {
+[...]
++	} else
+[...]
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#5838: FILE: drivers/net/wireguard/socket.c:229:
++		endpoint->addr6.sin6_scope_id = ipv6_iface_scope_id(&ipv6_hdr(skb)->saddr, skb->skb_iif);
+
+CHECK:BRACES: Unbalanced braces around else statement
+#5840: FILE: drivers/net/wireguard/socket.c:231:
++	} else
+
+WARNING:LONG_LINE: line length of 113 exceeds 100 columns
+#5848: FILE: drivers/net/wireguard/socket.c:239:
++		a->addr4.sin_port == b->addr4.sin_port && a->addr4.sin_addr.s_addr == b->addr4.sin_addr.s_addr &&
+
+WARNING:LONG_LINE: line length of 120 exceeds 100 columns
+#5851: FILE: drivers/net/wireguard/socket.c:242:
++		a->addr6.sin6_port == b->addr6.sin6_port && ipv6_addr_equal(&a->addr6.sin6_addr, &b->addr6.sin6_addr) &&
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#5852: FILE: drivers/net/wireguard/socket.c:243:
++		a->addr6.sin6_scope_id == b->addr6.sin6_scope_id && ipv6_addr_equal(&a->src6, &b->src6)) ||
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#5866: FILE: drivers/net/wireguard/socket.c:257:
++	if (endpoint->addr.sa_family == AF_INET) {
+[...]
++	} else if (endpoint->addr.sa_family == AF_INET6) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#5873: FILE: drivers/net/wireguard/socket.c:264:
++	} else
+
+WARNING:DEPRECATED_API: Deprecated use of 'synchronize_rcu_bh', prefer 'synchronize_rcu' instead
+#5998: FILE: drivers/net/wireguard/socket.c:389:
++	synchronize_rcu_bh();
+
+WARNING:LONG_LINE: line length of 122 exceeds 100 columns
+#6026: FILE: drivers/net/wireguard/socket.h:18:
++int socket_send_buffer_as_reply_to_skb(struct wireguard_device *wg, struct sk_buff *in_skb, void *out_buffer, size_t len);
+
+WARNING:SPDX_LICENSE_TAG: Improper SPDX comment style for 'drivers/net/wireguard/timers.c', please use '//' instead
+#6050: FILE: drivers/net/wireguard/timers.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#6050: FILE: drivers/net/wireguard/timers.c:1:
++/* SPDX-License-Identifier: GPL-2.0
+
+WARNING:NETWORKING_BLOCK_COMMENT_STYLE: networking block comments don't use an empty /* line, use /* Comment...
+#6062: FILE: drivers/net/wireguard/timers.c:13:
++/*
++ * Timer for retransmitting the handshake if we don't hear back after `REKEY_TIMEOUT + jitter` ms
+
+WARNING:LONG_LINE_COMMENT: line length of 117 exceeds 100 columns
+#6063: FILE: drivers/net/wireguard/timers.c:14:
++ * Timer for sending empty packet if we have received a packet but after have not sent one for `KEEPALIVE_TIMEOUT` ms
+
+WARNING:LONG_LINE_COMMENT: line length of 152 exceeds 100 columns
+#6064: FILE: drivers/net/wireguard/timers.c:15:
++ * Timer for initiating new handshake if we have sent a packet but after have not received one (even empty) for `(KEEPALIVE_TIMEOUT + REKEY_TIMEOUT)` ms
+
+WARNING:LONG_LINE_COMMENT: line length of 112 exceeds 100 columns
+#6065: FILE: drivers/net/wireguard/timers.c:16:
++ * Timer for zeroing out all ephemeral keys after `(REJECT_AFTER_TIME * 3)` ms if no new keys have been received
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#6069: FILE: drivers/net/wireguard/timers.c:20:
++#define peer_get_from_timer(timer_name) \
++	struct wireguard_peer *peer; \
++	rcu_read_lock_bh(); \
++	peer = peer_get_maybe_zero(from_timer(peer, timer, timer_name)); \
++	rcu_read_unlock_bh(); \
++	if (unlikely(!peer)) \
++		return;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#6069: FILE: drivers/net/wireguard/timers.c:20:
++#define peer_get_from_timer(timer_name) \
++	struct wireguard_peer *peer; \
++	rcu_read_lock_bh(); \
++	peer = peer_get_maybe_zero(from_timer(peer, timer, timer_name)); \
++	rcu_read_unlock_bh(); \
++	if (unlikely(!peer)) \
++		return;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:LONG_LINE: line length of 207 exceeds 100 columns
+#6087: FILE: drivers/net/wireguard/timers.c:38:
++		pr_debug("%s: Handshake for peer %llu (%pISpfsc) did not complete after %d attempts, giving up\n", peer->device->dev->name, peer->internal_id, &peer->endpoint.addr, MAX_TIMER_HANDSHAKES + 2);
+
+WARNING:TYPO_SPELLING: 'keypair' may be misspelled - perhaps 'key pair'?
+#6091: FILE: drivers/net/wireguard/timers.c:42:
++		/* We drop all packets without a keypair and don't try again,
+ 		                                 ^^^^^^^
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#6100: FILE: drivers/net/wireguard/timers.c:51:
++			mod_timer(&peer->timer_zero_key_material, jiffies + REJECT_AFTER_TIME * 3 * HZ);
+
+WARNING:LONG_LINE: line length of 239 exceeds 100 columns
+#6103: FILE: drivers/net/wireguard/timers.c:54:
++		pr_debug("%s: Handshake for peer %llu (%pISpfsc) did not complete after %d seconds, retrying (try %d)\n", peer->device->dev->name, peer->internal_id, &peer->endpoint.addr, REKEY_TIMEOUT, peer->timer_handshake_attempts + 1);
+
+WARNING:LONG_LINE_COMMENT: line length of 102 exceeds 100 columns
+#6105: FILE: drivers/net/wireguard/timers.c:56:
++		/* We clear the endpoint address src address, in case this is the cause of trouble. */
+
+WARNING:LONG_LINE: line length of 221 exceeds 100 columns
+#6130: FILE: drivers/net/wireguard/timers.c:81:
++	pr_debug("%s: Retrying handshake with peer %llu (%pISpfsc) because we stopped hearing back after %d seconds\n", peer->device->dev->name, peer->internal_id, &peer->endpoint.addr, KEEPALIVE_TIMEOUT + REKEY_TIMEOUT);
+
+WARNING:LONG_LINE_COMMENT: line length of 108 exceeds 100 columns
+#6141: FILE: drivers/net/wireguard/timers.c:92:
++	if (!queue_work(peer->device->handshake_send_wq, &peer->clear_peer_work)) /* Takes our reference. */
+
+WARNING:LONG_LINE_COMMENT: line length of 111 exceeds 100 columns
+#6142: FILE: drivers/net/wireguard/timers.c:93:
++		peer_put(peer); /* If the work was already on the queue, we want to drop the extra reference */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6144: FILE: drivers/net/wireguard/timers.c:95:
++}
++static void queued_expired_zero_key_material(struct work_struct *work)
+
+WARNING:LONG_LINE: line length of 212 exceeds 100 columns
+#6148: FILE: drivers/net/wireguard/timers.c:99:
++	pr_debug("%s: Zeroing out all keys for peer %llu (%pISpfsc), since we haven't received a new one in %d seconds\n", peer->device->dev->name, peer->internal_id, &peer->endpoint.addr, REJECT_AFTER_TIME * 3);
+
+WARNING:TYPO_SPELLING: 'keypairs' may be misspelled - perhaps 'key pairs'?
+#6150: FILE: drivers/net/wireguard/timers.c:101:
++	noise_keypairs_clear(&peer->keypairs);
+ 	                            ^^^^^^^^
+
+WARNING:LONG_LINE: line length of 106 exceeds 100 columns
+#6167: FILE: drivers/net/wireguard/timers.c:118:
++		mod_timer(&peer->timer_new_handshake, jiffies + (KEEPALIVE_TIMEOUT + REKEY_TIMEOUT) * HZ);
+
+WARNING:LONG_LINE_COMMENT: line length of 103 exceeds 100 columns
+#6181: FILE: drivers/net/wireguard/timers.c:132:
++/* Should be called after any type of authenticated packet is sent -- keepalive, data, or handshake. */
+
+WARNING:LONG_LINE_COMMENT: line length of 107 exceeds 100 columns
+#6188: FILE: drivers/net/wireguard/timers.c:139:
++/* Should be called after any type of authenticated packet is received -- keepalive, data, or handshake. */
+
+WARNING:LONG_LINE: line length of 143 exceeds 100 columns
+#6199: FILE: drivers/net/wireguard/timers.c:150:
++		mod_timer(&peer->timer_retransmit_handshake, jiffies + REKEY_TIMEOUT * HZ + prandom_u32_max(REKEY_TIMEOUT_JITTER_MAX_JIFFIES));
+
+WARNING:LONG_LINE_COMMENT: line length of 144 exceeds 100 columns
+#6202: FILE: drivers/net/wireguard/timers.c:153:
++/* Should be called after a handshake response message is received and processed or when getting key confirmation via the first data message. */
+
+WARNING:LONG_LINE_COMMENT: line length of 143 exceeds 100 columns
+#6212: FILE: drivers/net/wireguard/timers.c:163:
++/* Should be called after an ephemeral key is created, which is before sending a handshake response or after receiving a handshake response. */
+
+WARNING:LONG_LINE_COMMENT: line length of 129 exceeds 100 columns
+#6219: FILE: drivers/net/wireguard/timers.c:170:
++/* Should be called before a packet with authentication -- keepalive, data, or handshake -- is sent, or after one is received. */
+
+WARNING:LONG_LINE: line length of 113 exceeds 100 columns
+#6223: FILE: drivers/net/wireguard/timers.c:174:
++		mod_timer(&peer->timer_persistent_keepalive, jiffies + peer->persistent_keepalive_interval * HZ);
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#6279: FILE: drivers/net/wireguard/timers.h:26:
++	return (s64)(birthday_nanoseconds + expiration_seconds * NSEC_PER_SEC) <= (s64)ktime_get_boot_fast_ns();
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#6289: FILE: drivers/net/wireguard/version.h:1:
++#define WIREGUARD_VERSION "0.0.20180731"
+
+WARNING:TYPO_SPELLING: 'appened' may be misspelled - perhaps 'append'?
+#6409: FILE: include/uapi/linux/wireguard.h:114:
++ * the list of peers is only cleared the first time but appened after.
+                                                         ^^^^^^^
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6430: FILE: include/uapi/linux/wireguard.h:135:
++};
++#define WG_CMD_MAX (__WG_CMD_MAX - 1)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6435: FILE: include/uapi/linux/wireguard.h:140:
++};
++enum wgdevice_attribute {
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6447: FILE: include/uapi/linux/wireguard.h:152:
++};
++#define WGDEVICE_A_MAX (__WGDEVICE_A_LAST - 1)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6453: FILE: include/uapi/linux/wireguard.h:158:
++};
++enum wgpeer_attribute {
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6466: FILE: include/uapi/linux/wireguard.h:171:
++};
++#define WGPEER_A_MAX (__WGPEER_A_LAST - 1)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6475: FILE: include/uapi/linux/wireguard.h:180:
++};
++#define WGALLOWEDIP_A_MAX (__WGALLOWEDIP_A_LAST - 1)
+
+WARNING:LONG_LINE: line length of 254 exceeds 100 columns
+#6491: FILE: tools/testing/selftests/wireguard/netns.sh:8:
++# ┌─────────────────────┐   ┌──────────────────────────────────┐   ┌─────────────────────┐
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#6492: FILE: tools/testing/selftests/wireguard/netns.sh:9:
++# │   $ns1 namespace    │   │          $ns0 namespace          │   │   $ns2 namespace    │
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#6493: FILE: tools/testing/selftests/wireguard/netns.sh:10:
++# │                     │   │                                  │   │                     │
+
+WARNING:LONG_LINE: line length of 162 exceeds 100 columns
+#6494: FILE: tools/testing/selftests/wireguard/netns.sh:11:
++# │┌────────┐           │   │            ┌────────┐            │   │           ┌────────┐│
+
+WARNING:LONG_LINE: line length of 218 exceeds 100 columns
+#6495: FILE: tools/testing/selftests/wireguard/netns.sh:12:
++# ││  wg0   │───────────┼───┼────────────│   lo   │────────────┼───┼───────────│  wg0   ││
+
+WARNING:LONG_LINE: line length of 240 exceeds 100 columns
+#6496: FILE: tools/testing/selftests/wireguard/netns.sh:13:
++# │├────────┴──────────┐│   │    ┌───────┴────────┴────────┐   │   │┌──────────┴────────┤│
+
+WARNING:LONG_LINE: line length of 114 exceeds 100 columns
+#6497: FILE: tools/testing/selftests/wireguard/netns.sh:14:
++# ││192.168.241.1/24   ││   │    │(ns1)         (ns2)      │   │   ││192.168.241.2/24   ││
+
+WARNING:LONG_LINE: line length of 114 exceeds 100 columns
+#6498: FILE: tools/testing/selftests/wireguard/netns.sh:15:
++# ││fd00::1/24         ││   │    │127.0.0.1:1   127.0.0.1:2│   │   ││fd00::2/24         ││
+
+WARNING:LONG_LINE: line length of 190 exceeds 100 columns
+#6499: FILE: tools/testing/selftests/wireguard/netns.sh:16:
++# │└───────────────────┘│   │    │[::]:1        [::]:2     │   │   │└───────────────────┘│
+
+WARNING:LONG_LINE: line length of 240 exceeds 100 columns
+#6500: FILE: tools/testing/selftests/wireguard/netns.sh:17:
++# └─────────────────────┘   │    └─────────────────────────┘   │   └─────────────────────┘
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#6501: FILE: tools/testing/selftests/wireguard/netns.sh:18:
++#                           └──────────────────────────────────┘                          $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LONG_LINE: line length of 162 exceeds 100 columns
+#6501: FILE: tools/testing/selftests/wireguard/netns.sh:18:
++#                           └──────────────────────────────────┘                          
+
+WARNING:LONG_LINE: line length of 135 exceeds 100 columns
+#6524: FILE: tools/testing/selftests/wireguard/netns.sh:41:
++waitiperf() { pretty "${1//*-}" "wait for iperf:5201"; while [[ $(ss -N "$1" -tlp 'sport = 5201') != *iperf3* ]]; do sleep 0.1; done; }
+
+WARNING:LONG_LINE: line length of 133 exceeds 100 columns
+#6525: FILE: tools/testing/selftests/wireguard/netns.sh:42:
++waitncatudp() { pretty "${1//*-}" "wait for udp:1111"; while [[ $(ss -N "$1" -ulp 'sport = 1111') != *ncat* ]]; do sleep 0.1; done; }
+
+WARNING:LONG_LINE: line length of 133 exceeds 100 columns
+#6526: FILE: tools/testing/selftests/wireguard/netns.sh:43:
++waitncattcp() { pretty "${1//*-}" "wait for tcp:1111"; while [[ $(ss -N "$1" -tlp 'sport = 1111') != *ncat* ]]; do sleep 0.1; done; }
+
+WARNING:LONG_LINE: line length of 180 exceeds 100 columns
+#6527: FILE: tools/testing/selftests/wireguard/netns.sh:44:
++waitiface() { pretty "${1//*-}" "wait for $2 to come up"; ip netns exec "$1" bash -c "while [[ \$(< \"/sys/class/net/$2/operstate\") != up ]]; do read -t .1 -N 0 || true; done;"; }
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#6630: FILE: tools/testing/selftests/wireguard/netns.sh:147:
++{ read _; read _; read _; read rx_bytes _; read _; read tx_bytes _; } < <(ip2 -stats link show dev wg0)
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#6632: FILE: tools/testing/selftests/wireguard/netns.sh:149:
++{ read _; read _; read _; read rx_bytes _; read _; read tx_bytes _; } < <(ip1 -stats link show dev wg0)
+
+WARNING:LONG_LINE: line length of 413 exceeds 100 columns
+#6709: FILE: tools/testing/selftests/wireguard/netns.sh:226:
++# ┌────────────────────────────────────────┐    ┌────────────────────────────────────────────────┐     ┌────────────────────────────────────────┐
+
+WARNING:LONG_LINE: line length of 157 exceeds 100 columns
+#6710: FILE: tools/testing/selftests/wireguard/netns.sh:227:
++# │             $ns1 namespace             │    │                 $ns0 namespace                 │     │             $ns2 namespace             │
+
+WARNING:LONG_LINE: line length of 157 exceeds 100 columns
+#6711: FILE: tools/testing/selftests/wireguard/netns.sh:228:
++# │                                        │    │                                                │     │                                        │
+
+WARNING:LONG_LINE: line length of 245 exceeds 100 columns
+#6712: FILE: tools/testing/selftests/wireguard/netns.sh:229:
++# │  ┌─────┐             ┌─────┐           │    │    ┌──────┐              ┌──────┐              │     │  ┌─────┐            ┌─────┐            │
+
+WARNING:LONG_LINE: line length of 311 exceeds 100 columns
+#6713: FILE: tools/testing/selftests/wireguard/netns.sh:230:
++# │  │ wg0 │─────────────│vethc│───────────┼────┼────│vethrc│              │vethrs│──────────────┼─────┼──│veths│────────────│ wg0 │            │
+
+WARNING:LONG_LINE: line length of 379 exceeds 100 columns
+#6714: FILE: tools/testing/selftests/wireguard/netns.sh:231:
++# │  ├─────┴──────────┐  ├─────┴──────────┐│    │    ├──────┴─────────┐    ├──────┴────────────┐ │     │  ├─────┴──────────┐ ├─────┴──────────┐ │
+
+WARNING:LONG_LINE: line length of 181 exceeds 100 columns
+#6715: FILE: tools/testing/selftests/wireguard/netns.sh:232:
++# │  │192.168.241.1/24│  │192.168.1.100/24││    │    │192.168.1.100/24│    │10.0.0.1/24        │ │     │  │10.0.0.100/24   │ │192.168.241.2/24│ │
+
+WARNING:LONG_LINE: line length of 181 exceeds 100 columns
+#6716: FILE: tools/testing/selftests/wireguard/netns.sh:233:
++# │  │fd00::1/24      │  │                ││    │    │                │    │SNAT:192.168.1.0/24│ │     │  │                │ │fd00::2/24      │ │
+
+WARNING:LONG_LINE: line length of 379 exceeds 100 columns
+#6717: FILE: tools/testing/selftests/wireguard/netns.sh:234:
++# │  └────────────────┘  └────────────────┘│    │    └────────────────┘    └───────────────────┘ │     │  └────────────────┘ └────────────────┘ │
+
+WARNING:LONG_LINE: line length of 413 exceeds 100 columns
+#6718: FILE: tools/testing/selftests/wireguard/netns.sh:235:
++# └────────────────────────────────────────┘    └────────────────────────────────────────────────┘     └────────────────────────────────────────┘
+
+WARNING:LONG_LINE: line length of 163 exceeds 100 columns
+#6751: FILE: tools/testing/selftests/wireguard/netns.sh:268:
++# Demonstrate n2 can still send packets to n1, since persistent-keepalive will prevent connection tracking entry from expiring (to see entries: `n0 conntrack -L`).
+
+WARNING:LONG_LINE: line length of 258 exceeds 100 columns
+#6762: FILE: tools/testing/selftests/wireguard/netns.sh:279:
++# ┌────────────────────────────────────────┐    ┌────────────────────────────────────────┐
+
+WARNING:LONG_LINE: line length of 154 exceeds 100 columns
+#6765: FILE: tools/testing/selftests/wireguard/netns.sh:282:
++# │  ┌─────┐             ┌─────┐           │    │  ┌─────┐            ┌─────┐            │
+
+WARNING:LONG_LINE: line length of 198 exceeds 100 columns
+#6766: FILE: tools/testing/selftests/wireguard/netns.sh:283:
++# │  │ wg0 │─────────────│veth1│───────────┼────┼──│veth2│────────────│ wg0 │            │
+
+WARNING:LONG_LINE: line length of 242 exceeds 100 columns
+#6767: FILE: tools/testing/selftests/wireguard/netns.sh:284:
++# │  ├─────┴──────────┐  ├─────┴──────────┐│    │  ├─────┴──────────┐ ├─────┴──────────┐ │
+
+WARNING:LONG_LINE: line length of 114 exceeds 100 columns
+#6768: FILE: tools/testing/selftests/wireguard/netns.sh:285:
++# │  │192.168.241.1/24│  │10.0.0.1/24     ││    │  │10.0.0.2/24     │ │192.168.241.2/24│ │
+
+WARNING:LONG_LINE: line length of 114 exceeds 100 columns
+#6769: FILE: tools/testing/selftests/wireguard/netns.sh:286:
++# │  │fd00::1/24      │  │fd00:aa::1/96   ││    │  │fd00:aa::2/96   │ │fd00::2/24      │ │
+
+WARNING:LONG_LINE: line length of 242 exceeds 100 columns
+#6770: FILE: tools/testing/selftests/wireguard/netns.sh:287:
++# │  └────────────────┘  └────────────────┘│    │  └────────────────┘ └────────────────┘ │
+
+WARNING:LONG_LINE: line length of 258 exceeds 100 columns
+#6771: FILE: tools/testing/selftests/wireguard/netns.sh:288:
++# └────────────────────────────────────────┘    └────────────────────────────────────────┘
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#6832: FILE: tools/testing/selftests/wireguard/netns.sh:349:
++# What happens if the inbound destination address belongs to a different interface as the default route?
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000185322.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 5 errors, 507 warnings, 100 checks, 6514 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000185322.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

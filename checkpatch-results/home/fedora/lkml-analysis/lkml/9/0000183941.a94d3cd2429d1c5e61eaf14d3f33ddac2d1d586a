@@ -1,0 +1,119 @@
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#146: FILE: arch/arm/include/asm/elf.h:141:
++#define ARCH_DLINFO(sysinfo_ehdr)				\
+ do {								\
++	NEW_AUX_ENT(AT_SYSINFO_EHDR, sysinfo_ehdr);		\
+ } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#163: FILE: arch/arm64/include/asm/elf.h:168:
++#define ARCH_DLINFO(sysinfo_ehdr)					\
+ do {									\
++	NEW_AUX_ENT(AT_SYSINFO_EHDR, sysinfo_ehdr);			\
+ 									\
+ 	/*								\
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#176: FILE: arch/arm64/include/asm/elf.h:225:
++#define COMPAT_ARCH_DLINFO(sysinfo_ehdr)				\
+ do {									\
++	NEW_AUX_ENT(AT_SYSINFO_EHDR, sysinfo_ehdr);			\
+ } while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#216: FILE: arch/mips/include/asm/elf.h:477:
++#define ARCH_DLINFO(sysinfo_ehdr)					\
+ do {									\
++	NEW_AUX_ENT(AT_SYSINFO_EHDR, sysinfo_ehdr);			\
+ } while (0)
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#310: FILE: arch/sh/include/asm/elf.h:173:
++#define VSYSCALL_AUX_ENT(sysinfo_ehdr)				\
+ 	if (vdso_enabled)					\
++		NEW_AUX_ENT(AT_SYSINFO_EHDR, sysinfo_ehdr);	\
+ 	else							\
+ 		NEW_AUX_ENT(AT_IGNORE, 0)
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'sysinfo_ehdr' may be better as '(sysinfo_ehdr)' to avoid precedence issues
+#366: FILE: arch/x86/include/asm/elf.h:309:
++#define VDSO_ENTRY(sysinfo_ehdr)					\
++	(sysinfo_ehdr + vdso_image_32.sym___kernel_vsyscall)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sysinfo_ehdr' - possible side-effects?
+#369: FILE: arch/x86/include/asm/elf.h:312:
++#define	ARCH_DLINFO_IA32(sysinfo_ehdr)					\
+ do {									\
++	if (sysinfo_ehdr) {						\
++		NEW_AUX_ENT(AT_SYSINFO,	VDSO_ENTRY(sysinfo_ehdr));	\
++		NEW_AUX_ENT(AT_SYSINFO_EHDR, sysinfo_ehdr);		\
+ 	}								\
+ } while (0)
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#406: FILE: arch/x86/include/asm/elf.h:365:
++#define COMPAT_ARCH_DLINFO(sysinfo_ehdr)				\
+ if (exec->e_machine == EM_X86_64)					\
++	ARCH_DLINFO_X32(sysinfo_ehdr);					\
+ else									\
++	ARCH_DLINFO_IA32(sysinfo_ehdr)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sysinfo_ehdr' - possible side-effects?
+#406: FILE: arch/x86/include/asm/elf.h:365:
++#define COMPAT_ARCH_DLINFO(sysinfo_ehdr)				\
+ if (exec->e_machine == EM_X86_64)					\
++	ARCH_DLINFO_X32(sysinfo_ehdr);					\
+ else									\
++	ARCH_DLINFO_IA32(sysinfo_ehdr)
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000183941.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a total: 2 errors, 4 warnings, 3 checks, 314 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000183941.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

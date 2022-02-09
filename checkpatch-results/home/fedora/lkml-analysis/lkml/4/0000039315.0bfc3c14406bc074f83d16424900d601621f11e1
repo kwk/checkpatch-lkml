@@ -1,0 +1,98 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#181: FILE: arch/x86/include/asm/pgtable.h:799:
++extern pte_t ptep_clear_flush(struct vm_area_struct *vma,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#197: FILE: arch/x86/include/asm/pgtable.h:970:
++extern void fix_pte_leak(struct mm_struct *mm, unsigned long addr,
+
+ERROR:DEFINE_ARCH_HAS: #define of 'ARCH_HAS_FIX_PTE_LEAK' is wrong - use Kconfig variables or standard guards instead
+#199: FILE: arch/x86/include/asm/pgtable.h:972:
++#define ARCH_HAS_FIX_PTE_LEAK 1
+
+The ARCH_HAS_xyz and ARCH_HAVE_xyz patterns are wrong.
+
+For big conceptual features use Kconfig symbols instead.  And for
+smaller things where we have compatibility fallback functions but
+want architectures able to override them with optimized ones, we
+should either use weak functions (appropriate for some cases), or
+the symbol that protects them should be the same symbol we use.
+
+See: https://lore.kernel.org/lkml/CA+55aFycQ9XJvEOsiM3txHL5bjUc8CeKWJNR_H+MiicaddB42Q@mail.gmail.com/
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#206: FILE: arch/x86/include/asm/pgtable.h:979:
++}
++#define ARCH_HAS_NEEDS_SWAP_PTL 1
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:DEFINE_ARCH_HAS: #define of 'ARCH_HAS_NEEDS_SWAP_PTL' is wrong - use Kconfig variables or standard guards instead
+#206: FILE: arch/x86/include/asm/pgtable.h:979:
++#define ARCH_HAS_NEEDS_SWAP_PTL 1
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#211: FILE: arch/x86/include/asm/pgtable.h:984:
++}
++#define ARCH_DISABLE_DEFERRED_FLUSH 1
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#250: FILE: arch/x86/include/asm/tlbflush.h:349:
++void intel_cleanup_pte_range(struct mmu_gather *tlb, pte_t *start_ptep,
++		pte_t *end_ptep);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'tlb' - possible side-effects?
+#256: FILE: arch/x86/include/asm/tlbflush.h:355:
++#define arch_flush_cleared_pte(tlb, ptent) do {				\
++	if (static_cpu_has_bug(X86_BUG_PTE_LEAK) &&			\
++	    intel_detect_leaked_pte(ptent)) {				\
++		tlb->saw_unset_a_or_d = 1;				\
++		tlb->force_batch_flush = 1;				\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'tlb' may be better as '(tlb)' to avoid precedence issues
+#256: FILE: arch/x86/include/asm/tlbflush.h:355:
++#define arch_flush_cleared_pte(tlb, ptent) do {				\
++	if (static_cpu_has_bug(X86_BUG_PTE_LEAK) &&			\
++	    intel_detect_leaked_pte(ptent)) {				\
++		tlb->saw_unset_a_or_d = 1;				\
++		tlb->force_batch_flush = 1;				\
++	}								\
++} while (0)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#331: FILE: arch/x86/kernel/cpu/intel.c:863:
++void intel_cleanup_pte_range(struct mmu_gather *tlb, pte_t *start_ptep,
++		pte_t *end_ptep)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#470: FILE: mm/memory.c:1199:
++		bool did_flush = tlb_flush_mmu_tlbonly(tlb);
++		if (did_flush)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#482: FILE: mm/memory.c:1974:
++	if (unlikely(arch_needs_swap_ptl() ||
++	    sizeof(pte_t) > sizeof(unsigned long))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#509: FILE: mm/mremap.c:154:
++		pte = move_pte(old_ptent, new_vma->vm_page_prot,
++				old_addr, new_addr);
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000039315.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 2 errors, 1 warnings, 10 checks, 363 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000039315.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

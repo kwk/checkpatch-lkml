@@ -1,0 +1,451 @@
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#197: FILE: tools/perf/ui/hist.c:10:
++#define __HPP_HEADER_FN(_type, _str, _min_width, _unit_width) ^I^I\$
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_unit_width' may be better as '(_unit_width)' to avoid precedence issues
+#197: FILE: tools/perf/ui/hist.c:10:
++#define __HPP_HEADER_FN(_type, _str, _min_width, _unit_width) 		\
++static int hpp__header_##_type(struct perf_hpp *hpp)			\
++{									\
++	int len = _min_width;						\
++									\
++	if (symbol_conf.event_group) {					\
++		struct perf_evsel *evsel = hpp->ptr;			\
++									\
++		len = max(len, evsel->nr_members * _unit_width);	\
++	}								\
++	return scnprintf(hpp->buf, hpp->size, "%*s", len, _str);	\
++}
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#210: FILE: tools/perf/ui/hist.c:23:
++#define __HPP_WIDTH_FN(_type, _min_width, _unit_width) ^I^I^I\$
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_unit_width' may be better as '(_unit_width)' to avoid precedence issues
+#210: FILE: tools/perf/ui/hist.c:23:
++#define __HPP_WIDTH_FN(_type, _min_width, _unit_width) 			\
++static int hpp__width_##_type(struct perf_hpp *hpp)			\
++{									\
++	int len = _min_width;						\
++									\
++	if (symbol_conf.event_group) {					\
++		struct perf_evsel *evsel = hpp->ptr;			\
++									\
++		len = max(len, evsel->nr_members * _unit_width);	\
++	}								\
++	return len;							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_field' - possible side-effects?
+#223: FILE: tools/perf/ui/hist.c:36:
++#define __HPP_COLOR_PERCENT_FN(_type, _field)					\
++static int hpp__color_##_type(struct perf_hpp *hpp, struct hist_entry *he) 	\
++{										\
++	int ret;								\
++	double percent = 0.0;							\
++	struct hists *hists = he->hists;					\
++										\
++	if (hists->stats.total_period)						\
++		percent = 100.0 * he->stat._field / hists->stats.total_period; 	\
++										\
++	ret = percent_color_snprintf(hpp->buf, hpp->size, " %6.2f%%", percent);	\
++										\
++	if (symbol_conf.event_group) {						\
++		int i;								\
++		struct perf_evsel *evsel = hists_to_evsel(hists);		\
++		struct hist_entry *pair;					\
++		int nr_members = evsel->nr_members;				\
++		double *percents;						\
++										\
++		if (nr_members <= 1)						\
++			return ret;						\
++										\
++		percents = zalloc(sizeof(*percents) * nr_members);		\
++		if (percents == NULL) {						\
++			pr_warning("Not enough memory!\n");			\
++			return ret;						\
++		}								\
++										\
++		list_for_each_entry(pair, &he->pairs.head, pairs.node) { 	\
++			u64 period = pair->stat._field;				\
++			u64 total = pair->hists->stats.total_period;		\
++										\
++			if (!total)						\
++				continue;					\
++										\
++			evsel = hists_to_evsel(pair->hists);			\
++			i = perf_evsel__group_idx(evsel);			\
++			percents[i] = 100.0 * period / total;			\
++		}								\
++										\
++		for (i = 1; i < nr_members; i++) {				\
++			ret += percent_color_snprintf(hpp->buf + ret,		\
++						      hpp->size - ret,		\
++						      " %6.2f%%", percents[i]);	\
++		}								\
++		free(percents);							\
++	}									\
++	return ret;								\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_field' may be better as '(_field)' to avoid precedence issues
+#223: FILE: tools/perf/ui/hist.c:36:
++#define __HPP_COLOR_PERCENT_FN(_type, _field)					\
++static int hpp__color_##_type(struct perf_hpp *hpp, struct hist_entry *he) 	\
++{										\
++	int ret;								\
++	double percent = 0.0;							\
++	struct hists *hists = he->hists;					\
++										\
++	if (hists->stats.total_period)						\
++		percent = 100.0 * he->stat._field / hists->stats.total_period; 	\
++										\
++	ret = percent_color_snprintf(hpp->buf, hpp->size, " %6.2f%%", percent);	\
++										\
++	if (symbol_conf.event_group) {						\
++		int i;								\
++		struct perf_evsel *evsel = hists_to_evsel(hists);		\
++		struct hist_entry *pair;					\
++		int nr_members = evsel->nr_members;				\
++		double *percents;						\
++										\
++		if (nr_members <= 1)						\
++			return ret;						\
++										\
++		percents = zalloc(sizeof(*percents) * nr_members);		\
++		if (percents == NULL) {						\
++			pr_warning("Not enough memory!\n");			\
++			return ret;						\
++		}								\
++										\
++		list_for_each_entry(pair, &he->pairs.head, pairs.node) { 	\
++			u64 period = pair->stat._field;				\
++			u64 total = pair->hists->stats.total_period;		\
++										\
++			if (!total)						\
++				continue;					\
++										\
++			evsel = hists_to_evsel(pair->hists);			\
++			i = perf_evsel__group_idx(evsel);			\
++			percents[i] = 100.0 * period / total;			\
++		}								\
++										\
++		for (i = 1; i < nr_members; i++) {				\
++			ret += percent_color_snprintf(hpp->buf + ret,		\
++						      hpp->size - ret,		\
++						      " %6.2f%%", percents[i]);	\
++		}								\
++		free(percents);							\
++	}									\
++	return ret;								\
++}
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#224: FILE: tools/perf/ui/hist.c:37:
++static int hpp__color_##_type(struct perf_hpp *hpp, struct hist_entry *he) ^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#231: FILE: tools/perf/ui/hist.c:44:
++^I^Ipercent = 100.0 * he->stat._field / hists->stats.total_period; ^I\$
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!percents"
+#246: FILE: tools/perf/ui/hist.c:59:
++		if (percents == NULL) {						\
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#251: FILE: tools/perf/ui/hist.c:64:
++^I^Ilist_for_each_entry(pair, &he->pairs.head, pairs.node) { ^I\$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_field' - possible side-effects?
+#273: FILE: tools/perf/ui/hist.c:86:
++#define __HPP_ENTRY_PERCENT_FN(_type, _field)					\
++static int hpp__entry_##_type(struct perf_hpp *hpp, struct hist_entry *he) 	\
++{										\
++	int ret;								\
++	double percent = 0.0;							\
++	struct hists *hists = he->hists;					\
++	const char *fmt = symbol_conf.field_sep ? " %.2f" : " %6.2f%%";		\
++										\
++	if (hists->stats.total_period)						\
++		percent = 100.0 * he->stat._field / hists->stats.total_period; 	\
++										\
++	ret = scnprintf(hpp->buf, hpp->size, fmt, percent);			\
++										\
++	if (symbol_conf.event_group) {						\
++		int i;								\
++		struct perf_evsel *evsel = hists_to_evsel(hists);		\
++		struct hist_entry *pair;					\
++		int nr_members = evsel->nr_members;				\
++		double *percents;						\
++										\
++		if (nr_members <= 1)						\
++			return ret;						\
++										\
++		percents = zalloc(sizeof(*percents) * nr_members);		\
++		if (percents == NULL) {						\
++			pr_warning("Not enough memory!\n");			\
++			return ret;						\
++		}								\
++										\
++		list_for_each_entry(pair, &he->pairs.head, pairs.node) { 	\
++			u64 period = pair->stat._field;				\
++			u64 total = pair->hists->stats.total_period;		\
++										\
++			if (!total)						\
++				continue;					\
++										\
++			evsel = hists_to_evsel(pair->hists);			\
++			i = perf_evsel__group_idx(evsel);			\
++			percents[i] = 100.0 * period / total;			\
++		}								\
++										\
++		for (i = 1; i < nr_members; i++) {				\
++			ret += scnprintf(hpp->buf + ret, hpp->size - ret,	\
++					 fmt, percents[i]);			\
++		}								\
++		free(percents);							\
++	}									\
++	return ret;								\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_field' may be better as '(_field)' to avoid precedence issues
+#273: FILE: tools/perf/ui/hist.c:86:
++#define __HPP_ENTRY_PERCENT_FN(_type, _field)					\
++static int hpp__entry_##_type(struct perf_hpp *hpp, struct hist_entry *he) 	\
++{										\
++	int ret;								\
++	double percent = 0.0;							\
++	struct hists *hists = he->hists;					\
++	const char *fmt = symbol_conf.field_sep ? " %.2f" : " %6.2f%%";		\
++										\
++	if (hists->stats.total_period)						\
++		percent = 100.0 * he->stat._field / hists->stats.total_period; 	\
++										\
++	ret = scnprintf(hpp->buf, hpp->size, fmt, percent);			\
++										\
++	if (symbol_conf.event_group) {						\
++		int i;								\
++		struct perf_evsel *evsel = hists_to_evsel(hists);		\
++		struct hist_entry *pair;					\
++		int nr_members = evsel->nr_members;				\
++		double *percents;						\
++										\
++		if (nr_members <= 1)						\
++			return ret;						\
++										\
++		percents = zalloc(sizeof(*percents) * nr_members);		\
++		if (percents == NULL) {						\
++			pr_warning("Not enough memory!\n");			\
++			return ret;						\
++		}								\
++										\
++		list_for_each_entry(pair, &he->pairs.head, pairs.node) { 	\
++			u64 period = pair->stat._field;				\
++			u64 total = pair->hists->stats.total_period;		\
++										\
++			if (!total)						\
++				continue;					\
++										\
++			evsel = hists_to_evsel(pair->hists);			\
++			i = perf_evsel__group_idx(evsel);			\
++			percents[i] = 100.0 * period / total;			\
++		}								\
++										\
++		for (i = 1; i < nr_members; i++) {				\
++			ret += scnprintf(hpp->buf + ret, hpp->size - ret,	\
++					 fmt, percents[i]);			\
++		}								\
++		free(percents);							\
++	}									\
++	return ret;								\
++}
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#274: FILE: tools/perf/ui/hist.c:87:
++static int hpp__entry_##_type(struct perf_hpp *hpp, struct hist_entry *he) ^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#282: FILE: tools/perf/ui/hist.c:95:
++^I^Ipercent = 100.0 * he->stat._field / hists->stats.total_period; ^I\$
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!percents"
+#297: FILE: tools/perf/ui/hist.c:110:
++		if (percents == NULL) {						\
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#302: FILE: tools/perf/ui/hist.c:115:
++^I^Ilist_for_each_entry(pair, &he->pairs.head, pairs.node) { ^I\$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_field' - possible side-effects?
+#323: FILE: tools/perf/ui/hist.c:136:
++#define __HPP_ENTRY_RAW_FN(_type, _field)					\
++static int hpp__entry_##_type(struct perf_hpp *hpp, struct hist_entry *he) 	\
++{										\
++	int ret;								\
++	const char *fmt = symbol_conf.field_sep ? " %"PRIu64 : " %11"PRIu64; 	\
++										\
++	ret = scnprintf(hpp->buf, hpp->size, fmt, he->stat._field);		\
++										\
++	if (symbol_conf.event_group) {						\
++		int i;								\
++		struct perf_evsel *evsel = hists_to_evsel(he->hists);		\
++		struct hist_entry *pair;					\
++		int nr_members = evsel->nr_members;				\
++		u64 *numbers;							\
++										\
++		if (nr_members <= 1)						\
++			return ret;						\
++										\
++		numbers = zalloc(sizeof(*numbers) * nr_members);		\
++		if (numbers == NULL) {						\
++			pr_warning("Not enough memory!\n");			\
++			return ret;						\
++		}								\
++										\
++		list_for_each_entry(pair, &he->pairs.head, pairs.node) { 	\
++			evsel = hists_to_evsel(pair->hists);			\
++			i = perf_evsel__group_idx(evsel);			\
++			numbers[i] = pair->stat._field;				\
++		}								\
++										\
++		for (i = 1; i < nr_members; i++) {				\
++			ret += scnprintf(hpp->buf + ret, hpp->size - ret,	\
++					 fmt, numbers[i]);			\
++		}								\
++		free(numbers);							\
++	}									\
++	return ret;								\
++}
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#324: FILE: tools/perf/ui/hist.c:137:
++static int hpp__entry_##_type(struct perf_hpp *hpp, struct hist_entry *he) ^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#327: FILE: tools/perf/ui/hist.c:140:
++^Iconst char *fmt = symbol_conf.field_sep ? " %"PRIu64 : " %11"PRIu64; ^I\$
+
+CHECK:CAMELCASE: Avoid CamelCase: <PRIu64>
+#327: FILE: tools/perf/ui/hist.c:140:
++	const char *fmt = symbol_conf.field_sep ? " %"PRIu64 : " %11"PRIu64; 	\
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#327: FILE: tools/perf/ui/hist.c:140:
++	const char *fmt = symbol_conf.field_sep ? " %"PRIu64 : " %11"PRIu64; 	\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!numbers"
+#342: FILE: tools/perf/ui/hist.c:155:
++		if (numbers == NULL) {						\
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#347: FILE: tools/perf/ui/hist.c:160:
++^I^Ilist_for_each_entry(pair, &he->pairs.head, pairs.node) { ^I\$
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#362: FILE: tools/perf/ui/hist.c:175:
++#define HPP_PERCENT_FNS(_type, _str, _field, _min_width, _unit_width)	\
++__HPP_HEADER_FN(_type, _str, _min_width, _unit_width)			\
++__HPP_WIDTH_FN(_type, _min_width, _unit_width)				\
++__HPP_COLOR_PERCENT_FN(_type, _field)					\
++__HPP_ENTRY_PERCENT_FN(_type, _field)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_type' - possible side-effects?
+#362: FILE: tools/perf/ui/hist.c:175:
++#define HPP_PERCENT_FNS(_type, _str, _field, _min_width, _unit_width)	\
++__HPP_HEADER_FN(_type, _str, _min_width, _unit_width)			\
++__HPP_WIDTH_FN(_type, _min_width, _unit_width)				\
++__HPP_COLOR_PERCENT_FN(_type, _field)					\
++__HPP_ENTRY_PERCENT_FN(_type, _field)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_field' - possible side-effects?
+#362: FILE: tools/perf/ui/hist.c:175:
++#define HPP_PERCENT_FNS(_type, _str, _field, _min_width, _unit_width)	\
++__HPP_HEADER_FN(_type, _str, _min_width, _unit_width)			\
++__HPP_WIDTH_FN(_type, _min_width, _unit_width)				\
++__HPP_COLOR_PERCENT_FN(_type, _field)					\
++__HPP_ENTRY_PERCENT_FN(_type, _field)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_min_width' - possible side-effects?
+#362: FILE: tools/perf/ui/hist.c:175:
++#define HPP_PERCENT_FNS(_type, _str, _field, _min_width, _unit_width)	\
++__HPP_HEADER_FN(_type, _str, _min_width, _unit_width)			\
++__HPP_WIDTH_FN(_type, _min_width, _unit_width)				\
++__HPP_COLOR_PERCENT_FN(_type, _field)					\
++__HPP_ENTRY_PERCENT_FN(_type, _field)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_unit_width' - possible side-effects?
+#362: FILE: tools/perf/ui/hist.c:175:
++#define HPP_PERCENT_FNS(_type, _str, _field, _min_width, _unit_width)	\
++__HPP_HEADER_FN(_type, _str, _min_width, _unit_width)			\
++__HPP_WIDTH_FN(_type, _min_width, _unit_width)				\
++__HPP_COLOR_PERCENT_FN(_type, _field)					\
++__HPP_ENTRY_PERCENT_FN(_type, _field)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#368: FILE: tools/perf/ui/hist.c:181:
++#define HPP_RAW_FNS(_type, _str, _field, _min_width, _unit_width)	\
++__HPP_HEADER_FN(_type, _str, _min_width, _unit_width)			\
++__HPP_WIDTH_FN(_type, _min_width, _unit_width)				\
++__HPP_ENTRY_RAW_FN(_type, _field)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_type' - possible side-effects?
+#368: FILE: tools/perf/ui/hist.c:181:
++#define HPP_RAW_FNS(_type, _str, _field, _min_width, _unit_width)	\
++__HPP_HEADER_FN(_type, _str, _min_width, _unit_width)			\
++__HPP_WIDTH_FN(_type, _min_width, _unit_width)				\
++__HPP_ENTRY_RAW_FN(_type, _field)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_min_width' - possible side-effects?
+#368: FILE: tools/perf/ui/hist.c:181:
++#define HPP_RAW_FNS(_type, _str, _field, _min_width, _unit_width)	\
++__HPP_HEADER_FN(_type, _str, _min_width, _unit_width)			\
++__HPP_WIDTH_FN(_type, _min_width, _unit_width)				\
++__HPP_ENTRY_RAW_FN(_type, _field)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_unit_width' - possible side-effects?
+#368: FILE: tools/perf/ui/hist.c:181:
++#define HPP_RAW_FNS(_type, _str, _field, _min_width, _unit_width)	\
++__HPP_HEADER_FN(_type, _str, _min_width, _unit_width)			\
++__HPP_WIDTH_FN(_type, _min_width, _unit_width)				\
++__HPP_ENTRY_RAW_FN(_type, _field)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#373: FILE: tools/perf/ui/hist.c:186:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#383: FILE: tools/perf/ui/hist.c:196:
++
++
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000017341.commit.50c234c910ddd03a627257cc11704614c0619761 total: 2 errors, 11 warnings, 21 checks, 399 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000017341.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

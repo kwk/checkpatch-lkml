@@ -1,0 +1,40 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'regs' - possible side-effects?
+#70: FILE: arch/arm/include/asm/perf_event.h:46:
++#define perf_arch_fetch_caller_regs(regs, ip)				\
++	do {								\
++		__u32 _cpsr, _pc;					\
++		__asm__ __volatile__("str r7, [%[_regs], #(7 * 4)]\n\t" \
++				     "str r13, [%[_regs], #(13 * 4)]\n\t" \
++				     "str r14, [%[_regs], #(14 * 4)]\n\t" \
++				     "mov %[_pc],  r15\n\t"		\
++				     "mrs %[_cpsr], cpsr\n\t"		\
++				     : [_cpsr] "=r" (_cpsr),		\
++				       [_pc] "=r" (_pc)			\
++				     : [_regs] "r" (&(regs)->uregs)	\
++				     : "memory");			\
++		(regs)->ARM_pc = _pc;					\
++		(regs)->ARM_cpsr = _cpsr;				\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'regs' - possible side-effects?
+#86: FILE: arch/arm/include/asm/perf_event.h:62:
++#define perf_arch_fetch_caller_regs(regs, ip)				\
++	do {								\
++		__u32 _cpsr;						\
++		__asm__ __volatile__("stmia %[_regs11], {r11 - r15}\n\t" \
++				     "mrs %[_cpsr], cpsr\n\t"		\
++				     : [_cpsr] "=r" (_cpsr)		\
++				     : [_regs11] "r" (&(regs)->uregs[11]) \
++				     : "memory");			\
++		(regs)->ARM_cpsr = _cpsr;				\
++	} while (0)
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000350520.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 0 warnings, 2 checks, 53 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000350520.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,61 @@
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#90: FILE: fs/f2fs/f2fs.h:2313:
++#define stat_inc_atomic_write(inode)					\
++		(atomic_inc(&F2FS_I_SB(inode)->aw_cnt));
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#92: FILE: fs/f2fs/f2fs.h:2315:
++#define stat_dec_atomic_write(inode)					\
++		(atomic_dec(&F2FS_I_SB(inode)->aw_cnt));
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'inode' - possible side-effects?
+#94: FILE: fs/f2fs/f2fs.h:2317:
++#define stat_update_max_atomic_write(inode)				\
++	do {								\
++		int cur = atomic_read(&F2FS_I_SB(inode)->aw_cnt);	\
++		int max = atomic_read(&F2FS_I_SB(inode)->max_aw_cnt);	\
++		if (cur > max)						\
++			atomic_set(&F2FS_I_SB(inode)->max_aw_cnt, cur);	\
++	} while (0)
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#131: FILE: fs/f2fs/file.c:1576:
++		ret = f2fs_do_sync_file(filp, 0, LLONG_MAX, 0, true);
+ 		                        ^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#134: FILE: fs/f2fs/file.c:1579:
++		ret = f2fs_do_sync_file(filp, 0, LLONG_MAX, 0, true);
+ 		                        ^^^^
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000299564.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 4 warnings, 1 checks, 98 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000299564.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

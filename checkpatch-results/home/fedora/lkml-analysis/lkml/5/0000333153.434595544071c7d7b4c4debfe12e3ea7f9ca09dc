@@ -1,0 +1,233 @@
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct thermal_zone_device *' should also have an identifier name
+#684: FILE: drivers/thermal/thermal_core.h:70:
++int thermal_zone_create_device_groups(struct thermal_zone_device *, int);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#684: FILE: drivers/thermal/thermal_core.h:70:
++int thermal_zone_create_device_groups(struct thermal_zone_device *, int);
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#690: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#695: FILE: drivers/thermal/thermal_sysfs.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#1044: FILE: drivers/thermal/thermal_sysfs.c:350:
++#define create_s32_tzp_attr(name)					\
++	static ssize_t							\
++	name##_show(struct device *dev, struct device_attribute *devattr, \
++		char *buf)						\
++	{								\
++	struct thermal_zone_device *tz = to_thermal_zone(dev);		\
++									\
++	if (tz->tzp)							\
++		return sprintf(buf, "%d\n", tz->tzp->name);		\
++	else								\
++		return -EIO;						\
++	}								\
++									\
++	static ssize_t							\
++	name##_store(struct device *dev, struct device_attribute *devattr, \
++		const char *buf, size_t count)				\
++	{								\
++		struct thermal_zone_device *tz = to_thermal_zone(dev);	\
++		s32 value;						\
++									\
++		if (!tz->tzp)						\
++			return -EIO;					\
++									\
++		if (kstrtos32(buf, 10, &value))				\
++			return -EINVAL;					\
++									\
++		tz->tzp->name = value;					\
++									\
++		return count;						\
++	}								\
++	static DEVICE_ATTR(name, S_IWUSR | S_IRUGO, name##_show, name##_store)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'name' may be better as '(name)' to avoid precedence issues
+#1044: FILE: drivers/thermal/thermal_sysfs.c:350:
++#define create_s32_tzp_attr(name)					\
++	static ssize_t							\
++	name##_show(struct device *dev, struct device_attribute *devattr, \
++		char *buf)						\
++	{								\
++	struct thermal_zone_device *tz = to_thermal_zone(dev);		\
++									\
++	if (tz->tzp)							\
++		return sprintf(buf, "%d\n", tz->tzp->name);		\
++	else								\
++		return -EIO;						\
++	}								\
++									\
++	static ssize_t							\
++	name##_store(struct device *dev, struct device_attribute *devattr, \
++		const char *buf, size_t count)				\
++	{								\
++		struct thermal_zone_device *tz = to_thermal_zone(dev);	\
++		s32 value;						\
++									\
++		if (!tz->tzp)						\
++			return -EIO;					\
++									\
++		if (kstrtos32(buf, 10, &value))				\
++			return -EINVAL;					\
++									\
++		tz->tzp->name = value;					\
++									\
++		return count;						\
++	}								\
++	static DEVICE_ATTR(name, S_IWUSR | S_IRUGO, name##_show, name##_store)
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR | S_IRUGO' are not preferred. Consider using octal permissions '0644'.
+#1074: FILE: drivers/thermal/thermal_sysfs.c:380:
++	static DEVICE_ATTR(name, S_IWUSR | S_IRUGO, name##_show, name##_store)
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:DEVICE_ATTR_RO: Use DEVICE_ATTR_RO
+#1083: FILE: drivers/thermal/thermal_sysfs.c:389:
++#undef create_s32_tzp_attr
+
+The DEVICE_ATTR_RO(name) helper macro can be used instead of
+DEVICE_ATTR(name, 0444, name_show, NULL);
+
+Note that the macro automatically appends _show to the named
+attribute variable of the device for the show method.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+WARNING:DEVICE_ATTR_RO: Use DEVICE_ATTR_RO
+#1091: FILE: drivers/thermal/thermal_sysfs.c:397:
++static DEVICE_ATTR(temp, 0444, temp_show, NULL);
+
+WARNING:DEVICE_ATTR_WO: Use DEVICE_ATTR_WO
+#1092: FILE: drivers/thermal/thermal_sysfs.c:398:
++static DEVICE_ATTR(emul_temp, S_IWUSR, NULL, emul_temp_store);
+
+The DEVICE_AATR_WO(name) helper macro can be used instead of
+DEVICE_ATTR(name, 0200, NULL, name_store);
+
+Note that the macro automatically appends _store to the
+named attribute variable of the device for the store method.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR' are not preferred. Consider using octal permissions '0200'.
+#1092: FILE: drivers/thermal/thermal_sysfs.c:398:
++static DEVICE_ATTR(emul_temp, S_IWUSR, NULL, emul_temp_store);
+
+WARNING:DEVICE_ATTR_RW: Use DEVICE_ATTR_RW
+#1093: FILE: drivers/thermal/thermal_sysfs.c:399:
++static DEVICE_ATTR(policy, S_IRUGO | S_IWUSR, policy_show, policy_store);
+
+The DEVICE_ATTR_RW(name) helper macro can be used instead of
+DEVICE_ATTR(name, 0644, name_show, name_store);
+
+Note that the macro automatically appends _show and _store to the
+named attribute variable of the device for the show and store methods.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#1093: FILE: drivers/thermal/thermal_sysfs.c:399:
++static DEVICE_ATTR(policy, S_IRUGO | S_IWUSR, policy_show, policy_store);
+
+WARNING:DEVICE_ATTR_RO: Use DEVICE_ATTR_RO
+#1094: FILE: drivers/thermal/thermal_sysfs.c:400:
++static DEVICE_ATTR(available_policies, S_IRUGO, available_policies_show, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#1094: FILE: drivers/thermal/thermal_sysfs.c:400:
++static DEVICE_ATTR(available_policies, S_IRUGO, available_policies_show, NULL);
+
+WARNING:DEVICE_ATTR_RW: Use DEVICE_ATTR_RW
+#1095: FILE: drivers/thermal/thermal_sysfs.c:401:
++static DEVICE_ATTR(sustainable_power, S_IWUSR | S_IRUGO, sustainable_power_show,
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR | S_IRUGO' are not preferred. Consider using octal permissions '0644'.
+#1095: FILE: drivers/thermal/thermal_sysfs.c:401:
++static DEVICE_ATTR(sustainable_power, S_IWUSR | S_IRUGO, sustainable_power_show,
+
+WARNING:DEVICE_ATTR_RW: Use DEVICE_ATTR_RW
+#1099: FILE: drivers/thermal/thermal_sysfs.c:405:
++static DEVICE_ATTR(mode, 0644, mode_show, mode_store);
+
+WARNING:DEVICE_ATTR_RW: Use DEVICE_ATTR_RW
+#1100: FILE: drivers/thermal/thermal_sysfs.c:406:
++static DEVICE_ATTR(passive, S_IRUGO | S_IWUSR, passive_show, passive_store);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#1100: FILE: drivers/thermal/thermal_sysfs.c:406:
++static DEVICE_ATTR(passive, S_IRUGO | S_IWUSR, passive_show, passive_store);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#1250: FILE: drivers/thermal/thermal_sysfs.c:556:
++		tz->trip_type_attrs[indx].attr.attr.mode = S_IRUGO;
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#1261: FILE: drivers/thermal/thermal_sysfs.c:567:
++		tz->trip_temp_attrs[indx].attr.attr.mode = S_IRUGO;
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR' are not preferred. Consider using octal permissions '0200'.
+#1265: FILE: drivers/thermal/thermal_sysfs.c:571:
++			tz->trip_temp_attrs[indx].attr.attr.mode |= S_IWUSR;
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#1280: FILE: drivers/thermal/thermal_sysfs.c:586:
++		tz->trip_hyst_attrs[indx].attr.attr.mode = S_IRUGO;
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR' are not preferred. Consider using octal permissions '0200'.
+#1283: FILE: drivers/thermal/thermal_sysfs.c:589:
++			tz->trip_hyst_attrs[indx].attr.attr.mode |= S_IWUSR;
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000333153.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 23 warnings, 2 checks, 1265 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000333153.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

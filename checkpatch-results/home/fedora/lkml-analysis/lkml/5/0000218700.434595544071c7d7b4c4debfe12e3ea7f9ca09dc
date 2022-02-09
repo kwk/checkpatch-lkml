@@ -1,0 +1,166 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#27: 
+4.10-stable review patch.  If anyone has any objections, please let me know.
+
+WARNING:UNKNOWN_COMMIT_ID: Unknown commit id '3f795cef0ecdf9bc980dd058d49bdab4b19af1d3', maybe rebased or not pulled?
+#33: 
+commit 3f795cef0ecdf9bc980dd058d49bdab4b19af1d3 upstream.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'val' - possible side-effects?
+#82: FILE: arch/parisc/include/asm/uaccess.h:103:
++#define __get_user_internal(val, ptr)			\
++({							\
++	register long __gu_err __asm__ ("r8") = 0;	\
++							\
++	switch (sizeof(*(ptr))) {			\
++	case 1: __get_user_asm(val, "ldb", ptr); break;	\
++	case 2: __get_user_asm(val, "ldh", ptr); break; \
++	case 4: __get_user_asm(val, "ldw", ptr); break; \
++	case 8: LDD_USER(val, ptr); break;		\
++	default: BUILD_BUG();				\
++	}						\
++							\
++	__gu_err;					\
+ })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#82: FILE: arch/parisc/include/asm/uaccess.h:103:
++#define __get_user_internal(val, ptr)			\
++({							\
++	register long __gu_err __asm__ ("r8") = 0;	\
++							\
++	switch (sizeof(*(ptr))) {			\
++	case 1: __get_user_asm(val, "ldb", ptr); break;	\
++	case 2: __get_user_asm(val, "ldh", ptr); break; \
++	case 4: __get_user_asm(val, "ldw", ptr); break; \
++	case 8: LDD_USER(val, ptr); break;		\
++	default: BUILD_BUG();				\
++	}						\
++							\
++	__gu_err;					\
+ })
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#87: FILE: arch/parisc/include/asm/uaccess.h:108:
++	case 1: __get_user_asm(val, "ldb", ptr); break;	\
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#88: FILE: arch/parisc/include/asm/uaccess.h:109:
++	case 2: __get_user_asm(val, "ldh", ptr); break; \
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#89: FILE: arch/parisc/include/asm/uaccess.h:110:
++	case 4: __get_user_asm(val, "ldw", ptr); break; \
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#90: FILE: arch/parisc/include/asm/uaccess.h:111:
++	case 8: LDD_USER(val, ptr); break;		\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#91: FILE: arch/parisc/include/asm/uaccess.h:112:
++	default: BUILD_BUG();				\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#104: FILE: arch/parisc/include/asm/uaccess.h:124:
++#define __get_user_asm(val, ldx, ptr)			\
++{							\
++	register long __gu_val;				\
++							\
+ 	__asm__("1: " ldx " 0(%%sr2,%2),%0\n"		\
+ 		"9:\n"					\
+ 		ASM_EXCEPTIONTABLE_ENTRY_EFAULT(1b, 9b)	\
+ 		: "=r"(__gu_val), "=r"(__gu_err)        \
++		: "r"(ptr), "1"(__gu_err));		\
++							\
++	(val) = (__force __typeof__(*(ptr))) __gu_val;	\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#121: FILE: arch/parisc/include/asm/uaccess.h:139:
++#define __get_user_asm64(val, ptr)			\
++{							\
++	union {						\
++		unsigned long long	l;		\
++		__typeof__(*(ptr))	t;		\
++	} __gu_tmp;					\
++							\
+ 	__asm__("   copy %%r0,%R0\n"			\
+ 		"1: ldw 0(%%sr2,%2),%0\n"		\
+ 		"2: ldw 4(%%sr2,%2),%R0\n"		\
+ 		"9:\n"					\
+ 		ASM_EXCEPTIONTABLE_ENTRY_EFAULT(1b, 9b)	\
+ 		ASM_EXCEPTIONTABLE_ENTRY_EFAULT(2b, 9b)	\
++		: "=&r"(__gu_tmp.l), "=r"(__gu_err)	\
++		: "r"(ptr), "1"(__gu_err));		\
++							\
++	(val) = __gu_tmp.t;				\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#146: FILE: arch/parisc/include/asm/uaccess.h:161:
++#define __put_user_internal(x, ptr)				\
+ ({								\
+ 	register long __pu_err __asm__ ("r8") = 0;      	\
+         __typeof__(*(ptr)) __x = (__typeof__(*(ptr)))(x);	\
+ 								\
+ 	switch (sizeof(*(ptr))) {				\
++	case 1: __put_user_asm("stb", __x, ptr); break;		\
++	case 2: __put_user_asm("sth", __x, ptr); break;		\
++	case 4: __put_user_asm("stw", __x, ptr); break;		\
++	case 8: STD_USER(__x, ptr); break;			\
++	default: BUILD_BUG();					\
++	}							\
+ 								\
+ 	__pu_err;						\
+ })
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#159: FILE: arch/parisc/include/asm/uaccess.h:167:
++	case 1: __put_user_asm("stb", __x, ptr); break;		\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#160: FILE: arch/parisc/include/asm/uaccess.h:168:
++	case 2: __put_user_asm("sth", __x, ptr); break;		\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#161: FILE: arch/parisc/include/asm/uaccess.h:169:
++	case 4: __put_user_asm("stw", __x, ptr); break;		\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#162: FILE: arch/parisc/include/asm/uaccess.h:170:
++	case 8: STD_USER(__x, ptr); break;			\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#163: FILE: arch/parisc/include/asm/uaccess.h:171:
++	default: BUILD_BUG();					\
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#175: FILE: arch/parisc/include/asm/uaccess.h:183:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000218700.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 10 errors, 2 warnings, 6 checks, 128 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000218700.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,325 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#111: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#116: FILE: arch/x86/include/asm/kgr.h:1:
++#ifndef ASM_KGR_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#126: FILE: arch/x86/include/asm/kgr.h:11:
++static void _new_function ##_stub_slow (unsigned long ip, unsigned long parent_ip,	\
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#143: FILE: arch/x86/include/asm/kgr.h:28:
++static void _new_function ##_stub_fast (unsigned long ip,		\
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#149: FILE: arch/x86/include/asm/kgr.h:34:
++	BUG_ON(!c->new);				\
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#225: FILE: include/linux/kgr.h:1:
++#ifndef LINUX_KGR_H
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#239: FILE: include/linux/kgr.h:15:
++#define kgr_debug(args...)	\
++	pr_info(args);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_name' - possible side-effects?
+#266: FILE: include/linux/kgr.h:42:
++#define KGR_PATCHED_FUNCTION(patch, _name, _new_function)			\
++	KGR_STUB_ARCH_SLOW(_name, _new_function);				\
++	KGR_STUB_ARCH_FAST(_name, _new_function);				\
++	extern void _new_function ## _stub_slow (unsigned long, unsigned long,	\
++		                       struct ftrace_ops *, struct pt_regs *);	\
++	extern void _new_function ## _stub_fast (unsigned long, unsigned long,	\
++		                       struct ftrace_ops *, struct pt_regs *);	\
++	static struct ftrace_ops __kgr_patch_ftrace_ops_slow_ ## _name = {	\
++		.func = _new_function ## _stub_slow,				\
++		.flags = FTRACE_OPS_FL_SAVE_REGS,				\
++	};									\
++	static struct ftrace_ops __kgr_patch_ftrace_ops_fast_ ## _name = {	\
++		.func = _new_function ## _stub_fast,				\
++		.flags = FTRACE_OPS_FL_SAVE_REGS,				\
++	};									\
++	static const struct kgr_patch_fun __kgr_patch_ ## _name = {		\
++		.name = #_name,							\
++		.new_name = #_new_function,					\
++		.new_function = _new_function,					\
++		.ftrace_ops_slow = &__kgr_patch_ftrace_ops_slow_ ## _name,	\
++		.ftrace_ops_fast = &__kgr_patch_ftrace_ops_fast_ ## _name,	\
++	};									\
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_new_function' - possible side-effects?
+#266: FILE: include/linux/kgr.h:42:
++#define KGR_PATCHED_FUNCTION(patch, _name, _new_function)			\
++	KGR_STUB_ARCH_SLOW(_name, _new_function);				\
++	KGR_STUB_ARCH_FAST(_name, _new_function);				\
++	extern void _new_function ## _stub_slow (unsigned long, unsigned long,	\
++		                       struct ftrace_ops *, struct pt_regs *);	\
++	extern void _new_function ## _stub_fast (unsigned long, unsigned long,	\
++		                       struct ftrace_ops *, struct pt_regs *);	\
++	static struct ftrace_ops __kgr_patch_ftrace_ops_slow_ ## _name = {	\
++		.func = _new_function ## _stub_slow,				\
++		.flags = FTRACE_OPS_FL_SAVE_REGS,				\
++	};									\
++	static struct ftrace_ops __kgr_patch_ftrace_ops_fast_ ## _name = {	\
++		.func = _new_function ## _stub_fast,				\
++		.flags = FTRACE_OPS_FL_SAVE_REGS,				\
++	};									\
++	static const struct kgr_patch_fun __kgr_patch_ ## _name = {		\
++		.name = #_name,							\
++		.new_name = #_new_function,					\
++		.new_function = _new_function,					\
++		.ftrace_ops_slow = &__kgr_patch_ftrace_ops_slow_ ## _name,	\
++		.ftrace_ops_fast = &__kgr_patch_ftrace_ops_fast_ ## _name,	\
++	};									\
++
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#266: FILE: include/linux/kgr.h:42:
++#define KGR_PATCHED_FUNCTION(patch, _name, _new_function)			\
++	KGR_STUB_ARCH_SLOW(_name, _new_function);				\
++	KGR_STUB_ARCH_FAST(_name, _new_function);				\
++	extern void _new_function ## _stub_slow (unsigned long, unsigned long,	\
++		                       struct ftrace_ops *, struct pt_regs *);	\
++	extern void _new_function ## _stub_fast (unsigned long, unsigned long,	\
++		                       struct ftrace_ops *, struct pt_regs *);	\
++	static struct ftrace_ops __kgr_patch_ftrace_ops_slow_ ## _name = {	\
++		.func = _new_function ## _stub_slow,				\
++		.flags = FTRACE_OPS_FL_SAVE_REGS,				\
++	};									\
++	static struct ftrace_ops __kgr_patch_ftrace_ops_fast_ ## _name = {	\
++		.func = _new_function ## _stub_fast,				\
++		.flags = FTRACE_OPS_FL_SAVE_REGS,				\
++	};									\
++	static const struct kgr_patch_fun __kgr_patch_ ## _name = {		\
++		.name = #_name,							\
++		.new_name = #_new_function,					\
++		.new_function = _new_function,					\
++		.ftrace_ops_slow = &__kgr_patch_ftrace_ops_slow_ ## _name,	\
++		.ftrace_ops_fast = &__kgr_patch_ftrace_ops_fast_ ## _name,	\
++	};									\
++
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#269: FILE: include/linux/kgr.h:45:
++	extern void _new_function ## _stub_slow (unsigned long, unsigned long,	\
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#269: FILE: include/linux/kgr.h:45:
++	extern void _new_function ## _stub_slow (unsigned long, unsigned long,	\
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned long' should also have an identifier name
+#269: FILE: include/linux/kgr.h:45:
++	extern void _new_function ## _stub_slow (unsigned long, unsigned long,	\
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned long' should also have an identifier name
+#269: FILE: include/linux/kgr.h:45:
++	extern void _new_function ## _stub_slow (unsigned long, unsigned long,	\
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct ftrace_ops *' should also have an identifier name
+#269: FILE: include/linux/kgr.h:45:
++	extern void _new_function ## _stub_slow (unsigned long, unsigned long,	\
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct pt_regs *' should also have an identifier name
+#269: FILE: include/linux/kgr.h:45:
++	extern void _new_function ## _stub_slow (unsigned long, unsigned long,	\
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#270: FILE: include/linux/kgr.h:46:
++^I^I                       struct ftrace_ops *, struct pt_regs *);^I\$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#271: FILE: include/linux/kgr.h:47:
++	extern void _new_function ## _stub_fast (unsigned long, unsigned long,	\
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#271: FILE: include/linux/kgr.h:47:
++	extern void _new_function ## _stub_fast (unsigned long, unsigned long,	\
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned long' should also have an identifier name
+#271: FILE: include/linux/kgr.h:47:
++	extern void _new_function ## _stub_fast (unsigned long, unsigned long,	\
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned long' should also have an identifier name
+#271: FILE: include/linux/kgr.h:47:
++	extern void _new_function ## _stub_fast (unsigned long, unsigned long,	\
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct ftrace_ops *' should also have an identifier name
+#271: FILE: include/linux/kgr.h:47:
++	extern void _new_function ## _stub_fast (unsigned long, unsigned long,	\
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct pt_regs *' should also have an identifier name
+#271: FILE: include/linux/kgr.h:47:
++	extern void _new_function ## _stub_fast (unsigned long, unsigned long,	\
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#272: FILE: include/linux/kgr.h:48:
++^I^I                       struct ftrace_ops *, struct pt_regs *);^I\$
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#289: FILE: include/linux/kgr.h:65:
++#define KGR_PATCH(name)		&__kgr_patch_ ## name
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#292: FILE: include/linux/kgr.h:68:
++extern int kgr_start_patching(const struct kgr_patch *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const struct kgr_patch *' should also have an identifier name
+#292: FILE: include/linux/kgr.h:68:
++extern int kgr_start_patching(const struct kgr_patch *);
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#305: FILE: kernel/Kconfig.kgr:4:
++config KGR
++	tristate "Kgr infrastructure"
++	depends on DYNAMIC_FTRACE_WITH_REGS
++	depends on HAVE_KGR
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#327: FILE: kernel/kgr.c:1:
++/*
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#377: FILE: kernel/kgr.c:51:
++			pr_info("pid %d (%s) still in kernel after timeout\n",
++					p->pid, p->comm);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#398: FILE: kernel/kgr.c:72:
++			pr_err("kgr: finalize for %s failed, trying to continue\n",
++					(*patch_fun)->name);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#442: FILE: kernel/kgr.c:116:
++		WARN(1, "kgr: function %s not resolved ... kernel in inconsistent state\n",
++				f_name);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#455: FILE: kernel/kgr.c:129:
++		pr_err("kgr: we got out of bounds the intended function (%s -> %s)\n",
++				f_name, check_name);
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#478: FILE: kernel/kgr.c:152:
++	if (!caches) {
++		kgr_debug("kgr: unable to allocate fentry caches\n");
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#488: FILE: kernel/kgr.c:162:
++	kgr_debug("kgr: storing %lx to caches->new for %s\n",
++			fentry_loc, patch_fun->new_name);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#498: FILE: kernel/kgr.c:172:
++	kgr_debug("kgr: storing %lx to caches->old for %s\n",
++			fentry_loc, patch_fun->name);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#532: FILE: kernel/kgr.c:206:
++		kgr_debug("kgr: setting filter for %lx (%s) failed\n",
++				caches->old, patch_fun->name);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#539: FILE: kernel/kgr.c:213:
++		kgr_debug("kgr: registering ftrace function for %lx (%s) failed\n",
++				caches->old, patch_fun->name);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#552: FILE: kernel/kgr.c:226:
++			kgr_debug("kgr: unregistering ftrace function for %lx (%s) failed\n",
++					fentry_loc, patch_fun->name);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#557: FILE: kernel/kgr.c:231:
++	kgr_debug("kgr: redirection for %lx (%s) done\n", fentry_loc,
++			patch_fun->name);
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000182578.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 3 errors, 22 warnings, 15 checks, 488 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000182578.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

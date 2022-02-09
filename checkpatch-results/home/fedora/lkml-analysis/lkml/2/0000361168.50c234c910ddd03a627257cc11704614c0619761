@@ -1,0 +1,214 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#143: FILE: kernel/module.c:487:
++#define MODINFO_ATTR(field)						\
++static void setup_modinfo_##field(struct module *mod, const char *s)	\
++{									\
++	mod->field = kstrdup(s, GFP_KERNEL);				\
++}									\
++static ssize_t show_modinfo_##field(struct module_attribute *mattr,	\
++				    struct module *mod, char *buffer)	\
++{									\
++	return sprintf(buffer, "%s\n", mod->field);			\
++}									\
++static int modinfo_##field##_exists(struct module *mod)			\
++{									\
++	return mod->field != NULL;					\
++}									\
++static void free_modinfo_##field(struct module *mod)			\
++{									\
++	kfree(mod->field);						\
++	mod->field = NULL;						\
++}									\
++static struct module_attribute modinfo_##field = {			\
++	.attr = { .name = __stringify(field), .mode = 0444 },		\
++	.show = show_modinfo_##field,					\
++	.setup = setup_modinfo_##field,					\
++	.test = modinfo_##field##_exists,				\
++	.free = free_modinfo_##field,					\
+ };
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#143: FILE: kernel/module.c:487:
++#define MODINFO_ATTR(field)						\
++static void setup_modinfo_##field(struct module *mod, const char *s)	\
++{									\
++	mod->field = kstrdup(s, GFP_KERNEL);				\
++}									\
++static ssize_t show_modinfo_##field(struct module_attribute *mattr,	\
++				    struct module *mod, char *buffer)	\
++{									\
++	return sprintf(buffer, "%s\n", mod->field);			\
++}									\
++static int modinfo_##field##_exists(struct module *mod)			\
++{									\
++	return mod->field != NULL;					\
++}									\
++static void free_modinfo_##field(struct module *mod)			\
++{									\
++	kfree(mod->field);						\
++	mod->field = NULL;						\
++}									\
++static struct module_attribute modinfo_##field = {			\
++	.attr = { .name = __stringify(field), .mode = 0444 },		\
++	.show = show_modinfo_##field,					\
++	.setup = setup_modinfo_##field,					\
++	.test = modinfo_##field##_exists,				\
++	.free = free_modinfo_##field,					\
+ };
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#143: FILE: kernel/module.c:487:
++#define MODINFO_ATTR(field)						\
++static void setup_modinfo_##field(struct module *mod, const char *s)	\
++{									\
++	mod->field = kstrdup(s, GFP_KERNEL);				\
++}									\
++static ssize_t show_modinfo_##field(struct module_attribute *mattr,	\
++				    struct module *mod, char *buffer)	\
++{									\
++	return sprintf(buffer, "%s\n", mod->field);			\
++}									\
++static int modinfo_##field##_exists(struct module *mod)			\
++{									\
++	return mod->field != NULL;					\
++}									\
++static void free_modinfo_##field(struct module *mod)			\
++{									\
++	kfree(mod->field);						\
++	mod->field = NULL;						\
++}									\
++static struct module_attribute modinfo_##field = {			\
++	.attr = { .name = __stringify(field), .mode = 0444 },		\
++	.show = show_modinfo_##field,					\
++	.setup = setup_modinfo_##field,					\
++	.test = modinfo_##field##_exists,				\
++	.free = free_modinfo_##field,					\
+ };
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "mod->field"
+#155: FILE: kernel/module.c:499:
++	return mod->field != NULL;					\
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#238: FILE: kernel/module.c:751:
++		 * waiter --RR */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#248: FILE: kernel/module.c:805:
++	 * between this and the old multi-field proc format. */
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#352: FILE: kernel/module.c:1633:
++		typeof (sym[i].st_shndx) index = sym[i].st_shndx;
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#353: FILE: kernel/module.c:1634:
++		typeof (sym[i].st_shndx) index = sym[i].st_shndx;
++		switch (index) {
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#483: FILE: kernel/module.c:2477:
++	info->strmap =
++		kzalloc(BITS_TO_LONGS(info->sechdrs[info->index.str].sh_size)
++			* sizeof(long), GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'load_module', this function's name, in a string
+#495: FILE: kernel/module.c:2539:
++	pr_debug("load_module: umod=%p, len=%lu, uargs=%p\n", umod, len, uargs);
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#506: FILE: kernel/module.c:2700:
++		 * Try to protect us from buggy refcounters. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#516: FILE: kernel/module.c:2725:
++	 * is done */
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#525: FILE: kernel/module.c:2787:
+ 		    && *(mod->strtab + mod->symtab[i].st_name) != '\0'
++		    && !is_arm_mapping_symbol(mod->strtab +
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#532: FILE: kernel/module.c:2793:
+ 		    && *(mod->strtab + mod->symtab[i].st_name) != '\0'
++		    && !is_arm_mapping_symbol(mod->strtab +
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "colon"
+#543: FILE: kernel/module.c:2932:
++	if (colon != NULL) {
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "mod"
+#547: FILE: kernel/module.c:2935:
++		if (mod != NULL)
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000361168.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 9 warnings, 7 checks, 489 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000361168.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

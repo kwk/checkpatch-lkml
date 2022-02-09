@@ -1,0 +1,226 @@
+CHECK:BRACES: Unbalanced braces around else statement
+#74: FILE: drivers/s390/scsi/zfcp_erp.c:105:
++	else {
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#194: FILE: drivers/s390/scsi/zfcp_qdio.c:248:
++	ret = wait_event_interruptible_lock_irq_timeout(qdio->req_q_wq,
++		       zfcp_qdio_sbal_check(qdio), qdio->req_q_lock, 5 * HZ);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#214: FILE: drivers/s390/scsi/zfcp_sysfs.c:30:
++#define ZFCP_DEFINE_ATTR_CONST(_feat, _name, _format, _value)		       \
++static ssize_t zfcp_sysfs_##_feat##_##_name##_show(struct device *dev,	       \
++						   struct device_attribute *at,\
++						   char *buf)		       \
++{									       \
++	return sprintf(buf, _format, _value);				       \
++}									       \
++static ZFCP_DEV_ATTR(_feat, _name, S_IRUGO,				       \
++		     zfcp_sysfs_##_feat##_##_name##_show, NULL);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#221: FILE: drivers/s390/scsi/zfcp_sysfs.c:37:
++static ZFCP_DEV_ATTR(_feat, _name, S_IRUGO,				       \
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'wq' - possible side-effects?
+#297: FILE: include/linux/wait.h:814:
++#define __wait_event_interruptible_lock_irq_timeout(wq, condition,	\
++						    lock, ret)		\
++do {									\
++	DEFINE_WAIT(__wait);						\
++									\
++	for (;;) {							\
++		prepare_to_wait(&wq, &__wait, TASK_INTERRUPTIBLE);	\
++		if (condition)						\
++			break;						\
++		if (signal_pending(current)) {				\
++			ret = -ERESTARTSYS;				\
++			break;						\
++		}							\
++		spin_unlock_irq(&lock);					\
++		ret = schedule_timeout(ret);				\
++		spin_lock_irq(&lock);					\
++		if (!ret)						\
++			break;						\
++	}								\
++	finish_wait(&wq, &__wait);					\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'wq' may be better as '(wq)' to avoid precedence issues
+#297: FILE: include/linux/wait.h:814:
++#define __wait_event_interruptible_lock_irq_timeout(wq, condition,	\
++						    lock, ret)		\
++do {									\
++	DEFINE_WAIT(__wait);						\
++									\
++	for (;;) {							\
++		prepare_to_wait(&wq, &__wait, TASK_INTERRUPTIBLE);	\
++		if (condition)						\
++			break;						\
++		if (signal_pending(current)) {				\
++			ret = -ERESTARTSYS;				\
++			break;						\
++		}							\
++		spin_unlock_irq(&lock);					\
++		ret = schedule_timeout(ret);				\
++		spin_lock_irq(&lock);					\
++		if (!ret)						\
++			break;						\
++	}								\
++	finish_wait(&wq, &__wait);					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'lock' - possible side-effects?
+#297: FILE: include/linux/wait.h:814:
++#define __wait_event_interruptible_lock_irq_timeout(wq, condition,	\
++						    lock, ret)		\
++do {									\
++	DEFINE_WAIT(__wait);						\
++									\
++	for (;;) {							\
++		prepare_to_wait(&wq, &__wait, TASK_INTERRUPTIBLE);	\
++		if (condition)						\
++			break;						\
++		if (signal_pending(current)) {				\
++			ret = -ERESTARTSYS;				\
++			break;						\
++		}							\
++		spin_unlock_irq(&lock);					\
++		ret = schedule_timeout(ret);				\
++		spin_lock_irq(&lock);					\
++		if (!ret)						\
++			break;						\
++	}								\
++	finish_wait(&wq, &__wait);					\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'lock' may be better as '(lock)' to avoid precedence issues
+#297: FILE: include/linux/wait.h:814:
++#define __wait_event_interruptible_lock_irq_timeout(wq, condition,	\
++						    lock, ret)		\
++do {									\
++	DEFINE_WAIT(__wait);						\
++									\
++	for (;;) {							\
++		prepare_to_wait(&wq, &__wait, TASK_INTERRUPTIBLE);	\
++		if (condition)						\
++			break;						\
++		if (signal_pending(current)) {				\
++			ret = -ERESTARTSYS;				\
++			break;						\
++		}							\
++		spin_unlock_irq(&lock);					\
++		ret = schedule_timeout(ret);				\
++		spin_lock_irq(&lock);					\
++		if (!ret)						\
++			break;						\
++	}								\
++	finish_wait(&wq, &__wait);					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ret' - possible side-effects?
+#297: FILE: include/linux/wait.h:814:
++#define __wait_event_interruptible_lock_irq_timeout(wq, condition,	\
++						    lock, ret)		\
++do {									\
++	DEFINE_WAIT(__wait);						\
++									\
++	for (;;) {							\
++		prepare_to_wait(&wq, &__wait, TASK_INTERRUPTIBLE);	\
++		if (condition)						\
++			break;						\
++		if (signal_pending(current)) {				\
++			ret = -ERESTARTSYS;				\
++			break;						\
++		}							\
++		spin_unlock_irq(&lock);					\
++		ret = schedule_timeout(ret);				\
++		spin_lock_irq(&lock);					\
++		if (!ret)						\
++			break;						\
++	}								\
++	finish_wait(&wq, &__wait);					\
++} while (0)
+
+WARNING:LONG_LINE_COMMENT: line length of 102 exceeds 100 columns
+#320: FILE: include/linux/wait.h:837:
++ * wait_event_interruptible_lock_irq_timeout - sleep until a condition gets true or a timeout elapses.
+
+A comment starts before but extends beyond the maximum line length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'condition' - possible side-effects?
+#343: FILE: include/linux/wait.h:860:
++#define wait_event_interruptible_lock_irq_timeout(wq, condition, lock,	\
++						  timeout)		\
++({									\
++	int __ret = timeout;						\
++									\
++	if (!(condition))						\
++		__wait_event_interruptible_lock_irq_timeout(		\
++					wq, condition, lock, __ret);	\
++	__ret;								\
++})
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000325076.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 3 warnings, 8 checks, 253 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000325076.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

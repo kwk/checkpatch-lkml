@@ -1,0 +1,703 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#35: 
+Add code to implement the core functions to establish a SMB Direct connection.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#61: FILE: fs/cifs/Kconfig:194:
++config CIFS_SMB_DIRECT
++	bool "SMB Direct support (Experimental)"
++	depends on CIFS && INFINIBAND
++	help
++	  Enables SMB Direct experimental support for SMB 3.0, 3.02 and 3.1.1.
++	  SMB Direct allows transferring SMB packets over RDMA.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#93: FILE: fs/cifs/smbdirect.c:20:
++static struct smbd_response *get_empty_queue_buffer(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#95: FILE: fs/cifs/smbdirect.c:22:
++static struct smbd_response *get_receive_buffer(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#97: FILE: fs/cifs/smbdirect.c:24:
++static void put_receive_buffer(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#104: FILE: fs/cifs/smbdirect.c:31:
++static void put_empty_packet(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#106: FILE: fs/cifs/smbdirect.c:33:
++static void enqueue_reassembly(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#109: FILE: fs/cifs/smbdirect.c:36:
++static struct smbd_response *_get_first_reassembly(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#112: FILE: fs/cifs/smbdirect.c:39:
++static int smbd_post_recv(
+
+ERROR:INITIALISED_STATIC: do not initialise statics to 0
+#140: FILE: fs/cifs/smbdirect.c:121:
++static unsigned int smbd_logging_class = 0;
+
+Static variables should not be initialized explicitly to zero.
+Your compiler (or rather your loader) automatically does
+it for you.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#143: FILE: fs/cifs/smbdirect.c:124:
++MODULE_PARM_DESC(smbd_logging_class,
++	"Logging class for SMBD transport 0x0 to 0x100");
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#150: FILE: fs/cifs/smbdirect.c:131:
++MODULE_PARM_DESC(smbd_logging_level,
++	"Logging level for SMBD transport, 0 (default): error, 1: info");
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'level' may be better as '(level)' to avoid precedence issues
+#152: FILE: fs/cifs/smbdirect.c:133:
++#define log_rdma(level, class, fmt, args...)				\
++do {									\
++	if (level <= smbd_logging_level || class & smbd_logging_class)	\
++		cifs_dbg(VFS, "%s:%d " fmt, __func__, __LINE__, ##args);\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'class' may be better as '(class)' to avoid precedence issues
+#152: FILE: fs/cifs/smbdirect.c:133:
++#define log_rdma(level, class, fmt, args...)				\
++do {									\
++	if (level <= smbd_logging_level || class & smbd_logging_class)	\
++		cifs_dbg(VFS, "%s:%d " fmt, __func__, __LINE__, ##args);\
++} while (0)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#204: FILE: fs/cifs/smbdirect.c:185:
++	wait_event(info->wait_send_pending,
++		atomic_read(&info->send_pending) == 0);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#206: FILE: fs/cifs/smbdirect.c:187:
++	wait_event(info->wait_send_payload_pending,
++		atomic_read(&info->send_payload_pending) == 0);
+
+WARNING:TYPO_SPELLING: 'posssible' may be misspelled - perhaps 'possible'?
+#208: FILE: fs/cifs/smbdirect.c:189:
++	/* It's not posssible for upper layer to get to reassembly */
+ 	            ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#215: FILE: fs/cifs/smbdirect.c:196:
++			spin_unlock_irqrestore(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#225: FILE: fs/cifs/smbdirect.c:206:
++	wait_event(info->wait_receive_queues,
++		info->count_receive_queue + info->count_empty_packet_queue
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#269: FILE: fs/cifs/smbdirect.c:250:
++static int smbd_conn_upcall(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#275: FILE: fs/cifs/smbdirect.c:256:
++	log_rdma_event(INFO, "event=%d status=%d\n",
++		event->event, event->status);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#335: FILE: fs/cifs/smbdirect.c:316:
++	log_rdma_event(ERR, "%s on device %s info %p\n",
++		ib_event_msg(event->event), event->device->name, info);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#365: FILE: fs/cifs/smbdirect.c:346:
++	log_rdma_send(INFO, "smbd_request %p completed wc->status=%d\n",
++		request, wc->status);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#369: FILE: fs/cifs/smbdirect.c:350:
++		log_rdma_send(ERR, "wc->status=%d wc->opcode=%d\n",
++			wc->status, wc->opcode);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#375: FILE: fs/cifs/smbdirect.c:356:
++		ib_dma_unmap_single(request->info->id->device,
++			request->sge[i].addr,
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#393: FILE: fs/cifs/smbdirect.c:374:
++	log_rdma_event(INFO, "resp message min_version %u max_version %u "
++		"negotiated_version %u credits_requested %u "
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#394: FILE: fs/cifs/smbdirect.c:375:
++		"negotiated_version %u credits_requested %u "
++		"credits_granted %u status %u max_readwrite_size %u "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#395: FILE: fs/cifs/smbdirect.c:376:
++		"credits_granted %u status %u max_readwrite_size %u "
++		"preferred_send_size %u max_receive_size %u "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#396: FILE: fs/cifs/smbdirect.c:377:
++		"preferred_send_size %u max_receive_size %u "
++		"max_fragmented_size %u\n",
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#408: FILE: fs/cifs/smbdirect.c:389:
++static bool process_negotiation_response(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#416: FILE: fs/cifs/smbdirect.c:397:
++		log_rdma_event(ERR,
++			"error: packet_length=%d\n", packet_length);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#422: FILE: fs/cifs/smbdirect.c:403:
++		log_rdma_event(ERR, "error: negotiated_version=%x\n",
++			le16_to_cpu(packet->negotiated_version));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#443: FILE: fs/cifs/smbdirect.c:424:
++		log_rdma_event(ERR, "error: preferred_send_size=%d\n",
++			le32_to_cpu(packet->preferred_send_size));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#450: FILE: fs/cifs/smbdirect.c:431:
++		log_rdma_event(ERR, "error: max_receive_size=%d\n",
++			le32_to_cpu(packet->max_receive_size));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#454: FILE: fs/cifs/smbdirect.c:435:
++	info->max_send_size = min_t(int, info->max_send_size,
++					le32_to_cpu(packet->max_receive_size));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#459: FILE: fs/cifs/smbdirect.c:440:
++		log_rdma_event(ERR, "error: max_fragmented_size=%d\n",
++			le32_to_cpu(packet->max_fragmented_size));
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#485: FILE: fs/cifs/smbdirect.c:466:
++		queue_delayed_work(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#497: FILE: fs/cifs/smbdirect.c:478:
++		container_of(work, struct smbd_connection,
++			post_send_credits_work);
+
+WARNING:TYPO_SPELLING: 'emtpy' may be misspelled - perhaps 'empty'?
+#512: FILE: fs/cifs/smbdirect.c:493:
++				/* now switch to emtpy packet queue */
+ 				                 ^^^^^
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#513: FILE: fs/cifs/smbdirect.c:494:
++				if (use_receive_queue) {
+[...]
++				} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#516: FILE: fs/cifs/smbdirect.c:497:
++				} else
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#525: FILE: fs/cifs/smbdirect.c:506:
++				log_rdma_recv(ERR,
++					"post_recv failed rc=%d\n", rc);
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#573: FILE: fs/cifs/smbdirect.c:554:
++	log_rdma_recv(INFO, "response=%p type=%d wc status=%d wc opcode %d "
++		      "byte_len=%d pkey_index=%x\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#579: FILE: fs/cifs/smbdirect.c:560:
++		log_rdma_recv(INFO, "wc->status=%d opcode=%d\n",
++			wc->status, wc->opcode);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#584: FILE: fs/cifs/smbdirect.c:565:
++	ib_dma_sync_single_for_cpu(
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#609: FILE: fs/cifs/smbdirect.c:590:
++		if (data_length) {
+[...]
++		} else
+[...]
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#618: FILE: fs/cifs/smbdirect.c:599:
++			enqueue_reassembly(
+
+CHECK:BRACES: Unbalanced braces around else statement
+#622: FILE: fs/cifs/smbdirect.c:603:
++		} else
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#632: FILE: fs/cifs/smbdirect.c:613:
++		atomic_add(le16_to_cpu(data_transfer->credits_granted),
++			&info->send_credits);
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#635: FILE: fs/cifs/smbdirect.c:616:
++		log_incoming(INFO, "data flags %d data_offset %d "
++			"data_length %d remaining_data_length %d\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#653: FILE: fs/cifs/smbdirect.c:634:
++		log_rdma_recv(ERR,
++			"unexpected response type=%d\n", response->type);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#660: FILE: fs/cifs/smbdirect.c:641:
++static struct rdma_cm_id *smbd_create_id(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#669: FILE: fs/cifs/smbdirect.c:650:
++	id = rdma_create_id(&init_net, smbd_conn_upcall, info,
++		RDMA_PS_TCP, IB_QPT_RC);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#687: FILE: fs/cifs/smbdirect.c:668:
++	rc = rdma_resolve_addr(id, NULL, (struct sockaddr *)dstaddr,
++		RDMA_RESOLVE_TIMEOUT);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#692: FILE: fs/cifs/smbdirect.c:673:
++	wait_for_completion_interruptible_timeout(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#706: FILE: fs/cifs/smbdirect.c:687:
++	wait_for_completion_interruptible_timeout(
+
+WARNING:TYPO_SPELLING: 'requries' may be misspelled - perhaps 'requires'?
+#723: FILE: fs/cifs/smbdirect.c:704:
++ * This implementation requries FRWR on RDMA read/write
+                        ^^^^^^^^
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#735: FILE: fs/cifs/smbdirect.c:716:
++static int smbd_ia_open(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#749: FILE: fs/cifs/smbdirect.c:730:
++		log_rdma_event(ERR,
++			"Fast Registration Work Requests "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#750: FILE: fs/cifs/smbdirect.c:731:
++			"Fast Registration Work Requests "
++			"(FRWR) is not supported\n");
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#752: FILE: fs/cifs/smbdirect.c:733:
++		log_rdma_event(ERR,
++			"Device capability flags = %llx "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#753: FILE: fs/cifs/smbdirect.c:734:
++			"Device capability flags = %llx "
++			"max_fast_reg_page_list_len = %u\n",
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#807: FILE: fs/cifs/smbdirect.c:788:
++	request->sge[0].addr = ib_dma_map_single(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#818: FILE: fs/cifs/smbdirect.c:799:
++	ib_dma_sync_single_for_device(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#832: FILE: fs/cifs/smbdirect.c:813:
++	log_rdma_send(INFO, "sge addr=%llx length=%x lkey=%x\n",
++		request->sge[0].addr,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#845: FILE: fs/cifs/smbdirect.c:826:
++	ib_dma_unmap_single(info->id->device, request->sge[0].addr,
++		request->sge[0].length, DMA_TO_DEVICE);
+
+WARNING:TYPO_SPELLING: 'avaialbe' may be misspelled - perhaps 'available'?
+#892: FILE: fs/cifs/smbdirect.c:873:
++ * This function waits for avaialbe send credits and build a SMBD packet
+                            ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'intput' may be misspelled - perhaps 'input'?
+#895: FILE: fs/cifs/smbdirect.c:876:
++ * intput values
+    ^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#904: FILE: fs/cifs/smbdirect.c:885:
++static int smbd_create_header(struct smbd_connection *info,
++		int size, int remaining_data_length,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#914: FILE: fs/cifs/smbdirect.c:895:
++	rc = wait_event_interruptible(info->wait_send_queue,
++		atomic_read(&info->send_credits) > 0 ||
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#954: FILE: fs/cifs/smbdirect.c:935:
++	log_outgoing(INFO, "credits_requested=%d credits_granted=%d "
++		"data_offset=%d data_length=%d remaining_data_length=%d\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#990: FILE: fs/cifs/smbdirect.c:971:
++static void smbd_destroy_header(struct smbd_connection *info,
++		struct smbd_request *request)
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#992: FILE: fs/cifs/smbdirect.c:973:
++{
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1003: FILE: fs/cifs/smbdirect.c:984:
++static int smbd_post_send(struct smbd_connection *info,
++		struct smbd_request *request, bool has_payload)
+
+WARNING:TYPO_SPELLING: 'legnth' may be misspelled - perhaps 'length'?
+#1010: FILE: fs/cifs/smbdirect.c:991:
++			"rdma_request sge[%d] addr=%llu legnth=%u\n",
+ 			                                ^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1010: FILE: fs/cifs/smbdirect.c:991:
++		log_rdma_send(INFO,
++			"rdma_request sge[%d] addr=%llu legnth=%u\n",
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1012: FILE: fs/cifs/smbdirect.c:993:
++		ib_dma_sync_single_for_device(
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1046: FILE: fs/cifs/smbdirect.c:1027:
++	} else
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1049: FILE: fs/cifs/smbdirect.c:1030:
++		mod_delayed_work(info->workqueue, &info->idle_timer_work,
++			info->keep_alive_interval*HZ);
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1049: FILE: fs/cifs/smbdirect.c:1030:
++			info->keep_alive_interval*HZ);
+ 			                         ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1055: FILE: fs/cifs/smbdirect.c:1036:
++static int smbd_post_send_sgl(struct smbd_connection *info,
++	struct scatterlist *sgl, int data_length, int remaining_data_length)
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1062: FILE: fs/cifs/smbdirect.c:1043:
++	rc = smbd_create_header(
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1069: FILE: fs/cifs/smbdirect.c:1050:
++		request->sge[i+1].addr =
+ 		              ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1071: FILE: fs/cifs/smbdirect.c:1052:
++			ib_dma_map_page(info->id->device, sg_page(sg),
++			       sg->offset, sg->length, DMA_BIDIRECTIONAL);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1072: FILE: fs/cifs/smbdirect.c:1053:
++		if (ib_dma_mapping_error(
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1073: FILE: fs/cifs/smbdirect.c:1054:
++				info->id->device, request->sge[i+1].addr)) {
+ 				                                ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1075: FILE: fs/cifs/smbdirect.c:1056:
++			request->sge[i+1].addr = 0;
+ 			              ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1078: FILE: fs/cifs/smbdirect.c:1059:
++		request->sge[i+1].length = sg->length;
+ 		              ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1079: FILE: fs/cifs/smbdirect.c:1060:
++		request->sge[i+1].lkey = info->pd->local_dma_lkey;
+ 		              ^
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1114: FILE: fs/cifs/smbdirect.c:1095:
++static int smbd_post_recv(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1120: FILE: fs/cifs/smbdirect.c:1101:
++	response->sge.addr = ib_dma_map_single(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1156: FILE: fs/cifs/smbdirect.c:1137:
++	log_rdma_event(INFO,
++		"smbd_post_recv rc=%d iov.addr=%llx iov.length=%x "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1157: FILE: fs/cifs/smbdirect.c:1138:
++		"smbd_post_recv rc=%d iov.addr=%llx iov.length=%x "
++		"iov.lkey=%x\n",
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1169: FILE: fs/cifs/smbdirect.c:1150:
++	rc = wait_for_completion_interruptible_timeout(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1186: FILE: fs/cifs/smbdirect.c:1167:
++static void put_empty_packet(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1207: FILE: fs/cifs/smbdirect.c:1188:
++static void enqueue_reassembly(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1238: FILE: fs/cifs/smbdirect.c:1219:
++		ret = list_first_entry(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1245: FILE: fs/cifs/smbdirect.c:1226:
++static struct smbd_response *get_empty_queue_buffer(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1253: FILE: fs/cifs/smbdirect.c:1234:
++		ret = list_first_entry(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1277: FILE: fs/cifs/smbdirect.c:1258:
++		ret = list_first_entry(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1295: FILE: fs/cifs/smbdirect.c:1276:
++static void put_receive_buffer(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1302: FILE: fs/cifs/smbdirect.c:1283:
++	ib_dma_unmap_single(info->id->device, response->sge.addr,
++		response->sge.length, DMA_FROM_DEVICE);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1350: FILE: fs/cifs/smbdirect.c:1331:
++		response = list_first_entry(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1380: FILE: fs/cifs/smbdirect.c:1361:
++	struct smbd_connection *info = container_of(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1394: FILE: fs/cifs/smbdirect.c:1375:
++	struct smbd_connection *info = container_of(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1400: FILE: fs/cifs/smbdirect.c:1381:
++		log_keep_alive(ERR,
++			"error status info->keep_alive_requested=%d\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1411: FILE: fs/cifs/smbdirect.c:1392:
++	queue_delayed_work(info->workqueue, &info->idle_timer_work,
++			info->keep_alive_interval*HZ);
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1411: FILE: fs/cifs/smbdirect.c:1392:
++			info->keep_alive_interval*HZ);
+ 			                         ^
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1432: FILE: fs/cifs/smbdirect.c:1413:
++		kmem_cache_create(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1442: FILE: fs/cifs/smbdirect.c:1423:
++		mempool_create(info->send_credit_target, mempool_alloc_slab,
++			mempool_free_slab, info->request_cache);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1448: FILE: fs/cifs/smbdirect.c:1429:
++		kmem_cache_create(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1458: FILE: fs/cifs/smbdirect.c:1439:
++		mempool_create(info->receive_credit_max, mempool_alloc_slab,
++		       mempool_free_slab, info->response_cache);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1489: FILE: fs/cifs/smbdirect.c:1470:
++struct smbd_connection *_smbd_get_connection(
+
+CHECK:SPACING: No space is necessary after a cast
+#1496: FILE: fs/cifs/smbdirect.c:1477:
++	struct sockaddr_in *addr_in = (struct sockaddr_in *) dstaddr;
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*info)...) over kzalloc(sizeof(struct smbd_connection)...)
+#1498: FILE: fs/cifs/smbdirect.c:1479:
++	info = kzalloc(sizeof(struct smbd_connection), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1512: FILE: fs/cifs/smbdirect.c:1493:
++		log_rdma_event(ERR,
++			"consider lowering send_credit_target = %d. "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1513: FILE: fs/cifs/smbdirect.c:1494:
++			"consider lowering send_credit_target = %d. "
++			"Possible CQE overrun, device "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1514: FILE: fs/cifs/smbdirect.c:1495:
++			"Possible CQE overrun, device "
++			"reporting max_cpe %d max_qp_wr %d\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1524: FILE: fs/cifs/smbdirect.c:1505:
++		log_rdma_event(ERR,
++			"consider lowering receive_credit_max = %d. "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1525: FILE: fs/cifs/smbdirect.c:1506:
++			"consider lowering receive_credit_max = %d. "
++			"Possible CQE overrun, device "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1526: FILE: fs/cifs/smbdirect.c:1507:
++			"Possible CQE overrun, device "
++			"reporting max_cpe %d max_qp_wr %d\n",
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#1540: FILE: fs/cifs/smbdirect.c:1521:
++	if (SMBDIRECT_MAX_SGE > info->id->device->attrs.max_sge) {
+
+Comparisons with a constant or upper case identifier on the left
+side of the test should be avoided.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1542: FILE: fs/cifs/smbdirect.c:1523:
++		log_rdma_event(ERR, "warning: device max_sge = %d too small\n",
++			info->id->device->attrs.max_sge);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1549: FILE: fs/cifs/smbdirect.c:1530:
++	info->send_cq = ib_alloc_cq(info->id->device, info,
++			info->send_credit_target, 0, IB_POLL_SOFTIRQ);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1556: FILE: fs/cifs/smbdirect.c:1537:
++	info->recv_cq = ib_alloc_cq(info->id->device, info,
++			info->receive_credit_max, 0, IB_POLL_SOFTIRQ);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1591: FILE: fs/cifs/smbdirect.c:1572:
++	log_rdma_event(INFO, "connecting to IP %pI4 port %d\n",
++		&addr_in->sin_addr, port);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1600: FILE: fs/cifs/smbdirect.c:1581:
++	wait_event_interruptible(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1622: FILE: fs/cifs/smbdirect.c:1603:
++	queue_delayed_work(info->workqueue, &info->idle_timer_work,
++		info->keep_alive_interval*HZ);
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1622: FILE: fs/cifs/smbdirect.c:1603:
++		info->keep_alive_interval*HZ);
+ 		                         ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1652: FILE: fs/cifs/smbdirect.c:1633:
++	wait_event(info->conn_wait,
++		info->transport_status == SMBD_DISCONNECTED);
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#1733: FILE: fs/cifs/smbdirect.h:71:
++	spinlock_t lock_new_credits_offered;
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#1762: FILE: fs/cifs/smbdirect.h:100:
++	spinlock_t receive_queue_lock;
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#1766: FILE: fs/cifs/smbdirect.h:104:
++	spinlock_t empty_packet_queue_lock;
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#1772: FILE: fs/cifs/smbdirect.h:110:
++	spinlock_t reassembly_queue_lock;
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1906: FILE: fs/cifs/smbdirect.h:244:
++struct smbd_connection *smbd_get_connection(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1944: FILE: fs/cifs/smbdirect.h:282:
++struct smbd_mr *smbd_register_mr(
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000082116.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 1 errors, 23 warnings, 112 checks, 1875 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000082116.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

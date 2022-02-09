@@ -1,0 +1,186 @@
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#57: FILE: arch/sparc/include/asm/tsb.h:82:
++#define	IF_TLB_TYPE_NOT_HYPE(TMP, NOT_HYPE_LABEL)	\
++	sethi	%hi(tlb_type), TMP;			\
++	lduw	[TMP + %lo(tlb_type)], TMP;		\
++	cmp	TMP, 3;					\
++	bne,pn	%icc, NOT_HYPE_LABEL;			\
++	nop
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'TMP' - possible side-effects?
+#57: FILE: arch/sparc/include/asm/tsb.h:82:
++#define	IF_TLB_TYPE_NOT_HYPE(TMP, NOT_HYPE_LABEL)	\
++	sethi	%hi(tlb_type), TMP;			\
++	lduw	[TMP + %lo(tlb_type)], TMP;		\
++	cmp	TMP, 3;					\
++	bne,pn	%icc, NOT_HYPE_LABEL;			\
++	nop
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:WxV)
+#58: FILE: arch/sparc/include/asm/tsb.h:83:
++	sethi	%hi(tlb_type), TMP;			\
+ 	     	^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#59: FILE: arch/sparc/include/asm/tsb.h:84:
++	lduw	[TMP + %lo(tlb_type)], TMP;		\
+
+Whitespace before opening bracket '[' is prohibited.
+There are some exceptions:
+
+1. With a type on the left::
+
+    int [] a;
+
+2. At the beginning of a line for slice initialisers::
+
+    [0...10] = 5,
+
+3. Inside a curly brace::
+
+    = { [0...10] = 5 }
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:WxV)
+#59: FILE: arch/sparc/include/asm/tsb.h:84:
++	lduw	[TMP + %lo(tlb_type)], TMP;		\
+ 	    	       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#61: FILE: arch/sparc/include/asm/tsb.h:86:
++	bne,pn	%icc, NOT_HYPE_LABEL;			\
+ 	   ^
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:WxV)
+#61: FILE: arch/sparc/include/asm/tsb.h:86:
++	bne,pn	%icc, NOT_HYPE_LABEL;			\
+ 	      	^
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#68: FILE: arch/sparc/include/asm/tsb.h:93:
++#define	COMPUTE_TAG_TARGET(DEST, VADDR, CTX, ZERO_CTX_LABEL) \
++	srlx	VADDR, 22, DEST; \
++	brz,pn	CTX, ZERO_CTX_LABEL; \
++	 nop;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#68: FILE: arch/sparc/include/asm/tsb.h:93:
++#define	COMPUTE_TAG_TARGET(DEST, VADDR, CTX, ZERO_CTX_LABEL) \
++	srlx	VADDR, 22, DEST; \
++	brz,pn	CTX, ZERO_CTX_LABEL; \
++	 nop;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#70: FILE: arch/sparc/include/asm/tsb.h:95:
++	brz,pn	CTX, ZERO_CTX_LABEL; \
+ 	   ^
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#80: FILE: arch/sparc/include/asm/tsb.h:105:
++#define COMPUTE_TSB_PTR(TSB_PTR, VADDR, HASH_SHIFT, TMP1, TMP2) \
++	and	TSB_PTR, 0x7, TMP1;			\
++	mov	512, TMP2;				\
++	andn	TSB_PTR, 0x7, TSB_PTR;			\
++	sllx	TMP2, TMP1, TMP2;			\
++	srlx	VADDR, HASH_SHIFT, TMP1;		\
++	sub	TMP2, 1, TMP2;				\
++	and	TMP1, TMP2, TMP1;			\
++	sllx	TMP1, 4, TMP1;				\
++	add	TSB_PTR, TMP1, TSB_PTR;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'TSB_PTR' - possible side-effects?
+#80: FILE: arch/sparc/include/asm/tsb.h:105:
++#define COMPUTE_TSB_PTR(TSB_PTR, VADDR, HASH_SHIFT, TMP1, TMP2) \
++	and	TSB_PTR, 0x7, TMP1;			\
++	mov	512, TMP2;				\
++	andn	TSB_PTR, 0x7, TSB_PTR;			\
++	sllx	TMP2, TMP1, TMP2;			\
++	srlx	VADDR, HASH_SHIFT, TMP1;		\
++	sub	TMP2, 1, TMP2;				\
++	and	TMP1, TMP2, TMP1;			\
++	sllx	TMP1, 4, TMP1;				\
++	add	TSB_PTR, TMP1, TSB_PTR;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'TMP1' - possible side-effects?
+#80: FILE: arch/sparc/include/asm/tsb.h:105:
++#define COMPUTE_TSB_PTR(TSB_PTR, VADDR, HASH_SHIFT, TMP1, TMP2) \
++	and	TSB_PTR, 0x7, TMP1;			\
++	mov	512, TMP2;				\
++	andn	TSB_PTR, 0x7, TSB_PTR;			\
++	sllx	TMP2, TMP1, TMP2;			\
++	srlx	VADDR, HASH_SHIFT, TMP1;		\
++	sub	TMP2, 1, TMP2;				\
++	and	TMP1, TMP2, TMP1;			\
++	sllx	TMP1, 4, TMP1;				\
++	add	TSB_PTR, TMP1, TSB_PTR;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'TMP2' - possible side-effects?
+#80: FILE: arch/sparc/include/asm/tsb.h:105:
++#define COMPUTE_TSB_PTR(TSB_PTR, VADDR, HASH_SHIFT, TMP1, TMP2) \
++	and	TSB_PTR, 0x7, TMP1;			\
++	mov	512, TMP2;				\
++	andn	TSB_PTR, 0x7, TSB_PTR;			\
++	sllx	TMP2, TMP1, TMP2;			\
++	srlx	VADDR, HASH_SHIFT, TMP1;		\
++	sub	TMP2, 1, TMP2;				\
++	and	TMP1, TMP2, TMP1;			\
++	sllx	TMP1, 4, TMP1;				\
++	add	TSB_PTR, TMP1, TSB_PTR;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#80: FILE: arch/sparc/include/asm/tsb.h:105:
++#define COMPUTE_TSB_PTR(TSB_PTR, VADDR, HASH_SHIFT, TMP1, TMP2) \
++	and	TSB_PTR, 0x7, TMP1;			\
++	mov	512, TMP2;				\
++	andn	TSB_PTR, 0x7, TSB_PTR;			\
++	sllx	TMP2, TMP1, TMP2;			\
++	srlx	VADDR, HASH_SHIFT, TMP1;		\
++	sub	TMP2, 1, TMP2;				\
++	and	TMP1, TMP2, TMP1;			\
++	sllx	TMP1, 4, TMP1;				\
++	add	TSB_PTR, TMP1, TSB_PTR;
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000304851.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 6 errors, 2 warnings, 7 checks, 85 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000304851.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

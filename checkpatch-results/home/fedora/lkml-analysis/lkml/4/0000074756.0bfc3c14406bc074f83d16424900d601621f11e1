@@ -1,0 +1,134 @@
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#183: FILE: arch/powerpc/include/asm/ppc_asm.h:31:
++#define ACCOUNT_CPU_USER_ENTRY(ptr, ra, rb)				\
+ 	MFTB(ra);			/* get timebase */		\
++	PPC_LL	rb, ACCOUNT_STARTTIME_USER(ptr);			\
++	PPC_STL	ra, ACCOUNT_STARTTIME(ptr);				\
+ 	subf	rb,rb,ra;		/* subtract start value */	\
++	PPC_LL	ra, ACCOUNT_USER_TIME(ptr);				\
+ 	add	ra,ra,rb;		/* add on to user time */	\
++	PPC_STL	ra, ACCOUNT_USER_TIME(ptr);				\
+ 
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#183: FILE: arch/powerpc/include/asm/ppc_asm.h:31:
++#define ACCOUNT_CPU_USER_ENTRY(ptr, ra, rb)				\
+ 	MFTB(ra);			/* get timebase */		\
++	PPC_LL	rb, ACCOUNT_STARTTIME_USER(ptr);			\
++	PPC_STL	ra, ACCOUNT_STARTTIME(ptr);				\
+ 	subf	rb,rb,ra;		/* subtract start value */	\
++	PPC_LL	ra, ACCOUNT_USER_TIME(ptr);				\
+ 	add	ra,ra,rb;		/* add on to user time */	\
++	PPC_STL	ra, ACCOUNT_USER_TIME(ptr);				\
+ 
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ra' - possible side-effects?
+#183: FILE: arch/powerpc/include/asm/ppc_asm.h:31:
++#define ACCOUNT_CPU_USER_ENTRY(ptr, ra, rb)				\
+ 	MFTB(ra);			/* get timebase */		\
++	PPC_LL	rb, ACCOUNT_STARTTIME_USER(ptr);			\
++	PPC_STL	ra, ACCOUNT_STARTTIME(ptr);				\
+ 	subf	rb,rb,ra;		/* subtract start value */	\
++	PPC_LL	ra, ACCOUNT_USER_TIME(ptr);				\
+ 	add	ra,ra,rb;		/* add on to user time */	\
++	PPC_STL	ra, ACCOUNT_USER_TIME(ptr);				\
+ 
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'rb' - possible side-effects?
+#183: FILE: arch/powerpc/include/asm/ppc_asm.h:31:
++#define ACCOUNT_CPU_USER_ENTRY(ptr, ra, rb)				\
+ 	MFTB(ra);			/* get timebase */		\
++	PPC_LL	rb, ACCOUNT_STARTTIME_USER(ptr);			\
++	PPC_STL	ra, ACCOUNT_STARTTIME(ptr);				\
+ 	subf	rb,rb,ra;		/* subtract start value */	\
++	PPC_LL	ra, ACCOUNT_USER_TIME(ptr);				\
+ 	add	ra,ra,rb;		/* add on to user time */	\
++	PPC_STL	ra, ACCOUNT_USER_TIME(ptr);				\
+ 
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#183: FILE: arch/powerpc/include/asm/ppc_asm.h:31:
++#define ACCOUNT_CPU_USER_ENTRY(ptr, ra, rb)				\
+ 	MFTB(ra);			/* get timebase */		\
++	PPC_LL	rb, ACCOUNT_STARTTIME_USER(ptr);			\
++	PPC_STL	ra, ACCOUNT_STARTTIME(ptr);				\
+ 	subf	rb,rb,ra;		/* subtract start value */	\
++	PPC_LL	ra, ACCOUNT_USER_TIME(ptr);				\
+ 	add	ra,ra,rb;		/* add on to user time */	\
++	PPC_STL	ra, ACCOUNT_USER_TIME(ptr);				\
+ 
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#197: FILE: arch/powerpc/include/asm/ppc_asm.h:40:
++#define ACCOUNT_CPU_USER_EXIT(ptr, ra, rb)				\
+ 	MFTB(ra);			/* get timebase */		\
++	PPC_LL	rb, ACCOUNT_STARTTIME(ptr);				\
++	PPC_STL	ra, ACCOUNT_STARTTIME_USER(ptr);			\
+ 	subf	rb,rb,ra;		/* subtract start value */	\
++	PPC_LL	ra, ACCOUNT_SYSTEM_TIME(ptr);				\
+ 	add	ra,ra,rb;		/* add on to system time */	\
++	PPC_STL	ra, ACCOUNT_SYSTEM_TIME(ptr)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ra' - possible side-effects?
+#197: FILE: arch/powerpc/include/asm/ppc_asm.h:40:
++#define ACCOUNT_CPU_USER_EXIT(ptr, ra, rb)				\
+ 	MFTB(ra);			/* get timebase */		\
++	PPC_LL	rb, ACCOUNT_STARTTIME(ptr);				\
++	PPC_STL	ra, ACCOUNT_STARTTIME_USER(ptr);			\
+ 	subf	rb,rb,ra;		/* subtract start value */	\
++	PPC_LL	ra, ACCOUNT_SYSTEM_TIME(ptr);				\
+ 	add	ra,ra,rb;		/* add on to system time */	\
++	PPC_STL	ra, ACCOUNT_SYSTEM_TIME(ptr)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'rb' - possible side-effects?
+#197: FILE: arch/powerpc/include/asm/ppc_asm.h:40:
++#define ACCOUNT_CPU_USER_EXIT(ptr, ra, rb)				\
+ 	MFTB(ra);			/* get timebase */		\
++	PPC_LL	rb, ACCOUNT_STARTTIME(ptr);				\
++	PPC_STL	ra, ACCOUNT_STARTTIME_USER(ptr);			\
+ 	subf	rb,rb,ra;		/* subtract start value */	\
++	PPC_LL	ra, ACCOUNT_SYSTEM_TIME(ptr);				\
+ 	add	ra,ra,rb;		/* add on to system time */	\
++	PPC_STL	ra, ACCOUNT_SYSTEM_TIME(ptr)
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000074756.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 1 errors, 1 warnings, 6 checks, 417 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000074756.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

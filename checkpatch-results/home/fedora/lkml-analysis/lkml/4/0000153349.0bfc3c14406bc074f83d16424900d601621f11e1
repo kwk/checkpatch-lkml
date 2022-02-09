@@ -1,0 +1,50 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_lock' - possible side-effects?
+#55: FILE: include/linux/lockdep.h:449:
++#define LOCK_CONTENDED_RETURN(_lock, try, lock)			\
++({								\
++	int ____err = 0;					\
++	if (!try(_lock)) {					\
++		lock_contended(&(_lock)->dep_map, _RET_IP_);	\
++		____err = lock(_lock);				\
++	}							\
++	if (!____err)						\
++		lock_acquired(&(_lock)->dep_map, _RET_IP_);	\
++	____err;						\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'try' may be better as '(try)' to avoid precedence issues
+#55: FILE: include/linux/lockdep.h:449:
++#define LOCK_CONTENDED_RETURN(_lock, try, lock)			\
++({								\
++	int ____err = 0;					\
++	if (!try(_lock)) {					\
++		lock_contended(&(_lock)->dep_map, _RET_IP_);	\
++		____err = lock(_lock);				\
++	}							\
++	if (!____err)						\
++		lock_acquired(&(_lock)->dep_map, _RET_IP_);	\
++	____err;						\
++})
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#88: FILE: include/linux/rwsem.h:121:
++extern int __must_check down_write_killable(struct rw_semaphore *sem);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#116: FILE: kernel/locking/rwsem.c:74:
++EXPORT_SYMBOL(down_write_killable);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000153349.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 1 warnings, 3 checks, 59 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000153349.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,131 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#26: 
+Commit ee53bbd17257 "tracing: Move the perf code out of trace_event.h" moved
+
+WARNING:UNKNOWN_COMMIT_ID: Unknown commit id 'ee53bbd17257', maybe rebased or not pulled?
+#26: 
+Commit ee53bbd17257 "tracing: Move the perf code out of trace_event.h" moved
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("_ftrace_events") over __attribute__((section("_ftrace_events")))
+#396: FILE: include/trace/trace_events.h:595:
++ * __attribute__((section("_ftrace_events"))) *__event_<call> = &event_<call>;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#402: FILE: include/trace/trace_events.h:601:
++#define _TRACE_PERF_PROTO(call, proto)					\
++	static notrace void						\
++	perf_trace_##call(void *__data, proto);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#427: FILE: include/trace/trace_events.h:626:
++#define __dynamic_array(type, item, len)				\
++	__entry->__data_loc_##item = __data_offsets.item;
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#427: FILE: include/trace/trace_events.h:626:
++#define __dynamic_array(type, item, len)				\
++	__entry->__data_loc_##item = __data_offsets.item;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'src' - possible side-effects?
+#434: FILE: include/trace/trace_events.h:633:
++#define __assign_str(dst, src)						\
++	strcpy(__get_str(dst), (src) ? (const char *)(src) : "(null)");
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#434: FILE: include/trace/trace_events.h:633:
++#define __assign_str(dst, src)						\
++	strcpy(__get_str(dst), (src) ? (const char *)(src) : "(null)");
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#441: FILE: include/trace/trace_events.h:640:
++#define __get_bitmask(field) (char *)__get_dynamic_array(field)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#488: FILE: include/trace/trace_events.h:687:
++}
++/*
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'call' - possible side-effects?
+#522: FILE: include/trace/trace_events.h:721:
++#define DECLARE_EVENT_CLASS(call, proto, args, tstruct, assign, print)	\
++_TRACE_PERF_PROTO(call, PARAMS(proto));					\
++static char print_fmt_##call[] = print;					\
++static struct trace_event_class __used __refdata event_class_##call = { \
++	.system			= TRACE_SYSTEM_STRING,			\
++	.define_fields		= trace_event_define_fields_##call,	\
++	.fields			= LIST_HEAD_INIT(event_class_##call.fields),\
++	.raw_init		= trace_event_raw_init,			\
++	.probe			= trace_event_raw_event_##call,		\
++	.reg			= trace_event_reg,			\
++	_TRACE_PERF_INIT(call)						\
++};
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#522: FILE: include/trace/trace_events.h:721:
++#define DECLARE_EVENT_CLASS(call, proto, args, tstruct, assign, print)	\
++_TRACE_PERF_PROTO(call, PARAMS(proto));					\
++static char print_fmt_##call[] = print;					\
++static struct trace_event_class __used __refdata event_class_##call = { \
++	.system			= TRACE_SYSTEM_STRING,			\
++	.define_fields		= trace_event_define_fields_##call,	\
++	.fields			= LIST_HEAD_INIT(event_class_##call.fields),\
++	.raw_init		= trace_event_raw_init,			\
++	.probe			= trace_event_raw_event_##call,		\
++	.reg			= trace_event_reg,			\
++	_TRACE_PERF_INIT(call)						\
++};
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("_ftrace_events") over __attribute__((section("_ftrace_events")))
+#548: FILE: include/trace/trace_events.h:747:
++__attribute__((section("_ftrace_events"))) *__event_##call = &event_##call
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("_ftrace_events") over __attribute__((section("_ftrace_events")))
+#565: FILE: include/trace/trace_events.h:764:
++__attribute__((section("_ftrace_events"))) *__event_##call = &event_##call
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000243770.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 2 errors, 9 warnings, 3 checks, 522 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000243770.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

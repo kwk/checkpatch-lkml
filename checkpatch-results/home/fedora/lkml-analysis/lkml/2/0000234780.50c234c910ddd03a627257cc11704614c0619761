@@ -1,0 +1,220 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#55: FILE: arch/x86/include/asm/cmpxchg.h:6:
++extern void __xchg_wrong_size(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#56: FILE: arch/x86/include/asm/cmpxchg.h:7:
++extern void __cmpxchg_wrong_size(void);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#64: FILE: arch/x86/include/asm/cmpxchg.h:15:
++#define __xchg(x, ptr, size)						\
++({									\
++	__typeof(*(ptr)) __x = (x);					\
++	switch (size) {							\
++	case 1:								\
++	{								\
++		volatile u8 *__ptr = (volatile u8 *)(ptr);		\
++		asm volatile("xchgb %0,%1"				\
++			     : "=q" (__x), "+m" (*__ptr)		\
++			     : "0" (__x)				\
++			     : "memory");				\
++		break;							\
++	}								\
++	case 2:								\
++	{								\
++		volatile u16 *__ptr = (volatile u16 *)(ptr);		\
++		asm volatile("xchgw %0,%1"				\
++			     : "=r" (__x), "+m" (*__ptr)		\
++			     : "0" (__x)				\
++			     : "memory");				\
++		break;							\
++	}								\
++	case 4:								\
++	{								\
++		volatile u32 *__ptr = (volatile u32 *)(ptr);		\
++		asm volatile("xchgl %0,%1"				\
++			     : "=r" (__x), "+m" (*__ptr)		\
++			     : "0" (__x)				\
++			     : "memory");				\
++		break;							\
++	}								\
++	case 8:								\
++	{								\
++		volatile u64 *__ptr = (volatile u64 *)(ptr);		\
++		asm volatile("xchgq %0,%1"				\
++			     : "=r" (__x), "+m" (*__ptr)		\
++			     : "0" (__x)				\
++			     : "memory");				\
++		break;							\
++	}								\
++	default:							\
++		__xchg_wrong_size();					\
++	}								\
++	__x;								\
++})
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#70: FILE: arch/x86/include/asm/cmpxchg.h:21:
++		volatile u8 *__ptr = (volatile u8 *)(ptr);		\
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#79: FILE: arch/x86/include/asm/cmpxchg.h:30:
++		volatile u16 *__ptr = (volatile u16 *)(ptr);		\
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#88: FILE: arch/x86/include/asm/cmpxchg.h:39:
++		volatile u32 *__ptr = (volatile u32 *)(ptr);		\
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#97: FILE: arch/x86/include/asm/cmpxchg.h:48:
++		volatile u64 *__ptr = (volatile u64 *)(ptr);		\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#110: FILE: arch/x86/include/asm/cmpxchg.h:61:
++#define xchg(ptr, v)							\
++	__xchg((v), (ptr), sizeof(*ptr))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#118: FILE: arch/x86/include/asm/cmpxchg.h:69:
++#define __raw_cmpxchg(ptr, old, new, size, lock)			\
++({									\
++	__typeof__(*(ptr)) __ret;					\
++	__typeof__(*(ptr)) __old = (old);				\
++	__typeof__(*(ptr)) __new = (new);				\
++	switch (size) {							\
++	case 1:								\
++	{								\
++		volatile u8 *__ptr = (volatile u8 *)(ptr);		\
++		asm volatile(lock "cmpxchgb %2,%1"			\
++			     : "=a" (__ret), "+m" (*__ptr)		\
++			     : "q" (__new), "0" (__old)			\
++			     : "memory");				\
++		break;							\
++	}								\
++	case 2:								\
++	{								\
++		volatile u16 *__ptr = (volatile u16 *)(ptr);		\
++		asm volatile(lock "cmpxchgw %2,%1"			\
++			     : "=a" (__ret), "+m" (*__ptr)		\
++			     : "r" (__new), "0" (__old)			\
++			     : "memory");				\
++		break;							\
++	}								\
++	case 4:								\
++	{								\
++		volatile u32 *__ptr = (volatile u32 *)(ptr);		\
++		asm volatile(lock "cmpxchgl %2,%1"			\
++			     : "=a" (__ret), "+m" (*__ptr)		\
++			     : "r" (__new), "0" (__old)			\
++			     : "memory");				\
++		break;							\
++	}								\
++	case 8:								\
++	{								\
++		volatile u64 *__ptr = (volatile u64 *)(ptr);		\
++		asm volatile(lock "cmpxchgq %2,%1"			\
++			     : "=a" (__ret), "+m" (*__ptr)		\
++			     : "r" (__new), "0" (__old)			\
++			     : "memory");				\
++		break;							\
++	}								\
++	default:							\
++		__cmpxchg_wrong_size();					\
++	}								\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'lock' - possible side-effects?
+#118: FILE: arch/x86/include/asm/cmpxchg.h:69:
++#define __raw_cmpxchg(ptr, old, new, size, lock)			\
++({									\
++	__typeof__(*(ptr)) __ret;					\
++	__typeof__(*(ptr)) __old = (old);				\
++	__typeof__(*(ptr)) __new = (new);				\
++	switch (size) {							\
++	case 1:								\
++	{								\
++		volatile u8 *__ptr = (volatile u8 *)(ptr);		\
++		asm volatile(lock "cmpxchgb %2,%1"			\
++			     : "=a" (__ret), "+m" (*__ptr)		\
++			     : "q" (__new), "0" (__old)			\
++			     : "memory");				\
++		break;							\
++	}								\
++	case 2:								\
++	{								\
++		volatile u16 *__ptr = (volatile u16 *)(ptr);		\
++		asm volatile(lock "cmpxchgw %2,%1"			\
++			     : "=a" (__ret), "+m" (*__ptr)		\
++			     : "r" (__new), "0" (__old)			\
++			     : "memory");				\
++		break;							\
++	}								\
++	case 4:								\
++	{								\
++		volatile u32 *__ptr = (volatile u32 *)(ptr);		\
++		asm volatile(lock "cmpxchgl %2,%1"			\
++			     : "=a" (__ret), "+m" (*__ptr)		\
++			     : "r" (__new), "0" (__old)			\
++			     : "memory");				\
++		break;							\
++	}								\
++	case 8:								\
++	{								\
++		volatile u64 *__ptr = (volatile u64 *)(ptr);		\
++		asm volatile(lock "cmpxchgq %2,%1"			\
++			     : "=a" (__ret), "+m" (*__ptr)		\
++			     : "r" (__new), "0" (__old)			\
++			     : "memory");				\
++		break;							\
++	}								\
++	default:							\
++		__cmpxchg_wrong_size();					\
++	}								\
++	__ret;								\
++})
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#126: FILE: arch/x86/include/asm/cmpxchg.h:77:
++		volatile u8 *__ptr = (volatile u8 *)(ptr);		\
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#135: FILE: arch/x86/include/asm/cmpxchg.h:86:
++		volatile u16 *__ptr = (volatile u16 *)(ptr);		\
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#144: FILE: arch/x86/include/asm/cmpxchg.h:95:
++		volatile u32 *__ptr = (volatile u32 *)(ptr);		\
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#153: FILE: arch/x86/include/asm/cmpxchg.h:104:
++		volatile u64 *__ptr = (volatile u64 *)(ptr);		\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#183: FILE: arch/x86/include/asm/cmpxchg.h:134:
++#define cmpxchg(ptr, old, new)						\
++	__cmpxchg((ptr), (old), (new), sizeof(*ptr))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#186: FILE: arch/x86/include/asm/cmpxchg.h:137:
++#define sync_cmpxchg(ptr, old, new)					\
++	__sync_cmpxchg((ptr), (old), (new), sizeof(*ptr))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#189: FILE: arch/x86/include/asm/cmpxchg.h:140:
++#define cmpxchg_local(ptr, old, new)					\
++	__cmpxchg_local((ptr), (old), (new), sizeof(*ptr))
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000234780.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 8 warnings, 9 checks, 420 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000234780.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,634 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:DT_SPLIT_BINDING_PATCH: DT binding docs and includes should be a separate patch. See: Documentation/devicetree/bindings/submitting-patches.rst
+
+Devicetree bindings should be their own patch.  This is because
+bindings are logically independent from a driver implementation,
+they have a different maintainer (even though they often
+are applied via the same tree), and it makes for a cleaner history in the
+DT only tree created with git-filter-branch.
+
+See: https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.html#i-for-patch-submitters
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#446: FILE: arch/arm64/kernel/arm64ksyms.c:80:
++extern long long __ashlti3(long long a, int b);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#448: FILE: arch/arm64/kernel/arm64ksyms.c:82:
++extern long long __ashrti3(long long a, int b);
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#450: FILE: arch/arm64/kernel/arm64ksyms.c:84:
++extern long long __lshrti3(long long a, int b);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'offset' may be better as '(offset)' to avoid precedence issues
+#519: FILE: arch/mips/boot/compressed/uart-16550.c:23:
++#define PORT(offset) (CKSEG1ADDR(INGENIC_UART0_BASE_ADDR) + (4 * offset))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#542: FILE: arch/mips/cavium-octeon/octeon-irq.c:2275:
++		pr_err("ERROR: Couldn't acquire parent_irq for %s\n",
+ 			ciu_node->name);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#569: FILE: arch/mips/cavium-octeon/octeon-irq.c:2303:
++		pr_err("ERROR: Couldn't read cavium,max-bits from %s\n",
+ 			ciu_node->name);
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#749: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'mm' - possible side-effects?
+#772: FILE: arch/powerpc/include/asm/book3s/64/slice.h:19:
++#define slice_set_user_psize(mm, psize)		\
++do {						\
++	(mm)->context.user_psize = (psize);	\
++	(mm)->context.sllp = SLB_VSID_USER | mmu_psize_defs[(psize)].sllp; \
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'psize' - possible side-effects?
+#772: FILE: arch/powerpc/include/asm/book3s/64/slice.h:19:
++#define slice_set_user_psize(mm, psize)		\
++do {						\
++	(mm)->context.user_psize = (psize);	\
++	(mm)->context.sllp = SLB_VSID_USER | mmu_psize_defs[(psize)].sllp; \
++} while (0)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#789: FILE: arch/powerpc/include/asm/irq_work.h:9:
+ }
++extern void arch_irq_work_raise(void);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#789: FILE: arch/powerpc/include/asm/irq_work.h:9:
++extern void arch_irq_work_raise(void);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'addr' may be better as '(addr)' to avoid precedence issues
+#828: FILE: arch/powerpc/include/asm/nohash/32/slice.h:14:
++#define GET_HIGH_SLICE_INDEX(addr)	(addr & 0)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#848: FILE: arch/powerpc/include/asm/nohash/64/slice.h:10:
++#define slice_set_user_psize(mm, psize)	do { BUG(); } while (0)
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#848: FILE: arch/powerpc/include/asm/nohash/64/slice.h:10:
++#define slice_set_user_psize(mm, psize)	do { BUG(); } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'status < ARRAY_SIZE(facility_strings)'
+#1107: FILE: arch/powerpc/kernel/traps.c:1626:
++	if ((hv || status >= 2) &&
++	    (status < ARRAY_SIZE(facility_strings)) &&
++	    facility_strings[status])
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1375: FILE: arch/powerpc/perf/core-book3s.c:467:
++			if (perf_paranoid_kernel() && !capable(CAP_SYS_ADMIN) &&
++				is_kernel_addr(addr))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1468: FILE: arch/powerpc/platforms/powernv/npu-dma.c:451:
++static void mmio_launch_invalidate(struct mmio_atsd_reg *mmio_atsd_reg,
++				unsigned long launch, unsigned long va)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1536: FILE: arch/powerpc/platforms/powernv/npu-dma.c:494:
++static void mmio_invalidate_va(struct mmio_atsd_reg mmio_atsd_reg[NV_MAX_NPUS],
++			unsigned long va, unsigned long pid, bool flush)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1601: FILE: arch/powerpc/platforms/powernv/npu-dma.c:549:
++static void acquire_atsd_reg(struct npu_context *npu_context,
++			struct mmio_atsd_reg mmio_atsd_reg[NV_MAX_NPUS])
+
+WARNING:TYPO_SPELLING: 'VAS' may be misspelled - perhaps 'WAS'?
+#1774: FILE: arch/powerpc/platforms/powernv/vas-debug.c:206:
++ * Set up the "root" VAS debugfs dir. Return if we already set it up
+                      ^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:TYPO_SPELLING: 'VAS' may be misspelled - perhaps 'WAS'?
+#1775: FILE: arch/powerpc/platforms/powernv/vas-debug.c:207:
++ * (or failed to) in an earlier instance of VAS.
+                                             ^^^
+
+WARNING:NR_CPUS: usage of NR_CPUS is often wrong - consider using cpu_possible(), num_possible_cpus(), for_each_possible_cpu(), etc
+#1822: FILE: arch/powerpc/sysdev/mpic.c:629:
++	for (i = 0; i < min(32, NR_CPUS) && cpu_possible(i); ++i, cpumask >>= 1)
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1832: FILE: arch/riscv/include/asm/fence.h:1:
++#ifndef _ASM_RISCV_FENCE_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#1864: FILE: arch/riscv/include/asm/spinlock.h:32:
++	smp_store_release(&lock->lock, 0);
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#1940: FILE: arch/riscv/include/asm/spinlock.h:140:
++	smp_store_release(&lock->lock, 0);
+
+WARNING:TYPO_SPELLING: 'consequtive' may be misspelled - perhaps 'consecutive'?
+#2098: FILE: arch/x86/events/intel/ds.c:1347:
++	 * the difference between two consequtive reads is:
+ 	                              ^^^^^^^^^^^
+
+ERROR:RETURN_PARENTHESES: return is not a function, parentheses are not required
+#2531: FILE: drivers/acpi/acpica/evevent.c:219:
++		return (int_status);
+
+return is not a function and as such doesn't need parentheses::
+
+  return (bar);
+
+can simply be::
+
+  return bar;
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#2545: FILE: drivers/acpi/acpica/nseval.c:312:
++	} else if (ACPI_FAILURE(status)) {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#2563: FILE: drivers/acpi/acpica/psargs.c:893:
+ 			if (arg->common.aml_opcode == AML_INT_METHODCALL_OP) {
++
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#2591: FILE: drivers/ata/libata-core.c:4497:
++	/* Some Sandisk SSDs lock up hard with NCQ enabled.  Reported on
++	   SD7SN6S256G and SD8SN8U256G */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2591: FILE: drivers/ata/libata-core.c:4497:
++	   SD7SN6S256G and SD8SN8U256G */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#2716: FILE: drivers/block/null_blk.c:92:
+ };
++#define NULLB_PAGE_LOCK (MAP_SZ - 1)
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#3171: FILE: drivers/gpu/drm/amd/amdgpu/amdgpu_ib.c:326:
++	tmo_mm = tmo_gfx = AMDGPU_IB_TEST_TIMEOUT;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments should align the * on each line
+#3186: FILE: drivers/gpu/drm/amd/amdgpu/amdgpu_ib.c:341:
++		 * cost waiting for it coming back under RUNTIME only
++		*/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3200: FILE: drivers/gpu/drm/amd/amdgpu/amdgpu_ib.c:354:
++		if (ring->funcs->type == AMDGPU_RING_TYPE_UVD ||
++			ring->funcs->type == AMDGPU_RING_TYPE_VCE ||
+
+WARNING:TYPO_SPELLING: 'enogh' may be misspelled - perhaps 'enough'?
+#3241: FILE: drivers/gpu/drm/amd/amdgpu/sdma_v3_0.c:723:
++			/*wptr polling is not enogh fast, directly clean the wptr register */
+ 			                      ^^^^^
+
+CHECK:CAMELCASE: Avoid CamelCase: <mmSDMA0_GFX_RB_WPTR>
+#3242: FILE: drivers/gpu/drm/amd/amdgpu/sdma_v3_0.c:724:
++			WREG32(mmSDMA0_GFX_RB_WPTR + sdma_offsets[i], 0);
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#3273: FILE: drivers/gpu/drm/amd/display/dc/core/dc_resource.c:2433:
++	if (stream->sink->link->dpcd_caps.dpcd_rev.raw >= DPCD_REV_12) {
+ 		vscPacketRevision = 2;
+ 	}
+
+WARNING:VSPRINTF_SPECIFIER_PX: Using vsprintf specifier '%px' potentially exposes the kernel memory layout, if you don't really need the address please consider using '%p'.
+#3987: FILE: drivers/hwtracing/coresight/coresight-cpu-debug.c:318:
++	dev_emerg(dev, " EDPCSR:  [<%px>] %pS\n", (void *)pc, (void *)pc);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4385: FILE: drivers/md/bcache/sysfs.c:314:
++			schedule_delayed_work(&dc->writeback_rate_update,
+ 				      dc->writeback_rate_update_seconds * HZ);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4421: FILE: drivers/md/bcache/writeback.c:143:
++		schedule_delayed_work(&dc->writeback_rate_update,
+ 			      dc->writeback_rate_update_seconds * HZ);
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#4534: FILE: drivers/misc/cxl/cxl.h:373:
++#define CXL_PSL_DEBUG_CDC  (1ull << (63-27)) /* Coherent Data cache support */
+                                        ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'reg == SDHCI_TRANSFER_MODE'
+#4660: FILE: drivers/mmc/host/sdhci-iproc.c:58:
++	if ((reg == SDHCI_TRANSFER_MODE) && iproc_host->is_cmd_shadowed) {
+
+WARNING:TYPO_SPELLING: 'fileds' may be misspelled - perhaps 'fields'?
+#4789: FILE: drivers/net/ethernet/broadcom/bnxt/bnxt_tc.c:995:
++	 * tunnel header fileds. Ignore src_port in the tunnel_key,
+ 	                 ^^^^^^
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#5444: FILE: drivers/net/ieee802154/ca8210.c:2516:
++		dev_err(
+
+CHECK:USLEEP_RANGE: usleep_range is preferred over udelay; see Documentation/timers/timers-howto.rst
+#5473: FILE: drivers/net/phy/dp83640.c:1222:
++	udelay(10);		/* Taking udelay inaccuracy into account */
+
+usleep_range() should be preferred over udelay(). The proper way of
+using usleep_range() is mentioned in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/timers/timers-howto.html#delays-information-on-the-various-kernel-delay-sleep-mechanisms
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#5643: FILE: drivers/net/wireless/ath/ath9k/common-spectral.c:486:
++		if ((buf = *per_cpu_ptr(rc->buf, i))) {
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#5643: FILE: drivers/net/wireless/ath/ath9k/common-spectral.c:486:
++		if ((buf = *per_cpu_ptr(rc->buf, i))) {
++			ret += relay_buf_full(buf);
++		}
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5911: FILE: drivers/nvme/host/fabrics.c:540:
++blk_status_t nvmf_check_if_ready(struct nvme_ctrl *ctrl, struct request *rq,
++		bool queue_live, bool is_connected)
+
+WARNING:PREFER_FALLTHROUGH: Prefer 'fallthrough;' over fallthrough comment
+#5958: FILE: drivers/nvme/host/fabrics.c:587:
++		 * fall-thru to the reject_or_queue_io clause
+
+Use the `fallthrough;` pseudo keyword instead of
+`/* fallthrough */` like comments.
+
+WARNING:PREFER_FALLTHROUGH: Prefer 'fallthrough;' over fallthrough comment
+#5962: FILE: drivers/nvme/host/fabrics.c:591:
++	/* these cases fall-thru
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6044: FILE: drivers/nvme/host/fabrics.h:161:
++blk_status_t nvmf_check_if_ready(struct nvme_ctrl *ctrl,
++	struct request *rq, bool queue_live, bool is_connected);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6091: FILE: drivers/nvme/host/fc.c:2306:
++	ret = nvmf_check_if_ready(&queue->ctrl->ctrl, rq,
++		test_bit(NVME_FC_Q_LIVE, &queue->flags),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6156: FILE: drivers/nvme/host/rdma.c:1613:
++	ret = nvmf_check_if_ready(&queue->ctrl->ctrl, rq,
++		test_bit(NVME_RDMA_Q_LIVE, &queue->flags), true);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6185: FILE: drivers/nvme/target/loop.c:162:
++	ret = nvmf_check_if_ready(&queue->ctrl->ctrl, req,
++		test_bit(NVME_LOOP_Q_LIVE, &queue->flags), true);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#6198: FILE: drivers/parisc/lba_pci.c:1406:
+ 
++
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'np_pctldev == p->dev->of_node'
+#6422: FILE: drivers/pinctrl/devicetree.c:126:
++		if (pctldev && (np_pctldev == p->dev->of_node))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6456: FILE: drivers/pinctrl/pinctrl-mcp23s08.c:800:
++				devm_kmemdup(dev, &mcp23x08_regmap,
++					sizeof(struct regmap_config), GFP_KERNEL);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6464: FILE: drivers/pinctrl/pinctrl-mcp23s08.c:808:
++				devm_kmemdup(dev, &mcp23x17_regmap,
++					sizeof(struct regmap_config), GFP_KERNEL);
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#6473: FILE: drivers/pinctrl/pinctrl-mcp23s08.c:817:
++		one_regmap_config->name = devm_kasprintf(dev, GFP_KERNEL, "%d", (addr & ~0x40) >> 1);
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#6519: FILE: drivers/pinctrl/sh-pfc/pfc-r8a7796.c:480:
++#define MOD_SEL1_20		FM(SEL_SSI1_0)		FM(SEL_SSI1_1)
+
+CHECK:CAMELCASE: Avoid CamelCase: <er_Type>
+#7218: FILE: drivers/zorro/zorro.c:189:
++		switch (z->rom.er_Type & ERT_TYPEMASK) {
+
+WARNING:TYPO_SPELLING: 'commited' may be misspelled - perhaps 'committed'?
+#7416: FILE: fs/btrfs/transaction.c:1369:
++	 * Ensure dirty @src will be commited.  Or, after comming
+ 	                             ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'comming' may be misspelled - perhaps 'coming'?
+#7416: FILE: fs/btrfs/transaction.c:1369:
++	 * Ensure dirty @src will be commited.  Or, after comming
+ 	                                                  ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'iput' may be misspelled - perhaps 'input'?
+#7473: FILE: fs/btrfs/tree-log.c:2488:
++				 * If the nlink count is zero here, the iput
+ 				                                        ^^^^
+
+WARNING:TYPO_SPELLING: 'iput' may be misspelled - perhaps 'input'?
+#7485: FILE: fs/btrfs/tree-log.c:2500:
++				iput(inode);
+ 				^^^^
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#7559: FILE: fs/dcache.c:1876:
++	BUG_ON(!hlist_unhashed(&entry->d_u.d_alias));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#7560: FILE: fs/dcache.c:1877:
++	BUG_ON(!inode);
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#7567: FILE: fs/dcache.c:1884:
++	smp_mb();
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7686: FILE: fs/f2fs/checkpoint.c:1168:
++static void commit_checkpoint(struct f2fs_sb_info *sbi,
++	void *src, block_t blk_addr)
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#8154: FILE: fs/ocfs2/dlm/dlmrecovery.c:1383:
++		mlog(ML_ERROR, "Domain %s not joined! "
++			  "lockres %.*s, master %u\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#8286: FILE: fs/super.c:138:
++	smp_rmb();
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#8422: FILE: include/linux/dcache.h:229:
++extern void d_instantiate_new(struct dentry *, struct inode *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct dentry *' should also have an identifier name
+#8422: FILE: include/linux/dcache.h:229:
++extern void d_instantiate_new(struct dentry *, struct inode *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct inode *' should also have an identifier name
+#8422: FILE: include/linux/dcache.h:229:
++extern void d_instantiate_new(struct dentry *, struct inode *);
+
+CHECK:BRACES: Unbalanced braces around else statement
+#8464: FILE: ipc/shm.c:1333:
++			} else
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#8499: FILE: kernel/debug/kdb/kdb_main.c:1580:
++			valid = raw = 1;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#8538: FILE: kernel/debug/kdb/kdb_main.c:1653:
++		int ret;
++		last_addr = addr;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#8614: FILE: kernel/events/core.c:2350:
++		struct perf_cgroup *cgrp = perf_cgroup_from_task(current, ctx);
++		reprogram = cgroup_is_descendant(cgrp->css.cgroup,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8615: FILE: kernel/events/core.c:2351:
++		reprogram = cgroup_is_descendant(cgrp->css.cgroup,
++					event->cgrp->css.cgroup);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'leader != event'
+#8627: FILE: kernel/events/core.c:5773:
++	if ((leader != event) &&
++	    (leader->state == PERF_EVENT_STATE_ACTIVE))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'leader->state == PERF_EVENT_STATE_ACTIVE'
+#8627: FILE: kernel/events/core.c:5773:
++	if ((leader != event) &&
++	    (leader->state == PERF_EVENT_STATE_ACTIVE))
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#8898: FILE: mm/ksm.c:2107:
++		split = PageTransCompound(page)
++			&& compound_head(page) == compound_head(tree_page);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "head"
+#9018: FILE: mm/slub.c:1426:
++	return *head != NULL;
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#9489: FILE: tools/perf/tests/dwarf-unwind.c:48:
++int test_dwarf_unwind__compare(void *p1, void *p2);
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#9490: FILE: tools/perf/tests/dwarf-unwind.c:49:
++int test_dwarf_unwind__krava_3(struct thread *thread);
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#9491: FILE: tools/perf/tests/dwarf-unwind.c:50:
++int test_dwarf_unwind__krava_2(struct thread *thread);
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#9492: FILE: tools/perf/tests/dwarf-unwind.c:51:
++int test_dwarf_unwind__krava_1(struct thread *thread);
+
+WARNING:LONG_LINE_COMMENT: line length of 106 exceeds 100 columns
+#10082: FILE: tools/testing/selftests/net/fib-onlink-tests.sh:304:
++	run_ip6 ${VRF_TABLE} ${TEST_NET6[2]}::1 ${V6ADDRS[p5]/::*}::64 ${NETIFS[p5]} 0 "unicast connected"
+
+A comment starts before but extends beyond the maximum line length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:LONG_LINE_COMMENT: line length of 101 exceeds 100 columns
+#10084: FILE: tools/testing/selftests/net/fib-onlink-tests.sh:306:
++	run_ip6 ${VRF_TABLE} ${TEST_NET6[2]}::3 ::ffff:${TEST_NET4IN6[2]} ${NETIFS[p5]} 0 "v4-mapped"
+
+WARNING:LONG_LINE_COMMENT: line length of 106 exceeds 100 columns
+#10088: FILE: tools/testing/selftests/net/fib-onlink-tests.sh:310:
++	run_ip6 ${PBR_TABLE} ${TEST_NET6[2]}::4 ${V6ADDRS[p5]/::*}::64 ${NETIFS[p5]} 0 "unicast connected"
+
+WARNING:LONG_LINE_COMMENT: line length of 101 exceeds 100 columns
+#10090: FILE: tools/testing/selftests/net/fib-onlink-tests.sh:312:
++	run_ip6 ${PBR_TABLE} ${TEST_NET6[2]}::6 ::ffff:${TEST_NET4IN6[2]} ${NETIFS[p5]} 0 "v4-mapped"
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000237977.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 3 errors, 47 warnings, 44 checks, 8399 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000237977.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

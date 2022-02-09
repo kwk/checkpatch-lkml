@@ -1,0 +1,91 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#165: FILE: include/linux/vmstat.h:18:
++extern int sysctl_vm_numa_stat_handler(struct ctl_table *table,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#166: FILE: include/linux/vmstat.h:19:
++extern int sysctl_vm_numa_stat_handler(struct ctl_table *table,
++		int write, void __user *buffer, size_t *length, loff_t *ppos);
+
+WARNING:DUPLICATED_SYSCTL_CONST: duplicated sysctl range checking value 'zero', consider using the shared one in include/linux/sysctl.h
+#186: FILE: kernel/sysctl.c:1380:
++		.extra1			= &zero,
+
+Commit d91bff3011cf ("proc/sysctl: add shared variables for range
+check") added some shared const variables to be used instead of a local
+copy in each source file.
+
+Consider replacing the sysctl range checking value with the shared
+one in include/linux/sysctl.h.  The following conversion scheme may
+be used::
+
+  &zero     ->  SYSCTL_ZERO
+  &one      ->  SYSCTL_ONE
+  &int_max  ->  SYSCTL_INT_MAX
+
+See:
+
+  1. https://lore.kernel.org/lkml/20190430180111.10688-1-mcroce@redhat.com/
+  2. https://lore.kernel.org/lkml/20190531131422.14970-1-mcroce@redhat.com/
+
+WARNING:DUPLICATED_SYSCTL_CONST: duplicated sysctl range checking value 'one', consider using the shared one in include/linux/sysctl.h
+#187: FILE: kernel/sysctl.c:1381:
++		.extra2			= &one,
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#250: FILE: mm/vmstat.c:47:
++			per_cpu_ptr(zone->pageset, cpu)->vm_numa_stat_diff[item]
++						= 0;
+
+Assignment operators should not be written at the start of a
+line but should follow the operand at the previous line.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#279: FILE: mm/vmstat.c:76:
++int sysctl_vm_numa_stat_handler(struct ctl_table *table, int write,
++		void __user *buffer, size_t *length, loff_t *ppos)
+
+CHECK:UNCOMMENTED_DEFINITION: DEFINE_MUTEX definition without comment
+#282: FILE: mm/vmstat.c:79:
++	DEFINE_MUTEX(vm_numa_stat_lock);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#291: FILE: mm/vmstat.c:88:
++	if (oldval == sysctl_vm_numa_stat)
+[...]
++	else if (sysctl_vm_numa_stat == ENABLE_NUMA_STAT) {
+[...]
++	} else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000083111.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 2 warnings, 6 checks, 165 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000083111.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

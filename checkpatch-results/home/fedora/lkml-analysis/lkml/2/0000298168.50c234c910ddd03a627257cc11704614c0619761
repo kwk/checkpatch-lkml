@@ -1,0 +1,120 @@
+WARNING:TYPO_SPELLING: 'delcared' may be misspelled - perhaps 'declared'?
+#42: 
+delcared in vvar.h with a fixed address (validated by the linker
+^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#155: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#160: FILE: arch/x86/include/asm/vvar.h:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'offset' may be better as '(offset)' to avoid precedence issues
+#187: FILE: arch/x86/include/asm/vvar.h:28:
++#define DECLARE_VVAR(offset, type, name) \
++	EMIT_VVAR(name, VSYSCALL_VARS_OFFSET + offset)
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#192: FILE: arch/x86/include/asm/vvar.h:33:
++#define DECLARE_VVAR(offset, type, name)				\
++	static type const * const vvaraddr_ ## name =			\
++		(void *)(VSYSCALL_START + VSYSCALL_VARS_OFFSET + (offset));
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#192: FILE: arch/x86/include/asm/vvar.h:33:
++#define DECLARE_VVAR(offset, type, name)				\
++	static type const * const vvaraddr_ ## name =			\
++		(void *)(VSYSCALL_START + VSYSCALL_VARS_OFFSET + (offset));
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#196: FILE: arch/x86/include/asm/vvar.h:37:
++#define DEFINE_VVAR(type, name)						\
++	type __vvar_ ## name						\
++	__attribute__((section(".vsyscall_var_" #name), aligned(16)))
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section(".vsyscall_var_" #name) over __attribute__((section(".vsyscall_var_" #name)))
+#198: FILE: arch/x86/include/asm/vvar.h:39:
++	__attribute__((section(".vsyscall_var_" #name), aligned(16)))
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __aligned(16) over __attribute__((aligned(16)))
+#198: FILE: arch/x86/include/asm/vvar.h:39:
++	__attribute__((section(".vsyscall_var_" #name), aligned(16)))
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#206: FILE: arch/x86/include/asm/vvar.h:47:
++DECLARE_VVAR(0, volatile unsigned long, jiffies)
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#221: FILE: arch/x86/kernel/time.c:26:
++DEFINE_VVAR(volatile unsigned long, jiffies) = INITIAL_JIFFIES;
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#401: FILE: arch/x86/kernel/vsyscall_64.c:205:
++	if (tcache && tcache->blob[0] == (j = VVAR(jiffies))) {
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000298168.commit.50c234c910ddd03a627257cc11704614c0619761 total: 3 errors, 8 warnings, 1 checks, 363 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000298168.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

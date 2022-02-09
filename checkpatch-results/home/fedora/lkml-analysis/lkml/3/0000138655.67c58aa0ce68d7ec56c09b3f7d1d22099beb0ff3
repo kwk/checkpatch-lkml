@@ -1,0 +1,257 @@
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#49: FILE: arch/x86/Kconfig:1577:
++config SIGNED_PE_FILE_PARSER
++	bool "Signed PE binary parser"
++	depends on PKCS7_MESSAGE_PARSER=y
++	select ASN1
++	select OID_REGISTRY
++	---help---
++	  This option provides support for parsing signed PE
++	  (Protable Executable) binaries.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:TYPO_SPELLING: 'Protable' may be misspelled - perhaps 'Portable'?
+#56: FILE: arch/x86/Kconfig:1584:
++	  (Protable Executable) binaries.
+ 	   ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#74: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#79: FILE: arch/x86/kernel/pefile_parser.c:1:
++/* Parse a signed PE binary
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#103: FILE: arch/x86/kernel/pefile_parser.c:25:
++	pr_devel("==> %s("FMT")\n", __func__, ##__VA_ARGS__)
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#105: FILE: arch/x86/kernel/pefile_parser.c:27:
++	pr_devel("<== %s()"FMT"\n", __func__, ##__VA_ARGS__)
+
+WARNING:UNNECESSARY_MODIFIER: Integer promotion: Using 'h' in '%04hx' is unnecessary
+#105: FILE: arch/x86/kernel/pefile_parser.c:27:
++	pr_devel("<== %s()"FMT"\n", __func__, ##__VA_ARGS__)
++
++/*
++ * Parse a PE binary.
++ */
++static int pefile_parse_binary(const void *pebuf, unsigned int pelen,
++			       struct pefile_context *ctx)
++{
++	const struct mz_hdr *mz = pebuf;
++	const struct pe_hdr *pe;
++	const struct pe32_opt_hdr *pe32;
++	const struct pe32plus_opt_hdr *pe64;
++	const struct data_directory *ddir;
++	const struct data_dirent *dde;
++	const struct section_header *secs, *sec;
++	size_t cursor, datalen = pelen;
++
++	kenter("");
++
++#define chkaddr(base, x, s)						\
++	do {								\
++		if ((x) < base || (s) >= datalen || (x) > datalen - (s)) \
++			return -ELIBBAD;				\
++	} while (0)
++
++	chkaddr(0, 0, sizeof(*mz));
++	if (mz->magic != MZ_MAGIC)
++		return -ELIBBAD;
++	cursor = sizeof(*mz);
++
++	chkaddr(cursor, mz->peaddr, sizeof(*pe));
++	pe = pebuf + mz->peaddr;
++	if (pe->magic != PE_MAGIC)
++		return -ELIBBAD;
++	cursor = mz->peaddr + sizeof(*pe);
++
++	chkaddr(0, cursor, sizeof(pe32->magic));
++	pe32 = pebuf + cursor;
++	pe64 = pebuf + cursor;
++
++	switch (pe32->magic) {
++	case PE_OPT_MAGIC_PE32:
++		chkaddr(0, cursor, sizeof(*pe32));
++		ctx->image_checksum_offset =
++			(unsigned long)&pe32->csum - (unsigned long)pebuf;
++		ctx->header_size = pe32->header_size;
++		cursor += sizeof(*pe32);
++		ctx->n_data_dirents = pe32->data_dirs;
++		break;
++
++	case PE_OPT_MAGIC_PE32PLUS:
++		chkaddr(0, cursor, sizeof(*pe64));
++		ctx->image_checksum_offset =
++			(unsigned long)&pe64->csum - (unsigned long)pebuf;
++		ctx->header_size = pe64->header_size;
++		cursor += sizeof(*pe64);
++		ctx->n_data_dirents = pe64->data_dirs;
++		break;
++
++	default:
++		pr_debug("Unknown PEOPT magic = %04hx\n", pe32->magic);
++		return -ELIBBAD;
++	}
++
++	pr_debug("checksum @ %x\n", ctx->image_checksum_offset);
++	pr_debug("header size = %x\n", ctx->header_size);
++
++	if (cursor >= ctx->header_size || ctx->header_size >= datalen)
++		return -ELIBBAD;
++
++	if (ctx->n_data_dirents > (ctx->header_size - cursor) / sizeof(*dde))
++		return -ELIBBAD;
++
++	ddir = pebuf + cursor;
++	cursor += sizeof(*dde) * ctx->n_data_dirents;
++
++	ctx->cert_dirent_offset =
++		(unsigned long)&ddir->certs - (unsigned long)pebuf;
++	ctx->certs_size = ddir->certs.size;
++
++	if (!ddir->certs.virtual_address || !ddir->certs.size) {
++		pr_debug("Unsigned PE binary\n");
++		return -EKEYREJECTED;
++	}
++
++	chkaddr(ctx->header_size, ddir->certs.virtual_address,
++		ddir->certs.size);
++	ctx->sig_offset = ddir->certs.virtual_address;
++	ctx->sig_len = ddir->certs.size;
++	pr_debug("cert = %x @%x [%*ph]\n",
++		 ctx->sig_len, ctx->sig_offset,
++		 ctx->sig_len, pebuf + ctx->sig_offset);
++
++	ctx->n_sections = pe->sections;
++	if (ctx->n_sections > (ctx->header_size - cursor) / sizeof(*sec))
++		return -ELIBBAD;
++	ctx->secs = secs = pebuf + cursor;
++
++	return 0;
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'base' may be better as '(base)' to avoid precedence issues
+#124: FILE: arch/x86/kernel/pefile_parser.c:46:
++#define chkaddr(base, x, s)						\
++	do {								\
++		if ((x) < base || (s) >= datalen || (x) > datalen - (s)) \
++			return -ELIBBAD;				\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#124: FILE: arch/x86/kernel/pefile_parser.c:46:
++#define chkaddr(base, x, s)						\
++	do {								\
++		if ((x) < base || (s) >= datalen || (x) > datalen - (s)) \
++			return -ELIBBAD;				\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#124: FILE: arch/x86/kernel/pefile_parser.c:46:
++#define chkaddr(base, x, s)						\
++	do {								\
++		if ((x) < base || (s) >= datalen || (x) > datalen - (s)) \
++			return -ELIBBAD;				\
++	} while (0)
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#124: FILE: arch/x86/kernel/pefile_parser.c:46:
++#define chkaddr(base, x, s)						\
++	do {								\
++		if ((x) < base || (s) >= datalen || (x) > datalen - (s)) \
++			return -ELIBBAD;				\
++	} while (0)
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#201: FILE: arch/x86/kernel/pefile_parser.c:123:
++	ctx->secs = secs = pebuf + cursor;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#230: FILE: arch/x86/kernel/pefile_parser.h:1:
++/* PE Binary parser bits
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#243: FILE: arch/x86/kernel/pefile_parser.h:14:
++	unsigned	header_size;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#244: FILE: arch/x86/kernel/pefile_parser.h:15:
++	unsigned	image_checksum_offset;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#245: FILE: arch/x86/kernel/pefile_parser.h:16:
++	unsigned	cert_dirent_offset;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#246: FILE: arch/x86/kernel/pefile_parser.h:17:
++	unsigned	n_data_dirents;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#247: FILE: arch/x86/kernel/pefile_parser.h:18:
++	unsigned	n_sections;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#248: FILE: arch/x86/kernel/pefile_parser.h:19:
++	unsigned	certs_size;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#249: FILE: arch/x86/kernel/pefile_parser.h:20:
++	unsigned	sig_offset;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#250: FILE: arch/x86/kernel/pefile_parser.h:21:
++	unsigned	sig_len;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#256: FILE: arch/x86/kernel/pefile_parser.h:27:
++	unsigned	digest_len;		/* Digest length */
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#260: FILE: arch/x86/kernel/pefile_parser.h:31:
++extern int pefile_parse_verify_sig(const void *pebuf, unsigned int pelen);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000138655.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 16 warnings, 7 checks, 198 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000138655.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

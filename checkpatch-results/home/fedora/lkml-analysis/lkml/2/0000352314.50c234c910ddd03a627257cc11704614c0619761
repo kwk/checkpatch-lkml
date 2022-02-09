@@ -1,0 +1,111 @@
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#73: FILE: security/apparmor/include/sid.h:20:
++#define AA_SIDTAB_HASH_BUCKETS     (1 << AA_SIDTAB_HASH_BITS)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'sid' may be better as '(sid)' to avoid precedence issues
+#77: FILE: security/apparmor/include/sid.h:24:
++#define AA_SIDTAB_HASH(sid)        (sid & AA_SIDTAB_HASH_MASK)
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#91: FILE: security/apparmor/include/sid.h:38:
++	spinlock_t lock;
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*aa_sid_hash_table)...) over kmalloc(sizeof(struct aa_sidtab)...)
+#120: FILE: security/apparmor/lsm.c:911:
++	aa_sid_hash_table = kmalloc(sizeof(struct aa_sidtab), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:SPACING: space prohibited before semicolon
+#219: FILE: security/apparmor/policy.c:760:
++		return ;
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPACING: space prohibited before semicolon
+#238: FILE: security/apparmor/policy.c:967:
++		return ;
+
+WARNING:SPACING: space prohibited before semicolon
+#240: FILE: security/apparmor/policy.c:969:
++		return ;
+
+WARNING:TYPO_SPELLING: 'allocte' may be misspelled - perhaps 'allocate'?
+#301: FILE: security/apparmor/sid.c:55:
++ * alloc_sid - allocte a unique sid in the sid_bitmap array
+                ^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:SPACING: space prohibited before semicolon
+#377: FILE: security/apparmor/sid.c:119:
++			return ;
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around node->list
+#448: FILE: security/apparmor/sid.c:190:
++	list_add_tail(&(node->list), &aa_sid_hash_table->sid_list[hash_value]);
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*node)...) over kmalloc(sizeof(struct aa_sidtab_node)...)
+#465: FILE: security/apparmor/sid.c:207:
++	node = kmalloc(sizeof(struct aa_sidtab_node), GFP_KERNEL);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around node->list
+#495: FILE: security/apparmor/sid.c:237:
++	list_del(&(node->list));
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000352314.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 5 warnings, 7 checks, 416 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000352314.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

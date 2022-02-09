@@ -1,0 +1,113 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'HEAD' - possible side-effects?
+#79: FILE: include/linux/lsm_hooks.h:1984:
++#define LSM_HOOK_INIT(HEAD, HOOK)		\
++	{					\
++		.head_idx = HOOK_IDX(HEAD),	\
++		.hook = { .HEAD = HOOK },	\
++		.owner = THIS_MODULE,		\
++	}
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#94: FILE: include/linux/lsm_hooks.h:1997:
++extern void security_add_dynamic_hooks(struct security_hook_list *hooks,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#95: FILE: include/linux/lsm_hooks.h:1998:
++extern void security_add_dynamic_hooks(struct security_hook_list *hooks,
++					int count,
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#132: FILE: security/inode.c:28:
++extern struct mutex lsm_lock;
+
+CHECK:UNCOMMENTED_DEFINITION: DEFINE_MUTEX definition without comment
+#181: FILE: security/security.c:51:
++DEFINE_MUTEX(lsm_lock);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'FUNC' - possible side-effects?
+#260: FILE: security/security.c:261:
++#define call_void_hook_builtin(FUNC, ...) do {			\
++	struct security_hook_list *P;				\
++	list_for_each_entry(P, HOOK_HEAD(FUNC), list)		\
++		P->hook.FUNC(__VA_ARGS__);			\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'FUNC' - possible side-effects?
+#270: FILE: security/security.c:271:
++#define call_void_hook_dynamic(FUNC, ...) ({			\
++	struct security_hook_list *P;				\
++	int idx;						\
++								\
++	idx = srcu_read_lock(DYNAMIC_HOOK_SRCU(FUNC));		\
++	list_for_each_entry_rcu(P,				\
++				DYNAMIC_HOOK_HEAD(FUNC),	\
++				list) {				\
++		P->hook.FUNC(__VA_ARGS__);			\
++	}							\
++	srcu_read_unlock(DYNAMIC_HOOK_SRCU(FUNC), idx);		\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'FUNC' - possible side-effects?
+#283: FILE: security/security.c:284:
++#define call_void_hook(FUNC, ...)	\
++	do {				\
++		call_void_hook_builtin(FUNC, __VA_ARGS__);	\
++		if (!IS_DYNAMIC_HOOK_ENABLED(FUNC))		\
++			break;					\
++		call_void_hook_dynamic(FUNC, __VA_ARGS__);	\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'FUNC' - possible side-effects?
+#291: FILE: security/security.c:292:
++#define call_int_hook(FUNC, IRC, ...) ({			\
++	bool continue_iteration = true;				\
++	int RC = IRC, idx;					\
+ 	do {							\
+ 		struct security_hook_list *P;			\
+ 								\
++		list_for_each_entry(P, HOOK_HEAD(FUNC), list) { \
++			RC = P->hook.FUNC(__VA_ARGS__);		\
++			if (RC != 0) {				\
++				continue_iteration = false;	\
++				break;				\
++			}					\
++		}						\
++		if (!IS_DYNAMIC_HOOK_ENABLED(FUNC))		\
++			break;					\
++		if (!continue_iteration)			\
++			break;					\
++		idx = srcu_read_lock(DYNAMIC_HOOK_SRCU(FUNC));	\
++		list_for_each_entry_rcu(P,			\
++					DYNAMIC_HOOK_HEAD(FUNC), \
++					list) {			\
++			RC = P->hook.FUNC(__VA_ARGS__);		\
++			if (RC != 0)				\
++				break;				\
++		}						\
++		srcu_read_unlock(DYNAMIC_HOOK_SRCU(FUNC), idx);	\
++	} while (0);						\
++	RC;							\
++})
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#466: FILE: security/security.c:1323:
++		if (thisrc != -ENOSYS) {
+
+ENOSYS means that a nonexistent system call was called.
+Earlier, it was wrongly used for things like invalid operations on
+otherwise valid syscalls.  This should be avoided in new code.
+
+See: https://lore.kernel.org/lkml/5eb299021dec23c1a48fa7d9f2c8b794e967766d.1408730669.git.luto@amacapital.net/
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000326369.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 0 errors, 2 warnings, 8 checks, 423 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000326369.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

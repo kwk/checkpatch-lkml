@@ -1,0 +1,68 @@
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#68: FILE: arch/x86/include/asm/svm.h:347:
++        (offsetof(struct vmcb_save_area, field) / sizeof(u64))$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#68: FILE: arch/x86/include/asm/svm.h:347:
++        (offsetof(struct vmcb_save_area, field) / sizeof(u64))$
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#70: FILE: arch/x86/include/asm/svm.h:349:
++#define GHCB_SET_VALID(ghcb, field)							\
++	__set_bit(GHB_BITMAP_IDX(field), (unsigned long *)&(ghcb)->save.valid_bitmap);	\
++
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#73: FILE: arch/x86/include/asm/svm.h:352:
++#define DEFINE_GHCB_ACCESSORS(field)							\
++	static inline bool ghcb_##field##_is_valid(const struct ghcb *ghcb)		\
++	{										\
++		int idx = offsetof(struct vmcb_save_area, field) / sizeof(u64);		\
++		return test_bit(idx, (unsigned long *)&(ghcb)->save.valid_bitmap);	\
++	}										\
++											\
++	static inline void								\
++	ghcb_set_##field(struct ghcb *ghcb, u64 value)					\
++	{										\
++		GHCB_SET_VALID(ghcb, field)						\
++		ghcb->save.field = value;						\
++	}
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000048878.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 1 errors, 2 warnings, 1 checks, 50 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000048878.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

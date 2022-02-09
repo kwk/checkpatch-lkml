@@ -1,0 +1,81 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#48: 
+  http://www.kernel.org/pub/linux/kernel/projects/rt/3.2/patch-3.2.31-rt47.patch.xz
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#152: FILE: include/linux/locallock.h:99:
++#define local_lock_irq_on(lvar, cpu)					\
++	do { __local_lock_irq(&per_cpu(lvar, cpu)); } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#162: FILE: include/linux/locallock.h:117:
++#define local_unlock_irq_on(lvar, cpu)					\
++	do {								\
++		__local_unlock_irq(&per_cpu(lvar, cpu));		\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'lvar' - possible side-effects?
+#174: FILE: include/linux/locallock.h:140:
++#define local_lock_irqsave_on(lvar, _flags, cpu)			\
++	do {								\
++		__local_lock_irqsave(&per_cpu(lvar, cpu));		\
++		_flags = per_cpu(lvar, cpu).flags;			\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cpu' - possible side-effects?
+#174: FILE: include/linux/locallock.h:140:
++#define local_lock_irqsave_on(lvar, _flags, cpu)			\
++	do {								\
++		__local_lock_irqsave(&per_cpu(lvar, cpu));		\
++		_flags = per_cpu(lvar, cpu).flags;			\
++	} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#187: FILE: include/linux/locallock.h:165:
++#define local_unlock_irqrestore_on(lvar, flags, cpu)			\
++	do {								\
++		__local_unlock_irqrestore(&per_cpu(lvar, cpu), flags);	\
++	} while (0)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#204: FILE: include/linux/random.h:56:
++extern void add_interrupt_randomness(int irq, int irq_flags, __u64 ip);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:SPACING: No space is necessary after a cast
+#279: FILE: kernel/irq/manage.c:822:
++						 desc->random_ip ^ (u64) action);
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#421: FILE: kernel/sched.c:4542:
++		pr_cont("\n");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#435: FILE: kernel/sched.c:8931:
++		pr_cont("\n");
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000043225.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 6 warnings, 4 checks, 353 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000043225.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

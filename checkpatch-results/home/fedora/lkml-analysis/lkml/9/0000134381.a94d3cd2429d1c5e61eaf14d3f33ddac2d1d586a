@@ -1,0 +1,216 @@
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#128: FILE: kernel/bpf/core.c:1621:
++#define ATOMIC_ALU_OP(BOP, KOP)						\
++		case BOP:						\
++			if (BPF_SIZE(insn->code) == BPF_W)		\
++				atomic_##KOP((u32) SRC, (atomic_t *)(unsigned long) \
++					     (DST + insn->off));	\
++			else						\
++				atomic64_##KOP((u64) SRC, (atomic64_t *)(unsigned long) \
++					       (DST + insn->off));	\
++			break;						\
++		case BOP | BPF_FETCH:					\
++			if (BPF_SIZE(insn->code) == BPF_W)		\
++				SRC = (u32) atomic_fetch_##KOP(		\
++					(u32) SRC,			\
++					(atomic_t *)(unsigned long) (DST + insn->off)); \
++			else						\
++				SRC = (u64) atomic64_fetch_##KOP(	\
++					(u64) SRC,			\
++					(atomic64_t *)(unsigned long) (DST + insn->off)); \
+ 			break;
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'BOP' - possible side-effects?
+#128: FILE: kernel/bpf/core.c:1621:
++#define ATOMIC_ALU_OP(BOP, KOP)						\
++		case BOP:						\
++			if (BPF_SIZE(insn->code) == BPF_W)		\
++				atomic_##KOP((u32) SRC, (atomic_t *)(unsigned long) \
++					     (DST + insn->off));	\
++			else						\
++				atomic64_##KOP((u64) SRC, (atomic64_t *)(unsigned long) \
++					       (DST + insn->off));	\
++			break;						\
++		case BOP | BPF_FETCH:					\
++			if (BPF_SIZE(insn->code) == BPF_W)		\
++				SRC = (u32) atomic_fetch_##KOP(		\
++					(u32) SRC,			\
++					(atomic_t *)(unsigned long) (DST + insn->off)); \
++			else						\
++				SRC = (u64) atomic64_fetch_##KOP(	\
++					(u64) SRC,			\
++					(atomic64_t *)(unsigned long) (DST + insn->off)); \
+ 			break;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#128: FILE: kernel/bpf/core.c:1621:
++#define ATOMIC_ALU_OP(BOP, KOP)						\
++		case BOP:						\
++			if (BPF_SIZE(insn->code) == BPF_W)		\
++				atomic_##KOP((u32) SRC, (atomic_t *)(unsigned long) \
++					     (DST + insn->off));	\
++			else						\
++				atomic64_##KOP((u64) SRC, (atomic64_t *)(unsigned long) \
++					       (DST + insn->off));	\
++			break;						\
++		case BOP | BPF_FETCH:					\
++			if (BPF_SIZE(insn->code) == BPF_W)		\
++				SRC = (u32) atomic_fetch_##KOP(		\
++					(u32) SRC,			\
++					(atomic_t *)(unsigned long) (DST + insn->off)); \
++			else						\
++				SRC = (u64) atomic64_fetch_##KOP(	\
++					(u64) SRC,			\
++					(atomic64_t *)(unsigned long) (DST + insn->off)); \
+ 			break;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:SPACING: No space is necessary after a cast
+#131: FILE: kernel/bpf/core.c:1624:
++				atomic_##KOP((u32) SRC, (atomic_t *)(unsigned long) \
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#134: FILE: kernel/bpf/core.c:1627:
++				atomic64_##KOP((u64) SRC, (atomic64_t *)(unsigned long) \
+
+CHECK:SPACING: No space is necessary after a cast
+#139: FILE: kernel/bpf/core.c:1632:
++				SRC = (u32) atomic_fetch_##KOP(		\
+
+CHECK:SPACING: No space is necessary after a cast
+#140: FILE: kernel/bpf/core.c:1633:
++					(u32) SRC,			\
+
+CHECK:SPACING: No space is necessary after a cast
+#141: FILE: kernel/bpf/core.c:1634:
++					(atomic_t *)(unsigned long) (DST + insn->off)); \
+
+CHECK:SPACING: No space is necessary after a cast
+#143: FILE: kernel/bpf/core.c:1636:
++				SRC = (u64) atomic64_fetch_##KOP(	\
+
+CHECK:SPACING: No space is necessary after a cast
+#144: FILE: kernel/bpf/core.c:1637:
++					(u64) SRC,			\
+
+CHECK:SPACING: No space is necessary after a cast
+#145: FILE: kernel/bpf/core.c:1638:
++					(atomic64_t *)(unsigned long) (DST + insn->off)); \
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxE)
+#153: FILE: kernel/bpf/core.c:1642:
++	STX_ATOMIC_W:
+ 	            ^
+
+WARNING:INDENTED_LABEL: labels should not be indented
+#153: FILE: kernel/bpf/core.c:1642:
++	STX_ATOMIC_W:
+
+CHECK:SPACING: No space is necessary after a cast
+#173: FILE: kernel/bpf/core.c:1649:
++				SRC = (u32) atomic_xchg(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#173: FILE: kernel/bpf/core.c:1649:
++				SRC = (u32) atomic_xchg(
+
+CHECK:SPACING: No space is necessary after a cast
+#174: FILE: kernel/bpf/core.c:1650:
++					(atomic_t *)(unsigned long) (DST + insn->off),
+
+CHECK:SPACING: No space is necessary after a cast
+#175: FILE: kernel/bpf/core.c:1651:
++					(u32) SRC);
+
+CHECK:SPACING: No space is necessary after a cast
+#177: FILE: kernel/bpf/core.c:1653:
++				SRC = (u64) atomic64_xchg(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#177: FILE: kernel/bpf/core.c:1653:
++				SRC = (u64) atomic64_xchg(
+
+CHECK:SPACING: No space is necessary after a cast
+#178: FILE: kernel/bpf/core.c:1654:
++					(atomic64_t *)(unsigned long) (DST + insn->off),
+
+CHECK:SPACING: No space is necessary after a cast
+#179: FILE: kernel/bpf/core.c:1655:
++					(u64) SRC);
+
+CHECK:SPACING: No space is necessary after a cast
+#186: FILE: kernel/bpf/core.c:1659:
++				BPF_R0 = (u32) atomic_cmpxchg(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#186: FILE: kernel/bpf/core.c:1659:
++				BPF_R0 = (u32) atomic_cmpxchg(
+
+CHECK:SPACING: No space is necessary after a cast
+#187: FILE: kernel/bpf/core.c:1660:
++					(atomic_t *)(unsigned long) (DST + insn->off),
+
+CHECK:SPACING: No space is necessary after a cast
+#188: FILE: kernel/bpf/core.c:1661:
++					(u32) BPF_R0, (u32) SRC);
+
+CHECK:SPACING: No space is necessary after a cast
+#190: FILE: kernel/bpf/core.c:1663:
++				BPF_R0 = (u64) atomic64_cmpxchg(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#190: FILE: kernel/bpf/core.c:1663:
++				BPF_R0 = (u64) atomic64_cmpxchg(
+
+CHECK:SPACING: No space is necessary after a cast
+#191: FILE: kernel/bpf/core.c:1664:
++					(atomic64_t *)(unsigned long) (DST + insn->off),
+
+CHECK:SPACING: No space is necessary after a cast
+#192: FILE: kernel/bpf/core.c:1665:
++					(u64) BPF_R0, (u64) SRC);
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000134381.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a total: 2 errors, 2 warnings, 25 checks, 94 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000134381.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

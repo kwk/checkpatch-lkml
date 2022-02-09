@@ -1,0 +1,173 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#37: 
+> On Sun, Mar 11, 2018 at 4:27 AM, Peter Zijlstra <peterz@infradead.org> wrote:
+
+WARNING:TYPO_SPELLING: 'filesytem' may be misspelled - perhaps 'filesystem'?
+#48: 
+> >> these pages vs filesytem operations like hole-punch and truncate the
+                    ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:REPEATED_WORD: Possible repeated word: 'no'
+#55: 
+> > Argh, no no no.. That whole wait_for_atomic_t thing is a giant
+
+WARNING:REPEATED_WORD: Possible repeated word: 'no'
+#55: 
+> > Argh, no no no.. That whole wait_for_atomic_t thing is a giant
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#590: FILE: include/linux/wait_bit.h:238:
++extern void init_wait_var_entry(struct wait_bit_queue_entry *wbq_entry, void *var, int flags);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#591: FILE: include/linux/wait_bit.h:239:
++extern void wake_up_var(void *var);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#592: FILE: include/linux/wait_bit.h:240:
++extern wait_queue_head_t *__var_waitqueue(void *p);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'var' - possible side-effects?
+#594: FILE: include/linux/wait_bit.h:242:
++#define ___wait_var_event(var, condition, state, exclusive, ret, cmd)	\
++({									\
++	__label__ __out;						\
++	struct wait_queue_head *__wq_head = __var_waitqueue(var);	\
++	struct wait_bit_queue_entry __wbq_entry;			\
++	long __ret = ret; /* explicit shadow */				\
++									\
++	init_wait_var_entry(&__wbq_entry, var,				\
++			    exclusive ? WQ_FLAG_EXCLUSIVE : 0);		\
++	for (;;) {							\
++		long __int = prepare_to_wait_event(__wq_head,		\
++						   &__wbq_entry.wq_entry, \
++						   state);		\
++		if (condition)						\
++			break;						\
++									\
++		if (___wait_is_interruptible(state) && __int) {		\
++			__ret = __int;					\
++			goto __out;					\
++		}							\
++									\
++		cmd;							\
++	}								\
++	finish_wait(__wq_head, &__wbq_entry.wq_entry);			\
++__out:	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'state' - possible side-effects?
+#594: FILE: include/linux/wait_bit.h:242:
++#define ___wait_var_event(var, condition, state, exclusive, ret, cmd)	\
++({									\
++	__label__ __out;						\
++	struct wait_queue_head *__wq_head = __var_waitqueue(var);	\
++	struct wait_bit_queue_entry __wbq_entry;			\
++	long __ret = ret; /* explicit shadow */				\
++									\
++	init_wait_var_entry(&__wbq_entry, var,				\
++			    exclusive ? WQ_FLAG_EXCLUSIVE : 0);		\
++	for (;;) {							\
++		long __int = prepare_to_wait_event(__wq_head,		\
++						   &__wbq_entry.wq_entry, \
++						   state);		\
++		if (condition)						\
++			break;						\
++									\
++		if (___wait_is_interruptible(state) && __int) {		\
++			__ret = __int;					\
++			goto __out;					\
++		}							\
++									\
++		cmd;							\
++	}								\
++	finish_wait(__wq_head, &__wbq_entry.wq_entry);			\
++__out:	__ret;								\
++})
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#594: FILE: include/linux/wait_bit.h:242:
++#define ___wait_var_event(var, condition, state, exclusive, ret, cmd)	\
++({									\
++	__label__ __out;						\
++	struct wait_queue_head *__wq_head = __var_waitqueue(var);	\
++	struct wait_bit_queue_entry __wbq_entry;			\
++	long __ret = ret; /* explicit shadow */				\
++									\
++	init_wait_var_entry(&__wbq_entry, var,				\
++			    exclusive ? WQ_FLAG_EXCLUSIVE : 0);		\
++	for (;;) {							\
++		long __int = prepare_to_wait_event(__wq_head,		\
++						   &__wbq_entry.wq_entry, \
++						   state);		\
++		if (condition)						\
++			break;						\
++									\
++		if (___wait_is_interruptible(state) && __int) {		\
++			__ret = __int;					\
++			goto __out;					\
++		}							\
++									\
++		cmd;							\
++	}								\
++	finish_wait(__wq_head, &__wbq_entry.wq_entry);			\
++__out:	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'condition' - possible side-effects?
+#625: FILE: include/linux/wait_bit.h:273:
++#define wait_var_event(var, condition)					\
++do {									\
++	might_sleep();							\
++	if (condition)							\
++		break;							\
++	__wait_var_event(var, condition);				\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'condition' - possible side-effects?
+#637: FILE: include/linux/wait_bit.h:285:
++#define wait_var_event_killable(var, condition)				\
++({									\
++	int __ret = 0;							\
++	might_sleep();							\
++	if (!(condition))						\
++		__ret = __wait_var_event_killable(var, condition);	\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'condition' - possible side-effects?
+#651: FILE: include/linux/wait_bit.h:299:
++#define wait_var_event_timeout(var, condition, timeout)			\
++({									\
++	long __ret = timeout;						\
++	might_sleep();							\
++	if (!___wait_cond_timeout(condition))				\
++		__ret = __wait_var_event_timeout(var, condition, timeout); \
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'timeout' - possible side-effects?
+#651: FILE: include/linux/wait_bit.h:299:
++#define wait_var_event_timeout(var, condition, timeout)			\
++({									\
++	long __ret = timeout;						\
++	might_sleep();							\
++	if (!___wait_cond_timeout(condition))				\
++		__ret = __wait_var_event_timeout(var, condition, timeout); \
++	__ret;								\
++})
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000301507.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 0 errors, 5 warnings, 9 checks, 580 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000301507.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,200 @@
+WARNING:BAD_SIGN_OFF: Co-developed-by: must be immediately followed by Signed-off-by:
+#106: 
+Co-developed-by: Petr Mladek <pmladek@suse.com>
+Reviewed-by: Petr Mladek <pmladek@suse.com>
+The signed-off-by line does not fall in line with the standards
+specified by the community.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#127: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:UNNECESSARY_MODIFIER: Integer promotion: Using 'h' in '%hu' is unnecessary
+#1436: FILE: kernel/printk/printk_ringbuffer.c:1305:
++		pr_warn_once("wrong data size (%u, expecting %hu) for data: %.*s\n",
++			     data_size, len, data_size, data);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around r->info
+#1531: FILE: kernel/printk/printk_ringbuffer.c:1400:
++		memcpy(r->info, &desc.info, sizeof(*(r->info)));
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around descs[_DESCS_COUNT(descbits) - 1].state_var
+#1792: FILE: kernel/printk/printk_ringbuffer.c:1661:
++	atomic_long_set(&(descs[_DESCS_COUNT(descbits) - 1].state_var), DESC0_SV(descbits));
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'descbits' - possible side-effects?
+#2049: FILE: kernel/printk/printk_ringbuffer.h:225:
++#define _DEFINE_PRINTKRB(name, descbits, avgtextbits, avgdictbits, text_buf)			\
++static char _##name##_dict[1U << ((avgdictbits) + (descbits))]					\
++			__aligned(__alignof__(unsigned long));					\
++static struct prb_desc _##name##_descs[_DESCS_COUNT(descbits)] = {				\
++	/* this will be the first record reserved by a writer */				\
++	[0] = {											\
++		.info = {									\
++			/* will be incremented to 0 on the first reservation */			\
++			.seq = -(u64)_DESCS_COUNT(descbits),					\
++		},										\
++	},											\
++	/* the initial head and tail */								\
++	[_DESCS_COUNT(descbits) - 1] = {							\
++		.info = {									\
++			/* reports the first seq value during the bootstrap phase */		\
++			.seq = 0,								\
++		},										\
++		/* reusable */									\
++		.state_var	= ATOMIC_INIT(DESC0_SV(descbits)),				\
++		/* no associated data block */							\
++		.text_blk_lpos	= INVALID_BLK_LPOS,						\
++		.dict_blk_lpos	= INVALID_BLK_LPOS,						\
++	},											\
++};												\
++static struct printk_ringbuffer name = {							\
++	.desc_ring = {										\
++		.count_bits	= descbits,							\
++		.descs		= &_##name##_descs[0],						\
++		.head_id	= ATOMIC_INIT(DESC0_ID(descbits)),				\
++		.tail_id	= ATOMIC_INIT(DESC0_ID(descbits)),				\
++	},											\
++	.text_data_ring = {									\
++		.size_bits	= (avgtextbits) + (descbits),					\
++		.data		= text_buf,							\
++		.head_lpos	= ATOMIC_LONG_INIT(BLK0_LPOS((avgtextbits) + (descbits))),	\
++		.tail_lpos	= ATOMIC_LONG_INIT(BLK0_LPOS((avgtextbits) + (descbits))),	\
++	},											\
++	.dict_data_ring = {									\
++		.size_bits	= (avgtextbits) + (descbits),					\
++		.data		= &_##name##_dict[0],						\
++		.head_lpos	= ATOMIC_LONG_INIT(BLK0_LPOS((avgtextbits) + (descbits))),	\
++		.tail_lpos	= ATOMIC_LONG_INIT(BLK0_LPOS((avgtextbits) + (descbits))),	\
++	},											\
++	.fail			= ATOMIC_LONG_INIT(0),						\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'avgtextbits' - possible side-effects?
+#2049: FILE: kernel/printk/printk_ringbuffer.h:225:
++#define _DEFINE_PRINTKRB(name, descbits, avgtextbits, avgdictbits, text_buf)			\
++static char _##name##_dict[1U << ((avgdictbits) + (descbits))]					\
++			__aligned(__alignof__(unsigned long));					\
++static struct prb_desc _##name##_descs[_DESCS_COUNT(descbits)] = {				\
++	/* this will be the first record reserved by a writer */				\
++	[0] = {											\
++		.info = {									\
++			/* will be incremented to 0 on the first reservation */			\
++			.seq = -(u64)_DESCS_COUNT(descbits),					\
++		},										\
++	},											\
++	/* the initial head and tail */								\
++	[_DESCS_COUNT(descbits) - 1] = {							\
++		.info = {									\
++			/* reports the first seq value during the bootstrap phase */		\
++			.seq = 0,								\
++		},										\
++		/* reusable */									\
++		.state_var	= ATOMIC_INIT(DESC0_SV(descbits)),				\
++		/* no associated data block */							\
++		.text_blk_lpos	= INVALID_BLK_LPOS,						\
++		.dict_blk_lpos	= INVALID_BLK_LPOS,						\
++	},											\
++};												\
++static struct printk_ringbuffer name = {							\
++	.desc_ring = {										\
++		.count_bits	= descbits,							\
++		.descs		= &_##name##_descs[0],						\
++		.head_id	= ATOMIC_INIT(DESC0_ID(descbits)),				\
++		.tail_id	= ATOMIC_INIT(DESC0_ID(descbits)),				\
++	},											\
++	.text_data_ring = {									\
++		.size_bits	= (avgtextbits) + (descbits),					\
++		.data		= text_buf,							\
++		.head_lpos	= ATOMIC_LONG_INIT(BLK0_LPOS((avgtextbits) + (descbits))),	\
++		.tail_lpos	= ATOMIC_LONG_INIT(BLK0_LPOS((avgtextbits) + (descbits))),	\
++	},											\
++	.dict_data_ring = {									\
++		.size_bits	= (avgtextbits) + (descbits),					\
++		.data		= &_##name##_dict[0],						\
++		.head_lpos	= ATOMIC_LONG_INIT(BLK0_LPOS((avgtextbits) + (descbits))),	\
++		.tail_lpos	= ATOMIC_LONG_INIT(BLK0_LPOS((avgtextbits) + (descbits))),	\
++	},											\
++	.fail			= ATOMIC_LONG_INIT(0),						\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'descbits' - possible side-effects?
+#2108: FILE: kernel/printk/printk_ringbuffer.h:284:
++#define DEFINE_PRINTKRB(name, descbits, avgtextbits, avgdictbits)		\
++static char _##name##_text[1U << ((avgtextbits) + (descbits))]			\
++			__aligned(__alignof__(unsigned long));			\
++_DEFINE_PRINTKRB(name, descbits, avgtextbits, avgdictbits, &_##name##_text[0])
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'avgtextbits' - possible side-effects?
+#2108: FILE: kernel/printk/printk_ringbuffer.h:284:
++#define DEFINE_PRINTKRB(name, descbits, avgtextbits, avgdictbits)		\
++static char _##name##_text[1U << ((avgtextbits) + (descbits))]			\
++			__aligned(__alignof__(unsigned long));			\
++_DEFINE_PRINTKRB(name, descbits, avgtextbits, avgdictbits, &_##name##_text[0])
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#2194: FILE: kernel/printk/printk_ringbuffer.h:370:
++#define prb_for_each_record(from, rb, s, r) \
++for ((s) = from; prb_read_valid(rb, s, r); (s) = (r)->info->seq + 1)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'r' - possible side-effects?
+#2194: FILE: kernel/printk/printk_ringbuffer.h:370:
++#define prb_for_each_record(from, rb, s, r) \
++for ((s) = from; prb_read_valid(rb, s, r); (s) = (r)->info->seq + 1)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#2212: FILE: kernel/printk/printk_ringbuffer.h:388:
++#define prb_for_each_info(from, rb, s, i, lc) \
++for ((s) = from; prb_read_valid_info(rb, s, i, lc); (s) = (i)->seq + 1)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#2212: FILE: kernel/printk/printk_ringbuffer.h:388:
++#define prb_for_each_info(from, rb, s, i, lc) \
++for ((s) = from; prb_read_valid_info(rb, s, i, lc); (s) = (i)->seq + 1)
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000075284.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 3 warnings, 10 checks, 2090 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000075284.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,260 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'val' - possible side-effects?
+#122: FILE: arch/x86/kvm/ept_idle.c:22:
++#define set_restart_gpa(val, note)	({			\
++	unsigned long old_val = eic->restart_gpa;		\
++	eic->restart_gpa = (val);				\
++	trace_printk("restart_gpa=%lx %luK  %s  %s %d\n",	\
++		     (val), (eic->restart_gpa - old_val) >> 10,	\
++		     note, __func__, __LINE__);			\
++})
+
+WARNING:TRACE_PRINTK: Do not use trace_printk() in production code (this can be ignored if built only with a debug config option)
+#125: FILE: arch/x86/kvm/ept_idle.c:25:
++	trace_printk("restart_gpa=%lx %luK  %s  %s %d\n",	\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'val' - possible side-effects?
+#130: FILE: arch/x86/kvm/ept_idle.c:30:
++#define set_next_hva(val, note)	({				\
++	unsigned long old_val = eic->next_hva;			\
++	eic->next_hva = (val);					\
++	trace_printk("   next_hva=%lx %luK  %s  %s %d\n",	\
++		     (val), (eic->next_hva - old_val) >> 10,	\
++		     note, __func__, __LINE__);			\
++})
+
+WARNING:TRACE_PRINTK: Do not use trace_printk() in production code (this can be ignored if built only with a debug config option)
+#133: FILE: arch/x86/kvm/ept_idle.c:33:
++	trace_printk("   next_hva=%lx %luK  %s  %s %d\n",	\
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#168: FILE: arch/x86/kvm/ept_idle.c:68:
++static void u64_to_u8(uint64_t n, uint8_t *p)
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#186: FILE: arch/x86/kvm/ept_idle.c:86:
++	debug_printk("ept_idle_ctrl: pie_read=%d pie_read_max=%d buf_size=%d "
++		     "bytes_copied=%d next_hva=%lx restart_gpa=%lx "
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#187: FILE: arch/x86/kvm/ept_idle.c:87:
++		     "bytes_copied=%d next_hva=%lx restart_gpa=%lx "
++		     "gpa_to_hva=%lx\n",
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#200: FILE: arch/x86/kvm/ept_idle.c:100:
++	unsigned long hva;
++	eic->kpie[eic->pie_read++] = PIP_CMD_SET_HVA;
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'eic_report_addr', this function's name, in a string
+#204: FILE: arch/x86/kvm/ept_idle.c:104:
++	debug_printk("eic_report_addr %lx\n", addr);
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+CHECK:CAMELCASE: Avoid CamelCase: <ProcIdlePageType>
+#211: FILE: arch/x86/kvm/ept_idle.c:111:
++			enum ProcIdlePageType page_type)
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'eic_add_page', this function's name, in a string
+#215: FILE: arch/x86/kvm/ept_idle.c:115:
++	debug_printk("eic_add_page addr=%lx next=%lx "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#216: FILE: arch/x86/kvm/ept_idle.c:116:
++	debug_printk("eic_add_page addr=%lx next=%lx "
++		     "page_type=%d pagesize=%dK\n",
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#250: FILE: arch/x86/kvm/ept_idle.c:150:
++			WARN_ONCE(page_size < next-addr, "next-addr too large");
+ 			                          ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#276: FILE: arch/x86/kvm/ept_idle.c:176:
++		if (!ept_pte_present(*pte))
+[...]
++		else if (!test_and_clear_bit(_PAGE_BIT_EPT_ACCESSED,
+[...]
++		else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#279: FILE: arch/x86/kvm/ept_idle.c:179:
++					     (unsigned long *) &pte->pte))
+
+CHECK:BRACES: Unbalanced braces around else statement
+#281: FILE: arch/x86/kvm/ept_idle.c:181:
++		else {
+
+CHECK:BRACES: Unbalanced braces around else statement
+#323: FILE: arch/x86/kvm/ept_idle.c:223:
++		} else
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#399: FILE: arch/x86/kvm/ept_idle.c:299:
++	BUG_ON(addr >= end);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ept_idle_copy_user', this function's name, in a string
+#453: FILE: arch/x86/kvm/ept_idle.c:353:
++	debug_printk("ept_idle_copy_user %lx %lx\n", start, end);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#524: FILE: arch/x86/kvm/ept_idle.c:424:
++			gpa_t gpa;
++			gfn = hva_to_gfn_memslot(hva, memslot);
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ept_idle_find_gpa', this function's name, in a string
+#527: FILE: arch/x86/kvm/ept_idle.c:427:
++			debug_printk("ept_idle_find_gpa slot %lx=>%llx %lx=>%llx "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#528: FILE: arch/x86/kvm/ept_idle.c:428:
++			debug_printk("ept_idle_find_gpa slot %lx=>%llx %lx=>%llx "
++				     "delta %llx size %lx\n",
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#558: FILE: arch/x86/kvm/ept_idle.c:458:
++	if (mmu->mmu_role.base.ad_disabled) {
+[...]
++	} else if (mmu->shadow_root_level != 4 + (! !pgtable_l5_enabled())) {
+[...]
++	} else
+[...]
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#559: FILE: arch/x86/kvm/ept_idle.c:459:
++		printk(KERN_NOTICE
+
+ERROR:SPACING: space prohibited after that '!' (ctx:BxW)
+#562: FILE: arch/x86/kvm/ept_idle.c:462:
++	} else if (mmu->shadow_root_level != 4 + (! !pgtable_l5_enabled())) {
+ 	                                          ^
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#563: FILE: arch/x86/kvm/ept_idle.c:463:
++		printk(KERN_NOTICE "Unsupported EPT level %d\n",
+
+CHECK:BRACES: Unbalanced braces around else statement
+#566: FILE: arch/x86/kvm/ept_idle.c:466:
++	} else
+
+CHECK:BRACES: Unbalanced braces around else statement
+#593: FILE: arch/x86/kvm/ept_idle.c:493:
++			else {
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ept_idle_read', this function's name, in a string
+#623: FILE: arch/x86/kvm/ept_idle.c:523:
++		debug_printk("ept_idle_read past TASK_SIZE: %lx %lx\n",
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ept_idle_read', this function's name, in a string
+#632: FILE: arch/x86/kvm/ept_idle.c:532:
++		debug_printk("ept_idle_read past EOF: %lx %lx\n",
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ept_idle_read', this function's name, in a string
+#637: FILE: arch/x86/kvm/ept_idle.c:537:
++		debug_printk("ept_idle_read unaligned ppos: %lx\n",
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'ept_idle_read', this function's name, in a string
+#642: FILE: arch/x86/kvm/ept_idle.c:542:
++		debug_printk("ept_idle_read small count: %lx\n",
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#718: FILE: arch/x86/kvm/ept_idle.c:618:
++extern struct file_operations proc_ept_idle_operations;
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#741: FILE: arch/x86/kvm/ept_idle.h:1:
++#ifndef _EPT_IDLE_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'a' may be better as '(a)' to avoid precedence issues
+#767: FILE: arch/x86/kvm/ept_idle.h:27:
++#define PIP_TYPE(a)		(0xf & (a >> 4))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'a' may be better as '(a)' to avoid precedence issues
+#768: FILE: arch/x86/kvm/ept_idle.h:28:
++#define PIP_SIZE(a)		(0xf & a)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'nr' may be better as '(nr)' to avoid precedence issues
+#769: FILE: arch/x86/kvm/ept_idle.h:29:
++#define PIP_COMPOSE(type, nr)	((type << 4) | nr)
+
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#828: FILE: arch/x86/kvm/ept_idle.h:88:
++extern struct file_operations proc_ept_idle_operations;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#840: FILE: arch/x86/kvm/ept_idle.h:100:
++	uint8_t kpie[EPT_IDLE_KBUF_SIZE];
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000056744.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 1 errors, 22 warnings, 16 checks, 753 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000056744.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

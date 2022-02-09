@@ -1,0 +1,140 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#81: FILE: arch/powerpc/include/asm/iommu.h:138:
++extern void iommu_register_group(struct powerpc_iommu *iommu,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc_node(sizeof(*iommu)...) over kzalloc_node(sizeof(struct powerpc_iommu)...)
+#116: FILE: arch/powerpc/kernel/iommu.c:717:
++	iommu = kzalloc_node(sizeof(struct powerpc_iommu), GFP_KERNEL,
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#117: FILE: arch/powerpc/kernel/iommu.c:718:
++	iommu = kzalloc_node(sizeof(struct powerpc_iommu), GFP_KERNEL,
++			   node);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#141: FILE: arch/powerpc/kernel/iommu.c:746:
++		BUG_ON(iommu->group);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#167: FILE: arch/powerpc/kernel/iommu.c:900:
++void iommu_register_group(struct powerpc_iommu *iommu,
+ 		int pci_domain_number, unsigned long pe_num)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#280: FILE: arch/powerpc/platforms/powernv/pci-ioda.c:1218:
++	iommu_register_group(&pe->iommu, phb->hose->global_number,
++			pe->pe_number);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#327: FILE: arch/powerpc/platforms/powernv/pci-ioda.c:1356:
++	iommu_register_group(&pe->iommu, phb->hose->global_number,
++			pe->pe_number);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!phb->p5ioc2.iommu.tables[0].it_map"
+#343: FILE: arch/powerpc/platforms/powernv/pci-p5ioc2.c:89:
++	if (phb->p5ioc2.iommu.tables[0].it_map == NULL) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#347: FILE: arch/powerpc/platforms/powernv/pci-p5ioc2.c:93:
++		iommu_register_group(&phb->p5ioc2.iommu,
+ 				pci_domain_nr(phb->hose->bus), phb->opal_id);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#352: FILE: arch/powerpc/platforms/powernv/pci-p5ioc2.c:97:
++	set_iommu_table_base_and_group(&pdev->dev,
++			&phb->p5ioc2.iommu.tables[0]);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#442: FILE: arch/powerpc/platforms/pseries/iommu.c:1125:
++		iommu_register_group(tbl->it_iommu,
++				pci_domain_nr(pci->phb->bus), 0);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#463: FILE: drivers/vfio/vfio_iommu_spapr_tce.c:107:
++static struct iommu_table *spapr_tce_find_table(
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'start <= entry'
+#478: FILE: drivers/vfio/vfio_iommu_spapr_tce.c:122:
++		if ((start <= entry) && (entry < end)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'entry < end'
+#478: FILE: drivers/vfio/vfio_iommu_spapr_tce.c:122:
++		if ((start <= entry) && (entry < end)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#588: FILE: drivers/vfio/vfio_iommu_spapr_tce.c:373:
++		if (WARN_ON(!container->grp ||
++				!iommu_group_get_iommudata(container->grp)))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#616: FILE: drivers/vfio/vfio_iommu_spapr_tce.c:420:
++		if (WARN_ON(!container->grp ||
++				!iommu_group_get_iommudata(container->grp)))
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#711: FILE: drivers/vfio/vfio_iommu_spapr_tce.c:536:
++		BUG_ON(!iommu);
+
+./tmp.djB3TWhDXa//home/fedora/lkml-analysis/lkml/3/patch.offset.0000000322.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 2 warnings, 15 checks, 590 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.djB3TWhDXa//home/fedora/lkml-analysis/lkml/3/patch.offset.0000000322.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

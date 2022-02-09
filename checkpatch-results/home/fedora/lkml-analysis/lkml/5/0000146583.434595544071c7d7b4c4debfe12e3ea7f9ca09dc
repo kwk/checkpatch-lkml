@@ -1,0 +1,70 @@
+CHECK:UNDOCUMENTED_SETUP: __setup appears un-documented -- check Documentation/admin-guide/kernel-parameters.txt
+#80: FILE: arch/powerpc/mm/hugetlbpage.c:796:
++__setup("default_hugepagesz=", hugepage_default_setup_sz);
+
+WARNING:MISPLACED_INIT: __initdata should be placed after parsed_valid_default_hugepagesz
+#105: FILE: mm/hugetlb.c:57:
++static bool __initdata parsed_valid_default_hugepagesz = true;
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#129: FILE: mm/hugetlb.c:2857:
++		if (!parsed_valid_default_hugepagesz) {
+[...]
++		} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#131: FILE: mm/hugetlb.c:2859:
++			pr_warn("hugepages = %s cannot be allocated for "
++				"unsupported default_hugepagesz, ignoring\n", s);
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:BRACES: Unbalanced braces around else statement
+#133: FILE: mm/hugetlb.c:2861:
++		} else
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000146583.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 2 warnings, 3 checks, 63 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000146583.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

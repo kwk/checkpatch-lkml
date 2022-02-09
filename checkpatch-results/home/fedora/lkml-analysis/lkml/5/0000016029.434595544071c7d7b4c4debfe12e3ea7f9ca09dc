@@ -1,0 +1,70 @@
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#89: FILE: fs/btrfs/disk-io.c:3127:
+ }
++ALLOW_ERROR_INJECTION(open_ctree, ERRNO);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#102: FILE: fs/btrfs/free-space-cache.c:336:
+ }
++ALLOW_ERROR_INJECTION(io_ctl_init, ERRNO);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#133: FILE: include/asm-generic/error-injection.h:23:
++#define ALLOW_ERROR_INJECTION(fname, _etype)				\
++static struct error_injection_entry __used				\
+ 	__attribute__((__section__("_error_injection_whitelist")))	\
++	_eil_addr_##fname = {						\
++		.addr = (unsigned long)fname,				\
++		.etype = EI_ETYPE_##_etype,				\
++	};
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#168: FILE: include/linux/error-injection.h:10:
++extern int get_injectable_error_type(unsigned long addr);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#273: FILE: lib/error-inject.c:91:
++extern struct error_injection_entry __stop_error_injection_whitelist[];
+
+WARNING:VSPRINTF_POINTER_EXTENSION: Invalid vsprintf pointer extension '%pf' - use %ps instead
+#300: FILE: lib/error-inject.c:192:
++	seq_printf(m, "%pf\t%s\n", (void *)ent->start_addr,
++		   error_type_string(ent->etype));
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000016029.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 3 warnings, 3 checks, 183 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000016029.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

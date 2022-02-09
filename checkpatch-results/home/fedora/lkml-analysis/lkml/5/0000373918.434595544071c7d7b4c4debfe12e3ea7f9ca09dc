@@ -1,0 +1,139 @@
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#110: FILE: kernel/futex.c:220:
++		struct mutex mutex;
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'state->type == TYPE_PI'
+#153: FILE: kernel/futex.c:865:
++	if (state->owner && (state->type == TYPE_PI)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#184: FILE: kernel/futex.c:958:
++		if (pi_state->type == TYPE_PI)
+[...]
++		else if (pi_state->type == TYPE_TO) {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'pi_state->type != TYPE_PI'
+#202: FILE: kernel/futex.c:1039:
++	if (unlikely(!pi_state || (pi_state->type != TYPE_PI)))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#350: FILE: kernel/futex.c:3335:
++#define FUTEX_SPIN_THRESHOLD	(1 << 10)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#391: FILE: kernel/futex.c:3376:
++		if (unlikely(!otask || (otask->flags & PF_EXITING) ||
++			    (uval & FUTEX_OWNER_DIED))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#397: FILE: kernel/futex.c:3382:
++			ret = futex_atomic_cmpxchg_inatomic(&curval,
++					uaddr, uval, vpid);
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'futex_spin_on_owner', this function's name, in a string
+#402: FILE: kernel/futex.c:3387:
++			pr_info("futex_spin_on_owner: pid %d grabs futex from pid %d (%s)!\n",
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#497: FILE: kernel/futex.c:3482:
++		BUG_ON(!otask);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#537: FILE: kernel/futex.c:3522:
++	if (unlikely(((uval & FUTEX_TID_MASK) == vpid) ||
++			should_fail_futex(true)))
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#564: FILE: kernel/futex.c:3549:
++	BUG_ON(!state);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'pid != vpid'
+#630: FILE: kernel/futex.c:3615:
++	if ((pid && (pid != vpid)) || !uval)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#640: FILE: kernel/futex.c:3625:
++		futex_atomic_cmpxchg_inatomic(&uval, uaddr, uval,
++					       uval & ~FUTEX_TID_MASK);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'uval == FUTEX_WAITERS'
+#674: FILE: kernel/futex.c:3659:
++	if ((uval == FUTEX_WAITERS) && owner)
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000373918.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 3 warnings, 11 checks, 633 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000373918.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

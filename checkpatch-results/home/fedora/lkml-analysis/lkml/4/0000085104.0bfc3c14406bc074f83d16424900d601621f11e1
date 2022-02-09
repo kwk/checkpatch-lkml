@@ -1,0 +1,115 @@
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc_node(sizeof(*pkg_data)...) over kmalloc_node(sizeof(struct pkg_data)...)
+#284: FILE: arch/x86/events/intel/cqm.c:163:
++	pkg_data = kmalloc_node(sizeof(struct pkg_data),
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#304: FILE: arch/x86/events/intel/cqm.c:180:
++	pkg_data->prmids_by_rmid = kmalloc_node(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '['
+#340: FILE: arch/x86/events/intel/cqm.c:211:
++	WARN_ON_ONCE(valid && pkg_data->prmids_by_rmid[
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc_node(sizeof(*prmid)...) over kmalloc_node(sizeof(struct prmid)...)
+#386: FILE: arch/x86/events/intel/cqm.c:240:
++		prmid = kmalloc_node(sizeof(struct prmid), GFP_KERNEL,
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#402: FILE: arch/x86/events/intel/cqm.c:251:
++		raw_spin_lock_irqsave_nested(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#455: FILE: arch/x86/events/intel/cqm.c:374:
++	raw_spin_unlock_irqrestore(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#501: FILE: arch/x86/events/intel/cqm.c:418:
++	raw_spin_unlock_irqrestore(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#597: FILE: arch/x86/events/intel/cqm.c:639:
++	cqm_pkgs_data[pkg_id]->rotation_cpu = cpumask_any_but(
+
+WARNING:TYPO_SPELLING: 'programed' may be misspelled - perhaps 'programmed'?
+#720: FILE: arch/x86/events/intel/cqm.h:26:
++ * @rmid:		The rmid value to be programed in hardware.
+          		                     ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:TYPO_SPELLING: 'accesors' may be misspelled - perhaps 'accessors'?
+#722: FILE: arch/x86/events/intel/cqm.h:28:
++ * Its accesors ensure that CQM events for this rmid are read atomically and
+        ^^^^^^^^
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#769: FILE: arch/x86/events/intel/cqm.h:75:
++	struct mutex		pkg_data_mutex;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pkg_id__' - possible side-effects?
+#792: FILE: arch/x86/events/intel/cqm.h:98:
++#define cqm_pkg_id_for_each_online(pkg_id__) \
++	for (pkg_id__ = __cqm_pkgs_data_first_online(); \
++	     pkg_id__ < PQR_MAX_NR_PKGS; \
++	     pkg_id__ = __cqm_pkgs_data_next_online(pkg_id__))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'pmonr' may be better as '(pmonr)' to avoid precedence issues
+#797: FILE: arch/x86/events/intel/cqm.h:103:
++#define __pkg_data(pmonr, member) cqm_pkgs_data[pmonr->pkg_id]->member
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'member' may be better as '(member)' to avoid precedence issues
+#797: FILE: arch/x86/events/intel/cqm.h:103:
++#define __pkg_data(pmonr, member) cqm_pkgs_data[pmonr->pkg_id]->member
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#812: FILE: arch/x86/events/intel/cqm.h:118:
++# define monr_hrchy_acquire_raw_spin_locks_irq_save(flags, i) \
++	do { \
++		raw_local_irq_save(flags); \
++		cqm_pkg_id_for_each_online(i) {\
++			raw_spin_lock_nested( \
++				&cqm_pkgs_data[i]->pkg_data_lock, i); \
++		} \
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#835: FILE: arch/x86/events/intel/cqm.h:141:
++# define monr_hrchy_release_raw_spin_locks_irq_restore(flags, i) \
++	do { \
++		cqm_pkg_id_for_each_online(i) {\
++			raw_spin_unlock(&cqm_pkgs_data[i]->pkg_data_lock); \
++		} \
++		raw_local_irq_restore(flags); \
++	} while (0)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#864: FILE: arch/x86/events/intel/cqm.h:170:
++}
++#ifdef CONFIG_LOCKDEP
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000085104.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 2 warnings, 15 checks, 806 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000085104.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,149 @@
+WARNING:UNKNOWN_COMMIT_ID: Unknown commit id 'e96ebd589debd9a6a793608c4ec7019c38785dea', maybe rebased or not pulled?
+#64: 
+commit e96ebd589debd9a6a793608c4ec7019c38785dea upstream.
+
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#66: 
+This patch implements the __smp_store_release and __smp_load_acquire barriers
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#85: FILE: arch/parisc/include/asm/barrier.h:29:
++#define __smp_store_release(p, v)					\
++do {									\
++	typeof(p) __p = (p);						\
++        union { typeof(*p) __val; char __c[1]; } __u =			\
++                { .__val = (__force typeof(*p)) (v) };			\
++	compiletime_assert_atomic_type(*p);				\
++	switch (sizeof(*p)) {						\
++	case 1:								\
++		asm volatile("stb,ma %0,0(%1)"				\
++				: : "r"(*(__u8 *)__u.__c), "r"(__p)	\
++				: "memory");				\
++		break;							\
++	case 2:								\
++		asm volatile("sth,ma %0,0(%1)"				\
++				: : "r"(*(__u16 *)__u.__c), "r"(__p)	\
++				: "memory");				\
++		break;							\
++	case 4:								\
++		asm volatile("stw,ma %0,0(%1)"				\
++				: : "r"(*(__u32 *)__u.__c), "r"(__p)	\
++				: "memory");				\
++		break;							\
++	case 8:								\
++		if (IS_ENABLED(CONFIG_64BIT))				\
++			asm volatile("std,ma %0,0(%1)"			\
++				: : "r"(*(__u64 *)__u.__c), "r"(__p)	\
++				: "memory");				\
++		break;							\
++	}								\
++} while (0)
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#88: FILE: arch/parisc/include/asm/barrier.h:32:
++        union { typeof(*p) __val; char __c[1]; } __u =^I^I^I\$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#88: FILE: arch/parisc/include/asm/barrier.h:32:
++        union { typeof(*p) __val; char __c[1]; } __u =^I^I^I\$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#89: FILE: arch/parisc/include/asm/barrier.h:33:
++                { .__val = (__force typeof(*p)) (v) };^I^I^I\$
+
+CHECK:SPACING: No space is necessary after a cast
+#89: FILE: arch/parisc/include/asm/barrier.h:33:
++                { .__val = (__force typeof(*p)) (v) };			\
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#89: FILE: arch/parisc/include/asm/barrier.h:33:
++                { .__val = (__force typeof(*p)) (v) };^I^I^I\$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#116: FILE: arch/parisc/include/asm/barrier.h:60:
++#define __smp_load_acquire(p)						\
++({									\
++	union { typeof(*p) __val; char __c[1]; } __u;			\
++	typeof(p) __p = (p);						\
++	compiletime_assert_atomic_type(*p);				\
++	switch (sizeof(*p)) {						\
++	case 1:								\
++		asm volatile("ldb,ma 0(%1),%0"				\
++				: "=r"(*(__u8 *)__u.__c) : "r"(__p)	\
++				: "memory");				\
++		break;							\
++	case 2:								\
++		asm volatile("ldh,ma 0(%1),%0"				\
++				: "=r"(*(__u16 *)__u.__c) : "r"(__p)	\
++				: "memory");				\
++		break;							\
++	case 4:								\
++		asm volatile("ldw,ma 0(%1),%0"				\
++				: "=r"(*(__u32 *)__u.__c) : "r"(__p)	\
++				: "memory");				\
++		break;							\
++	case 8:								\
++		if (IS_ENABLED(CONFIG_64BIT))				\
++			asm volatile("ldd,ma 0(%1),%0"			\
++				: "=r"(*(__u64 *)__u.__c) : "r"(__p)	\
++				: "memory");				\
++		break;							\
++	}								\
++	__u.__val;							\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'p' may be better as '(p)' to avoid precedence issues
+#116: FILE: arch/parisc/include/asm/barrier.h:60:
++#define __smp_load_acquire(p)						\
++({									\
++	union { typeof(*p) __val; char __c[1]; } __u;			\
++	typeof(p) __p = (p);						\
++	compiletime_assert_atomic_type(*p);				\
++	switch (sizeof(*p)) {						\
++	case 1:								\
++		asm volatile("ldb,ma 0(%1),%0"				\
++				: "=r"(*(__u8 *)__u.__c) : "r"(__p)	\
++				: "memory");				\
++		break;							\
++	case 2:								\
++		asm volatile("ldh,ma 0(%1),%0"				\
++				: "=r"(*(__u16 *)__u.__c) : "r"(__p)	\
++				: "memory");				\
++		break;							\
++	case 4:								\
++		asm volatile("ldw,ma 0(%1),%0"				\
++				: "=r"(*(__u32 *)__u.__c) : "r"(__p)	\
++				: "memory");				\
++		break;							\
++	case 8:								\
++		if (IS_ENABLED(CONFIG_64BIT))				\
++			asm volatile("ldd,ma 0(%1),%0"			\
++				: "=r"(*(__u64 *)__u.__c) : "r"(__p)	\
++				: "memory");				\
++		break;							\
++	}								\
++	__u.__val;							\
++})
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000032017.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 2 errors, 4 warnings, 4 checks, 67 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000032017.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

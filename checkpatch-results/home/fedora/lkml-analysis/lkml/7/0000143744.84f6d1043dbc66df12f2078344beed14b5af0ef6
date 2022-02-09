@@ -1,0 +1,163 @@
+ERROR:CORRUPTED_PATCH: patch seems to be corrupt (line wrapped?)
+#152: FILE: Documentation/admin-guide/kernel-parameters.txt:4091:
+=20
+
+The patch seems to be corrupted or lines are wrapped.
+Please regenerate the patch file before sending it to the maintainer.
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#185: FILE: arch/x86/kernel/cpu/amd.c:806:
+ }
++static bool rdrand_force;
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: spaces required around that '=' (ctx:WxV)
+#189: FILE: arch/x86/kernel/cpu/amd.c:810:
++	rdrand_force =3D true;
+ 	             ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#193: FILE: arch/x86/kernel/cpu/amd.c:814:
++}
++early_param("rdrand_force", rdrand_force_cmdline);
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#240: FILE: arch/x86/kernel/cpu/amd.c:904:
++	case 0x16: init_amd_jg(c); break;
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:SPACING: spaces required around that '=' (ctx:WxV)
+#273: FILE: arch/x86/power/cpu.c:397:
++	struct saved_msrs *saved_msrs =3D &saved_context.saved_msrs;
+ 	                              ^
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:WxV)
+#273: FILE: arch/x86/power/cpu.c:397:
++	struct saved_msrs *saved_msrs =3D &saved_context.saved_msrs;
+ 	                                  ^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#283: FILE: arch/x86/power/cpu.c:401:
++	int i, j;
++	total_num =3D saved_msrs->num + num;
+
+ERROR:SPACING: spaces required around that '=' (ctx:WxV)
+#283: FILE: arch/x86/power/cpu.c:401:
++	total_num =3D saved_msrs->num + num;
+ 	          ^
+
+ERROR:SPACING: spaces required around that '=' (ctx:WxV)
+#303: FILE: arch/x86/power/cpu.c:419:
++	for (i =3D saved_msrs->num, j =3D 0; i < total_num; i++, j++) {
+ 	       ^
+
+ERROR:SPACING: spaces required around that '=' (ctx:WxV)
+#303: FILE: arch/x86/power/cpu.c:419:
++	for (i =3D saved_msrs->num, j =3D 0; i < total_num; i++, j++) {
+ 	                              ^
+
+ERROR:SPACING: spaces required around that '=' (ctx:WxV)
+#304: FILE: arch/x86/power/cpu.c:420:
++		msr_array[i].info.msr_no	=3D msr_id[j];
+ 		                        	^
+
+ERROR:SPACING: spaces required around that '=' (ctx:WxV)
+#310: FILE: arch/x86/power/cpu.c:424:
++	saved_msrs->num   =3D total_num;
+ 	                  ^
+
+ERROR:SPACING: spaces required around that '=' (ctx:WxV)
+#311: FILE: arch/x86/power/cpu.c:425:
++	saved_msrs->array =3D msr_array;
+ 	                  ^
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#338: FILE: arch/x86/power/cpu.c:462:
+ };
++static int msr_save_cpuid_features(const struct x86_cpu_id *c)
+
+ERROR:SPACING: spaces required around that '=' (ctx:WxV)
+#340: FILE: arch/x86/power/cpu.c:464:
++	u32 cpuid_msr_id[] =3D {
+ 	                   ^
+
+WARNING:UNNECESSARY_MODIFIER: Integer promotion: Using 'h' in '%#hx' is unnecessary
+#344: FILE: arch/x86/power/cpu.c:468:
++	pr_info("x86/pm: family %#hx cpu detected, MSR saving is needed during su=
+spending.\n",
++		c->family);
++
++	return msr_build_context(cpuid_msr_id, ARRAY_SIZE(cpuid_msr_id));
++}
++
++static const struct x86_cpu_id msr_save_cpu_table[] =3D {
++	{
++		.vendor =3D X86_VENDOR_AMD,
++		.family =3D 0x15,
++		.model =3D X86_MODEL_ANY,
++		.feature =3D X86_FEATURE_ANY,
++		.driver_data =3D (kernel_ulong_t)msr_save_cpuid_features,
++	},
++	{
++		.vendor =3D X86_VENDOR_AMD,
++		.family =3D 0x16,
++		.model =3D X86_MODEL_ANY,
++		.feature =3D X86_FEATURE_ANY,
++		.driver_data =3D (kernel_ulong_t)msr_save_cpuid_features,
++	},
++	{}
++};
++
++typedef int (*pm_cpu_match_t)(const struct x86_cpu_id *);
++static int pm_cpu_check(const struct x86_cpu_id *c)
++{
++	const struct x86_cpu_id *m;
++	int ret =3D 0;
++
++	m =3D x86_match_cpu(msr_save_cpu_table);
++	if (m) {
++		pm_cpu_match_t fn;
++
++		fn =3D (pm_cpu_match_t)m->driver_data;
++		ret =3D fn(m);
++	}
++
++	return ret;
++}
++
+ static int pm_check_save_msr(void)
+ {
+ 	dmi_check_system(msr_save_dmi_table);
++	pm_cpu_check(msr_save_cpu_table);
++
+ 	return 0;
+ }
+=20
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000143744.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 total: 11 errors, 2 warnings, 4 checks, 229 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000143744.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

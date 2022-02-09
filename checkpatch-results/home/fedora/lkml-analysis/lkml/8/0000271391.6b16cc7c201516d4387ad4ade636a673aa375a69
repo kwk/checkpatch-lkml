@@ -1,0 +1,91 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#58: 
+Gitweb:        https://git.kernel.org/tip/e6e78b004fa7e0ab455d46d27f218bf6ce178a18
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'kfree_perf_thread', this function's name, in a string
+#220: FILE: kernel/rcu/rcuperf.c:616:
++	VERBOSE_PERFOUT_STRING("kfree_perf_thread task started");
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*alloc_ptr)...) over kmalloc(sizeof(struct kfree_obj)...)
+#235: FILE: kernel/rcu/rcuperf.c:631:
++			alloc_ptr = kmalloc(sizeof(struct kfree_obj), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around alloc_ptr->rh
+#245: FILE: kernel/rcu/rcuperf.c:641:
++				kfree_call_rcu_nobatch(&(alloc_ptr->rh), cb);
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#261: FILE: kernel/rcu/rcuperf.c:657:
++		pr_alert("Total time taken by all kfree'ers: %llu ns, loops: %d, batches: %ld\n",
++		       (unsigned long long)(end_time - start_time), kfree_loops,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#328: FILE: kernel/rcu/rcuperf.c:724:
++	kfree_reader_tasks = kcalloc(kfree_nrealthreads, sizeof(kfree_reader_tasks[0]),
++			       GFP_KERNEL);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!kfree_reader_tasks"
+#329: FILE: kernel/rcu/rcuperf.c:725:
++	if (kfree_reader_tasks == NULL) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000271391.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 2 warnings, 5 checks, 250 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000271391.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

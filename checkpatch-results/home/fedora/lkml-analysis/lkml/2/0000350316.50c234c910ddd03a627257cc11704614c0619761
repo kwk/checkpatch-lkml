@@ -1,0 +1,202 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'var' - possible side-effects?
+#52: FILE: arch/x86/include/asm/percpu.h:219:
++#define percpu_cmpxchg_op(var, oval, nval)				\
++({									\
++	typeof(var) __ret;						\
++	typeof(var) __old = (oval);					\
++	typeof(var) __new = (nval);					\
++	switch (sizeof(var)) {						\
++	case 1:								\
++		asm("cmpxchgb %2, "__percpu_arg(1)			\
++			    : "=a" (__ret), "+m" (&var)			\
++			    : "q" (__new), "0" (__old)			\
++			    : "memory");				\
++		break;							\
++	case 2:								\
++		asm("cmpxchgw %2, "__percpu_arg(1)			\
++			    : "=a" (__ret), "+m" (&var)			\
++			    : "r" (__new), "0" (__old)			\
++			    : "memory");				\
++		break;							\
++	case 4:								\
++		asm("cmpxchgl %2, "__percpu_arg(1)			\
++			    : "=a" (__ret), "+m" (&var)			\
++			    : "r" (__new), "0" (__old)			\
++			    : "memory");				\
++		break;							\
++	case 8:								\
++		asm("cmpxchgq %2, "__percpu_arg(1)			\
++			    : "=a" (__ret), "+m" (&var)			\
++			    : "r" (__new), "0" (__old)			\
++			    : "memory");				\
++		break;							\
++	default: __bad_percpu_size();					\
++	}								\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'var' may be better as '(var)' to avoid precedence issues
+#52: FILE: arch/x86/include/asm/percpu.h:219:
++#define percpu_cmpxchg_op(var, oval, nval)				\
++({									\
++	typeof(var) __ret;						\
++	typeof(var) __old = (oval);					\
++	typeof(var) __new = (nval);					\
++	switch (sizeof(var)) {						\
++	case 1:								\
++		asm("cmpxchgb %2, "__percpu_arg(1)			\
++			    : "=a" (__ret), "+m" (&var)			\
++			    : "q" (__new), "0" (__old)			\
++			    : "memory");				\
++		break;							\
++	case 2:								\
++		asm("cmpxchgw %2, "__percpu_arg(1)			\
++			    : "=a" (__ret), "+m" (&var)			\
++			    : "r" (__new), "0" (__old)			\
++			    : "memory");				\
++		break;							\
++	case 4:								\
++		asm("cmpxchgl %2, "__percpu_arg(1)			\
++			    : "=a" (__ret), "+m" (&var)			\
++			    : "r" (__new), "0" (__old)			\
++			    : "memory");				\
++		break;							\
++	case 8:								\
++		asm("cmpxchgq %2, "__percpu_arg(1)			\
++			    : "=a" (__ret), "+m" (&var)			\
++			    : "r" (__new), "0" (__old)			\
++			    : "memory");				\
++		break;							\
++	default: __bad_percpu_size();					\
++	}								\
++	__ret;								\
++})
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#59: FILE: arch/x86/include/asm/percpu.h:226:
++		asm("cmpxchgb %2, "__percpu_arg(1)			\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#65: FILE: arch/x86/include/asm/percpu.h:232:
++		asm("cmpxchgw %2, "__percpu_arg(1)			\
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#71: FILE: arch/x86/include/asm/percpu.h:238:
++		asm("cmpxchgl %2, "__percpu_arg(1)			\
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#77: FILE: arch/x86/include/asm/percpu.h:244:
++		asm("cmpxchgq %2, "__percpu_arg(1)			\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#82: FILE: arch/x86/include/asm/percpu.h:249:
++	default: __bad_percpu_size();					\
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'pcp' may be better as '(pcp)' to avoid precedence issues
+#102: FILE: arch/x86/include/asm/percpu.h:392:
++#define percpu_cmpxchg8b_double(pcp, o1, o2, n1, n2)			\
++({									\
++	char __ret;							\
++	typeof(o1) __o1 = o1;						\
++	typeof(o1) __n1 = n1;						\
++	typeof(o2) __o2 = o2;						\
++	typeof(o2) __n2 = n2;						\
++	asm("cmpxchg8b "__percpu_arg(1)"\n\tsetz %0\n\t"		\
++		    : "=a"(__ret), "=m" (*pcp)				\
++		    :  "b"(__n1), "c"(__n2), "a"(__o1), "d"(__o2));	\
++	__ret;								\
++})
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#109: FILE: arch/x86/include/asm/percpu.h:399:
++	asm("cmpxchg8b "__percpu_arg(1)"\n\tsetz %0\n\t"		\
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#115: FILE: arch/x86/include/asm/percpu.h:405:
++#define __this_cpu_cmpxchg_double_4(pcp, o1, o2, n1, n2) percpu_cmpxchg8b_double((pcp), o1, o2, n1, n2)
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#116: FILE: arch/x86/include/asm/percpu.h:406:
++#define this_cpu_cmpxchg_double_4(pcp, o1, o2, n1, n2)	percpu_cmpxchg8b_double((pcp), o1, o2, n1, n2)
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#117: FILE: arch/x86/include/asm/percpu.h:407:
++#define irqsafe_cmpxchg_double_4(pcp, o1, o2, n1, n2)	percpu_cmpxchg8b_double((pcp), o1, o2, n1, n2)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'pcp' may be better as '(pcp)' to avoid precedence issues
+#122: FILE: arch/x86/include/asm/percpu.h:412:
++#define __this_cpu_cmpxchg_8(pcp, oval, nval)				\
++({									\
++	typeof(var) __ret;						\
++	typeof(var) __old = (oval);					\
++	typeof(var) __new = (nval);					\
++	asm("cmpxchg8b %2, "__percpu_arg(1)				\
++	    : "=A" (__ret), "+m" (&pcp)					\
++	    : "b" (((u32)new), "c" ((u32)(new >> 32)),  "0" (__old)	\
++	    : "memory");						\
++	__ret;								\
++})
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#127: FILE: arch/x86/include/asm/percpu.h:417:
++	asm("cmpxchg8b %2, "__percpu_arg(1)				\
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'pcp' may be better as '(pcp)' to avoid precedence issues
+#150: FILE: arch/x86/include/asm/percpu.h:460:
++#define percpu_cmpxchg16b(pcp, o1, o2, n1, n2)				\
++({									\
++	char __ret;							\
++	typeof(o1) __o1 = o1;						\
++	typeof(o1) __n1 = n1;						\
++	typeof(o2) __o2 = o2;						\
++	typeof(o2) __n2 = n2;						\
++	asm("cmpxchg16b "__percpu_arg(1)"\n\tsetz %0\n\t"		\
++		    : "=a"(__ret), "=m" (*pcp)				\
++		    :  "b"(__n1), "c"(__n2), "a"(__o1), "d"(__o2));	\
++	__ret;								\
++})
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#157: FILE: arch/x86/include/asm/percpu.h:467:
++	asm("cmpxchg16b "__percpu_arg(1)"\n\tsetz %0\n\t"		\
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000350316.commit.50c234c910ddd03a627257cc11704614c0619761 total: 1 errors, 3 warnings, 12 checks, 119 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000350316.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

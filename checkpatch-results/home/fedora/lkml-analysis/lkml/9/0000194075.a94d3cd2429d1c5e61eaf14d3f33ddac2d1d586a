@@ -1,0 +1,111 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#75: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'bits' - possible side-effects?
+#169: FILE: arch/x86/kvm/vmx/tdx.h:90:
++#define TDX_BUILD_TDVPS_ACCESSORS(bits, uclass, lclass)			       \
++static __always_inline u##bits td_##lclass##_read##bits(struct vcpu_tdx *tdx,  \
++							u32 field)	       \
++{									       \
++	struct tdx_ex_ret ex_ret;					       \
++	u64 err;							       \
++									       \
++	tdvps_##lclass##_check(field, bits);				       \
++	err = tdrdvps(tdx->tdvpr.pa, TDVPS_##uclass(field), &ex_ret);	       \
++	if (unlikely(err)) {						       \
++		pr_err("TDRDVPS["#uclass".0x%x] failed: 0x%llx\n", field, err);\
++		return 0;						       \
++	}								       \
++	return (u##bits)ex_ret.r8;					       \
++}									       \
++static __always_inline void td_##lclass##_write##bits(struct vcpu_tdx *tdx,    \
++						      u32 field, u##bits val)  \
++{									       \
++	struct tdx_ex_ret ex_ret;					       \
++	u64 err;							       \
++									       \
++	tdvps_##lclass##_check(field, bits);				       \
++	err = tdwrvps(tdx->tdvpr.pa, TDVPS_##uclass(field), val,	       \
++		      GENMASK_ULL(bits - 1, 0), &ex_ret);		       \
++	if (unlikely(err))						       \
++		pr_err("TDWRVPS["#uclass".0x%x] = 0x%llx failed: 0x%llx\n",    \
++		       field, (u64)val, err);				       \
++}									       \
++static __always_inline void td_##lclass##_setbit##bits(struct vcpu_tdx *tdx,   \
++						       u32 field, u64 bit)     \
++{									       \
++	struct tdx_ex_ret ex_ret;					       \
++	u64 err;							       \
++									       \
++	tdvps_##lclass##_check(field, bits);				       \
++	err = tdwrvps(tdx->tdvpr.pa, TDVPS_##uclass(field), bit, bit, &ex_ret);\
++	if (unlikely(err))						       \
++		pr_err("TDWRVPS["#uclass".0x%x] |= 0x%llx failed: 0x%llx\n",   \
++		       field, bit, err);				       \
++}									       \
++static __always_inline void td_##lclass##_clearbit##bits(struct vcpu_tdx *tdx, \
++						         u32 field, u64 bit)   \
++{									       \
++	struct tdx_ex_ret ex_ret;					       \
++	u64 err;							       \
++									       \
++	tdvps_##lclass##_check(field, bits);				       \
++	err = tdwrvps(tdx->tdvpr.pa, TDVPS_##uclass(field), 0, bit, &ex_ret);  \
++	if (unlikely(err))						       \
++		pr_err("TDWRVPS["#uclass".0x%x] &= ~0x%llx failed: 0x%llx\n",  \
++		       field, bit, err);				       \
++}
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#179: FILE: arch/x86/kvm/vmx/tdx.h:100:
++		pr_err("TDRDVPS["#uclass".0x%x] failed: 0x%llx\n", field, err);\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#194: FILE: arch/x86/kvm/vmx/tdx.h:115:
++		pr_err("TDWRVPS["#uclass".0x%x] = 0x%llx failed: 0x%llx\n",    \
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#206: FILE: arch/x86/kvm/vmx/tdx.h:127:
++		pr_err("TDWRVPS["#uclass".0x%x] |= 0x%llx failed: 0x%llx\n",   \
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#210: FILE: arch/x86/kvm/vmx/tdx.h:131:
++^I^I^I^I^I^I         u32 field, u64 bit)   \$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#218: FILE: arch/x86/kvm/vmx/tdx.h:139:
++		pr_err("TDWRVPS["#uclass".0x%x] &= ~0x%llx failed: 0x%llx\n",  \
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000194075.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a total: 1 errors, 1 warnings, 5 checks, 167 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000194075.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

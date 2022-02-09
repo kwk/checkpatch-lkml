@@ -1,0 +1,246 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#52: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#57: FILE: include/linux/wait-simple.h:1:
++#ifndef _LINUX_WAIT_SIMPLE_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#70: FILE: include/linux/wait-simple.h:14:
++#define DEFINE_SWAITER(name)					\
++	struct swaiter name = {					\
++		.task	= current,				\
++		.node	= LIST_HEAD_INIT((name).node),		\
++	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#81: FILE: include/linux/wait-simple.h:25:
++#define SWAIT_HEAD_INITIALIZER(name) {				\
++		.lock	= __RAW_SPIN_LOCK_UNLOCKED(name.lock),	\
++		.list	= LIST_HEAD_INIT((name).list),		\
++	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#86: FILE: include/linux/wait-simple.h:30:
++#define DEFINE_SWAIT_HEAD(name)					\
++	struct swait_head name = SWAIT_HEAD_INITIALIZER(name)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#89: FILE: include/linux/wait-simple.h:33:
++extern void __init_swait_head(struct swait_head *h, struct lock_class_key *key);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#101: FILE: include/linux/wait-simple.h:45:
++extern void swait_prepare_locked(struct swait_head *head, struct swaiter *w);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#102: FILE: include/linux/wait-simple.h:46:
++extern void swait_prepare(struct swait_head *head, struct swaiter *w, int state);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#103: FILE: include/linux/wait-simple.h:47:
++extern void swait_finish_locked(struct swait_head *head, struct swaiter *w);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#104: FILE: include/linux/wait-simple.h:48:
++extern void swait_finish(struct swait_head *head, struct swaiter *w);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#109: FILE: include/linux/wait-simple.h:53:
++extern unsigned int __swait_wake(struct swait_head *head, unsigned int state, unsigned int num);
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#110: FILE: include/linux/wait-simple.h:54:
++extern unsigned int __swait_wake_locked(struct swait_head *head, unsigned int state, unsigned int num);
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#110: FILE: include/linux/wait-simple.h:54:
++extern unsigned int __swait_wake_locked(struct swait_head *head, unsigned int state, unsigned int num);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'wq' - possible side-effects?
+#120: FILE: include/linux/wait-simple.h:64:
++#define __swait_event(wq, condition)					\
++do {									\
++	DEFINE_SWAITER(__wait);						\
++									\
++	for (;;) {							\
++		swait_prepare(&wq, &__wait, TASK_UNINTERRUPTIBLE);	\
++		if (condition)						\
++			break;						\
++		schedule();						\
++	}								\
++	swait_finish(&wq, &__wait);					\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'wq' may be better as '(wq)' to avoid precedence issues
+#120: FILE: include/linux/wait-simple.h:64:
++#define __swait_event(wq, condition)					\
++do {									\
++	DEFINE_SWAITER(__wait);						\
++									\
++	for (;;) {							\
++		swait_prepare(&wq, &__wait, TASK_UNINTERRUPTIBLE);	\
++		if (condition)						\
++			break;						\
++		schedule();						\
++	}								\
++	swait_finish(&wq, &__wait);					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'condition' - possible side-effects?
+#145: FILE: include/linux/wait-simple.h:89:
++#define swait_event(wq, condition)					\
++do {									\
++	if (condition)							\
++		break;							\
++	__swait_event(wq, condition);					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'wq' - possible side-effects?
+#152: FILE: include/linux/wait-simple.h:96:
++#define __swait_event_interruptible(wq, condition, ret)			\
++do {									\
++	DEFINE_SWAITER(__wait);						\
++									\
++	for (;;) {							\
++		swait_prepare(&wq, &__wait, TASK_INTERRUPTIBLE);	\
++		if (condition)						\
++			break;						\
++		if (signal_pending(current)) {				\
++			ret = -ERESTARTSYS;				\
++			break;						\
++		}							\
++		schedule();						\
++	}								\
++	swait_finish(&wq, &__wait);					\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'wq' may be better as '(wq)' to avoid precedence issues
+#152: FILE: include/linux/wait-simple.h:96:
++#define __swait_event_interruptible(wq, condition, ret)			\
++do {									\
++	DEFINE_SWAITER(__wait);						\
++									\
++	for (;;) {							\
++		swait_prepare(&wq, &__wait, TASK_INTERRUPTIBLE);	\
++		if (condition)						\
++			break;						\
++		if (signal_pending(current)) {				\
++			ret = -ERESTARTSYS;				\
++			break;						\
++		}							\
++		schedule();						\
++	}								\
++	swait_finish(&wq, &__wait);					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'condition' - possible side-effects?
+#181: FILE: include/linux/wait-simple.h:125:
++#define swait_event_interruptible(wq, condition)			\
++({									\
++	int __ret = 0;							\
++	if (!(condition))						\
++		__swait_event_interruptible(wq, condition, __ret);	\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'wq' - possible side-effects?
+#189: FILE: include/linux/wait-simple.h:133:
++#define __swait_event_timeout(wq, condition, ret)			\
++do {									\
++	DEFINE_SWAITER(__wait);						\
++									\
++	for (;;) {							\
++		swait_prepare(&wq, &__wait, TASK_UNINTERRUPTIBLE);	\
++		if (condition)						\
++			break;						\
++		ret = schedule_timeout(ret);				\
++		if (!ret)						\
++			break;						\
++	}								\
++	swait_finish(&wq, &__wait);					\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'wq' may be better as '(wq)' to avoid precedence issues
+#189: FILE: include/linux/wait-simple.h:133:
++#define __swait_event_timeout(wq, condition, ret)			\
++do {									\
++	DEFINE_SWAITER(__wait);						\
++									\
++	for (;;) {							\
++		swait_prepare(&wq, &__wait, TASK_UNINTERRUPTIBLE);	\
++		if (condition)						\
++			break;						\
++		ret = schedule_timeout(ret);				\
++		if (!ret)						\
++			break;						\
++	}								\
++	swait_finish(&wq, &__wait);					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ret' - possible side-effects?
+#189: FILE: include/linux/wait-simple.h:133:
++#define __swait_event_timeout(wq, condition, ret)			\
++do {									\
++	DEFINE_SWAITER(__wait);						\
++									\
++	for (;;) {							\
++		swait_prepare(&wq, &__wait, TASK_UNINTERRUPTIBLE);	\
++		if (condition)						\
++			break;						\
++		ret = schedule_timeout(ret);				\
++		if (!ret)						\
++			break;						\
++	}								\
++	swait_finish(&wq, &__wait);					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'condition' - possible side-effects?
+#220: FILE: include/linux/wait-simple.h:164:
++#define swait_event_timeout(wq, condition, timeout)			\
++({									\
++	long __ret = timeout;						\
++	if (!(condition))						\
++		__swait_event_timeout(wq, condition, __ret);		\
++	__ret;								\
++})
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#248: FILE: kernel/wait-simple.c:1:
++/*
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000430520.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 4 warnings, 20 checks, 299 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000430520.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

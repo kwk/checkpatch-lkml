@@ -1,0 +1,186 @@
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#137: FILE: include/linux/btf.h:60:
++#define BTF_SHOW_COMPACT	(1ULL << 0)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#138: FILE: include/linux/btf.h:61:
++#define BTF_SHOW_NONAME		(1ULL << 1)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#139: FILE: include/linux/btf.h:62:
++#define BTF_SHOW_PTR_RAW	(1ULL << 2)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#140: FILE: include/linux/btf.h:63:
++#define BTF_SHOW_ZERO		(1ULL << 3)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#207: FILE: kernel/bpf/btf.c:327:
++	void (*show)(const struct btf *btf, const struct btf_type *t,
+ 			 u32 type_id, void *data, u8 bits_offsets,
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'kind' may be better as '(kind)' to avoid precedence issues
+#234: FILE: kernel/bpf/btf.c:722:
++#define BTF_KIND_BIT(kind)	(1ULL << kind)
+
+WARNING:REPEATED_WORD: Possible repeated word: 'have'
+#253: FILE: kernel/bpf/btf.c:741:
++	 * Start with type_id, as we have have resolved the struct btf_type *
+
+WARNING:REPEATED_WORD: Possible repeated word: 'the'
+#256: FILE: kernel/bpf/btf.c:744:
++	 * still represents the starting type while the the struct btf_type *
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#286: FILE: kernel/bpf/btf.c:774:
++	for (i = 0; i < BTF_SHOW_MAX_ITER; i++) {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'show' - possible side-effects?
+#412: FILE: kernel/bpf/btf.c:900:
++#define btf_show(show, ...)						      \
++	do {								      \
++		if (!show->state.depth_check)				      \
++			show->showfn(show, __VA_ARGS__);		      \
++	} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'show' may be better as '(show)' to avoid precedence issues
+#412: FILE: kernel/bpf/btf.c:900:
++#define btf_show(show, ...)						      \
++	do {								      \
++		if (!show->state.depth_check)				      \
++			show->showfn(show, __VA_ARGS__);		      \
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'show' - possible side-effects?
+#428: FILE: kernel/bpf/btf.c:916:
++#define btf_show_indent(show)						       \
++	((show->flags & BTF_SHOW_COMPACT) ? "" : __btf_show_indent(show))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'show' may be better as '(show)' to avoid precedence issues
+#428: FILE: kernel/bpf/btf.c:916:
++#define btf_show_indent(show)						       \
++	((show->flags & BTF_SHOW_COMPACT) ? "" : __btf_show_indent(show))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'show' may be better as '(show)' to avoid precedence issues
+#431: FILE: kernel/bpf/btf.c:919:
++#define btf_show_newline(show)						       \
++	((show->flags & BTF_SHOW_COMPACT) ? "" : "\n")
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'show' - possible side-effects?
+#434: FILE: kernel/bpf/btf.c:922:
++#define btf_show_delim(show)						       \
++	(show->state.depth == 0 ? "" :					       \
++	 ((show->flags & BTF_SHOW_COMPACT) && show->state.type &&	       \
++	  BTF_INFO_KIND(show->state.type->info) == BTF_KIND_UNION) ? "|" : ",")
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'show' may be better as '(show)' to avoid precedence issues
+#434: FILE: kernel/bpf/btf.c:922:
++#define btf_show_delim(show)						       \
++	(show->state.depth == 0 ? "" :					       \
++	 ((show->flags & BTF_SHOW_COMPACT) && show->state.type &&	       \
++	  BTF_INFO_KIND(show->state.type->info) == BTF_KIND_UNION) ? "|" : ",")
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'show' - possible side-effects?
+#439: FILE: kernel/bpf/btf.c:927:
++#define btf_show_type_value(show, fmt, value)				       \
++	do {								       \
++		if ((value) != 0 || (show->flags & BTF_SHOW_ZERO) ||	       \
++		    show->state.depth == 0) {				       \
++			btf_show(show, "%s%s" fmt "%s%s",		       \
++				 btf_show_indent(show),			       \
++				 btf_show_name(show),			       \
++				 value, btf_show_delim(show),		       \
++				 btf_show_newline(show));		       \
++			if (show->state.depth > show->state.depth_shown)       \
++				show->state.depth_shown = show->state.depth;   \
++		}							       \
++	} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'show' may be better as '(show)' to avoid precedence issues
+#439: FILE: kernel/bpf/btf.c:927:
++#define btf_show_type_value(show, fmt, value)				       \
++	do {								       \
++		if ((value) != 0 || (show->flags & BTF_SHOW_ZERO) ||	       \
++		    show->state.depth == 0) {				       \
++			btf_show(show, "%s%s" fmt "%s%s",		       \
++				 btf_show_indent(show),			       \
++				 btf_show_name(show),			       \
++				 value, btf_show_delim(show),		       \
++				 btf_show_newline(show));		       \
++			if (show->state.depth > show->state.depth_shown)       \
++				show->state.depth_shown = show->state.depth;   \
++		}							       \
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'value' - possible side-effects?
+#439: FILE: kernel/bpf/btf.c:927:
++#define btf_show_type_value(show, fmt, value)				       \
++	do {								       \
++		if ((value) != 0 || (show->flags & BTF_SHOW_ZERO) ||	       \
++		    show->state.depth == 0) {				       \
++			btf_show(show, "%s%s" fmt "%s%s",		       \
++				 btf_show_indent(show),			       \
++				 btf_show_name(show),			       \
++				 value, btf_show_delim(show),		       \
++				 btf_show_newline(show));		       \
++			if (show->state.depth > show->state.depth_shown)       \
++				show->state.depth_shown = show->state.depth;   \
++		}							       \
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'show' - possible side-effects?
+#453: FILE: kernel/bpf/btf.c:941:
++#define btf_show_type_values(show, fmt, ...)				       \
++	do {								       \
++		btf_show(show, "%s%s" fmt "%s%s", btf_show_indent(show),       \
++			 btf_show_name(show),				       \
++			 __VA_ARGS__, btf_show_delim(show),		       \
++			 btf_show_newline(show));			       \
++		if (show->state.depth > show->state.depth_shown)	       \
++			show->state.depth_shown = show->state.depth;	       \
++	} while (0)
+
+WARNING:VSPRINTF_SPECIFIER_PX: Using vsprintf specifier '%px' potentially exposes the kernel memory layout, if you don't really need the address please consider using '%p'.
+#769: FILE: kernel/bpf/btf.c:2264:
++	if (show->flags & BTF_SHOW_PTR_RAW)
++		btf_show_type_value(show, "%px", *(void **)data);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1155: FILE: kernel/bpf/btf.c:5057:
++void btf_type_seq_show(const struct btf *btf, u32 type_id, void *obj,
++			struct seq_file *m)
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000147366.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 3 warnings, 19 checks, 1066 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000147366.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

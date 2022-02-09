@@ -1,0 +1,543 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#56: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#61: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'W' - possible side-effects?
+#99: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:39:
++#define _wait_for(COND, MS, W) ({ \
++	unsigned long timeout__ = jiffies + msecs_to_jiffies(MS);	\
++	int ret__ = 0;							\
++	while (! (COND)) {						\
++		if (time_after(jiffies, timeout__)) {			\
++			ret__ = -ETIMEDOUT;				\
++			break;						\
++		}							\
++		if (W && !(in_atomic() || in_dbg_master())) msleep(W);	\
++	}								\
++	ret__;								\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'W' may be better as '(W)' to avoid precedence issues
+#99: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:39:
++#define _wait_for(COND, MS, W) ({ \
++	unsigned long timeout__ = jiffies + msecs_to_jiffies(MS);	\
++	int ret__ = 0;							\
++	while (! (COND)) {						\
++		if (time_after(jiffies, timeout__)) {			\
++			ret__ = -ETIMEDOUT;				\
++			break;						\
++		}							\
++		if (W && !(in_atomic() || in_dbg_master())) msleep(W);	\
++	}								\
++	ret__;								\
++})
+
+ERROR:SPACING: space prohibited after that '!' (ctx:BxW)
+#102: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:42:
++	while (! (COND)) {						\
+ 	       ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#107: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:47:
++		if (W && !(in_atomic() || in_dbg_master())) msleep(W);	\
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:IN_ATOMIC: do not use in_atomic in drivers
+#107: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:47:
++		if (W && !(in_atomic() || in_dbg_master())) msleep(W);	\
+
+in_atomic() is not for driver use so any such use is reported as an ERROR.
+Also in_atomic() is often used to determine if sleeping is permitted,
+but it is not reliable in this use model.  Therefore its use is
+strongly discouraged.
+
+However, in_atomic() is ok for core kernel use.
+
+See: https://lore.kernel.org/lkml/20080320201723.b87b3732.akpm@linux-foundation.org/
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#142: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:82:
++	/* FIXME: We are never Pineview, right?
++
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#179: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:119:
++	u32 reserved = get_reserved(gpio);
++	REG_WRITE(gpio->reg, reserved | GPIO_CLOCK_DIR_MASK);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#190: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:130:
++	u32 reserved = get_reserved(gpio);
++	REG_WRITE(gpio->reg, reserved | GPIO_DATA_DIR_MASK);
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*gpio)...) over kzalloc(sizeof(struct intel_gpio)...)
+#249: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:189:
++	gpio = kzalloc(sizeof(struct intel_gpio), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!gpio"
+#250: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:190:
++	if (gpio == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#332: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:272:
++			REG_WRITE(GMBUS1 + reg_offset,
++				   GMBUS_CYCLE_WAIT | (i + 1 == num ? GMBUS_CYCLE_STOP : 0) |
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#336: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:276:
++			REG_READ(GMBUS2+reg_offset);
+ 			               ^
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#340: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:280:
++				if (wait_for(REG_READ(GMBUS2 + reg_offset) & (GMBUS_SATOER | GMBUS_HW_RDY), 50))
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#354: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:294:
++			val = loop = 0;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#361: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:301:
++			REG_WRITE(GMBUS1 + reg_offset,
++				   (i + 1 == num ? GMBUS_CYCLE_STOP : GMBUS_CYCLE_WAIT) |
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#365: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:305:
++			REG_READ(GMBUS2+reg_offset);
+ 			               ^
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#368: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:308:
++				if (wait_for(REG_READ(GMBUS2 + reg_offset) & (GMBUS_SATOER | GMBUS_HW_RDY), 50))
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#373: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:313:
++				val = loop = 0;
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#379: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:319:
++				REG_READ(GMBUS2+reg_offset);
+ 				               ^
+
+WARNING:LONG_LINE: line length of 118 exceeds 100 columns
+#383: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:323:
++		if (i + 1 < num && wait_for(REG_READ(GMBUS2 + reg_offset) & (GMBUS_SATOER | GMBUS_HW_WAIT_PHASE), 50))
+
+WARNING:ALLOC_ARRAY_ARGS: kcalloc uses number as first arg, sizeof is generally wrong
+#458: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:398:
++	dev_priv->gmbus = kcalloc(sizeof(struct intel_gmbus), GMBUS_NUM_PORTS,
+
+The first argument for kcalloc or kmalloc_array should be the
+number of elements.  sizeof() as the first argument is generally
+wrong.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!dev_priv->gmbus"
+#460: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:400:
++	if (dev_priv->gmbus == NULL)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#495: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:435:
++		struct intel_gmbus *bus = &dev_priv->gmbus[i];
++		i2c_del_adapter(&bus->adapter);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!bus->force_bit"
+#520: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:460:
++		if (bus->force_bit == NULL) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#522: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:462:
++			struct drm_psb_private *dev_priv = adapter->algo_data;
++			bus->force_bit = intel_gpio_create(dev_priv,
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!dev_priv->gmbus"
+#539: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:479:
++	if (dev_priv->gmbus == NULL)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#544: FILE: drivers/gpu/drm/gma500/intel_gmbus.c:484:
++		struct intel_gmbus *bus = &dev_priv->gmbus[i];
++		if (bus->force_bit) {
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#620: FILE: drivers/gpu/drm/gma500/psb_intel_drv.h:239:
++extern void gma_intel_i2c_reset(struct drm_device *dev);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#621: FILE: drivers/gpu/drm/gma500/psb_intel_drv.h:240:
++extern int gma_intel_setup_gmbus(struct drm_device *dev);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#622: FILE: drivers/gpu/drm/gma500/psb_intel_drv.h:241:
++extern void gma_intel_gmbus_set_speed(struct i2c_adapter *adapter, int speed);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#623: FILE: drivers/gpu/drm/gma500/psb_intel_drv.h:242:
++extern void gma_intel_gmbus_force_bit(struct i2c_adapter *adapter, bool force_bit);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#624: FILE: drivers/gpu/drm/gma500/psb_intel_drv.h:243:
++extern void gma_intel_teardown_gmbus(struct drm_device *dev);
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#646: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:31:
++# define GPIO_CLOCK_DIR_MASK		(1 << 0)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#648: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:33:
++# define GPIO_CLOCK_DIR_OUT		(1 << 1)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#649: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:34:
++# define GPIO_CLOCK_VAL_MASK		(1 << 2)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#650: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:35:
++# define GPIO_CLOCK_VAL_OUT		(1 << 3)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#651: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:36:
++# define GPIO_CLOCK_VAL_IN		(1 << 4)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#652: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:37:
++# define GPIO_CLOCK_PULLUP_DISABLE	(1 << 5)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#653: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:38:
++# define GPIO_DATA_DIR_MASK		(1 << 8)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#655: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:40:
++# define GPIO_DATA_DIR_OUT		(1 << 9)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#656: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:41:
++# define GPIO_DATA_VAL_MASK		(1 << 10)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#657: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:42:
++# define GPIO_DATA_VAL_OUT		(1 << 11)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#658: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:43:
++# define GPIO_DATA_VAL_IN		(1 << 12)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#659: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:44:
++# define GPIO_DATA_PULLUP_DISABLE	(1 << 13)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#662: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:47:
++#define   GMBUS_RATE_100KHZ	(0<<8)
+                            	  ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#663: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:48:
++#define   GMBUS_RATE_50KHZ	(1<<8)
+                           	  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#663: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:48:
++#define   GMBUS_RATE_50KHZ	(1<<8)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#664: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:49:
++#define   GMBUS_RATE_400KHZ	(2<<8) /* reserved on Pineview */
+                            	  ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#665: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:50:
++#define   GMBUS_RATE_1MHZ	(3<<8) /* reserved on Pineview */
+                          	  ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#666: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:51:
++#define   GMBUS_HOLD_EXT	(1<<7) /* 300ns hold time, rsvd on Pineview */
+                         	  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#666: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:51:
++#define   GMBUS_HOLD_EXT	(1<<7) /* 300ns hold time, rsvd on Pineview */
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#677: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:62:
++#define   GMBUS_SW_CLR_INT	(1<<31)
+                           	  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#677: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:62:
++#define   GMBUS_SW_CLR_INT	(1<<31)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#678: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:63:
++#define   GMBUS_SW_RDY		(1<<30)
+                       		  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#678: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:63:
++#define   GMBUS_SW_RDY		(1<<30)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#679: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:64:
++#define   GMBUS_ENT		(1<<29) /* enable timeout */
+                    		  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#679: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:64:
++#define   GMBUS_ENT		(1<<29) /* enable timeout */
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#680: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:65:
++#define   GMBUS_CYCLE_NONE	(0<<25)
+                           	  ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#681: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:66:
++#define   GMBUS_CYCLE_WAIT	(1<<25)
+                           	  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#681: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:66:
++#define   GMBUS_CYCLE_WAIT	(1<<25)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#682: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:67:
++#define   GMBUS_CYCLE_INDEX	(2<<25)
+                            	  ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#683: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:68:
++#define   GMBUS_CYCLE_STOP	(4<<25)
+                           	  ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#687: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:72:
++#define   GMBUS_SLAVE_READ	(1<<0)
+                           	  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#687: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:72:
++#define   GMBUS_SLAVE_READ	(1<<0)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#688: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:73:
++#define   GMBUS_SLAVE_WRITE	(0<<0)
+                            	  ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#690: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:75:
++#define   GMBUS_INUSE		(1<<15)
+                      		  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#690: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:75:
++#define   GMBUS_INUSE		(1<<15)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#691: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:76:
++#define   GMBUS_HW_WAIT_PHASE	(1<<14)
+                              	  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#691: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:76:
++#define   GMBUS_HW_WAIT_PHASE	(1<<14)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#692: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:77:
++#define   GMBUS_STALL_TIMEOUT	(1<<13)
+                              	  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#692: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:77:
++#define   GMBUS_STALL_TIMEOUT	(1<<13)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#693: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:78:
++#define   GMBUS_INT		(1<<12)
+                    		  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#693: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:78:
++#define   GMBUS_INT		(1<<12)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#694: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:79:
++#define   GMBUS_HW_RDY		(1<<11)
+                       		  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#694: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:79:
++#define   GMBUS_HW_RDY		(1<<11)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#695: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:80:
++#define   GMBUS_SATOER		(1<<10)
+                       		  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#695: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:80:
++#define   GMBUS_SATOER		(1<<10)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#696: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:81:
++#define   GMBUS_ACTIVE		(1<<9)
+                       		  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#696: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:81:
++#define   GMBUS_ACTIVE		(1<<9)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#699: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:84:
++#define   GMBUS_SLAVE_TIMEOUT_EN (1<<4)
+                                    ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#699: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:84:
++#define   GMBUS_SLAVE_TIMEOUT_EN (1<<4)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#700: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:85:
++#define   GMBUS_NAK_EN		(1<<3)
+                       		  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#700: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:85:
++#define   GMBUS_NAK_EN		(1<<3)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#701: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:86:
++#define   GMBUS_IDLE_EN		(1<<2)
+                        		  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#701: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:86:
++#define   GMBUS_IDLE_EN		(1<<2)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#702: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:87:
++#define   GMBUS_HW_WAIT_EN	(1<<1)
+                           	  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#702: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:87:
++#define   GMBUS_HW_WAIT_EN	(1<<1)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#703: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:88:
++#define   GMBUS_HW_RDY_EN	(1<<0)
+                          	  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#703: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:88:
++#define   GMBUS_HW_RDY_EN	(1<<0)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#705: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:90:
++#define   GMBUS_2BYTE_INDEX_EN	(1<<31)
+                               	  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#705: FILE: drivers/gpu/drm/gma500/psb_intel_reg.h:90:
++#define   GMBUS_2BYTE_INDEX_EN	(1<<31)
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000187642.commit.50c234c910ddd03a627257cc11704614c0619761 total: 3 errors, 12 warnings, 78 checks, 634 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000187642.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

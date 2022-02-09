@@ -1,0 +1,107 @@
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#54: FILE: include/linux/cgroup.h:54:
++#define SUBSYS(_x)								\
++	extern struct static_key_true _x ## _cgrp_subsys_enabled_key;		\
++	extern struct static_key_true _x ## _cgrp_subsys_on_dfl_key;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#86: FILE: kernel/cgroup.c:143:
++#define SUBSYS(_x)								\
++	DEFINE_STATIC_KEY_TRUE(_x ## _cgrp_subsys_enabled_key);			\
++	DEFINE_STATIC_KEY_TRUE(_x ## _cgrp_subsys_on_dfl_key);			\
++	EXPORT_SYMBOL_GPL(_x ## _cgrp_subsys_enabled_key);			\
++	EXPORT_SYMBOL_GPL(_x ## _cgrp_subsys_on_dfl_key);
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#86: FILE: kernel/cgroup.c:143:
++#define SUBSYS(_x)								\
++	DEFINE_STATIC_KEY_TRUE(_x ## _cgrp_subsys_enabled_key);			\
++	DEFINE_STATIC_KEY_TRUE(_x ## _cgrp_subsys_on_dfl_key);			\
++	EXPORT_SYMBOL_GPL(_x ## _cgrp_subsys_enabled_key);			\
++	EXPORT_SYMBOL_GPL(_x ## _cgrp_subsys_on_dfl_key);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#89: FILE: kernel/cgroup.c:146:
++	EXPORT_SYMBOL_GPL(_x ## _cgrp_subsys_enabled_key);			\
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#94: FILE: kernel/cgroup.c:151:
++#define SUBSYS(_x) [_x ## _cgrp_id] = &_x ## _cgrp_subsys_enabled_key,
+
+Whitespace before opening bracket '[' is prohibited.
+There are some exceptions:
+
+1. With a type on the left::
+
+    int [] a;
+
+2. At the beginning of a line for slice initialisers::
+
+    [0...10] = 5,
+
+3. Inside a curly brace::
+
+    = { [0...10] = 5 }
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#98: FILE: kernel/cgroup.c:155:
++};
++#undef SUBSYS
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#100: FILE: kernel/cgroup.c:157:
++#define SUBSYS(_x) [_x ## _cgrp_id] = &_x ## _cgrp_subsys_on_dfl_key,
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#104: FILE: kernel/cgroup.c:161:
++};
++#undef SUBSYS
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000255934.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 3 errors, 3 warnings, 2 checks, 80 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000255934.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

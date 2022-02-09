@@ -1,0 +1,75 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'file_name' - possible side-effects?
+#89: FILE: drivers/cpufreq/cpufreq_governor.h:113:
++#define show_one_common(_gov, file_name)				\
++static ssize_t show_##file_name##_gov_sys				\
++(struct kobject *kobj, struct attribute *attr, char *buf)		\
++{									\
++	struct dbs_data *dbs_data = _gov##_dbs_gov.gdbs_data;		\
++	return sprintf(buf, "%u\n", dbs_data->file_name);		\
++}									\
++									\
++static ssize_t show_##file_name##_gov_pol				\
++(struct cpufreq_policy *policy, char *buf)				\
++{									\
++	struct policy_dbs_info *policy_dbs = policy->governor_data;	\
++	struct dbs_data *dbs_data = policy_dbs->dbs_data;		\
++	return sprintf(buf, "%u\n", dbs_data->file_name);		\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'file_name' may be better as '(file_name)' to avoid precedence issues
+#89: FILE: drivers/cpufreq/cpufreq_governor.h:113:
++#define show_one_common(_gov, file_name)				\
++static ssize_t show_##file_name##_gov_sys				\
++(struct kobject *kobj, struct attribute *attr, char *buf)		\
++{									\
++	struct dbs_data *dbs_data = _gov##_dbs_gov.gdbs_data;		\
++	return sprintf(buf, "%u\n", dbs_data->file_name);		\
++}									\
++									\
++static ssize_t show_##file_name##_gov_pol				\
++(struct cpufreq_policy *policy, char *buf)				\
++{									\
++	struct policy_dbs_info *policy_dbs = policy->governor_data;	\
++	struct dbs_data *dbs_data = policy_dbs->dbs_data;		\
++	return sprintf(buf, "%u\n", dbs_data->file_name);		\
++}
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#105: FILE: drivers/cpufreq/cpufreq_governor.h:129:
++#define show_store_one_common(_gov, file_name)				\
++show_one_common(_gov, file_name);					\
++store_one(_gov, file_name)
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_gov' - possible side-effects?
+#105: FILE: drivers/cpufreq/cpufreq_governor.h:129:
++#define show_store_one_common(_gov, file_name)				\
++show_one_common(_gov, file_name);					\
++store_one(_gov, file_name)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'file_name' - possible side-effects?
+#105: FILE: drivers/cpufreq/cpufreq_governor.h:129:
++#define show_store_one_common(_gov, file_name)				\
++show_one_common(_gov, file_name);					\
++store_one(_gov, file_name)
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000147974.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 1 errors, 0 warnings, 4 checks, 104 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000147974.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

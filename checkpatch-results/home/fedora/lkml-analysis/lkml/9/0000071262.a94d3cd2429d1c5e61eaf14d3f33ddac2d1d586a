@@ -1,0 +1,215 @@
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'addr' may be better as '(addr)' to avoid precedence issues
+#82: FILE: arch/powerpc/include/asm/uaccess.h:141:
++#define __get_user_asm_goto(x, addr, label, op)			\
++	asm_volatile_goto(					\
++		"1:	"op"%U1%X1 %0, %1	# get_user\n"	\
++		EX_TABLE(1b, %l2)				\
++		: "=r" (x)					\
++		: "m"UPD_CONSTR (*addr)				\
++		:						\
++		: label)
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#84: FILE: arch/powerpc/include/asm/uaccess.h:143:
++		"1:	"op"%U1%X1 %0, %1	# get_user\n"	\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:WxV)
+#85: FILE: arch/powerpc/include/asm/uaccess.h:144:
++		EX_TABLE(1b, %l2)				\
+ 		             ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#87: FILE: arch/powerpc/include/asm/uaccess.h:146:
++		: "m"UPD_CONSTR (*addr)				\
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#87: FILE: arch/powerpc/include/asm/uaccess.h:146:
++		: "m"UPD_CONSTR (*addr)				\
+
+CHECK:ARCH_DEFINES: architecture specific defines should be avoided
+#91: FILE: arch/powerpc/include/asm/uaccess.h:150:
++#ifdef __powerpc64__
+
+Architecture specific defines should be avoided wherever
+possible.
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'addr' may be better as '(addr)' to avoid precedence issues
+#95: FILE: arch/powerpc/include/asm/uaccess.h:154:
++#define __get_user_asm2_goto(x, addr, label)			\
++	asm_volatile_goto(					\
++		"1:	lwz%X1 %0, %1\n"			\
++		"2:	lwz%X1 %L0, %L1\n"			\
++		EX_TABLE(1b, %l2)				\
++		EX_TABLE(2b, %l2)				\
++		: "=r" (x)					\
++		: "m" (*addr)					\
++		:						\
++		: label)
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:WxV)
+#99: FILE: arch/powerpc/include/asm/uaccess.h:158:
++		EX_TABLE(1b, %l2)				\
+ 		             ^
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:WxV)
+#100: FILE: arch/powerpc/include/asm/uaccess.h:159:
++		EX_TABLE(2b, %l2)				\
+ 		             ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#107: FILE: arch/powerpc/include/asm/uaccess.h:166:
++#define __get_user_size_goto(x, ptr, size, label)				\
++do {										\
++	BUILD_BUG_ON(size > sizeof(x));						\
++	switch (size) {								\
++	case 1: __get_user_asm_goto(x, (u8 __user *)ptr, label, "lbz"); break;	\
++	case 2: __get_user_asm_goto(x, (u16 __user *)ptr, label, "lhz"); break;	\
++	case 4: __get_user_asm_goto(x, (u32 __user *)ptr, label, "lwz"); break;	\
++	case 8: __get_user_asm2_goto(x, (u64 __user *)ptr, label);  break;	\
++	default: x = 0; BUILD_BUG();						\
++	}									\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#107: FILE: arch/powerpc/include/asm/uaccess.h:166:
++#define __get_user_size_goto(x, ptr, size, label)				\
++do {										\
++	BUILD_BUG_ON(size > sizeof(x));						\
++	switch (size) {								\
++	case 1: __get_user_asm_goto(x, (u8 __user *)ptr, label, "lbz"); break;	\
++	case 2: __get_user_asm_goto(x, (u16 __user *)ptr, label, "lhz"); break;	\
++	case 4: __get_user_asm_goto(x, (u32 __user *)ptr, label, "lwz"); break;	\
++	case 8: __get_user_asm2_goto(x, (u64 __user *)ptr, label);  break;	\
++	default: x = 0; BUILD_BUG();						\
++	}									\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'size' - possible side-effects?
+#107: FILE: arch/powerpc/include/asm/uaccess.h:166:
++#define __get_user_size_goto(x, ptr, size, label)				\
++do {										\
++	BUILD_BUG_ON(size > sizeof(x));						\
++	switch (size) {								\
++	case 1: __get_user_asm_goto(x, (u8 __user *)ptr, label, "lbz"); break;	\
++	case 2: __get_user_asm_goto(x, (u16 __user *)ptr, label, "lhz"); break;	\
++	case 4: __get_user_asm_goto(x, (u32 __user *)ptr, label, "lwz"); break;	\
++	case 8: __get_user_asm2_goto(x, (u64 __user *)ptr, label);  break;	\
++	default: x = 0; BUILD_BUG();						\
++	}									\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'size' may be better as '(size)' to avoid precedence issues
+#107: FILE: arch/powerpc/include/asm/uaccess.h:166:
++#define __get_user_size_goto(x, ptr, size, label)				\
++do {										\
++	BUILD_BUG_ON(size > sizeof(x));						\
++	switch (size) {								\
++	case 1: __get_user_asm_goto(x, (u8 __user *)ptr, label, "lbz"); break;	\
++	case 2: __get_user_asm_goto(x, (u16 __user *)ptr, label, "lhz"); break;	\
++	case 4: __get_user_asm_goto(x, (u32 __user *)ptr, label, "lwz"); break;	\
++	case 8: __get_user_asm2_goto(x, (u64 __user *)ptr, label);  break;	\
++	default: x = 0; BUILD_BUG();						\
++	}									\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'label' - possible side-effects?
+#107: FILE: arch/powerpc/include/asm/uaccess.h:166:
++#define __get_user_size_goto(x, ptr, size, label)				\
++do {										\
++	BUILD_BUG_ON(size > sizeof(x));						\
++	switch (size) {								\
++	case 1: __get_user_asm_goto(x, (u8 __user *)ptr, label, "lbz"); break;	\
++	case 2: __get_user_asm_goto(x, (u16 __user *)ptr, label, "lhz"); break;	\
++	case 4: __get_user_asm_goto(x, (u32 __user *)ptr, label, "lwz"); break;	\
++	case 8: __get_user_asm2_goto(x, (u64 __user *)ptr, label);  break;	\
++	default: x = 0; BUILD_BUG();						\
++	}									\
++} while (0)
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#111: FILE: arch/powerpc/include/asm/uaccess.h:170:
++	case 1: __get_user_asm_goto(x, (u8 __user *)ptr, label, "lbz"); break;	\
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#112: FILE: arch/powerpc/include/asm/uaccess.h:171:
++	case 2: __get_user_asm_goto(x, (u16 __user *)ptr, label, "lhz"); break;	\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#113: FILE: arch/powerpc/include/asm/uaccess.h:172:
++	case 4: __get_user_asm_goto(x, (u32 __user *)ptr, label, "lwz"); break;	\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#114: FILE: arch/powerpc/include/asm/uaccess.h:173:
++	case 8: __get_user_asm2_goto(x, (u64 __user *)ptr, label);  break;	\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#115: FILE: arch/powerpc/include/asm/uaccess.h:174:
++	default: x = 0; BUILD_BUG();						\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#119: FILE: arch/powerpc/include/asm/uaccess.h:178:
++#define __get_user_size_allowed(x, ptr, size, retval)			\
++do {									\
++		__label__ __gus_failed;					\
++									\
++		__get_user_size_goto(x, ptr, size, __gus_failed);	\
++		retval = 0;						\
++		break;							\
++__gus_failed:								\
++		x = 0;							\
++		retval = -EFAULT;					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'retval' - possible side-effects?
+#119: FILE: arch/powerpc/include/asm/uaccess.h:178:
++#define __get_user_size_allowed(x, ptr, size, retval)			\
++do {									\
++		__label__ __gus_failed;					\
++									\
++		__get_user_size_goto(x, ptr, size, __gus_failed);	\
++		retval = 0;						\
++		break;							\
++__gus_failed:								\
++		x = 0;							\
++		retval = -EFAULT;					\
++} while (0)
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (0, 16)
+#120: FILE: arch/powerpc/include/asm/uaccess.h:179:
++do {									\
+[...]
++									\
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000071262.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a total: 5 errors, 2 warnings, 15 checks, 67 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000071262.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

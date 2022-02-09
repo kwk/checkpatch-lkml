@@ -1,0 +1,421 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#28: 
+   git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git irq-core-for-linus
+
+WARNING:REPEATED_WORD: Possible repeated word: 'the'
+#75: 
+      genirq/proc: Use the the accessor to report the effective affinity
+
+WARNING:TYPO_SPELLING: 'uninitalized' may be misspelled - perhaps 'uninitialized'?
+#147: 
+      genirq/proc: Avoid uninitalized variable warning
+                         ^^^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:DT_SCHEMA_BINDING_PATCH: DT bindings should be in DT schema format. See: Documentation/devicetree/bindings/writing-schema.rst
+
+DT bindings moved to a json-schema based format instead of
+freeform text.
+
+See: https://www.kernel.org/doc/html/latest/devicetree/bindings/writing-schema.html
+
+WARNING:DT_SPLIT_BINDING_PATCH: DT binding docs and includes should be a separate patch. See: Documentation/devicetree/bindings/submitting-patches.rst
+
+Devicetree bindings should be their own patch.  This is because
+bindings are logically independent from a driver implementation,
+they have a different maintainer (even though they often
+are applied via the same tree), and it makes for a cleaner history in the
+DT only tree created with git-filter-branch.
+
+See: https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.html#i-for-patch-submitters
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#605: FILE: drivers/irqchip/Kconfig:317:
++config IRQ_UNIPHIER_AIDET
++	bool "UniPhier AIDET support" if COMPILE_TEST
++	depends on ARCH_UNIPHIER || COMPILE_TEST
++	default ARCH_UNIPHIER
++	select IRQ_DOMAIN_HIERARCHY
++	help
++	  Support for the UniPhier AIDET (ARM Interrupt Detector).
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#968: FILE: drivers/irqchip/irq-gic-v3-its.c:118:
++	struct mutex		vlpi_lock;
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'synctype' may be better as '(synctype)' to avoid precedence issues
+#1285: FILE: drivers/irqchip/irq-gic-v3-its.c:719:
++#define BUILD_SINGLE_CMD_FUNC(name, buildtype, synctype, buildfn)	\
++void name(struct its_node *its,						\
++	  buildtype builder,						\
++	  struct its_cmd_desc *desc)					\
++{									\
++	struct its_cmd_block *cmd, *sync_cmd, *next_cmd;		\
++	synctype *sync_obj;						\
++	unsigned long flags;						\
++									\
++	raw_spin_lock_irqsave(&its->lock, flags);			\
++									\
++	cmd = its_allocate_entry(its);					\
++	if (!cmd) {		/* We're soooooo screewed... */		\
++		raw_spin_unlock_irqrestore(&its->lock, flags);		\
++		return;							\
++	}								\
++	sync_obj = builder(cmd, desc);					\
++	its_flush_cmd(its, cmd);					\
++									\
++	if (sync_obj) {							\
++		sync_cmd = its_allocate_entry(its);			\
++		if (!sync_cmd)						\
++			goto post;					\
++									\
++		buildfn(sync_cmd, sync_obj);				\
++		its_flush_cmd(its, sync_cmd);				\
++	}								\
++									\
++post:									\
++	next_cmd = its_post_commands(its);				\
++	raw_spin_unlock_irqrestore(&its->lock, flags);			\
++									\
++	its_wait_for_range_completion(its, cmd, next_cmd);		\
++}
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#1285: FILE: drivers/irqchip/irq-gic-v3-its.c:719:
++#define BUILD_SINGLE_CMD_FUNC(name, buildtype, synctype, buildfn)	\
++void name(struct its_node *its,						\
++	  buildtype builder,						\
++	  struct its_cmd_desc *desc)					\
++{									\
++	struct its_cmd_block *cmd, *sync_cmd, *next_cmd;		\
++	synctype *sync_obj;						\
++	unsigned long flags;						\
++									\
++	raw_spin_lock_irqsave(&its->lock, flags);			\
++									\
++	cmd = its_allocate_entry(its);					\
++	if (!cmd) {		/* We're soooooo screewed... */		\
++		raw_spin_unlock_irqrestore(&its->lock, flags);		\
++		return;							\
++	}								\
++	sync_obj = builder(cmd, desc);					\
++	its_flush_cmd(its, cmd);					\
++									\
++	if (sync_obj) {							\
++		sync_cmd = its_allocate_entry(its);			\
++		if (!sync_cmd)						\
++			goto post;					\
++									\
++		buildfn(sync_cmd, sync_obj);				\
++		its_flush_cmd(its, sync_cmd);				\
++	}								\
++									\
++post:									\
++	next_cmd = its_post_commands(its);				\
++	raw_spin_unlock_irqrestore(&its->lock, flags);			\
++									\
++	its_wait_for_range_completion(its, cmd, next_cmd);		\
++}
+
+WARNING:TYPO_SPELLING: 'issueing' may be misspelled - perhaps 'issuing'?
+#1565: FILE: drivers/irqchip/irq-gic-v3-its.c:1036:
++	 * would be issueing a mapping for an /existing/ DevID+EventID
+ 	            ^^^^^^^^
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#1647: FILE: drivers/irqchip/irq-gic-v3-its.c:1146:
++		maps = kzalloc(sizeof(*maps) * its_dev->event_map.nr_lpis,
++			       GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#2117: FILE: drivers/irqchip/irq-gic-v3-its.c:2020:
++		col_map = kzalloc(sizeof(*col_map) * nr_ites, GFP_KERNEL);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2554: FILE: drivers/irqchip/irq-gic-v3-its.c:2613:
++		BUG_ON(vm != vpe->its_vm);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2575: FILE: drivers/irqchip/irq-gic-v3-its.c:2634:
++	BUG_ON(!vm);
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#2679: FILE: drivers/irqchip/irq-gic-v3-its.c:2838:
++	vpe_proxy.vpes = kzalloc(sizeof(*vpe_proxy.vpes) * entries,
++				 GFP_KERNEL);
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#2682: FILE: drivers/irqchip/irq-gic-v3-its.c:2841:
++	if (!vpe_proxy.vpes) {
++		pr_err("ITS: Can't allocate GICv4 proxy device array\n");
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2695: FILE: drivers/irqchip/irq-gic-v3-its.c:2854:
++	BUG_ON(entries != vpe_proxy.dev->nr_ites);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#2925: FILE: drivers/irqchip/irq-gic-v3.c:481:
++		u64 offset = ptr - region->redist_base;
++		gic_data_rdist_rd_base() = ptr;
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#2956: FILE: drivers/irqchip/irq-gic-v3.c:511:
++	u64 typer = gic_read_typer(ptr + GICR_TYPER);
++	gic_data.rdists.has_vlpis &= !!(typer & GICR_TYPER_VLPIS);
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#3013: FILE: drivers/irqchip/irq-gic-v3.c:1110:
++			pr_cont("%pOF[%d] ", cpu_node, cpu);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#3067: FILE: drivers/irqchip/irq-gic-v4.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#3445: FILE: drivers/irqchip/irq-ls-scfg-msi.c:85:
++}
++early_param("lsmsi", early_parse_ls_scfg_msi);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#3579: FILE: drivers/irqchip/irq-ls-scfg-msi.c:262:
++	if (msi_affinity_flag) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#3583: FILE: drivers/irqchip/irq-ls-scfg-msi.c:266:
++	} else
+
+CHECK:SPACING: No space is necessary after a cast
+#3660: FILE: drivers/irqchip/irq-ls-scfg-msi.c:342:
++	msi_data->cfg = (struct ls_scfg_msi_cfg *) match->data;
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3681: FILE: drivers/irqchip/irq-ls-scfg-msi.c:358:
++	msi_data->used = devm_kcalloc(&pdev->dev,
++				    BITS_TO_LONGS(msi_data->irqs_num),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3899: FILE: drivers/irqchip/irq-stm32-exti.c:167:
++		pr_err("%pOF: Could not allocate generic interrupt chip.\n",
++			node);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3914: FILE: drivers/irqchip/irq-sun4i.c:101:
++		panic("%pOF: unable to map IC registers\n",
++			node);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#3989: FILE: drivers/irqchip/irq-uniphier-aidet.c:1:
++/*
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#4023: FILE: drivers/irqchip/irq-uniphier-aidet.c:35:
++	spinlock_t lock;
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#4187: FILE: drivers/irqchip/irq-uniphier-aidet.c:199:
++	priv->domain = irq_domain_create_hierarchy(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#4206: FILE: drivers/irqchip/irq-uniphier-aidet.c:218:
++		priv->saved_vals[i] = readl_relaxed(
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#4283: FILE: drivers/irqchip/irq-xtensa-mx.c:126:
++	unsigned mask = 1u << cpu;
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#4299: FILE: include/linux/irq.h:571:
++extern void handle_fasteoi_ack_irq(struct irq_desc *desc);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#4300: FILE: include/linux/irq.h:572:
++extern void handle_fasteoi_mask_irq(struct irq_desc *desc);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#4322: FILE: include/linux/irq_sim.h:1:
++#ifndef _LINUX_IRQ_SIM_H
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#4387: FILE: include/linux/irqchip/arm-gic-v3.h:207:
++#define GICR_TYPER_DirectLPIS		(1U << 3)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:CAMELCASE: Avoid CamelCase: <InnerShareable>
+#4415: FILE: include/linux/irqchip/arm-gic-v3.h:236:
++	GIC_BASER_SHAREABILITY(GICR_VPROPBASER, InnerShareable)
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:CAMELCASE: Avoid CamelCase: <GICR_VPROPBASER_nCnB>
+#4417: FILE: include/linux/irqchip/arm-gic-v3.h:238:
++#define GICR_VPROPBASER_nCnB	GIC_BASER_CACHEABILITY(GICR_VPROPBASER, INNER, nCnB)
+
+CHECK:CAMELCASE: Avoid CamelCase: <nCnB>
+#4417: FILE: include/linux/irqchip/arm-gic-v3.h:238:
++#define GICR_VPROPBASER_nCnB	GIC_BASER_CACHEABILITY(GICR_VPROPBASER, INNER, nCnB)
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#4418: FILE: include/linux/irqchip/arm-gic-v3.h:239:
++#define GICR_VPROPBASER_nC ^IGIC_BASER_CACHEABILITY(GICR_VPROPBASER, INNER, nC)$
+
+CHECK:CAMELCASE: Avoid CamelCase: <RaWt>
+#4419: FILE: include/linux/irqchip/arm-gic-v3.h:240:
++#define GICR_VPROPBASER_RaWt	GIC_BASER_CACHEABILITY(GICR_VPROPBASER, INNER, RaWt)
+
+CHECK:CAMELCASE: Avoid CamelCase: <WaWt>
+#4421: FILE: include/linux/irqchip/arm-gic-v3.h:242:
++#define GICR_VPROPBASER_WaWt	GIC_BASER_CACHEABILITY(GICR_VPROPBASER, INNER, WaWt)
+
+CHECK:CAMELCASE: Avoid CamelCase: <WaWb>
+#4422: FILE: include/linux/irqchip/arm-gic-v3.h:243:
++#define GICR_VPROPBASER_WaWb	GIC_BASER_CACHEABILITY(GICR_VPROPBASER, INNER, WaWb)
+
+CHECK:CAMELCASE: Avoid CamelCase: <RaWaWt>
+#4423: FILE: include/linux/irqchip/arm-gic-v3.h:244:
++#define GICR_VPROPBASER_RaWaWt	GIC_BASER_CACHEABILITY(GICR_VPROPBASER, INNER, RaWaWt)
+
+CHECK:CAMELCASE: Avoid CamelCase: <RaWaWb>
+#4424: FILE: include/linux/irqchip/arm-gic-v3.h:245:
++#define GICR_VPROPBASER_RaWaWb	GIC_BASER_CACHEABILITY(GICR_VPROPBASER, INNER, RaWaWb)
+
+CHECK:CAMELCASE: Avoid CamelCase: <NonShareable>
+#4441: FILE: include/linux/irqchip/arm-gic-v3.h:262:
++	GIC_BASER_SHAREABILITY(GICR_VPENDBASER, NonShareable)
+
+CHECK:CAMELCASE: Avoid CamelCase: <GICR_VPENDBASER_nCnB>
+#4443: FILE: include/linux/irqchip/arm-gic-v3.h:264:
++#define GICR_VPENDBASER_nCnB	GIC_BASER_CACHEABILITY(GICR_VPENDBASER, INNER, nCnB)
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#4444: FILE: include/linux/irqchip/arm-gic-v3.h:265:
++#define GICR_VPENDBASER_nC ^IGIC_BASER_CACHEABILITY(GICR_VPENDBASER, INNER, nC)$
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#4452: FILE: include/linux/irqchip/arm-gic-v3.h:273:
++#define GICR_VPENDBASER_Dirty		(1ULL << 60)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#4453: FILE: include/linux/irqchip/arm-gic-v3.h:274:
++#define GICR_VPENDBASER_PendingLast	(1ULL << 61)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#4454: FILE: include/linux/irqchip/arm-gic-v3.h:275:
++#define GICR_VPENDBASER_IDAI		(1ULL << 62)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#4455: FILE: include/linux/irqchip/arm-gic-v3.h:276:
++#define GICR_VPENDBASER_Valid		(1ULL << 63)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#4465: FILE: include/linux/irqchip/arm-gic-v3.h:301:
++#define GITS_CTLR_ImDe			(1U << 1)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#4471: FILE: include/linux/irqchip/arm-gic-v3.h:307:
++#define GITS_TYPER_VLPIS		(1UL << 1)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#4479: FILE: include/linux/irqchip/arm-gic-v3.h:315:
++#define GITS_TYPER_VMOVP		(1ULL << 37)
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#4517: FILE: include/linux/irqchip/arm-gic-v4.h:1:
++/*
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#4553: FILE: include/linux/irqchip/arm-gic-v4.h:37:
++^Istruct page ^I^I*vpt_page;$
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#4630: FILE: include/linux/irqdomain.h:463:
++extern int irq_domain_push_irq(struct irq_domain *domain, int virq, void *arg);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#4631: FILE: include/linux/irqdomain.h:464:
++extern int irq_domain_pop_irq(struct irq_domain *domain, int virq);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#4910: FILE: kernel/irq/irq_sim.c:1:
++/*
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!domain"
+#5236: FILE: kernel/irq/irqdomain.c:1501:
++	if (domain == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!domain"
+#5317: FILE: kernel/irq/irqdomain.c:1582:
++	if (domain == NULL)
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000114728.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 27 warnings, 36 checks, 4773 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000114728.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

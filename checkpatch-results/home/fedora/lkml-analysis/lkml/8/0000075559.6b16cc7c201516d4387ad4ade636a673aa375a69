@@ -1,0 +1,177 @@
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#156: FILE: include/linux/tracepoint.h:170:
++#define __DO_TRACE(name, proto, args, cond, rcuidle)			\
+ 	do {								\
+ 		struct tracepoint_func *it_func_ptr;			\
+ 		int __maybe_unused __idx = 0;				\
++		void *__data;						\
+ 									\
+ 		if (!(cond))						\
+ 			return;						\
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#198: FILE: include/linux/tracepoint.h:236:
++	extern int __tracepoint_iter_##name(data_proto);		\
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'proto' - possible side-effects?
+#220: FILE: include/linux/tracepoint.h:288:
++#define DEFINE_TRACE_FN(_name, _reg, _unreg, proto, args)		\
++	static const char __tpstrtab_##_name[]				\
++	__attribute__((section("__tracepoints_strings"))) = #_name;	\
++	extern struct static_call_key STATIC_CALL_KEY(tp_func_##_name);\
++	int __tracepoint_iter_##_name(void *__data, proto);		\
++	struct tracepoint __tracepoint_##_name				\
++	  __attribute__((section("__tracepoints"), used)) = {		\
++		.name = __tpstrtab_##_name,				\
++		.key = STATIC_KEY_INIT_FALSE,				\
++		.static_call_key = &STATIC_CALL_KEY(tp_func_##_name),	\
++		.static_call_tramp = STATIC_CALL_TRAMP_ADDR(tp_func_##_name), \
++		.iterator = &__tracepoint_iter_##_name,			\
++		.regfunc = _reg,					\
++		.unregfunc = _unreg,					\
++		.funcs = NULL };					\
++	__TRACEPOINT_ENTRY(_name);					\
++	int __tracepoint_iter_##_name(void *__data, proto)		\
++	{								\
++		struct tracepoint_func *it_func_ptr;			\
++		void *it_func;						\
++									\
++		it_func_ptr =						\
++			rcu_dereference_raw((&__tracepoint_##_name)->funcs); \
++		do {							\
++			it_func = (it_func_ptr)->func;			\
++			__data = (it_func_ptr)->data;			\
++			((void(*)(void *, proto))(it_func))(__data, args); \
++		} while ((++it_func_ptr)->func);			\
++		return 0;						\
++	}								\
++	DEFINE_STATIC_CALL(tp_func_##_name, __tracepoint_iter_##_name);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#220: FILE: include/linux/tracepoint.h:288:
++#define DEFINE_TRACE_FN(_name, _reg, _unreg, proto, args)		\
++	static const char __tpstrtab_##_name[]				\
++	__attribute__((section("__tracepoints_strings"))) = #_name;	\
++	extern struct static_call_key STATIC_CALL_KEY(tp_func_##_name);\
++	int __tracepoint_iter_##_name(void *__data, proto);		\
++	struct tracepoint __tracepoint_##_name				\
++	  __attribute__((section("__tracepoints"), used)) = {		\
++		.name = __tpstrtab_##_name,				\
++		.key = STATIC_KEY_INIT_FALSE,				\
++		.static_call_key = &STATIC_CALL_KEY(tp_func_##_name),	\
++		.static_call_tramp = STATIC_CALL_TRAMP_ADDR(tp_func_##_name), \
++		.iterator = &__tracepoint_iter_##_name,			\
++		.regfunc = _reg,					\
++		.unregfunc = _unreg,					\
++		.funcs = NULL };					\
++	__TRACEPOINT_ENTRY(_name);					\
++	int __tracepoint_iter_##_name(void *__data, proto)		\
++	{								\
++		struct tracepoint_func *it_func_ptr;			\
++		void *it_func;						\
++									\
++		it_func_ptr =						\
++			rcu_dereference_raw((&__tracepoint_##_name)->funcs); \
++		do {							\
++			it_func = (it_func_ptr)->func;			\
++			__data = (it_func_ptr)->data;			\
++			((void(*)(void *, proto))(it_func))(__data, args); \
++		} while ((++it_func_ptr)->func);			\
++		return 0;						\
++	}								\
++	DEFINE_STATIC_CALL(tp_func_##_name, __tracepoint_iter_##_name);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__tracepoints_strings") over __attribute__((section("__tracepoints_strings")))
+#222: FILE: include/linux/tracepoint.h:290:
++	__attribute__((section("__tracepoints_strings"))) = #_name;	\
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#223: FILE: include/linux/tracepoint.h:291:
++	extern struct static_call_key STATIC_CALL_KEY(tp_func_##_name);\
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'proto' should also have an identifier name
+#224: FILE: include/linux/tracepoint.h:292:
++	int __tracepoint_iter_##_name(void *__data, proto);		\
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__tracepoints") over __attribute__((section("__tracepoints")))
+#226: FILE: include/linux/tracepoint.h:294:
++	  __attribute__((section("__tracepoints"), used)) = {		\
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __used over __attribute__((used))
+#226: FILE: include/linux/tracepoint.h:294:
++	  __attribute__((section("__tracepoints"), used)) = {		\
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#254: FILE: include/linux/tracepoint.h:320:
++#define DEFINE_TRACE(name, proto, args)		\
++	DEFINE_TRACE_FN(name, NULL, NULL, PARAMS(proto), PARAMS(args));
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#259: FILE: include/linux/tracepoint.h:324:
++	EXPORT_SYMBOL_GPL(__tracepoint_##name);				\
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#260: FILE: include/linux/tracepoint.h:325:
++	EXPORT_SYMBOL_GPL(__tracepoint_iter_##name);			\
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#264: FILE: include/linux/tracepoint.h:328:
++	EXPORT_SYMBOL(__tracepoint_##name);				\
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#265: FILE: include/linux/tracepoint.h:329:
++	EXPORT_SYMBOL(__tracepoint_iter_##name);			\
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000075559.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 11 warnings, 3 checks, 262 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000075559.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

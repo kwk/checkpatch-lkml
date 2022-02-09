@@ -1,0 +1,442 @@
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#93: FILE: arch/arm64/Kconfig:268:
++config ARM64_ILP32
++	bool "Kernel support for ILP32"
++	help
++	  This option enables support for AArch64 ILP32 user space.  These are
++	  64-bit binaries using 32-bit quantities for addressing and certain
++	  data that would normally be 64-bit.
+ 
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#231: FILE: arch/arm64/include/asm/compat.h:359:
+ }
++static inline int is_ilp32_task(void)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#235: FILE: arch/arm64/include/asm/compat.h:363:
++}
++static inline int is_ilp32_thread(struct thread_info *thread)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#293: FILE: arch/arm64/include/asm/elf.h:176:
++extern void compat_start_thread(struct pt_regs *regs, unsigned long pc,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#318: FILE: arch/arm64/include/asm/elf.h:198:
++typedef unsigned long                  compat_elf_greg_t;
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#319: FILE: arch/arm64/include/asm/elf.h:199:
++typedef compat_elf_greg_t              compat_elf_gregset_t[32+2];
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#319: FILE: arch/arm64/include/asm/elf.h:199:
++typedef compat_elf_greg_t              compat_elf_gregset_t[32+2];
+                                                               ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#322: FILE: arch/arm64/include/asm/elf.h:202:
++#define SET_PR_FPVALID(S, V) \
++	(void)(*(int *) (((void *) &((S)->pr_reg)) + PR_REG_SIZE((S)->pr_reg)) = (V));
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'S' - possible side-effects?
+#322: FILE: arch/arm64/include/asm/elf.h:202:
++#define SET_PR_FPVALID(S, V) \
++	(void)(*(int *) (((void *) &((S)->pr_reg)) + PR_REG_SIZE((S)->pr_reg)) = (V));
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#322: FILE: arch/arm64/include/asm/elf.h:202:
++#define SET_PR_FPVALID(S, V) \
++	(void)(*(int *) (((void *) &((S)->pr_reg)) + PR_REG_SIZE((S)->pr_reg)) = (V));
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:SPACING: No space is necessary after a cast
+#323: FILE: arch/arm64/include/asm/elf.h:203:
++	(void)(*(int *) (((void *) &((S)->pr_reg)) + PR_REG_SIZE((S)->pr_reg)) = (V));
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#329: FILE: arch/arm64/include/asm/elf.h:209:
++typedef compat_a32_elf_greg_t          compat_elf_greg_t;
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#330: FILE: arch/arm64/include/asm/elf.h:210:
++typedef compat_elf_greg_t              compat_elf_gregset_t[COMPAT_ELF_NGREG];
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#340: FILE: arch/arm64/include/asm/elf.h:220:
++#define compat_elf_check_arch(x) (compat_elf_a32_check_arch(x) || compat_elf_ilp32_check_arch(x))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ex' - possible side-effects?
+#341: FILE: arch/arm64/include/asm/elf.h:221:
++#define COMPAT_SET_PERSONALITY(ex)	do {			\
++		if (compat_elf_ilp32_check_arch(&(ex)))		\
++			COMPAT_SET_ILP32_PERSONALITY((ex));	\
++		else						\
++			COMPAT_SET_A32_PERSONALITY((ex));	\
++	} while (0)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#348: FILE: arch/arm64/include/asm/elf.h:228:
++
++
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#500: FILE: arch/arm64/include/uapi/asm/bitsperlong.h:19:
+ 
++
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#510: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#515: FILE: arch/arm64/include/uapi/asm/posix_types.h:1:
++#ifndef __ASM_POSIX_TYPES_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#519: FILE: arch/arm64/include/uapi/asm/posix_types.h:5:
++typedef long long __kernel_long_t;
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#520: FILE: arch/arm64/include/uapi/asm/posix_types.h:6:
++typedef unsigned long long __kernel_ulong_t;
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#538: FILE: arch/arm64/include/uapi/asm/siginfo.h:22:
++typedef long long __kernel_si_clock_t __attribute__((aligned(4)));
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#669: FILE: arch/arm64/kernel/ptrace.c:974:
+ 
++
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#691: FILE: arch/arm64/kernel/ptrace.c:1066:
++{
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'compat_arch_ptrace', this function's name, in a string
+#702: FILE: arch/arm64/kernel/ptrace.c:1077:
++	panic("Calling compat_arch_ptrace without being ilp32 or aarch32 task.");
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#740: FILE: arch/arm64/kernel/signal.c:70:
++
++
+
+WARNING:TYPO_SPELLING: 'usig' may be misspelled - perhaps 'using'?
+#762: FILE: arch/arm64/kernel/signal.c:162:
++		ret = setup_rt_frame_ilp32(usig, ka, info, oldset, regs);
+ 		                           ^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:TYPO_SPELLING: 'usig' may be misspelled - perhaps 'using'?
+#765: FILE: arch/arm64/kernel/signal.c:165:
++		ret = setup_rt_frame(usig, ka, info, oldset, regs);
+ 		                     ^^^^
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#799: FILE: arch/arm64/kernel/signal_template.c:1:
++/*
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#924: FILE: arch/arm64/kernel/signal_template.c:126:
++	sp = sp_top = regs->sp;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#930: FILE: arch/arm64/kernel/signal_template.c:132:
++		sp = sp_top = current->sas_ss_sp + current->sas_ss_size;
+
+WARNING:TYPO_SPELLING: 'usig' may be misspelled - perhaps 'using'?
+#945: FILE: arch/arm64/kernel/signal_template.c:147:
++			 void __user *frame, int usig)
+ 			                         ^^^^
+
+WARNING:TYPO_SPELLING: 'usig' may be misspelled - perhaps 'using'?
+#949: FILE: arch/arm64/kernel/signal_template.c:151:
++	regs->regs[0] = usig;
+ 	                ^^^^
+
+WARNING:TYPO_SPELLING: 'usig' may be misspelled - perhaps 'using'?
+#966: FILE: arch/arm64/kernel/signal_template.c:168:
++static int setup_rt_frame(int usig, struct k_sigaction *ka, siginfo_t *info,
+                               ^^^^
+
+WARNING:TYPO_SPELLING: 'usig' may be misspelled - perhaps 'using'?
+#982: FILE: arch/arm64/kernel/signal_template.c:184:
++		setup_return(regs, ka, frame, usig);
+ 		                              ^^^^
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#998: FILE: arch/arm64/kernel/signalilp32.c:1:
++
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1034: FILE: arch/arm64/kernel/sys_ilp32.c:1:
++/*
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#1075: FILE: arch/arm64/kernel/sys_ilp32.c:42:
++#define __LONG_LONG_PAIR(HI, LO) LO, HI
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#1077: FILE: arch/arm64/kernel/sys_ilp32.c:44:
++#define __LONG_LONG_PAIR(HI, LO) HI, LO
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1144: FILE: arch/arm64/kernel/sys_ilp32.c:111:
++	int error;
++	if (sz != sizeof(*buf))
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1153: FILE: arch/arm64/kernel/sys_ilp32.c:120:
++	int error;
++	if (sz != sizeof(*buf))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1184: FILE: arch/arm64/kernel/sys_ilp32.c:151:
++asmlinkage int ilp32_ftruncate64(unsigned int fd, __LONG_LONG_PAIR(unsigned long high,
++				 unsigned long low))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1202: FILE: arch/arm64/kernel/sys_ilp32.c:169:
++asmlinkage long ilp32_sync_file_range(int fd,
++				   __LONG_LONG_PAIR(unsigned offset_hi, unsigned offset_lo),
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1202: FILE: arch/arm64/kernel/sys_ilp32.c:169:
++				   __LONG_LONG_PAIR(unsigned offset_hi, unsigned offset_lo),
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1202: FILE: arch/arm64/kernel/sys_ilp32.c:169:
++				   __LONG_LONG_PAIR(unsigned offset_hi, unsigned offset_lo),
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1203: FILE: arch/arm64/kernel/sys_ilp32.c:170:
++				   __LONG_LONG_PAIR(unsigned nbytes_hi, unsigned nbytes_lo),
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1203: FILE: arch/arm64/kernel/sys_ilp32.c:170:
++				   __LONG_LONG_PAIR(unsigned nbytes_hi, unsigned nbytes_lo),
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#1226: FILE: arch/arm64/kernel/sys_ilp32.c:193:
++extern int poll_select_copy_remaining(struct timespec *end_time, void __user *p,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1230: FILE: arch/arm64/kernel/sys_ilp32.c:197:
++static long do_compat_pselect(int n, compat_ulong_t __user *inp,
++	compat_ulong_t __user *outp, compat_ulong_t __user *exp,
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#1253: FILE: arch/arm64/kernel/sys_ilp32.c:220:
++		sigdelsetmask(&ksigmask, sigmask(SIGKILL)|sigmask(SIGSTOP));
+ 		                                         ^
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1260: FILE: arch/arm64/kernel/sys_ilp32.c:227:
++	if (ret == -ERESTARTNOHAND) {
+[...]
++	} else if (sigmask)
+[...]
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1268: FILE: arch/arm64/kernel/sys_ilp32.c:235:
++			memcpy(&current->saved_sigmask, &sigsaved,
++					sizeof(sigsaved));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1278: FILE: arch/arm64/kernel/sys_ilp32.c:245:
++asmlinkage long ilp32_sys_pselect6(int n, compat_ulong_t __user *inp,
++	compat_ulong_t __user *outp, compat_ulong_t __user *exp,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1286: FILE: arch/arm64/kernel/sys_ilp32.c:253:
++		if (!access_ok(VERIFY_READ, sig,
++				sizeof(compat_uptr_t)+sizeof(compat_size_t)) ||
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1286: FILE: arch/arm64/kernel/sys_ilp32.c:253:
++				sizeof(compat_uptr_t)+sizeof(compat_size_t)) ||
+ 				                     ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1289: FILE: arch/arm64/kernel/sys_ilp32.c:256:
++			__get_user(sigsetsize,
++				(compat_size_t __user *)(sig+sizeof(up))))
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1289: FILE: arch/arm64/kernel/sys_ilp32.c:256:
++				(compat_size_t __user *)(sig+sizeof(up))))
+ 				                            ^
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1296: FILE: arch/arm64/kernel/sys_ilp32.c:263:
++
++
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#1298: FILE: arch/arm64/kernel/sys_ilp32.c:265:
++#define __SYSCALL(nr, sym)	[nr] = sym,
+
+Whitespace before opening bracket '[' is prohibited.
+There are some exceptions:
+
+1. With a type on the left::
+
+    int [] a;
+
+2. At the beginning of a line for slice initialisers::
+
+    [0...10] = 5,
+
+3. Inside a curly brace::
+
+    = { [0...10] = 5 }
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1354: FILE: arch/arm64/kernel/vdso.c:128:
++	vdsoilp32_pagelist = kzalloc(sizeof(struct page *) * (vdsoilp32_pages + 1),
++				GFP_KERNEL);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!vdsoilp32_pagelist"
+#1355: FILE: arch/arm64/kernel/vdso.c:129:
++	if (vdsoilp32_pagelist == NULL) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#1356: FILE: arch/arm64/kernel/vdso.c:130:
++	if (vdsoilp32_pagelist == NULL) {
++		pr_err("Failed to allocate vDSO_ilp32 pagelist!\n");
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1362: FILE: arch/arm64/kernel/vdso.c:136:
++		pg = virt_to_page(&vdsoilp32_start + i*PAGE_SIZE);
+ 		                                      ^
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!vbase"
+#1370: FILE: arch/arm64/kernel/vdso.c:144:
++	if (vbase == NULL) {
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#1388: FILE: arch/arm64/kernel/vdso.c:162:
++
++}
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1525: FILE: arch/arm64/kernel/vdsoilp32/vdso_ilp32.lds.S:1:
++/*
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1631: FILE: arch/arm64/kernel/vdsoilp32/vdsoilp32.S:1:
++/*
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/compat.h> instead of <asm/compat.h>
+#1672: FILE: arch/arm64/mm/init.c:38:
++#include <asm/compat.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000316805.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 4 errors, 31 warnings, 33 checks, 1428 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000316805.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,29 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__vma' - possible side-effects?
+#66: FILE: include/linux/huge_mm.h:114:
++#define wait_split_huge_page(__vma, __pmd)				\
+ 	do {								\
+ 		pmd_t *____pmd = (__pmd);				\
++		struct address_space *__mapping = (__vma)->vm_file ?	\
++				(__vma)->vm_file->f_mapping : NULL;	\
++		struct anon_vma *__anon_vma = (__vma)->anon_vma;	\
++		if (__mapping)						\
++			mutex_lock(&__mapping->i_mmap_mutex);		\
++		if (__anon_vma) {					\
++			anon_vma_lock_write(__anon_vma);		\
++			anon_vma_unlock_write(__anon_vma);		\
++		}							\
++		if (__mapping)						\
++			mutex_unlock(&__mapping->i_mmap_mutex);		\
+ 		BUG_ON(pmd_trans_splitting(*____pmd) ||			\
+ 		       pmd_trans_huge(*____pmd));			\
+ 	} while (0)
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000309855.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 0 warnings, 1 checks, 55 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000309855.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

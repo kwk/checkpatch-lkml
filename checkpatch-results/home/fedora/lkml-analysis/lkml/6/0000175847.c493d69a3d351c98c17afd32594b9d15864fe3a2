@@ -1,0 +1,197 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#97: FILE: arch/nds32/include/asm/uaccess.h:78:
++#define get_user(x, ptr)						\
+ ({									\
+ 	long __e = -EFAULT;						\
++	const __typeof__(*(ptr)) __user *__p = (ptr);			\
++	if (likely(access_ok(VERIFY_READ, __p, sizeof(*__p)))) {	\
+ 		__e = __get_user(x, __p);				\
++	} else {							\
++		(x) = 0;						\
++	}								\
+ 	__e;								\
+ })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#97: FILE: arch/nds32/include/asm/uaccess.h:78:
++#define get_user(x, ptr)						\
+ ({									\
+ 	long __e = -EFAULT;						\
++	const __typeof__(*(ptr)) __user *__p = (ptr);			\
++	if (likely(access_ok(VERIFY_READ, __p, sizeof(*__p)))) {	\
+ 		__e = __get_user(x, __p);				\
++	} else {							\
++		(x) = 0;						\
++	}								\
+ 	__e;								\
+ })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#132: FILE: arch/nds32/include/asm/uaccess.h:103:
++#define __get_user_err(x, ptr, err)					\
+ do {									\
+ 	const __typeof__(*(ptr)) __user *__gu_addr = (ptr);		\
+ 	unsigned long __gu_val;						\
+ 	__chk_user_ptr(__gu_addr);					\
+ 	switch (sizeof(*(__gu_addr))) {					\
+ 	case 1:								\
++		__get_user_asm("lbi", __gu_val, __gu_addr, (err));	\
+ 		break;							\
+ 	case 2:								\
++		__get_user_asm("lhi", __gu_val, __gu_addr, (err));	\
+ 		break;							\
+ 	case 4:								\
++		__get_user_asm("lwi", __gu_val, __gu_addr, (err));	\
+ 		break;							\
+ 	case 8:								\
++		__get_user_asm_dword(__gu_val, __gu_addr, (err));	\
+ 		break;							\
+ 	default:							\
+ 		BUILD_BUG(); 						\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'err' - possible side-effects?
+#132: FILE: arch/nds32/include/asm/uaccess.h:103:
++#define __get_user_err(x, ptr, err)					\
+ do {									\
+ 	const __typeof__(*(ptr)) __user *__gu_addr = (ptr);		\
+ 	unsigned long __gu_val;						\
+ 	__chk_user_ptr(__gu_addr);					\
+ 	switch (sizeof(*(__gu_addr))) {					\
+ 	case 1:								\
++		__get_user_asm("lbi", __gu_val, __gu_addr, (err));	\
+ 		break;							\
+ 	case 2:								\
++		__get_user_asm("lhi", __gu_val, __gu_addr, (err));	\
+ 		break;							\
+ 	case 4:								\
++		__get_user_asm("lwi", __gu_val, __gu_addr, (err));	\
+ 		break;							\
+ 	case 8:								\
++		__get_user_asm_dword(__gu_val, __gu_addr, (err));	\
+ 		break;							\
+ 	default:							\
+ 		BUILD_BUG(); 						\
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#177: FILE: arch/nds32/include/asm/uaccess.h:128:
++#define __get_user_asm(inst, x, addr, err)				\
++	__asm__ __volatile__ (						\
++		"1:	"inst"	%1,[%2]\n"				\
++		"2:\n"							\
++		"	.section .fixup,\"ax\"\n"			\
++		"	.align	2\n"					\
++		"3:	move %0, %3\n"					\
++		"	move %1, #0\n"					\
++		"	b	2b\n"					\
++		"	.previous\n"					\
++		"	.section __ex_table,\"a\"\n"			\
++		"	.align	3\n"					\
++		"	.long	1b, 3b\n"				\
++		"	.previous"					\
++		: "+r" (err), "=&r" (x)					\
++		: "r" (addr), "i" (-EFAULT)				\
++		: "cc")
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#179: FILE: arch/nds32/include/asm/uaccess.h:130:
++		"1:	"inst"	%1,[%2]\n"				\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#237: FILE: arch/nds32/include/asm/uaccess.h:173:
++#define put_user(x, ptr)						\
+ ({									\
+ 	long __e = -EFAULT;						\
++	__typeof__(*(ptr)) __user *__p = (ptr);				\
++	if (likely(access_ok(VERIFY_WRITE, __p, sizeof(*__p)))) {	\
+ 		__e = __put_user(x, __p);				\
+ 	}								\
+ 	__e;								\
+ })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#268: FILE: arch/nds32/include/asm/uaccess.h:196:
++#define __put_user_err(x, ptr, err)					\
+ do {									\
+ 	__typeof__(*(ptr)) __user *__pu_addr = (ptr);			\
+ 	__typeof__(*(__pu_addr)) __pu_val = (x);			\
+ 	__chk_user_ptr(__pu_addr);					\
+ 	switch (sizeof(*(__pu_addr))) {					\
+ 	case 1:								\
++		__put_user_asm("sbi", __pu_val, __pu_addr, (err));	\
+ 		break;							\
+ 	case 2: 							\
++		__put_user_asm("shi", __pu_val, __pu_addr, (err));	\
+ 		break;							\
+ 	case 4: 							\
++		__put_user_asm("swi", __pu_val, __pu_addr, (err));	\
+ 		break;							\
+ 	case 8:								\
++		__put_user_asm_dword(__pu_val, __pu_addr, (err));	\
+ 		break;							\
+ 	default:							\
+ 		BUILD_BUG(); 						\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'err' - possible side-effects?
+#268: FILE: arch/nds32/include/asm/uaccess.h:196:
++#define __put_user_err(x, ptr, err)					\
+ do {									\
+ 	__typeof__(*(ptr)) __user *__pu_addr = (ptr);			\
+ 	__typeof__(*(__pu_addr)) __pu_val = (x);			\
+ 	__chk_user_ptr(__pu_addr);					\
+ 	switch (sizeof(*(__pu_addr))) {					\
+ 	case 1:								\
++		__put_user_asm("sbi", __pu_val, __pu_addr, (err));	\
+ 		break;							\
+ 	case 2: 							\
++		__put_user_asm("shi", __pu_val, __pu_addr, (err));	\
+ 		break;							\
+ 	case 4: 							\
++		__put_user_asm("swi", __pu_val, __pu_addr, (err));	\
+ 		break;							\
+ 	case 8:								\
++		__put_user_asm_dword(__pu_val, __pu_addr, (err));	\
+ 		break;							\
+ 	default:							\
+ 		BUILD_BUG(); 						\
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#312: FILE: arch/nds32/include/asm/uaccess.h:220:
++#define __put_user_asm(inst, x, addr, err)				\
++	__asm__ __volatile__ (						\
++		"1:	"inst"	%1,[%2]\n"				\
++		"2:\n"							\
++		"	.section .fixup,\"ax\"\n"			\
++		"	.align	2\n"					\
++		"3:	move	%0, %3\n"				\
++		"	b	2b\n"					\
++		"	.previous\n"					\
++		"	.section __ex_table,\"a\"\n"			\
++		"	.align	3\n"					\
++		"	.long	1b, 3b\n"				\
++		"	.previous"					\
++		: "+r" (err)						\
++		: "r" (x), "r" (addr), "i" (-EFAULT)			\
++		: "cc")
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#314: FILE: arch/nds32/include/asm/uaccess.h:222:
++		"1:	"inst"	%1,[%2]\n"				\
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000175847.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 2 errors, 0 warnings, 9 checks, 297 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000175847.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

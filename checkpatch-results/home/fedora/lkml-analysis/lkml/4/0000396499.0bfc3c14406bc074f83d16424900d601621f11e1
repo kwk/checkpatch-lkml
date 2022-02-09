@@ -1,0 +1,136 @@
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const void *' should also have an identifier name
+#71: FILE: include/linux/slab.h:145:
++void kfree_notrace(const void *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'flags' may be better as '(flags)' to avoid precedence issues
+#91: FILE: include/linux/slab.h:415:
++#define set_gfp_notrace_flag_notrace(flags) (flags |= ___GFP_NOTRACE)
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#173: FILE: mm/slab.c:3557:
++#define DEFINE_KFREE(_suffix)						\
++void kfree##_suffix(const void *objp)					\
++{									\
++	struct kmem_cache *c;						\
++	unsigned long flags;						\
++									\
++	trace_kfree##_suffix(_RET_IP_, objp);				\
++									\
++	if (unlikely(ZERO_OR_NULL_PTR(objp)))				\
++		return;							\
++	local_irq_save(flags);						\
++	kfree_debugcheck(objp);						\
++	c = virt_to_cache(objp);					\
++	debug_check_no_locks_freed(objp, c->object_size);		\
++									\
++	debug_check_no_obj_freed(objp, c->object_size);			\
++	__cache_free(c, (void *)objp, _RET_IP_);			\
++	local_irq_restore(flags);					\
++}									\
++EXPORT_SYMBOL(kfree##_suffix);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#229: FILE: mm/slob.c:485:
++#define DEFINE_KFREE(_suffix)						\
++void kfree##_suffix(const void *block)					\
++{									\
++	struct page *sp;						\
++									\
++	trace_kfree##_suffix(_RET_IP_, block);				\
++									\
++	if (unlikely(ZERO_OR_NULL_PTR(block)))				\
++		return;							\
++	kmemleak_free(block);						\
++									\
++	sp = virt_to_page(block);					\
++	if (PageSlab(sp)) {						\
++		int align = max_t(size_t, ARCH_KMALLOC_MINALIGN, ARCH_SLAB_MINALIGN);	\
++		unsigned int *m = (unsigned int *)(block - align);	\
++		slob_free(m, *m + align);				\
++	} else								\
++		__free_pages(sp, compound_order(sp));			\
++}									\
++EXPORT_SYMBOL(kfree##_suffix);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#286: FILE: mm/slub.c:3330:
++#define DEFINE_KFREE(_suffix)						\
++void kfree##_suffix(const void *x)					\
++{									\
++	struct page *page;						\
++	void *object = (void *)x;					\
++									\
++	trace_kfree##_suffix(_RET_IP_, x);				\
++									\
++	if (unlikely(ZERO_OR_NULL_PTR(x)))				\
++		return;							\
++									\
++	page = virt_to_head_page(x);					\
++	if (unlikely(!PageSlab(page))) {				\
++		BUG_ON(!PageCompound(page));				\
++		kfree_hook(x);						\
++		__free_kmem_pages(page, compound_order(page));		\
++		return;							\
++	}								\
++	slab_free(page->slab_cache, page, object, _RET_IP_);		\
++}									\
++EXPORT_SYMBOL(kfree##_suffix);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#299: FILE: mm/slub.c:3343:
++		BUG_ON(!PageCompound(page));				\
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000396499.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 5 warnings, 1 checks, 231 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000396499.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

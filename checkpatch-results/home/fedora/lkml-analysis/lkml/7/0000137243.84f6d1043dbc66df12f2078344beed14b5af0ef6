@@ -1,0 +1,80 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'kvm' - possible side-effects?
+#73: FILE: include/linux/kvm_host.h:750:
++#define __kvm_put_guest(kvm, gfn, offset, value, type)			\
++({									\
++	unsigned long __addr = gfn_to_hva(kvm, gfn);			\
++	type __user *__uaddr = (type __user *)(__addr + offset);	\
++	int __ret = 0;							\
++									\
++	if (kvm_is_error_hva(__addr))					\
++		__ret = -EFAULT;					\
++	else								\
++		__ret = put_user(value, __uaddr);			\
++	if (!__ret)							\
++		mark_page_dirty(kvm, gfn);				\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'gfn' - possible side-effects?
+#73: FILE: include/linux/kvm_host.h:750:
++#define __kvm_put_guest(kvm, gfn, offset, value, type)			\
++({									\
++	unsigned long __addr = gfn_to_hva(kvm, gfn);			\
++	type __user *__uaddr = (type __user *)(__addr + offset);	\
++	int __ret = 0;							\
++									\
++	if (kvm_is_error_hva(__addr))					\
++		__ret = -EFAULT;					\
++	else								\
++		__ret = put_user(value, __uaddr);			\
++	if (!__ret)							\
++		mark_page_dirty(kvm, gfn);				\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'offset' may be better as '(offset)' to avoid precedence issues
+#73: FILE: include/linux/kvm_host.h:750:
++#define __kvm_put_guest(kvm, gfn, offset, value, type)			\
++({									\
++	unsigned long __addr = gfn_to_hva(kvm, gfn);			\
++	type __user *__uaddr = (type __user *)(__addr + offset);	\
++	int __ret = 0;							\
++									\
++	if (kvm_is_error_hva(__addr))					\
++		__ret = -EFAULT;					\
++	else								\
++		__ret = put_user(value, __uaddr);			\
++	if (!__ret)							\
++		mark_page_dirty(kvm, gfn);				\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'kvm' - possible side-effects?
+#88: FILE: include/linux/kvm_host.h:765:
++#define kvm_put_guest(kvm, gpa, value, type)				\
++({									\
++	gpa_t __gpa = gpa;						\
++	struct kvm *__kvm = kvm;					\
++	__kvm_put_guest(__kvm, __gpa >> PAGE_SHIFT,			\
++			offset_in_page(__gpa), (value), type);		\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'kvm' may be better as '(kvm)' to avoid precedence issues
+#88: FILE: include/linux/kvm_host.h:765:
++#define kvm_put_guest(kvm, gpa, value, type)				\
++({									\
++	gpa_t __gpa = gpa;						\
++	struct kvm *__kvm = kvm;					\
++	__kvm_put_guest(__kvm, __gpa >> PAGE_SHIFT,			\
++			offset_in_page(__gpa), (value), type);		\
++})
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000137243.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 total: 0 errors, 0 warnings, 5 checks, 30 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000137243.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

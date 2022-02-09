@@ -1,0 +1,164 @@
+WARNING:TYPO_SPELLING: 'allocaing' may be misspelled - perhaps 'allocating'?
+#38: 
+should be provided for allocaing and freeing. DEFINE_EKPROBE_ALLOC_OPS
+                       ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'a' - possible side-effects?
+#57: FILE: include/linux/kprobes.h:276:
++#define ALIGN_UP(v, a)	(((v) + ((a) - 1)) & ~((a) - 1))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'v' - possible side-effects?
+#60: FILE: include/linux/kprobes.h:279:
++#define __ek_in_range(v, s, e)	(((v) >= (s)) && ((v) < (e)))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#64: FILE: include/linux/kprobes.h:283:
++#define __ek_elem_idx(v, s, e)	(__ek_buf_sz(s, v) / __ek_elem_sz_b(s, e))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#65: FILE: include/linux/kprobes.h:284:
++#define __ek_get_elem(i, s, e)	(&((s)[__ek_elem_sz(s, e) * (i)]))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__t' - possible side-effects?
+#66: FILE: include/linux/kprobes.h:285:
++#define __DEFINE_EKPROBE_ALLOC_OPS(__t, __name)				\
++static inline __t *__ek_alloc_##__name(__t *__s, __t *__e, unsigned long *__b)\
++{									\
++	int __i = find_next_zero_bit(__b, NR_EARLY_KPROBES_SLOTS, 0);	\
++	if (__i >= NR_EARLY_KPROBES_SLOTS)				\
++		return NULL;						\
++	set_bit(__i, __b);						\
++	return __ek_get_elem(__i, __s, __e);				\
++}									\
++static inline int __ek_free_##__name(__t *__v, __t *__s, __t *__e, unsigned long *__b)	\
++{									\
++	if (!__ek_in_range(__v, __s, __e))				\
++		return 0;						\
++	clear_bit(__ek_elem_idx(__v, __s, __e), __b);			\
++	return 1;							\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '__t' may be better as '(__t)' to avoid precedence issues
+#66: FILE: include/linux/kprobes.h:285:
++#define __DEFINE_EKPROBE_ALLOC_OPS(__t, __name)				\
++static inline __t *__ek_alloc_##__name(__t *__s, __t *__e, unsigned long *__b)\
++{									\
++	int __i = find_next_zero_bit(__b, NR_EARLY_KPROBES_SLOTS, 0);	\
++	if (__i >= NR_EARLY_KPROBES_SLOTS)				\
++		return NULL;						\
++	set_bit(__i, __b);						\
++	return __ek_get_elem(__i, __s, __e);				\
++}									\
++static inline int __ek_free_##__name(__t *__v, __t *__s, __t *__e, unsigned long *__b)	\
++{									\
++	if (!__ek_in_range(__v, __s, __e))				\
++		return 0;						\
++	clear_bit(__ek_elem_idx(__v, __s, __e), __b);			\
++	return 1;							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__t' - possible side-effects?
+#83: FILE: include/linux/kprobes.h:302:
++#define DEFINE_EKPROBE_ALLOC_OPS(__t, __name, __static)			\
++__static __t __ek_##__name##_slots[NR_EARLY_KPROBES_SLOTS];		\
++__static unsigned long __ek_##__name##_bitmap[EARLY_KPROBES_BITMAP_SZ];	\
++__DEFINE_EKPROBE_ALLOC_OPS(__t, __name)					\
++static inline __t *ek_alloc_##__name(void)				\
++{									\
++	return __ek_alloc_##__name(&((__ek_##__name##_slots)[0]),	\
++			&((__ek_##__name##_slots)[NR_EARLY_KPROBES_SLOTS]),\
++			(__ek_##__name##_bitmap));			\
++}									\
++static inline int ek_free_##__name(__t *__s)				\
++{									\
++	return __ek_free_##__name(__s, &((__ek_##__name##_slots)[0]),	\
++			&((__ek_##__name##_slots)[NR_EARLY_KPROBES_SLOTS]),\
++			(__ek_##__name##_bitmap));			\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__static' - possible side-effects?
+#83: FILE: include/linux/kprobes.h:302:
++#define DEFINE_EKPROBE_ALLOC_OPS(__t, __name, __static)			\
++__static __t __ek_##__name##_slots[NR_EARLY_KPROBES_SLOTS];		\
++__static unsigned long __ek_##__name##_bitmap[EARLY_KPROBES_BITMAP_SZ];	\
++__DEFINE_EKPROBE_ALLOC_OPS(__t, __name)					\
++static inline __t *ek_alloc_##__name(void)				\
++{									\
++	return __ek_alloc_##__name(&((__ek_##__name##_slots)[0]),	\
++			&((__ek_##__name##_slots)[NR_EARLY_KPROBES_SLOTS]),\
++			(__ek_##__name##_bitmap));			\
++}									\
++static inline int ek_free_##__name(__t *__s)				\
++{									\
++	return __ek_free_##__name(__s, &((__ek_##__name##_slots)[0]),	\
++			&((__ek_##__name##_slots)[NR_EARLY_KPROBES_SLOTS]),\
++			(__ek_##__name##_bitmap));			\
++}
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#100: FILE: include/linux/kprobes.h:319:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__t' - possible side-effects?
+#102: FILE: include/linux/kprobes.h:321:
++#define __DEFINE_EKPROBE_ALLOC_OPS(__t, __name)				\
++static inline __t *__ek_alloc_##__name(__t *__s, __t *__e, unsigned long *__b)\
++{									\
++	return NULL;							\
++}									\
++static inline int __ek_free_##__name(__t *__v, __t *__s, __t *__e, unsigned long *__b)\
++{									\
++	return 0;							\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '__t' may be better as '(__t)' to avoid precedence issues
+#102: FILE: include/linux/kprobes.h:321:
++#define __DEFINE_EKPROBE_ALLOC_OPS(__t, __name)				\
++static inline __t *__ek_alloc_##__name(__t *__s, __t *__e, unsigned long *__b)\
++{									\
++	return NULL;							\
++}									\
++static inline int __ek_free_##__name(__t *__v, __t *__s, __t *__e, unsigned long *__b)\
++{									\
++	return 0;							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__t' - possible side-effects?
+#112: FILE: include/linux/kprobes.h:331:
++#define DEFINE_EKPROBE_ALLOC_OPS(__t, __name, __static)			\
++static inline __t *ek_alloc_##__name(void)				\
++{									\
++	return NULL;							\
++}									\
++static inline void ek_free_##__name(__t *__s)				\
++{									\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '__t' may be better as '(__t)' to avoid precedence issues
+#112: FILE: include/linux/kprobes.h:331:
++#define DEFINE_EKPROBE_ALLOC_OPS(__t, __name, __static)			\
++static inline __t *ek_alloc_##__name(void)				\
++{									\
++	return NULL;							\
++}									\
++static inline void ek_free_##__name(__t *__s)				\
++{									\
++}
+
+./tmp.djB3TWhDXa//home/fedora/lkml-analysis/lkml/3/patch.offset.0000017558.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 1 warnings, 13 checks, 75 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.djB3TWhDXa//home/fedora/lkml-analysis/lkml/3/patch.offset.0000017558.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

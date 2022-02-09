@@ -1,0 +1,147 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#151: FILE: arch/x86/include/asm/alternative.h:64:
++extern void apply_pv_alternatives(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'feature' - possible side-effects?
+#160: FILE: arch/x86/include/asm/alternative.h:136:
++#define __ALTERNATIVE(section, oldinstr, newinstr, feature)		\
+ 	OLDINSTR(oldinstr, 1)						\
++	".pushsection " section ",\"a\"\n"				\
+ 	ALTINSTR_ENTRY(feature, 1)					\
+ 	".popsection\n"							\
+ 	".pushsection .altinstr_replacement, \"ax\"\n"			\
+ 	ALTINSTR_REPLACEMENT(newinstr, feature, 1)			\
++	".popsection\n"
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#193: FILE: arch/x86/include/asm/cpufeatures.h:217:
++#define X86_FEATURE_PV_OPS      ( 8*32+17) /* Use pv ops alternatives */
+                                    ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#193: FILE: arch/x86/include/asm/cpufeatures.h:217:
++#define X86_FEATURE_PV_OPS      ( 8*32+17) /* Use pv ops alternatives */
+                                       ^
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#193: FILE: arch/x86/include/asm/cpufeatures.h:217:
++#define X86_FEATURE_PV_OPS      ( 8*32+17) /* Use pv ops alternatives */
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#212: FILE: arch/x86/include/asm/paravirt-asm.h:31:
++	.byte 142b-140b;						\
+ 	          ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'rettype' - possible side-effects?
+#260: FILE: arch/x86/include/asm/paravirt_types.h:589:
++#define ____PVOP_ALT_CALL(rettype, native, op, clbr, call_clbr,	\
++			     extra_clbr, ...)				\
++({									\
++	rettype __ret;							\
++	PVOP_CALL_ARGS;							\
++	PVOP_TEST_NULL(op);						\
++	asm volatile(PV_ALT_SITE(native, PV_CALL_STR)			\
++		     : call_clbr, ASM_CALL_CONSTRAINT			\
++		     : PV_INPUT_CONSTRAINTS(op, clbr),			\
++		       ##__VA_ARGS__					\
++		     : "memory", "cc" extra_clbr);			\
++	if (IS_ENABLED(CONFIG_X86_32) &&				\
++	    sizeof(rettype) > sizeof(unsigned long))			\
++		__ret = (rettype)((((u64)__edx) << 32) | __eax);	\
++	else								\
++		__ret = (rettype)(__eax & PVOP_RETMASK(rettype));	\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'op' - possible side-effects?
+#260: FILE: arch/x86/include/asm/paravirt_types.h:589:
++#define ____PVOP_ALT_CALL(rettype, native, op, clbr, call_clbr,	\
++			     extra_clbr, ...)				\
++({									\
++	rettype __ret;							\
++	PVOP_CALL_ARGS;							\
++	PVOP_TEST_NULL(op);						\
++	asm volatile(PV_ALT_SITE(native, PV_CALL_STR)			\
++		     : call_clbr, ASM_CALL_CONSTRAINT			\
++		     : PV_INPUT_CONSTRAINTS(op, clbr),			\
++		       ##__VA_ARGS__					\
++		     : "memory", "cc" extra_clbr);			\
++	if (IS_ENABLED(CONFIG_X86_32) &&				\
++	    sizeof(rettype) > sizeof(unsigned long))			\
++		__ret = (rettype)((((u64)__edx) << 32) | __eax);	\
++	else								\
++		__ret = (rettype)(__eax & PVOP_RETMASK(rettype));	\
++	__ret;								\
++})
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#286: FILE: arch/x86/include/asm/paravirt_types.h:615:
++			     PVOP_CALLEE_OUTPUTS, , ##__VA_ARGS__)
+ 			                          ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'op' - possible side-effects?
+#294: FILE: arch/x86/include/asm/paravirt_types.h:640:
++#define ____PVOP_ALT_VCALL(native, op, clbr, call_clbr, extra_clbr,	\
++			      ...)					\
++({									\
++	PVOP_VCALL_ARGS;						\
++	PVOP_TEST_NULL(op);						\
++	asm volatile(PV_ALT_SITE(native, PV_CALL_STR)			\
++		     : call_clbr, ASM_CALL_CONSTRAINT			\
++		     : PV_INPUT_CONSTRAINTS(op, clbr),			\
++		       ##__VA_ARGS__					\
++		     : "memory", "cc" extra_clbr);			\
++})
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#313: FILE: arch/x86/include/asm/paravirt_types.h:659:
++			      PVOP_VCALLEE_OUTPUTS, , ##__VA_ARGS__)
+ 			                            ^
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/cpufeature.h> instead of <asm/cpufeature.h>
+#357: FILE: arch/x86/kernel/alternative.c:24:
++#include <asm/cpufeature.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#365: FILE: arch/x86/kernel/alternative.c:273:
++extern struct alt_instr __pv_alt_instructions[], __pv_alt_instructions_end[];
+
+CHECK:CAMELCASE: Avoid CamelCase: <Elf_Shdr>
+#410: FILE: arch/x86/kernel/module.c:216:
++	const Elf_Shdr *s, *text = NULL, *alt = NULL, *pv_alt = NULL,
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#431: FILE: arch/x86/kernel/module.c:245:
++		void *seg = (void *)pv_alt->sh_addr;
++		apply_alternatives(seg, seg + pv_alt->sh_size);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000094590.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 3 errors, 2 warnings, 10 checks, 296 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000094590.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

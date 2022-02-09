@@ -1,0 +1,228 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:UNDOCUMENTED_DT_STRING: DT compatible string "qcom,apq8064-ahci" appears un-documented -- check /home/fedora/lkml-analysis/linux/Documentation/devicetree/bindings/
+#101: FILE: arch/arm/boot/dts/qcom-apq8064.dtsi:580:
++			compatible		= "qcom,apq8064-ahci", "generic-ahci";
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#122: FILE: arch/arm/mm/ioremap.c:463:
++	BUG_ON(offset + SZ_64K - 1 > IO_SPACE_LIMIT);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'next' - possible side-effects?
+#264: FILE: arch/mips/include/asm/switch_to.h:82:
++#define __sanitize_fcr31(next)						\
++do {									\
++	unsigned long fcr31 = mask_fcr31_x(next->thread.fpu.fcr31);	\
++	void __user *pc;						\
++									\
++	if (unlikely(fcr31)) {						\
++		pc = (void __user *)task_pt_regs(next)->cp0_epc;	\
++		next->thread.fpu.fcr31 &= ~fcr31;			\
++		force_fcr31_sig(fcr31, pc, next);			\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'next' may be better as '(next)' to avoid precedence issues
+#264: FILE: arch/mips/include/asm/switch_to.h:82:
++#define __sanitize_fcr31(next)						\
++do {									\
++	unsigned long fcr31 = mask_fcr31_x(next->thread.fpu.fcr31);	\
++	void __user *pc;						\
++									\
++	if (unlikely(fcr31)) {						\
++		pc = (void __user *)task_pt_regs(next)->cp0_epc;	\
++		next->thread.fpu.fcr31 &= ~fcr31;			\
++		force_fcr31_sig(fcr31, pc, next);			\
++	}								\
++} while (0)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#298: FILE: arch/mips/include/uapi/asm/inst.h:850:
++	__BITFIELD_FIELD(unsigned int imm : 5,
+ 	__BITFIELD_FIELD(unsigned int : 16, /* Ignored */
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#543: FILE: arch/sparc/include/asm/page_64.h:28:
++#define REAL_HPAGE_PER_HPAGE	(_AC(1,UL) << (HPAGE_SHIFT - REAL_HPAGE_SHIFT))
+                             	      ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#771: FILE: arch/x86/include/asm/percpu.h:187:
++		asm volatile(op "b "__percpu_arg(1)",%0"\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#777: FILE: arch/x86/include/asm/percpu.h:192:
++		asm volatile(op "w "__percpu_arg(1)",%0"\
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#783: FILE: arch/x86/include/asm/percpu.h:197:
++		asm volatile(op "l "__percpu_arg(1)",%0"\
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#789: FILE: arch/x86/include/asm/percpu.h:202:
++		asm volatile(op "q "__percpu_arg(1)",%0"\
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#802: FILE: arch/x86/kernel/time.c:26:
++__visible volatile unsigned long jiffies __cacheline_aligned_in_smp = INITIAL_JIFFIES;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#819: FILE: arch/x86/mm/pageattr.c:960:
++			 unsigned num_pages, pud_t *pud, pgprot_t pgprot)
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1070: FILE: drivers/gpu/drm/nouveau/nouveau_fbcon.c:248:
++	if (drm->fbcon && drm->fbcon->helper.fbdev) {
+ 		drm->fbcon->helper.fbdev->flags = drm->fbcon->saved_flags;
+ 	}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#1571: FILE: drivers/net/ethernet/realtek/r8169.c:7549:
++	work_done = rtl_rx(dev, tp, (u32) budget);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'starget->state != STARGET_CREATED'
+#1821: FILE: drivers/scsi/scsi_scan.c:388:
++	if ((starget->state != STARGET_CREATED) &&
++	    (starget->state != STARGET_CREATED_REMOVE)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'starget->state != STARGET_CREATED_REMOVE'
+#1821: FILE: drivers/scsi/scsi_scan.c:388:
++	if ((starget->state != STARGET_CREATED) &&
++	    (starget->state != STARGET_CREATED_REMOVE)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2068: FILE: drivers/usb/storage/transport.c:820:
++			else if (srb->cmnd[0] == ATA_16 ||
++					srb->cmnd[0] == ATA_12) {
+
+CHECK:BRACES: Unbalanced braces around else statement
+#2077: FILE: drivers/usb/storage/transport.c:828:
++			else {
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2217: FILE: fs/btrfs/root-tree.c:331:
++			BUG_ON(err == -EEXIST);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2665: FILE: kernel/sched/sched.h:313:
++extern void unregister_fair_sched_group(struct task_group *tg);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2870: FILE: net/bluetooth/smp.c:2403:
++		 * remove and free already invalidated rcu list entries. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:REPEATED_WORD: Possible repeated word: 'are'
+#2961: FILE: net/ipv4/fou.c:200:
++	 * header to the outer L3 tunnel header, or we are are simply
+
+WARNING:REPEATED_WORD: Possible repeated word: 'are'
+#2976: FILE: net/ipv4/fou.c:367:
++	 * header to the outer L3 tunnel header, or we are are simply
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3113: FILE: net/ipv6/mcast.c:2399:
++		err = ip6_mc_del_src(idev, &iml->addr, iml->sfmode,
++				iml->sflist->sl_count, iml->sflist->sl_addr, 0);
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000100179.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 1 errors, 10 warnings, 14 checks, 2772 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000100179.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

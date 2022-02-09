@@ -1,0 +1,258 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#70: 
+  https://lkml.kernel.org/r/20181005081333.15018-1-ard.biesheuvel@linaro.org
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#185: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#264: FILE: include/linux/static_call.h:75:
++extern void arch_static_call_transform(void *site, void *tramp, void *func);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#267: FILE: include/linux/static_call.h:78:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'key' - possible side-effects?
+#268: FILE: include/linux/static_call.h:79:
++#define DECLARE_STATIC_CALL(key, func)					\
++	extern struct static_call_key key;				\
++	extern typeof(func) STATIC_CALL_TRAMP(key)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#270: FILE: include/linux/static_call.h:81:
++	extern typeof(func) STATIC_CALL_TRAMP(key)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#272: FILE: include/linux/static_call.h:83:
++
++
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#290: FILE: include/linux/static_call.h:101:
++extern void arch_static_call_defuse_tramp(void *site, void *tramp);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#291: FILE: include/linux/static_call.h:102:
++extern void __static_call_update(struct static_call_key *key, void *func);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#292: FILE: include/linux/static_call.h:103:
++extern int static_call_mod_init(struct module *mod);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'key' - possible side-effects?
+#294: FILE: include/linux/static_call.h:105:
++#define DEFINE_STATIC_CALL(key, _func)					\
++	DECLARE_STATIC_CALL(key, _func);				\
++	struct static_call_key key = {					\
++		.func = _func,						\
++		.tramp = STATIC_CALL_TRAMP(key),			\
++		.site_mods = LIST_HEAD_INIT(key.site_mods),		\
++	};								\
++	ARCH_DEFINE_STATIC_CALL_TRAMP(key, _func)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_func' - possible side-effects?
+#294: FILE: include/linux/static_call.h:105:
++#define DEFINE_STATIC_CALL(key, _func)					\
++	DECLARE_STATIC_CALL(key, _func);				\
++	struct static_call_key key = {					\
++		.func = _func,						\
++		.tramp = STATIC_CALL_TRAMP(key),			\
++		.site_mods = LIST_HEAD_INIT(key.site_mods),		\
++	};								\
++	ARCH_DEFINE_STATIC_CALL_TRAMP(key, _func)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'key' - possible side-effects?
+#308: FILE: include/linux/static_call.h:119:
++#define static_call(key, args...)					\
++({									\
++	__ADDRESSABLE(key);						\
++	STATIC_CALL_TRAMP(key)(args);					\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'key' - possible side-effects?
+#314: FILE: include/linux/static_call.h:125:
++#define static_call_update(key, func)					\
++({									\
++	BUILD_BUG_ON(!__same_type(func, STATIC_CALL_TRAMP(key)));	\
++	__static_call_update(&key, func);				\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'func' - possible side-effects?
+#314: FILE: include/linux/static_call.h:125:
++#define static_call_update(key, func)					\
++({									\
++	BUILD_BUG_ON(!__same_type(func, STATIC_CALL_TRAMP(key)));	\
++	__static_call_update(&key, func);				\
++})
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#320: FILE: include/linux/static_call.h:131:
++#define EXPORT_STATIC_CALL(key)						\
++	EXPORT_SYMBOL(key);						\
++	EXPORT_SYMBOL(STATIC_CALL_TRAMP(key))
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'key' - possible side-effects?
+#320: FILE: include/linux/static_call.h:131:
++#define EXPORT_STATIC_CALL(key)						\
++	EXPORT_SYMBOL(key);						\
++	EXPORT_SYMBOL(STATIC_CALL_TRAMP(key))
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#321: FILE: include/linux/static_call.h:132:
++	EXPORT_SYMBOL(key);						\
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#324: FILE: include/linux/static_call.h:135:
++#define EXPORT_STATIC_CALL_GPL(key)					\
++	EXPORT_SYMBOL_GPL(key);						\
++	EXPORT_SYMBOL_GPL(STATIC_CALL_TRAMP(key))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'key' - possible side-effects?
+#324: FILE: include/linux/static_call.h:135:
++#define EXPORT_STATIC_CALL_GPL(key)					\
++	EXPORT_SYMBOL_GPL(key);						\
++	EXPORT_SYMBOL_GPL(STATIC_CALL_TRAMP(key))
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#325: FILE: include/linux/static_call.h:136:
++	EXPORT_SYMBOL_GPL(key);						\
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#328: FILE: include/linux/static_call.h:139:
++
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'key' - possible side-effects?
+#335: FILE: include/linux/static_call.h:146:
++#define DEFINE_STATIC_CALL(key, _func)					\
++	DECLARE_STATIC_CALL(key, _func);				\
++	struct static_call_key key = {					\
++		.func = _func,						\
++		.tramp = STATIC_CALL_TRAMP(key),			\
++	};								\
++	ARCH_DEFINE_STATIC_CALL_TRAMP(key, func)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_func' - possible side-effects?
+#335: FILE: include/linux/static_call.h:146:
++#define DEFINE_STATIC_CALL(key, _func)					\
++	DECLARE_STATIC_CALL(key, _func);				\
++	struct static_call_key key = {					\
++		.func = _func,						\
++		.tramp = STATIC_CALL_TRAMP(key),			\
++	};								\
++	ARCH_DEFINE_STATIC_CALL_TRAMP(key, func)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'key' may be better as '(key)' to avoid precedence issues
+#345: FILE: include/linux/static_call.h:156:
++#define __static_call_update(key, func)					\
++({									\
++	cpus_read_lock();						\
++	arch_static_call_transform(NULL, key->tramp, func);		\
++	cpus_read_unlock();						\
++})
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#363: FILE: include/linux/static_call.h:174:
++
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'key' - possible side-effects?
+#370: FILE: include/linux/static_call.h:181:
++#define DEFINE_STATIC_CALL(key, _func)					\
++	DECLARE_STATIC_CALL(key, _func);				\
++	struct static_call_key key = {					\
++		.func = _func,						\
++	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_func' - possible side-effects?
+#370: FILE: include/linux/static_call.h:181:
++#define DEFINE_STATIC_CALL(key, _func)					\
++	DECLARE_STATIC_CALL(key, _func);				\
++	struct static_call_key key = {					\
++		.func = _func,						\
++	}
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#376: FILE: include/linux/static_call.h:187:
++#define static_call(key, args...)					\
++	((typeof(STATIC_CALL_TRAMP(key))*)(key.func))(args)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'key' - possible side-effects?
+#376: FILE: include/linux/static_call.h:187:
++#define static_call(key, args...)					\
++	((typeof(STATIC_CALL_TRAMP(key))*)(key.func))(args)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'key' may be better as '(key)' to avoid precedence issues
+#379: FILE: include/linux/static_call.h:190:
++#define __static_call_update(key, _func)				\
++	WRITE_ONCE(key->func, _func)
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#382: FILE: include/linux/static_call.h:193:
++#define static_call_update(key, func)					\
++	BUILD_BUG_ON(!__same_type(_func, STATIC_CALL_TRAMP(key)));	\
++	__static_call_update(key, func)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'key' - possible side-effects?
+#382: FILE: include/linux/static_call.h:193:
++#define static_call_update(key, func)					\
++	BUILD_BUG_ON(!__same_type(_func, STATIC_CALL_TRAMP(key)));	\
++	__static_call_update(key, func)
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#386: FILE: include/linux/static_call.h:197:
++#define EXPORT_STATIC_CALL(key) EXPORT_SYMBOL(key)
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#387: FILE: include/linux/static_call.h:198:
++#define EXPORT_STATIC_CALL_GPL(key) EXPORT_SYMBOL_GPL(key)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#488: FILE: kernel/static_call.c:38:
++
++
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#776: FILE: kernel/static_call.c:326:
++			if (!site_mod) {
++				WARN(1, "Failed to allocate memory for static calls");
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000084931.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 4 errors, 7 warnings, 26 checks, 656 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000084931.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

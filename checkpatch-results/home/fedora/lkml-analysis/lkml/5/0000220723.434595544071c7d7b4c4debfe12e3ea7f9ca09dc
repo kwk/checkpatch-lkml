@@ -1,0 +1,39 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'reg' - possible side-effects?
+#73: FILE: arch/arm64/include/asm/arch_timer.h:62:
++#define arch_timer_reg_read_stable(reg)					\
++({									\
++	u64 _val;							\
++	if (needs_unstable_timer_counter_workaround()) {		\
++		const struct arch_timer_erratum_workaround *wa;		\
++		preempt_disable();					\
++		wa = __this_cpu_read(timer_unstable_counter_workaround); \
++		if (wa && wa->read_##reg)				\
++			_val = wa->read_##reg();			\
++		else							\
++			_val = read_sysreg(reg);			\
++		preempt_enable();					\
++	} else {							\
++		_val = read_sysreg(reg);				\
++	}								\
++	_val;								\
+ })
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#133: FILE: drivers/clocksource/arm_arch_timer.c:383:
++		const struct arch_timer_erratum_workaround *__wa;
++		__wa = __this_cpu_read(timer_unstable_counter_workaround);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000220723.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 1 warnings, 1 checks, 113 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000220723.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

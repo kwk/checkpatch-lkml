@@ -1,0 +1,127 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#64: FILE: include/linux/kmod.h:69:
++extern int umh_wq_get_token(int token, const char *service);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#65: FILE: include/linux/kmod.h:70:
++extern void umh_wq_put_token(int token);
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#90: FILE: kernel/kmod.c:55:
++#define UMH_WQ_HASH_SIZE   1 << UMH_WQ_HASH_SHIFT
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#90: FILE: kernel/kmod.c:55:
++#define UMH_WQ_HASH_SIZE   1 << UMH_WQ_HASH_SHIFT
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:SPACING: No space is necessary after a cast
+#123: FILE: kernel/kmod.c:509:
++	hash = hash_32((unsigned long) token, UMH_WQ_HASH_SHIFT);
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#164: FILE: kernel/kmod.c:550:
++ * ^I   service thread.$
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*entry)...) over kzalloc(sizeof(struct umh_wq_entry)...)
+#202: FILE: kernel/kmod.c:588:
++	entry = kzalloc(sizeof(struct umh_wq_entry), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:LIKELY_MISUSE: nested (un)?likely() calls, IS_ERR already uses unlikely() internally
+#223: FILE: kernel/kmod.c:609:
++		if (likely(IS_ERR(entry))) {
+
+CHECK:SPACING: No space is necessary after a cast
+#227: FILE: kernel/kmod.c:613:
++			entry->token = (long) new_token;
+
+CHECK:SPACING: No space is necessary after a cast
+#234: FILE: kernel/kmod.c:620:
++	return (int) new_token;
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#240: FILE: kernel/kmod.c:626:
++ * ^I^I      and remove it from the serive thread list$
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#252: FILE: kernel/kmod.c:638:
++	if (unlikely(IS_ERR(entry)))
+[...]
++	else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:LIKELY_MISUSE: nested (un)?likely() calls, IS_ERR already uses unlikely() internally
+#252: FILE: kernel/kmod.c:638:
++	if (unlikely(IS_ERR(entry)))
+
+CHECK:BRACES: Unbalanced braces around else statement
+#254: FILE: kernel/kmod.c:640:
++	else {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#255: FILE: kernel/kmod.c:641:
++		if (--entry->count)
+[...]
++		else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#257: FILE: kernel/kmod.c:643:
++		else {
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#265: FILE: kernel/kmod.c:651:
++	return;
++}
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000373434.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 1 errors, 5 warnings, 11 checks, 212 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000373434.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

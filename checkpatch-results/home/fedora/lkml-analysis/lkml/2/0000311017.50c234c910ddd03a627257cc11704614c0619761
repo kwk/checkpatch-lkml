@@ -1,0 +1,343 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#49: 
+The conversion from backend /proc/scsi_target/mib/ context output to configfs
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#125: FILE: drivers/target/target_core_fabric_configfs.c:764:
++static struct config_group *target_core_port_stat_mkdir(
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#129: FILE: drivers/target/target_core_fabric_configfs.c:768:
++	return ERR_PTR(-ENOSYS);
+
+ENOSYS means that a nonexistent system call was called.
+Earlier, it was wrongly used for things like invalid operations on
+otherwise valid syscalls.  This should be avoided in new code.
+
+See: https://lore.kernel.org/lkml/5eb299021dec23c1a48fa7d9f2c8b794e967766d.1408730669.git.luto@amacapital.net/
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#132: FILE: drivers/target/target_core_fabric_configfs.c:771:
++static void target_core_port_stat_rmdir(
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#137: FILE: drivers/target/target_core_fabric_configfs.c:776:
++	return;
++}
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*lun_cg->default_groups)...) over kzalloc(sizeof(struct config_group)...)
+#166: FILE: drivers/target/target_core_fabric_configfs.c:814:
++	lun_cg->default_groups = kzalloc(sizeof(struct config_group) * 2,
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#167: FILE: drivers/target/target_core_fabric_configfs.c:815:
++	lun_cg->default_groups = kzalloc(sizeof(struct config_group) * 2,
++				GFP_KERNEL);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#169: FILE: drivers/target/target_core_fabric_configfs.c:817:
++		printk(KERN_ERR "Unable to allocate lun_cg->default_groups\n");
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#169: FILE: drivers/target/target_core_fabric_configfs.c:817:
++	if (!lun_cg->default_groups) {
++		printk(KERN_ERR "Unable to allocate lun_cg->default_groups\n");
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#176: FILE: drivers/target/target_core_fabric_configfs.c:824:
++	config_group_init_type_name(&lun->port_stat_grps.stat_group,
++			"statistics", &TF_CIT_TMPL(tf)->tfc_tpg_port_stat_cit);
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*port_stat_grp->default_groups)...) over kzalloc(sizeof(struct config_group)...)
+#181: FILE: drivers/target/target_core_fabric_configfs.c:829:
++	port_stat_grp->default_groups =  kzalloc(sizeof(struct config_group) * 3,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#182: FILE: drivers/target/target_core_fabric_configfs.c:830:
++	port_stat_grp->default_groups =  kzalloc(sizeof(struct config_group) * 3,
++				GFP_KERNEL);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#184: FILE: drivers/target/target_core_fabric_configfs.c:832:
++		printk(KERN_ERR "Unable to allocate port_stat_grp->default_groups\n");
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#184: FILE: drivers/target/target_core_fabric_configfs.c:832:
++	if (!port_stat_grp->default_groups) {
++		printk(KERN_ERR "Unable to allocate port_stat_grp->default_groups\n");
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#248: FILE: drivers/target/target_core_stat.c:691:
++#define DEV_STAT_SCSI_PORT_ATTR(_name, _mode)				\
++static struct target_stat_scsi_port_attribute				\
++			target_stat_scsi_port_##_name =			\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	target_stat_scsi_port_show_attr_##_name,			\
++	target_stat_scsi_port_store_attr_##_name);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#255: FILE: drivers/target/target_core_stat.c:698:
++#define DEV_STAT_SCSI_PORT_ATTR_RO(_name)				\
++static struct target_stat_scsi_port_attribute				\
++			target_stat_scsi_port_##_name =			\
++	__CONFIGFS_EATTR_RO(_name,					\
++	target_stat_scsi_port_show_attr_##_name);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#261: FILE: drivers/target/target_core_stat.c:704:
++static ssize_t target_stat_scsi_port_show_attr_inst(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#283: FILE: drivers/target/target_core_stat.c:726:
++static ssize_t target_stat_scsi_port_show_attr_dev(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#303: FILE: drivers/target/target_core_stat.c:746:
++static ssize_t target_stat_scsi_port_show_attr_indx(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#322: FILE: drivers/target/target_core_stat.c:765:
++static ssize_t target_stat_scsi_port_show_attr_role(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#345: FILE: drivers/target/target_core_stat.c:788:
++static ssize_t target_stat_scsi_port_show_attr_busy_count(
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#391: FILE: drivers/target/target_core_stat.c:834:
++#define DEV_STAT_SCSI_TGT_PORT_ATTR(_name, _mode)			\
++static struct target_stat_scsi_tgt_port_attribute			\
++			target_stat_scsi_tgt_port_##_name =		\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	target_stat_scsi_tgt_port_show_attr_##_name,			\
++	target_stat_scsi_tgt_port_store_attr_##_name);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#398: FILE: drivers/target/target_core_stat.c:841:
++#define DEV_STAT_SCSI_TGT_PORT_ATTR_RO(_name)				\
++static struct target_stat_scsi_tgt_port_attribute			\
++			target_stat_scsi_tgt_port_##_name =		\
++	__CONFIGFS_EATTR_RO(_name,					\
++	target_stat_scsi_tgt_port_show_attr_##_name);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#404: FILE: drivers/target/target_core_stat.c:847:
++static ssize_t target_stat_scsi_tgt_port_show_attr_inst(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#426: FILE: drivers/target/target_core_stat.c:869:
++static ssize_t target_stat_scsi_tgt_port_show_attr_dev(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#446: FILE: drivers/target/target_core_stat.c:889:
++static ssize_t target_stat_scsi_tgt_port_show_attr_indx(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#465: FILE: drivers/target/target_core_stat.c:908:
++static ssize_t target_stat_scsi_tgt_port_show_attr_name(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#482: FILE: drivers/target/target_core_stat.c:925:
++	ret = snprintf(page, PAGE_SIZE, "%sPort#%u\n",
++		TPG_TFO(tpg)->get_fabric_name(), sep->sep_index);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#488: FILE: drivers/target/target_core_stat.c:931:
++static ssize_t target_stat_scsi_tgt_port_show_attr_port_index(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#505: FILE: drivers/target/target_core_stat.c:948:
++	ret = snprintf(page, PAGE_SIZE, "%s%s%d\n",
++		TPG_TFO(tpg)->tpg_get_wwn(tpg), "+t+",
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#512: FILE: drivers/target/target_core_stat.c:955:
++static ssize_t target_stat_scsi_tgt_port_show_attr_in_cmds(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#534: FILE: drivers/target/target_core_stat.c:977:
++static ssize_t target_stat_scsi_tgt_port_show_attr_write_mbytes(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#551: FILE: drivers/target/target_core_stat.c:994:
++	ret = snprintf(page, PAGE_SIZE, "%u\n",
++			(u32)(sep->sep_stats.rx_data_octets >> 20));
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#557: FILE: drivers/target/target_core_stat.c:1000:
++static ssize_t target_stat_scsi_tgt_port_show_attr_read_mbytes(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#574: FILE: drivers/target/target_core_stat.c:1017:
++	ret = snprintf(page, PAGE_SIZE, "%u\n",
++			(u32)(sep->sep_stats.tx_data_octets >> 20));
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#580: FILE: drivers/target/target_core_stat.c:1023:
++static ssize_t target_stat_scsi_tgt_port_show_attr_hs_in_cmds(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#604: FILE: drivers/target/target_core_stat.c:1047:
++CONFIGFS_EATTR_OPS(target_stat_scsi_tgt_port, se_port_stat_grps,
++		scsi_tgt_port_group);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#632: FILE: drivers/target/target_core_stat.c:1075:
++o */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#635: FILE: drivers/target/target_core_stat.c:1078:
++#define DEV_STAT_SCSI_TRANSPORT_ATTR(_name, _mode)			\
++static struct target_stat_scsi_transport_attribute			\
++			target_stat_scsi_transport_##_name =		\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	target_stat_scsi_transport_show_attr_##_name,			\
++	target_stat_scsi_transport_store_attr_##_name);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#642: FILE: drivers/target/target_core_stat.c:1085:
++#define DEV_STAT_SCSI_TRANSPORT_ATTR_RO(_name)				\
++static struct target_stat_scsi_transport_attribute			\
++			target_stat_scsi_transport_##_name =		\
++	__CONFIGFS_EATTR_RO(_name,					\
++	target_stat_scsi_transport_show_attr_##_name);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#648: FILE: drivers/target/target_core_stat.c:1091:
++static ssize_t target_stat_scsi_transport_show_attr_inst(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#671: FILE: drivers/target/target_core_stat.c:1114:
++static ssize_t target_stat_scsi_transport_show_attr_device(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#688: FILE: drivers/target/target_core_stat.c:1131:
++	ret = snprintf(page, PAGE_SIZE, "scsiTransport%s\n",
++			TPG_TFO(tpg)->get_fabric_name());
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#694: FILE: drivers/target/target_core_stat.c:1137:
++static ssize_t target_stat_scsi_transport_show_attr_indx(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#710: FILE: drivers/target/target_core_stat.c:1153:
++	ret = snprintf(page, PAGE_SIZE, "%u\n",
++			TPG_TFO(tpg)->tpg_get_inst_index(tpg));
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#716: FILE: drivers/target/target_core_stat.c:1159:
++static ssize_t target_stat_scsi_transport_show_attr_dev_name(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#736: FILE: drivers/target/target_core_stat.c:1179:
++	ret = snprintf(page, PAGE_SIZE, "%s+%s\n",
++			TPG_TFO(tpg)->tpg_get_wwn(tpg),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#745: FILE: drivers/target/target_core_stat.c:1188:
++CONFIGFS_EATTR_OPS(target_stat_scsi_transport, se_port_stat_grps,
++		scsi_transport_group);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#775: FILE: drivers/target/target_core_stat.c:1218:
++	config_group_init_type_name(&PORT_STAT_GRP(lun)->scsi_port_group,
++			"scsi_port", &target_stat_scsi_port_cit);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#777: FILE: drivers/target/target_core_stat.c:1220:
++	config_group_init_type_name(&PORT_STAT_GRP(lun)->scsi_tgt_port_group,
++			"scsi_tgt_port", &target_stat_scsi_tgt_port_cit);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#779: FILE: drivers/target/target_core_stat.c:1222:
++	config_group_init_type_name(&PORT_STAT_GRP(lun)->scsi_transport_group,
++			"scsi_transport", &target_stat_scsi_transport_cit);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#794: FILE: drivers/target/target_core_stat.h:5:
++extern void target_stat_setup_port_default_groups(struct se_lun *);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct se_lun *' should also have an identifier name
+#794: FILE: drivers/target/target_core_stat.h:5:
++extern void target_stat_setup_port_default_groups(struct se_lun *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000311017.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 15 warnings, 38 checks, 718 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000311017.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

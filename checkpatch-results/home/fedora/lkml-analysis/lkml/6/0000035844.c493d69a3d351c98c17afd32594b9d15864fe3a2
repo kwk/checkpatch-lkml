@@ -1,0 +1,240 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#230: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#235: FILE: lib/test_stackinit.c:1:
++// SPDX-Licenses: GPLv2
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#254: FILE: lib/test_stackinit.c:20:
++static volatile u8 forced_mask = 0xff;
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#273: FILE: lib/test_stackinit.c:39:
++#define DO_NOTHING_RETURN_SCALAR(ptr)		*(ptr)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#277: FILE: lib/test_stackinit.c:43:
++#define DO_NOTHING_CALL_SCALAR(var, name)			\
++		(var) = do_nothing_ ## name(&(var))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'var' - possible side-effects?
+#277: FILE: lib/test_stackinit.c:43:
++#define DO_NOTHING_CALL_SCALAR(var, name)			\
++		(var) = do_nothing_ ## name(&(var))
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#284: FILE: lib/test_stackinit.c:50:
++#define FETCH_ARG_SCALAR(var)		&var
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'var' may be better as '(var)' to avoid precedence issues
+#284: FILE: lib/test_stackinit.c:50:
++#define FETCH_ARG_SCALAR(var)		&var
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#286: FILE: lib/test_stackinit.c:52:
++#define FETCH_ARG_STRUCT(var)		&var
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'var' may be better as '(var)' to avoid precedence issues
+#286: FILE: lib/test_stackinit.c:52:
++#define FETCH_ARG_STRUCT(var)		&var
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#293: FILE: lib/test_stackinit.c:59:
++#define INIT_CLONE_STRING		[FILL_SIZE_STRING]
+
+Whitespace before opening bracket '[' is prohibited.
+There are some exceptions:
+
+1. With a type on the left::
+
+    int [] a;
+
+2. At the beginning of a line for slice initialisers::
+
+    [0...10] = 5,
+
+3. Inside a curly brace::
+
+    = { [0...10] = 5 }
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#297: FILE: lib/test_stackinit.c:63:
++#define INIT_SCALAR_ZERO		= 0
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#299: FILE: lib/test_stackinit.c:65:
++#define INIT_STRING_NONE		[FILL_SIZE_STRING] /**/
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#300: FILE: lib/test_stackinit.c:66:
++#define INIT_STRING_ZERO		[FILL_SIZE_STRING] = { }
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#303: FILE: lib/test_stackinit.c:69:
++#define INIT_STRUCT_ZERO		= { }
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#304: FILE: lib/test_stackinit.c:70:
++#define INIT_STRUCT_STATIC_PARTIAL	= { .two = 0, }
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#305: FILE: lib/test_stackinit.c:71:
++#define INIT_STRUCT_STATIC_ALL		= { .one = arg->one,		\
++					    .two = arg->two,		\
++					    .three = arg->three,	\
++					    .four = arg->four,		\
++					}
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#310: FILE: lib/test_stackinit.c:76:
++#define INIT_STRUCT_DYNAMIC_PARTIAL	= { .two = arg->two, }
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#311: FILE: lib/test_stackinit.c:77:
++#define INIT_STRUCT_DYNAMIC_ALL		= { .one = arg->one,		\
++					    .two = arg->two,		\
++					    .three = arg->three,	\
++					    .four = arg->four,		\
++					}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'var_type' - possible side-effects?
+#331: FILE: lib/test_stackinit.c:97:
++#define DEFINE_TEST(name, var_type, which, init_level)		\
++static noinline int fill_ ## name(unsigned long sp)		\
++{								\
++	char buf[VAR_BUFFER +					\
++		 sizeof(var_type) * FILL_SIZE_ ## which * 4];	\
++								\
++	fill_start = buf;					\
++	fill_size = sizeof(buf);				\
++	/* Fill variable with 0xFF. */				\
++	memset(fill_start, (char)((sp && 0xff) | forced_mask),	\
++	       fill_size);					\
++								\
++	return (int)buf[0] | (int)buf[sizeof(buf)-1];		\
++}								\
++/* no-op to force compiler into ignoring "uninitialized" vars */\
++static noinline DO_NOTHING_TYPE_ ## which(var_type)		\
++do_nothing_ ## name(var_type *ptr)				\
++{								\
++	/* Will always be true, but compiler doesn't know. */	\
++	if ((unsigned long)ptr > 0x2)				\
++		return DO_NOTHING_RETURN_ ## which(ptr);	\
++	else							\
++		return DO_NOTHING_RETURN_ ## which(ptr + 1);	\
++}								\
++static noinline int fetch_ ## name(unsigned long sp,		\
++				   var_type *arg)		\
++{								\
++	char buf[VAR_BUFFER];					\
++	var_type var INIT_ ## which ## _ ## init_level;		\
++								\
++	target_start = &var;					\
++	target_size = sizeof(var);				\
++	/*							\
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#331: FILE: lib/test_stackinit.c:97:
++#define DEFINE_TEST(name, var_type, which, init_level)		\
++static noinline int fill_ ## name(unsigned long sp)		\
++{								\
++	char buf[VAR_BUFFER +					\
++		 sizeof(var_type) * FILL_SIZE_ ## which * 4];	\
++								\
++	fill_start = buf;					\
++	fill_size = sizeof(buf);				\
++	/* Fill variable with 0xFF. */				\
++	memset(fill_start, (char)((sp && 0xff) | forced_mask),	\
++	       fill_size);					\
++								\
++	return (int)buf[0] | (int)buf[sizeof(buf)-1];		\
++}								\
++/* no-op to force compiler into ignoring "uninitialized" vars */\
++static noinline DO_NOTHING_TYPE_ ## which(var_type)		\
++do_nothing_ ## name(var_type *ptr)				\
++{								\
++	/* Will always be true, but compiler doesn't know. */	\
++	if ((unsigned long)ptr > 0x2)				\
++		return DO_NOTHING_RETURN_ ## which(ptr);	\
++	else							\
++		return DO_NOTHING_RETURN_ ## which(ptr + 1);	\
++}								\
++static noinline int fetch_ ## name(unsigned long sp,		\
++				   var_type *arg)		\
++{								\
++	char buf[VAR_BUFFER];					\
++	var_type var INIT_ ## which ## _ ## init_level;		\
++								\
++	target_start = &var;					\
++	target_size = sizeof(var);				\
++	/*							\
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#343: FILE: lib/test_stackinit.c:109:
++	return (int)buf[0] | (int)buf[sizeof(buf)-1];		\
+ 	                                         ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#347: FILE: lib/test_stackinit.c:113:
++do_nothing_ ## name(var_type *ptr)				\
+                              ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#356: FILE: lib/test_stackinit.c:122:
++				   var_type *arg)		\
+ 				            ^
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#366: FILE: lib/test_stackinit.c:132:
++	 */							\
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#378: FILE: lib/test_stackinit.c:144:
++static noinline int test_ ## name (void)			\
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000035844.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 13 errors, 6 warnings, 7 checks, 349 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000035844.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

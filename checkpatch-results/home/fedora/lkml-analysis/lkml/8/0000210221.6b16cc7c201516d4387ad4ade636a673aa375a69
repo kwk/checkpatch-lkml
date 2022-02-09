@@ -1,0 +1,78 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'op' - possible side-effects?
+#122: FILE: include/linux/iopoll.h:35:
++#define read_poll_timeout(op, val, cond, sleep_us, timeout_us, args...)	\
++({ \
++	u64 __timeout_us = (timeout_us); \
++	unsigned long __sleep_us = (sleep_us); \
++	ktime_t __timeout = ktime_add_us(ktime_get(), __timeout_us); \
++	might_sleep_if((__sleep_us) != 0); \
++	for (;;) { \
++		(val) = op(args); \
++		if (cond) \
++			break; \
++		if (__timeout_us && \
++		    ktime_compare(ktime_get(), __timeout) > 0) { \
++			(val) = op(args); \
++			break; \
++		} \
++		if (__sleep_us) \
++			usleep_range((__sleep_us >> 2) + 1, __sleep_us); \
++	} \
++	(cond) ? 0 : -ETIMEDOUT; \
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'val' - possible side-effects?
+#122: FILE: include/linux/iopoll.h:35:
++#define read_poll_timeout(op, val, cond, sleep_us, timeout_us, args...)	\
++({ \
++	u64 __timeout_us = (timeout_us); \
++	unsigned long __sleep_us = (sleep_us); \
++	ktime_t __timeout = ktime_add_us(ktime_get(), __timeout_us); \
++	might_sleep_if((__sleep_us) != 0); \
++	for (;;) { \
++		(val) = op(args); \
++		if (cond) \
++			break; \
++		if (__timeout_us && \
++		    ktime_compare(ktime_get(), __timeout) > 0) { \
++			(val) = op(args); \
++			break; \
++		} \
++		if (__sleep_us) \
++			usleep_range((__sleep_us >> 2) + 1, __sleep_us); \
++	} \
++	(cond) ? 0 : -ETIMEDOUT; \
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cond' - possible side-effects?
+#122: FILE: include/linux/iopoll.h:35:
++#define read_poll_timeout(op, val, cond, sleep_us, timeout_us, args...)	\
++({ \
++	u64 __timeout_us = (timeout_us); \
++	unsigned long __sleep_us = (sleep_us); \
++	ktime_t __timeout = ktime_add_us(ktime_get(), __timeout_us); \
++	might_sleep_if((__sleep_us) != 0); \
++	for (;;) { \
++		(val) = op(args); \
++		if (cond) \
++			break; \
++		if (__timeout_us && \
++		    ktime_compare(ktime_get(), __timeout) > 0) { \
++			(val) = op(args); \
++			break; \
++		} \
++		if (__sleep_us) \
++			usleep_range((__sleep_us >> 2) + 1, __sleep_us); \
++	} \
++	(cond) ? 0 : -ETIMEDOUT; \
++})
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000210221.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 0 warnings, 3 checks, 46 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000210221.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

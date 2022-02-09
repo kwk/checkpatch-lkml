@@ -1,0 +1,134 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#77: 
+We need a few extra macros (COMPAT_PR_REG_SIZE and COMPAT_PRSTATUS_SIZE) due
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#111: FILE: arch/arm64/include/asm/elf.h:174:
++extern int aarch32_setup_vectors_page(struct linux_binprm *bprm,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#120: FILE: arch/arm64/include/asm/elf.h:181:
++typedef unsigned int			compat_a32_elf_greg_t;
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#121: FILE: arch/arm64/include/asm/elf.h:182:
++typedef compat_a32_elf_greg_t		compat_a32_elf_gregset_t[COMPAT_A32_ELF_NGREG];
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#144: FILE: arch/arm64/include/asm/elf.h:199:
++typedef elf_greg_t			compat_elf_greg_t;
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#145: FILE: arch/arm64/include/asm/elf.h:200:
++typedef elf_gregset_t			compat_elf_gregset_t;
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#158: FILE: arch/arm64/include/asm/elf.h:213:
++typedef elf_greg_t			compat_elf_greg_t;
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#159: FILE: arch/arm64/include/asm/elf.h:214:
++typedef elf_gregset_t			compat_elf_gregset_t;
+
+WARNING:TYPO_SPELLING: 'sise' may be misspelled - perhaps 'size'?
+#168: FILE: arch/arm64/include/asm/elf.h:223:
++ * and has different sise for supported ABIs
+                      ^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#170: FILE: arch/arm64/include/asm/elf.h:225:
++#define PRSTATUS_SIZE(S)		(is_a32_compat_task() ? 124 : (is_ilp32_compat_task() ? 352 : 392))
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'S' - possible side-effects?
+#172: FILE: arch/arm64/include/asm/elf.h:227:
++#define SET_PR_FPVALID(S, V)							\
++do {										\
++	*(int *) (((void *) &((S)->pr_reg)) + PR_REG_SIZE((S)->pr_reg)) = (V);	\
++} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#172: FILE: arch/arm64/include/asm/elf.h:227:
++#define SET_PR_FPVALID(S, V)							\
++do {										\
++	*(int *) (((void *) &((S)->pr_reg)) + PR_REG_SIZE((S)->pr_reg)) = (V);	\
++} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+CHECK:SPACING: No space is necessary after a cast
+#174: FILE: arch/arm64/include/asm/elf.h:229:
++	*(int *) (((void *) &((S)->pr_reg)) + PR_REG_SIZE((S)->pr_reg)) = (V);	\
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#177: FILE: arch/arm64/include/asm/elf.h:232:
++typedef compat_a32_elf_greg_t compat_elf_greg_t;
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#178: FILE: arch/arm64/include/asm/elf.h:233:
++typedef compat_a32_elf_gregset_t compat_elf_gregset_t;
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#200: FILE: arch/arm64/include/asm/elf.h:254:
++#define compat_elf_check_arch(x)	(compat_a32_elf_check_arch(x) || compat_ilp32_elf_check_arch(x))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#200: FILE: arch/arm64/include/asm/elf.h:254:
++#define compat_elf_check_arch(x)	(compat_a32_elf_check_arch(x) || compat_ilp32_elf_check_arch(x))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ex' - possible side-effects?
+#201: FILE: arch/arm64/include/asm/elf.h:255:
++#define COMPAT_SET_PERSONALITY(ex)			\
++do {							\
++	if (compat_a32_elf_check_arch(&ex))		\
++		COMPAT_A32_SET_PERSONALITY(ex);		\
++	else						\
++		COMPAT_ILP32_SET_PERSONALITY(ex);	\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ex' may be better as '(ex)' to avoid precedence issues
+#201: FILE: arch/arm64/include/asm/elf.h:255:
++#define COMPAT_SET_PERSONALITY(ex)			\
++do {							\
++	if (compat_a32_elf_check_arch(&ex))		\
++		COMPAT_A32_SET_PERSONALITY(ex);		\
++	else						\
++		COMPAT_ILP32_SET_PERSONALITY(ex);	\
++} while (0)
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000186439.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 13 warnings, 6 checks, 170 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000186439.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,91 @@
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#85: FILE: include/linux/lockdep.h:158:
++#define LOCKDEP_FLAG_TERMINAL_NESTABLE	(1 << 1)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#100: FILE: include/linux/lockdep.h:334:
++#define lockdep_set_terminal_nestable_class(lock) \
++	do { (lock)->dep_map.flags |= LOCKDEP_FLAG_TERMINAL_NESTABLE; } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'prev_type == LOCKDEP_FLAG_TERMINAL'
+#133: FILE: kernel/locking/lockdep.c:3276:
++		if (DEBUG_LOCKS_WARN_ON((prev_type == LOCKDEP_FLAG_TERMINAL) ||
++			((prev_type == LOCKDEP_FLAG_TERMINAL_NESTABLE) &&
++			 (flags_is_terminal(class->flags) !=
++				LOCKDEP_FLAG_TERMINAL)))) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'prev_type == LOCKDEP_FLAG_TERMINAL_NESTABLE'
+#133: FILE: kernel/locking/lockdep.c:3276:
++		if (DEBUG_LOCKS_WARN_ON((prev_type == LOCKDEP_FLAG_TERMINAL) ||
++			((prev_type == LOCKDEP_FLAG_TERMINAL_NESTABLE) &&
++			 (flags_is_terminal(class->flags) !=
++				LOCKDEP_FLAG_TERMINAL)))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#134: FILE: kernel/locking/lockdep.c:3277:
++		if (DEBUG_LOCKS_WARN_ON((prev_type == LOCKDEP_FLAG_TERMINAL) ||
++			((prev_type == LOCKDEP_FLAG_TERMINAL_NESTABLE) &&
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#153: FILE: kernel/locking/lockdep_internals.h:218:
++	return flags & (LOCKDEP_FLAG_TERMINAL|LOCKDEP_FLAG_TERMINAL_NESTABLE);
+ 	                                     ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000090929.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 0 errors, 1 warnings, 5 checks, 68 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000090929.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

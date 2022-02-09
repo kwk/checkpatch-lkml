@@ -1,0 +1,303 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:DT_SPLIT_BINDING_PATCH: DT binding docs and includes should be a separate patch. See: Documentation/devicetree/bindings/submitting-patches.rst
+
+Devicetree bindings should be their own patch.  This is because
+bindings are logically independent from a driver implementation,
+they have a different maintainer (even though they often
+are applied via the same tree), and it makes for a cleaner history in the
+DT only tree created with git-filter-branch.
+
+See: https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.html#i-for-patch-submitters
+
+WARNING:CONST_STRUCT: struct dev_pm_ops should normally be const
+#148: FILE: arch/arm/common/sa1111.c:1041:
++static struct dev_pm_ops sa1111_pm_ops = {
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#428: FILE: arch/mips/kernel/uprobes.c:171:
++		__compute_return_epc_for_insn(regs,
++			(union mips_instruction) aup->insn[0]);
+
+CHECK:SPACING: No space is necessary after a cast
+#428: FILE: arch/mips/kernel/uprobes.c:171:
++			(union mips_instruction) aup->insn[0]);
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#634: FILE: arch/x86/kvm/vmx.c:10496:
++		vmx_set_virtual_x2apic_mode(vcpu,
++				vcpu->arch.apic_base & X2APIC_ENABLE);
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#671: FILE: drivers/acpi/acpica/hwxface.c:514:
++		if (status == AE_NOT_FOUND) {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#868: FILE: drivers/hwmon/adt7411.c:33:
++#define ADT7411_CFG1_RESERVED_BIT3		(1 << 3)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#938: FILE: drivers/infiniband/hw/mlx4/mad.c:1091:
++						eqe->event.port_mgmt_change.params.port_info.gid_prefix;
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:LONG_LINE: line length of 111 exceeds 100 columns
+#945: FILE: drivers/infiniband/hw/mlx4/mad.c:1098:
++						 (u64)atomic64_read(&dev->sriov.demux[port - 1].subnet_prefix),
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#1002: FILE: drivers/infiniband/hw/mlx4/mcg.c:693:
++						group->response_sa_mad.data)->scope_join_state & 0xf;
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'sriov.demux[sqp->qp.port-1]'
+#1064: FILE: drivers/infiniband/hw/mlx4/qp.c:2344:
++					cpu_to_be64(atomic64_read(&(to_mdev(ib_dev)->sriov.
++								    demux[sqp->qp.port - 1].
+
+A single dereferencing identifier spanned on multiple lines like::
+
+  struct_identifier->member[index].
+  member = <foo>;
+
+is generally hard to follow. It can easily lead to typos and so makes
+the code vulnerable to bugs.
+
+If fixing the multiple line dereferencing leads to an 80 column
+violation, then either rewrite the code in a more simple way or if the
+starting part of the dereferencing identifier is the same and used at
+multiple places then store it in a temporary variable, and use that
+temporary variable only at all the places. For example, if there are
+two dereferencing identifiers::
+
+  member1->member2->member3.foo1;
+  member1->member2->member3.foo2;
+
+then store the member1->member2->member3 part in a temporary variable.
+It not only helps to avoid the 80 column violation but also reduces
+the program size by removing the unnecessary dereferences.
+
+But if none of the above methods work then ignore the 80 column
+violation because it is much easier to read a dereferencing identifier
+on a single line.
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'demux[sqp->qp.port-1].subnet_prefix'
+#1065: FILE: drivers/infiniband/hw/mlx4/qp.c:2345:
++								    demux[sqp->qp.port - 1].
++								    subnet_prefix)));
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'sriov.demux[sqp->qp.port-1].guid_cache[ah->av.ib.gid_index]'
+#1068: FILE: drivers/infiniband/hw/mlx4/qp.c:2348:
++					to_mdev(ib_dev)->sriov.demux[sqp->qp.port - 1].
++						       guid_cache[ah->av.ib.gid_index];
+
+CHECK:SPACING: No space is necessary after a cast
+#1247: FILE: drivers/media/usb/gspca/cpia1.c:1627:
++	struct sd *sd __maybe_unused = (struct sd *) gspca_dev;
+
+CHECK:SPACING: No space is necessary after a cast
+#1260: FILE: drivers/media/usb/gspca/konica.c:246:
++	struct sd *sd __maybe_unused = (struct sd *) gspca_dev;
+
+CHECK:SPACING: No space is necessary after a cast
+#1273: FILE: drivers/media/usb/gspca/t613.c:840:
++	struct sd *sd __maybe_unused = (struct sd *) gspca_dev;
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#1645: FILE: drivers/regulator/qcom_smd-regulator.c:187:
++		REGULATOR_LINEAR_RANGE( 750000,  0,  63, 12500),
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#1819: FILE: drivers/usb/misc/legousbtower.c:922:
++	usb_set_intfdata (interface, dev);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#1821: FILE: drivers/usb/misc/legousbtower.c:924:
++	retval = usb_register_dev (interface, &tower_class);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#1826: FILE: drivers/usb/misc/legousbtower.c:929:
++		usb_set_intfdata (interface, NULL);
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1833: FILE: drivers/usb/misc/legousbtower.c:936:
++	dev_info(&interface->dev, "LEGO USB Tower #%d now attached to major "
++		 "%d minor %d\n", (dev->minor - LEGO_USB_TOWER_MINOR_BASE),
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2036: FILE: include/linux/sysctl.h:44:
++extern int proc_douintvec(struct ctl_table *, int,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct ctl_table *' should also have an identifier name
+#2036: FILE: include/linux/sysctl.h:44:
++extern int proc_douintvec(struct ctl_table *, int,
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#2036: FILE: include/linux/sysctl.h:44:
++extern int proc_douintvec(struct ctl_table *, int,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void __user *' should also have an identifier name
+#2036: FILE: include/linux/sysctl.h:44:
++extern int proc_douintvec(struct ctl_table *, int,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'size_t *' should also have an identifier name
+#2036: FILE: include/linux/sysctl.h:44:
++extern int proc_douintvec(struct ctl_table *, int,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'loff_t *' should also have an identifier name
+#2036: FILE: include/linux/sysctl.h:44:
++extern int proc_douintvec(struct ctl_table *, int,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2037: FILE: include/linux/sysctl.h:45:
++extern int proc_douintvec(struct ctl_table *, int,
++			 void __user *, size_t *, loff_t *);
+
+WARNING:REPEATED_WORD: Possible repeated word: 'to'
+#2067: FILE: kernel/cpuset.c:343:
++			 * cpuset's effective_cpus is on its way to to be
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2165: FILE: kernel/sysctl.c:2055:
++static int do_proc_douintvec_conv(bool *negp, unsigned long *lvalp,
++				 int *valp,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2205: FILE: kernel/sysctl.c:2213:
++int proc_douintvec(struct ctl_table *table, int write,
++		     void __user *buffer, size_t *lenp, loff_t *ppos)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2217: FILE: kernel/sysctl.c:2830:
++int proc_douintvec(struct ctl_table *table, int write,
++		  void __user *buffer, size_t *lenp, loff_t *ppos)
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#2219: FILE: kernel/sysctl.c:2832:
++	return -ENOSYS;
+
+ENOSYS means that a nonexistent system call was called.
+Earlier, it was wrongly used for things like invalid operations on
+otherwise valid syscalls.  This should be avoided in new code.
+
+See: https://lore.kernel.org/lkml/5eb299021dec23c1a48fa7d9f2c8b794e967766d.1408730669.git.luto@amacapital.net/
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#2388: FILE: sound/pci/hda/patch_realtek.c:5793:
++#define ALC295_STANDARD_PINS \
++	{0x12, 0xb7a60130}, \
++	{0x14, 0x90170110}, \
++	{0x17, 0x21014020}, \
++	{0x18, 0x21a19030}, \
++	{0x21, 0x04211020}
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2406: FILE: sound/pci/hda/patch_realtek.c:5844:
++	SND_HDA_PIN_QUIRK(0x10ec0255, 0x1028, "Dell", ALC255_FIXUP_DELL1_MIC_NO_PRESENCE,
+ 		{0x14, 0x90170130},
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2417: FILE: sound/pci/hda/patch_realtek.c:5913:
++	SND_HDA_PIN_QUIRK(0x10ec0256, 0x1028, "Dell", ALC255_FIXUP_DELL1_MIC_NO_PRESENCE,
+ 		ALC256_STANDARD_PINS),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2425: FILE: sound/pci/hda/patch_realtek.c:6024:
++	SND_HDA_PIN_QUIRK(0x10ec0295, 0x1028, "Dell", ALC269_FIXUP_DELL1_MIC_NO_PRESENCE,
++		ALC295_STANDARD_PINS),
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!skl->nhlt"
+#2438: FILE: sound/soc/intel/skylake/skl.c:467:
++	if (skl->nhlt == NULL) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000353730.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 2 errors, 20 warnings, 17 checks, 1901 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000353730.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

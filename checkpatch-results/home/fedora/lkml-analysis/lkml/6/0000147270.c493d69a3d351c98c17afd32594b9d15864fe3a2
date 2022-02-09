@@ -1,0 +1,247 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#110: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+CHECK:SPACING: No space is necessary after a cast
+#123: FILE: lib/udivmoddi4.c:9:
++#define __ll_B ((unsigned long) 1 << (W_TYPE_SIZE / 2))
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:TYPECAST_INT_CONSTANT: Unnecessary typecast of c90 int constant - '(unsigned long) 1' could be '1UL'
+#123: FILE: lib/udivmoddi4.c:9:
++#define __ll_B ((unsigned long) 1 << (W_TYPE_SIZE / 2))
+
+CHECK:SPACING: No space is necessary after a cast
+#124: FILE: lib/udivmoddi4.c:10:
++#define __ll_lowpart(t) ((unsigned long) (t) & (__ll_B - 1))
+
+CHECK:SPACING: No space is necessary after a cast
+#125: FILE: lib/udivmoddi4.c:11:
++#define __ll_highpart(t) ((unsigned long) (t) >> (W_TYPE_SIZE / 2))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'u' - possible side-effects?
+#129: FILE: lib/udivmoddi4.c:15:
++#define umul_ppmm(w1, w0, u, v)						\
++	do {								\
++		unsigned long __x0, __x1, __x2, __x3;			\
++		unsigned short __ul, __vl, __uh, __vh;			\
++									\
++		__ul = __ll_lowpart(u);					\
++		__uh = __ll_highpart(u);				\
++		__vl = __ll_lowpart(v);					\
++		__vh = __ll_highpart(v);				\
++									\
++		__x0 = (unsigned long) __ul * __vl;			\
++		__x1 = (unsigned long) __ul * __vh;			\
++		__x2 = (unsigned long) __uh * __vl;			\
++		__x3 = (unsigned long) __uh * __vh;			\
++									\
++		__x1 += __ll_highpart(__x0);				\
++		__x1 += __x2;						\
++		if (__x1 < __x2)					\
++			__x3 += __ll_B;					\
++									\
++		(w1) = __x3 + __ll_highpart(__x1);			\
++		(w0) = __ll_lowpart(__x1) * __ll_B + __ll_lowpart(__x0);\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'v' - possible side-effects?
+#129: FILE: lib/udivmoddi4.c:15:
++#define umul_ppmm(w1, w0, u, v)						\
++	do {								\
++		unsigned long __x0, __x1, __x2, __x3;			\
++		unsigned short __ul, __vl, __uh, __vh;			\
++									\
++		__ul = __ll_lowpart(u);					\
++		__uh = __ll_highpart(u);				\
++		__vl = __ll_lowpart(v);					\
++		__vh = __ll_highpart(v);				\
++									\
++		__x0 = (unsigned long) __ul * __vl;			\
++		__x1 = (unsigned long) __ul * __vh;			\
++		__x2 = (unsigned long) __uh * __vl;			\
++		__x3 = (unsigned long) __uh * __vh;			\
++									\
++		__x1 += __ll_highpart(__x0);				\
++		__x1 += __x2;						\
++		if (__x1 < __x2)					\
++			__x3 += __ll_B;					\
++									\
++		(w1) = __x3 + __ll_highpart(__x1);			\
++		(w0) = __ll_lowpart(__x1) * __ll_B + __ll_lowpart(__x0);\
++	} while (0)
+
+CHECK:SPACING: No space is necessary after a cast
+#139: FILE: lib/udivmoddi4.c:25:
++		__x0 = (unsigned long) __ul * __vl;			\
+
+CHECK:SPACING: No space is necessary after a cast
+#140: FILE: lib/udivmoddi4.c:26:
++		__x1 = (unsigned long) __ul * __vh;			\
+
+CHECK:SPACING: No space is necessary after a cast
+#141: FILE: lib/udivmoddi4.c:27:
++		__x2 = (unsigned long) __uh * __vl;			\
+
+CHECK:SPACING: No space is necessary after a cast
+#142: FILE: lib/udivmoddi4.c:28:
++		__x3 = (unsigned long) __uh * __vh;			\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'al' - possible side-effects?
+#155: FILE: lib/udivmoddi4.c:41:
++#define sub_ddmmss(sh, sl, ah, al, bh, bl)				\
++	do {								\
++		unsigned long __x;					\
++		__x = (al) - (bl);					\
++		(sh) = (ah) - (bh) - (__x > (al));			\
++		(sl) = __x;						\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n1' - possible side-effects?
+#165: FILE: lib/udivmoddi4.c:51:
++#define __udiv_qrnnd_c(q, r, n1, n0, d)					\
++	do {								\
++		unsigned long __d1, __d0, __q1, __q0;			\
++		unsigned long __r1, __r0, __m;				\
++		__d1 = __ll_highpart(d);				\
++		__d0 = __ll_lowpart(d);				\
++									\
++		__r1 = (n1) % __d1;					\
++		__q1 = (n1) / __d1;					\
++		__m = (unsigned long) __q1 * __d0;			\
++		__r1 = __r1 * __ll_B | __ll_highpart(n0);		\
++		if (__r1 < __m) {					\
++			__q1--, __r1 += (d);				\
++			if (__r1 >= (d))				\
++				if (__r1 < __m)				\
++					__q1--, __r1 += (d);		\
++		}							\
++		__r1 -= __m;						\
++									\
++		__r0 = __r1 % __d1;					\
++		__q0 = __r1 / __d1;					\
++		__m = (unsigned long) __q0 * __d0;			\
++		__r0 = __r0 * __ll_B | __ll_lowpart(n0);		\
++		if (__r0 < __m) {					\
++			__q0--, __r0 += (d);				\
++			if (__r0 >= (d))				\
++				if (__r0 < __m)				\
++					__q0--, __r0 += (d);		\
++		}							\
++		__r0 -= __m;						\
++									\
++		(q) = (unsigned long) __q1 * __ll_B | __q0;		\
++		(r) = __r0;						\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n0' - possible side-effects?
+#165: FILE: lib/udivmoddi4.c:51:
++#define __udiv_qrnnd_c(q, r, n1, n0, d)					\
++	do {								\
++		unsigned long __d1, __d0, __q1, __q0;			\
++		unsigned long __r1, __r0, __m;				\
++		__d1 = __ll_highpart(d);				\
++		__d0 = __ll_lowpart(d);				\
++									\
++		__r1 = (n1) % __d1;					\
++		__q1 = (n1) / __d1;					\
++		__m = (unsigned long) __q1 * __d0;			\
++		__r1 = __r1 * __ll_B | __ll_highpart(n0);		\
++		if (__r1 < __m) {					\
++			__q1--, __r1 += (d);				\
++			if (__r1 >= (d))				\
++				if (__r1 < __m)				\
++					__q1--, __r1 += (d);		\
++		}							\
++		__r1 -= __m;						\
++									\
++		__r0 = __r1 % __d1;					\
++		__q0 = __r1 / __d1;					\
++		__m = (unsigned long) __q0 * __d0;			\
++		__r0 = __r0 * __ll_B | __ll_lowpart(n0);		\
++		if (__r0 < __m) {					\
++			__q0--, __r0 += (d);				\
++			if (__r0 >= (d))				\
++				if (__r0 < __m)				\
++					__q0--, __r0 += (d);		\
++		}							\
++		__r0 -= __m;						\
++									\
++		(q) = (unsigned long) __q1 * __ll_B | __q0;		\
++		(r) = __r0;						\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'd' - possible side-effects?
+#165: FILE: lib/udivmoddi4.c:51:
++#define __udiv_qrnnd_c(q, r, n1, n0, d)					\
++	do {								\
++		unsigned long __d1, __d0, __q1, __q0;			\
++		unsigned long __r1, __r0, __m;				\
++		__d1 = __ll_highpart(d);				\
++		__d0 = __ll_lowpart(d);				\
++									\
++		__r1 = (n1) % __d1;					\
++		__q1 = (n1) / __d1;					\
++		__m = (unsigned long) __q1 * __d0;			\
++		__r1 = __r1 * __ll_B | __ll_highpart(n0);		\
++		if (__r1 < __m) {					\
++			__q1--, __r1 += (d);				\
++			if (__r1 >= (d))				\
++				if (__r1 < __m)				\
++					__q1--, __r1 += (d);		\
++		}							\
++		__r1 -= __m;						\
++									\
++		__r0 = __r1 % __d1;					\
++		__q0 = __r1 / __d1;					\
++		__m = (unsigned long) __q0 * __d0;			\
++		__r0 = __r0 * __ll_B | __ll_lowpart(n0);		\
++		if (__r0 < __m) {					\
++			__q0--, __r0 += (d);				\
++			if (__r0 >= (d))				\
++				if (__r0 < __m)				\
++					__q0--, __r0 += (d);		\
++		}							\
++		__r0 -= __m;						\
++									\
++		(q) = (unsigned long) __q1 * __ll_B | __q0;		\
++		(r) = __r0;						\
++	} while (0)
+
+CHECK:SPACING: No space is necessary after a cast
+#174: FILE: lib/udivmoddi4.c:60:
++		__m = (unsigned long) __q1 * __d0;			\
+
+CHECK:SPACING: No space is necessary after a cast
+#186: FILE: lib/udivmoddi4.c:72:
++		__m = (unsigned long) __q0 * __d0;			\
+
+CHECK:SPACING: No space is necessary after a cast
+#196: FILE: lib/udivmoddi4.c:82:
++		(q) = (unsigned long) __q1 * __ll_B | __q0;		\
+
+CHECK:CAMELCASE: Avoid CamelCase: <DWunion>
+#209: FILE: lib/udivmoddi4.c:95:
++	const DWunion nn = {.ll = u };
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000147270.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 0 errors, 2 warnings, 17 checks, 317 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000147270.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

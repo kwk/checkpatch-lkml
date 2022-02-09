@@ -1,0 +1,72 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#147: FILE: include/linux/kthread.h:112:
++extern void __init_kwork(struct kthread_work *kwork, int onstack);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#148: FILE: include/linux/kthread.h:113:
++extern void destroy_kwork_on_stack(struct kthread_work *kwork);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#149: FILE: include/linux/kthread.h:114:
++extern void destroy_delayed_kwork_on_stack(struct kthread_delayed_work *kdwork);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#156: FILE: include/linux/kthread.h:121:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'work' - possible side-effects?
+#179: FILE: include/linux/kthread.h:179:
++#define kthread_init_work_onstack(work, fn)					\
++	do {								\
++		__init_kwork(work, 1);						\
+ 		memset((work), 0, sizeof(struct kthread_work));		\
+ 		INIT_LIST_HEAD(&(work)->node);				\
+ 		(work)->func = (fn);					\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'dwork' - possible side-effects?
+#189: FILE: include/linux/kthread.h:195:
++#define kthread_init_delayed_work_onstack(dwork, fn)				\
++	do {								\
++		kthread_init_work_onstack(&(dwork)->work, (fn));		\
++		__init_timer_on_stack(&(dwork)->timer,				\
++			     kthread_delayed_work_timer_fn,		\
++			     TIMER_IRQSAFE);				\
++	} while (0)
+
+CHECK:SPACING: No space is necessary after a cast
+#210: FILE: include/linux/poison.h:91:
++#define KWORK_ENTRY_STATIC	((void *) 0x600 + POISON_POINTER_DELTA)
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#226: FILE: kernel/kthread.c:75:
++	return ((struct kthread_work *) addr)->func;
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!kwork->node.prev"
+#233: FILE: kernel/kthread.c:82:
++	return (kwork->node.prev == NULL &&
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000033989.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 0 warnings, 9 checks, 307 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000033989.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

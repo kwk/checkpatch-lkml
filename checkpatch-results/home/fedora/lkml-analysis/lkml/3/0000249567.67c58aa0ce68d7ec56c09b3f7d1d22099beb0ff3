@@ -1,0 +1,99 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#31: 
+> > Do not pass rw argument down the __zram_make_request() -> zram_bvec_rw()
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#80: FILE: drivers/block/zram/zram_drv.c:45:
++#define ZRAM_ATTR_RO(name)						\
++static ssize_t zram_attr_##name##_show(struct device *d,		\
++				struct device_attribute *attr, char *b)	\
++{									\
++	struct zram *zram = dev_to_zram(d);				\
++	return sprintf(b, "%llu\n",					\
++		(u64)atomic64_read(&zram->stats.name));			\
++}									\
++static struct device_attribute dev_attr_##name =			\
++	__ATTR(name, S_IRUGO, zram_attr_##name##_show, NULL);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#80: FILE: drivers/block/zram/zram_drv.c:45:
++#define ZRAM_ATTR_RO(name)						\
++static ssize_t zram_attr_##name##_show(struct device *d,		\
++				struct device_attribute *attr, char *b)	\
++{									\
++	struct zram *zram = dev_to_zram(d);				\
++	return sprintf(b, "%llu\n",					\
++		(u64)atomic64_read(&zram->stats.name));			\
++}									\
++static struct device_attribute dev_attr_##name =			\
++	__ATTR(name, S_IRUGO, zram_attr_##name##_show, NULL);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#89: FILE: drivers/block/zram/zram_drv.c:54:
++	__ATTR(name, S_IRUGO, zram_attr_##name##_show, NULL);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#177: FILE: drivers/block/zram/zram_drv.c:80:
++static ssize_t disksize_show(struct device *dev,
+ 		struct device_attribute *attr, char *buf)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#188: FILE: drivers/block/zram/zram_drv.c:87:
++static ssize_t initstate_show(struct device *dev,
+ 		struct device_attribute *attr, char *buf)
+
+WARNING:DEVICE_ATTR_RO: Use DEVICE_ATTR_RO
+#328: FILE: drivers/block/zram/zram_drv.c:724:
++static DEVICE_ATTR(memory_used, S_IRUGO, memory_used_show, NULL);
+
+The DEVICE_ATTR_RO(name) helper macro can be used instead of
+DEVICE_ATTR(name, 0444, name_show, NULL);
+
+Note that the macro automatically appends _show to the named
+attribute variable of the device for the show method.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#328: FILE: drivers/block/zram/zram_drv.c:724:
++static DEVICE_ATTR(memory_used, S_IRUGO, memory_used_show, NULL);
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000249567.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 5 warnings, 3 checks, 300 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000249567.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

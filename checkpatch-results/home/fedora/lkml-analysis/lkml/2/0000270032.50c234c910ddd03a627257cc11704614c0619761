@@ -1,0 +1,356 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#33: 
+This patch introduces a general System Firmware interface to the kernel, called
+
+WARNING:TYPO_SPELLING: 'Inlcluded' may be misspelled - perhaps 'Included'?
+#36: 
+Inlcluded in this interface is the ability to search a standard set of fields,
+^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#65: FILE: drivers/firmware/Kconfig:160:
++config SYSTEM_FIRMWARE
++	bool "System Firmware Interface"
++	default y
++	help
++	  Enables common System Firmware Interface to export system firmware
++	  (SMBIOS, DMI, etc.) information to kernel and userspace.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#72: FILE: drivers/firmware/Kconfig:167:
++config SYSTEM_FIRMWARE_SYSFS
++	bool "Export System Firmware identification via sysfs to userspace"
++	depends on SYSTEM_FIRMWARE
++	help
++	  Say Y here if you want to query system identification information
++	  from userspace through /sys/class/sysfw/id/ or if you want
++	  system firmware (sysfw) based module auto-loading.
++
+
+WARNING:TYPO_SPELLING: 'compatability' may be misspelled - perhaps 'compatibility'?
+#86: FILE: drivers/firmware/Kconfig:181:
++	  old software.  This is purely a backwards compatability feature and
+ 	                                            ^^^^^^^^^^^^^
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#106: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#111: FILE: drivers/firmware/sysfw-sysfs.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#132: FILE: drivers/firmware/sysfw-sysfs.c:22:
++};
++#define to_sysfw_dev_attr(_dev_attr) \
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#136: FILE: drivers/firmware/sysfw-sysfs.c:26:
++static ssize_t sys_sysfw_field_show(struct device *dev,
++				  struct device_attribute *attr,
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#141: FILE: drivers/firmware/sysfw-sysfs.c:31:
++	ssize_t len;
++	len = scnprintf(page, PAGE_SIZE, "%s\n", sysfw_lookup(field));
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#142: FILE: drivers/firmware/sysfw-sysfs.c:32:
++	page[len-1] = '\n';
+ 	        ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#150: FILE: drivers/firmware/sysfw-sysfs.c:40:
++#define DEFINE_SYSFW_ATTR_WITH_SHOW(_name, _mode, _field)		\
++static struct sysfw_device_attribute sys_sysfw_##_name##_attr =	\
++	SYSFW_ATTR(_name, _mode, sys_sysfw_field_show, _field);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#237: FILE: drivers/firmware/sysfw-sysfs.c:127:
++static ssize_t sys_sysfw_modalias_show(struct device *dev,
++				     struct device_attribute *attr, char *page)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#240: FILE: drivers/firmware/sysfw-sysfs.c:130:
++	ssize_t r;
++	r = get_modalias(page, PAGE_SIZE-1);
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#240: FILE: drivers/firmware/sysfw-sysfs.c:130:
++	r = get_modalias(page, PAGE_SIZE-1);
+ 	                                ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#242: FILE: drivers/firmware/sysfw-sysfs.c:132:
++	page[r+1] = 0;
+ 	      ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#243: FILE: drivers/firmware/sysfw-sysfs.c:133:
++	return r+1;
+ 	        ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#249: FILE: drivers/firmware/sysfw-sysfs.c:139:
++static struct attribute *sys_sysfw_attributes[SYSFW_STRING_MAX+2];
+                                                               ^
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#282: FILE: drivers/firmware/sysfw-sysfs.c:172:
++#define ADD_SYSFW_ATTR(_name, _field) \
++	if (sysfw_lookup(_field)) \
++		sys_sysfw_attributes[i++] = \
++		&sys_sysfw_##_name##_attr.dev_attr.attr;
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#282: FILE: drivers/firmware/sysfw-sysfs.c:172:
++#define ADD_SYSFW_ATTR(_name, _field) \
++	if (sysfw_lookup(_field)) \
++		sys_sysfw_attributes[i++] = \
++		&sys_sysfw_##_name##_attr.dev_attr.attr;
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#288: FILE: drivers/firmware/sysfw-sysfs.c:178:
++/* In a separate function to keep gcc 3.2 happy - do NOT merge this in
++   sysfw_id_init! */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#288: FILE: drivers/firmware/sysfw-sysfs.c:178:
++   sysfw_id_init! */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#295: FILE: drivers/firmware/sysfw-sysfs.c:185:
++	 * what's available */
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#365: FILE: drivers/firmware/sysfw-sysfs.c:255:
++		printk(KERN_ERR "SYSFW: DMI Legacy sysfs did not "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#366: FILE: drivers/firmware/sysfw-sysfs.c:256:
++		printk(KERN_ERR "SYSFW: DMI Legacy sysfs did not "
++		       "initialize.\n");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#383: FILE: drivers/firmware/sysfw.c:1:
++/*
+
+WARNING:TYPO_SPELLING: 'Retuns' may be misspelled - perhaps 'Returns'?
+#483: FILE: drivers/firmware/sysfw.c:101:
++ * Retuns the date the firmware was built in YYYYMMDD for easy comparisons.
+    ^^^^^^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#500: FILE: drivers/firmware/sysfw.c:118:
++		int s = id->matches[i].slot;
++		if (s == SYSFW_NONE)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#593: FILE: include/linux/mod_devicetable.h:524:
++	struct sysfw_strmatch matches[4];
++	kernel_ulong_t driver_data
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'kernel_ulong_t' should also have an identifier name
+#593: FILE: include/linux/mod_devicetable.h:524:
++	kernel_ulong_t driver_data
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __aligned(sizeof(kernel_ulong_t)) over __attribute__((aligned(sizeof(kernel_ulong_t))))
+#594: FILE: include/linux/mod_devicetable.h:525:
++			__attribute__((aligned(sizeof(kernel_ulong_t))));
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const struct sysfw_id *' should also have an identifier name
+#599: FILE: include/linux/mod_devicetable.h:530:
++	int (*callback)(const struct sysfw_id *);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#605: FILE: include/linux/mod_devicetable.h:536:
++};
++/*
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#625: FILE: include/linux/sysfw.h:1:
++/*
+
+WARNING:EMBEDDED_FILENAME: It's generally not useful to have the filename in the file
+#626: FILE: include/linux/sysfw.h:2:
++ * include/linux/sysfw.h
+
+Embedding the complete filename path inside the file isn't particularly
+useful as often the path is moved around and becomes incorrect.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#664: FILE: include/linux/sysfw.h:40:
++extern int sysfw_driver_register(struct sysfw_driver *driver);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#673: FILE: include/linux/sysfw.h:49:
++extern const char *sysfw_lookup(int field);
+
+WARNING:TYPO_SPELLING: 'Retuns' may be misspelled - perhaps 'Returns'?
+#678: FILE: include/linux/sysfw.h:54:
++ * Retuns the date the firmware was built in YYYYMMDD for easy comparisons.
+    ^^^^^^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#680: FILE: include/linux/sysfw.h:56:
++extern int sysfw_get_date(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#689: FILE: include/linux/sysfw.h:65:
++extern bool sysfw_vendor_is(const char *str);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#700: FILE: include/linux/sysfw.h:76:
++extern const struct sysfw_id *sysfw_callback(const struct sysfw_id *list);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#703: FILE: include/linux/sysfw.h:79:
++extern void sysfw_init_late(void);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#711: FILE: include/linux/sysfw.h:87:
++}
++static inline const char *sysfw_lookup(int field)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#715: FILE: include/linux/sysfw.h:91:
++}
++static inline int sysfw_get_date(void)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#719: FILE: include/linux/sysfw.h:95:
++}
++static inline bool sysfw_vendor_is(const char *str)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#723: FILE: include/linux/sysfw.h:99:
++}
++static const struct sysfw_id *sysfw_callback(const struct sysfw_id *list)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#727: FILE: include/linux/sysfw.h:103:
++}
++static inline void sysfw_init_late(void)
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#730: FILE: include/linux/sysfw.h:106:
++	return;
++}
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#829: FILE: scripts/mod/file2alias.c:800:
++				sysfw_ascii_filter(alias + strlen(alias),
+ 						 id->matches[j].substr);
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000270032.commit.50c234c910ddd03a627257cc11704614c0619761 total: 1 errors, 27 warnings, 21 checks, 743 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000270032.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,125 @@
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#111: FILE: include/linux/export.h:49:
++#define __KSYMTAB_ENTRY(sym, sec)					\
+ 	__ADDRESSABLE(sym)						\
+ 	asm("	.section \"___ksymtab" sec "+" #sym "\", \"a\"	\n"	\
+ 	    "	.balign	4					\n"	\
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#147: FILE: include/linux/export.h:69:
+ 	__aligned(sizeof(void *))					\
++	= { (unsigned long)&sym, __kstrtab_##sym, __kstrtabns_##sym }
+
+Assignment operators should not be written at the start of a
+line but should follow the operand at the previous line.
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#157: FILE: include/linux/export.h:80:
++#define ___EXPORT_SYMBOL(sym, sec, ns)	__GENKSYMS_EXPORT_SYMBOL(sym)
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sym' - possible side-effects?
+#163: FILE: include/linux/export.h:85:
++#define ___EXPORT_SYMBOL(sym, sec, ns)					\
+ 	extern typeof(sym) sym;						\
+ 	__CRC_SYMBOL(sym, sec);						\
+ 	static const char __kstrtab_##sym[]				\
+ 	__attribute__((section("__ksymtab_strings"), used, aligned(1)))	\
++	= #sym;								\
+ 	static const char __kstrtabns_##sym[]				\
+ 	__attribute__((section("__ksymtab_strings"), used, aligned(1)))	\
++	= ns;								\
+ 	__KSYMTAB_ENTRY(sym, sec)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sec' - possible side-effects?
+#163: FILE: include/linux/export.h:85:
++#define ___EXPORT_SYMBOL(sym, sec, ns)					\
+ 	extern typeof(sym) sym;						\
+ 	__CRC_SYMBOL(sym, sec);						\
+ 	static const char __kstrtab_##sym[]				\
+ 	__attribute__((section("__ksymtab_strings"), used, aligned(1)))	\
++	= #sym;								\
+ 	static const char __kstrtabns_##sym[]				\
+ 	__attribute__((section("__ksymtab_strings"), used, aligned(1)))	\
++	= ns;								\
+ 	__KSYMTAB_ENTRY(sym, sec)
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#173: FILE: include/linux/export.h:90:
+ 	__attribute__((section("__ksymtab_strings"), used, aligned(1)))	\
++	= #sym;								\
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#181: FILE: include/linux/export.h:93:
+ 	__attribute__((section("__ksymtab_strings"), used, aligned(1)))	\
++	= ns;								\
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#210: FILE: include/linux/export.h:121:
++#define __EXPORT_SYMBOL(sym, sec, ns)					\
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#210: FILE: include/linux/export.h:121:
++#define __EXPORT_SYMBOL(sym, sec, ns)					\
+ 	__ksym_marker(sym);						\
++	__cond_export_sym(sym, sec, ns, __is_defined(__KSYM_##sym))
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sym' - possible side-effects?
+#210: FILE: include/linux/export.h:121:
++#define __EXPORT_SYMBOL(sym, sec, ns)					\
+ 	__ksym_marker(sym);						\
++	__cond_export_sym(sym, sec, ns, __is_defined(__KSYM_##sym))
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#231: FILE: include/linux/export.h:133:
++#define __EXPORT_SYMBOL(sym, sec, ns)	___EXPORT_SYMBOL(sym, sec, ns)
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#240: FILE: include/linux/export.h:139:
++#define _EXPORT_SYMBOL(sym, sec)	__EXPORT_SYMBOL(sym, sec, __stringify(DEFAULT_SYMBOL_NAMESPACE))
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#250: FILE: include/linux/export.h:144:
++#define EXPORT_SYMBOL(sym)		_EXPORT_SYMBOL(sym, "")
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#251: FILE: include/linux/export.h:145:
++#define EXPORT_SYMBOL_GPL(sym)		_EXPORT_SYMBOL(sym, "_gpl")
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#253: FILE: include/linux/export.h:147:
++#define EXPORT_SYMBOL_NS(sym, ns)	__EXPORT_SYMBOL(sym, "", #ns)
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000088377.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 total: 2 errors, 7 warnings, 6 checks, 161 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000088377.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

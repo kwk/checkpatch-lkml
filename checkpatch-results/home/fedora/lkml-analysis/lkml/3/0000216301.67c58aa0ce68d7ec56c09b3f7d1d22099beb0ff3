@@ -1,0 +1,292 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#67: 
+Old filter comes through sk_attach_filter() or sk_unattached_filter_create()
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#171: FILE: include/linux/filter.h:59:
++#define SK_RUN_FILTER(FILTER, SKB) (*FILTER->bpf_func)(SKB, FILTER->insns)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'FILTER' - possible side-effects?
+#171: FILE: include/linux/filter.h:59:
++#define SK_RUN_FILTER(FILTER, SKB) (*FILTER->bpf_func)(SKB, FILTER->insns)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'FILTER' may be better as '(FILTER)' to avoid precedence issues
+#171: FILE: include/linux/filter.h:59:
++#define SK_RUN_FILTER(FILTER, SKB) (*FILTER->bpf_func)(SKB, FILTER->insns)
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#506: FILE: net/core/filter.c:1010:
++		addrs = kzalloc(len * sizeof(*addrs), GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#560: FILE: net/core/filter.c:1064:
++#define EMIT_JMP \
++	do { \
++		if (tgt >= len || tgt < 0) \
++			goto err; \
++		insn->off = addrs ? addrs[tgt] - addrs[i] - 1 : 0; \
++		/* adjust pc relative offset for 2nd or 3rd insn */ \
++		insn->off -= insn - tmp_insns; \
++	} while (0)
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'sk_convert_filter', this function's name, in a string
+#742: FILE: net/core/filter.c:1246:
++		pr_err("sk_convert_filter() usage error\n");
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#777: FILE: net/core/filter.c:1281:
++#define CONT ({insn++; LOAD_IMM; goto select_insn; })
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#778: FILE: net/core/filter.c:1282:
++#define CONT_JMP ({insn++; LOAD_IMM; goto select_insn; })
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#785: FILE: net/core/filter.c:1289:
++#define DL(A, B, C) [A|B|C] = &&A##_##B##_##C,
+
+Whitespace before opening bracket '[' is prohibited.
+There are some exceptions:
+
+1. With a type on the left::
+
+    int [] a;
+
+2. At the beginning of a line for slice initialisers::
+
+    [0...10] = 5,
+
+3. Inside a curly brace::
+
+    = { [0...10] = 5 }
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#785: FILE: net/core/filter.c:1289:
++#define DL(A, B, C) [A|B|C] = &&A##_##B##_##C,
+                       ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#785: FILE: net/core/filter.c:1289:
++#define DL(A, B, C) [A|B|C] = &&A##_##B##_##C,
+                         ^
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'A' may be better as '(A)' to avoid precedence issues
+#785: FILE: net/core/filter.c:1289:
++#define DL(A, B, C) [A|B|C] = &&A##_##B##_##C,
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'B' may be better as '(B)' to avoid precedence issues
+#785: FILE: net/core/filter.c:1289:
++#define DL(A, B, C) [A|B|C] = &&A##_##B##_##C,
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'C' may be better as '(C)' to avoid precedence issues
+#785: FILE: net/core/filter.c:1289:
++#define DL(A, B, C) [A|B|C] = &&A##_##B##_##C,
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#885: FILE: net/core/filter.c:1389:
++#define ALU(OPCODE, OP) \
++	BPF_ALU64_##OPCODE##_BPF_X: \
++		A = A OP X; \
++		CONT; \
++	BPF_ALU_##OPCODE##_BPF_X: \
++		A = (u32)A OP (u32)X; \
++		CONT; \
++	BPF_ALU64_##OPCODE##_BPF_K: \
++		A = A OP K; \
++		CONT; \
++	BPF_ALU_##OPCODE##_BPF_K: \
++		A = (u32)A OP (u32)K; \
++		CONT;
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'OP' - possible side-effects?
+#885: FILE: net/core/filter.c:1389:
++#define ALU(OPCODE, OP) \
++	BPF_ALU64_##OPCODE##_BPF_X: \
++		A = A OP X; \
++		CONT; \
++	BPF_ALU_##OPCODE##_BPF_X: \
++		A = (u32)A OP (u32)X; \
++		CONT; \
++	BPF_ALU64_##OPCODE##_BPF_K: \
++		A = A OP K; \
++		CONT; \
++	BPF_ALU_##OPCODE##_BPF_K: \
++		A = (u32)A OP (u32)K; \
++		CONT;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#885: FILE: net/core/filter.c:1389:
++#define ALU(OPCODE, OP) \
++	BPF_ALU64_##OPCODE##_BPF_X: \
++		A = A OP X; \
++		CONT; \
++	BPF_ALU_##OPCODE##_BPF_X: \
++		A = (u32)A OP (u32)X; \
++		CONT; \
++	BPF_ALU64_##OPCODE##_BPF_K: \
++		A = A OP K; \
++		CONT; \
++	BPF_ALU_##OPCODE##_BPF_K: \
++		A = (u32)A OP (u32)K; \
++		CONT;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxE)
+#886: FILE: net/core/filter.c:1390:
++	BPF_ALU64_##OPCODE##_BPF_X: \
+ 	                          ^
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#890: FILE: net/core/filter.c:1394:
++		A = (u32)A OP (u32)X; \
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#896: FILE: net/core/filter.c:1400:
++		A = (u32)A OP (u32)K; \
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxE)
+#909: FILE: net/core/filter.c:1413:
++BPF_ALU_BPF_NEG_0:
+                  ^
+
+CHECK:SPACING: No space is necessary after a cast
+#925: FILE: net/core/filter.c:1429:
++	(*(s64 *) &A) >>= X;
+
+CHECK:SPACING: No space is necessary after a cast
+#928: FILE: net/core/filter.c:1432:
++	(*(s64 *) &A) >>= K;
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#1071: FILE: net/core/filter.c:1575:
++#define LDST(SIZEOP, SIZE) \
++	BPF_STX_BPF_MEM_##SIZEOP: \
++		*(SIZE *)(ulong)(A + insn->off) = X; \
++		CONT; \
++	BPF_ST_BPF_MEM_##SIZEOP: \
++		*(SIZE *)(ulong)(A + insn->off) = K; \
++		CONT; \
++	BPF_LDX_BPF_MEM_##SIZEOP: \
++		A = *(SIZE *)(ulong)(X + insn->off); \
++		CONT;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'SIZE' - possible side-effects?
+#1071: FILE: net/core/filter.c:1575:
++#define LDST(SIZEOP, SIZE) \
++	BPF_STX_BPF_MEM_##SIZEOP: \
++		*(SIZE *)(ulong)(A + insn->off) = X; \
++		CONT; \
++	BPF_ST_BPF_MEM_##SIZEOP: \
++		*(SIZE *)(ulong)(A + insn->off) = K; \
++		CONT; \
++	BPF_LDX_BPF_MEM_##SIZEOP: \
++		A = *(SIZE *)(ulong)(X + insn->off); \
++		CONT;
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'SIZE' may be better as '(SIZE)' to avoid precedence issues
+#1071: FILE: net/core/filter.c:1575:
++#define LDST(SIZEOP, SIZE) \
++	BPF_STX_BPF_MEM_##SIZEOP: \
++		*(SIZE *)(ulong)(A + insn->off) = X; \
++		CONT; \
++	BPF_ST_BPF_MEM_##SIZEOP: \
++		*(SIZE *)(ulong)(A + insn->off) = K; \
++		CONT; \
++	BPF_LDX_BPF_MEM_##SIZEOP: \
++		A = *(SIZE *)(ulong)(X + insn->off); \
++		CONT;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#1071: FILE: net/core/filter.c:1575:
++#define LDST(SIZEOP, SIZE) \
++	BPF_STX_BPF_MEM_##SIZEOP: \
++		*(SIZE *)(ulong)(A + insn->off) = X; \
++		CONT; \
++	BPF_ST_BPF_MEM_##SIZEOP: \
++		*(SIZE *)(ulong)(A + insn->off) = K; \
++		CONT; \
++	BPF_LDX_BPF_MEM_##SIZEOP: \
++		A = *(SIZE *)(ulong)(X + insn->off); \
++		CONT;
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxE)
+#1072: FILE: net/core/filter.c:1576:
++	BPF_STX_BPF_MEM_##SIZEOP: \
+ 	                        ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxW)
+#1088: FILE: net/core/filter.c:1592:
++BPF_STX_BPF_XADD_BPF_W: /* lock xadd *(u32 *)(A + insn->off) += X */
+                       ^
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "ptr"
+#1101: FILE: net/core/filter.c:1605:
++	if (likely(ptr != NULL)) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "ptr"
+#1111: FILE: net/core/filter.c:1615:
++	if (likely(ptr != NULL)) {
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "ptr"
+#1121: FILE: net/core/filter.c:1625:
++	if (likely(ptr != NULL)) {
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000216301.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 8 errors, 10 warnings, 15 checks, 976 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000216301.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,241 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#88: FILE: arch/x86/include/asm/mmconfig.h:6:
++extern void __cpuinit check_enable_amd_pci_mmconf(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#115: FILE: arch/x86/include/asm/pci_x86.h:112:
++extern void __init smbios_check_pciprobe(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#116: FILE: arch/x86/include/asm/pci_x86.h:113:
++extern void __init smbios_check_skip_isa_align(void);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#164: FILE: arch/x86/kernel/acpi/boot.c:1323:
++		printk(KERN_NOTICE "Warning: SMBIOS blacklist says broken, "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#165: FILE: arch/x86/kernel/acpi/boot.c:1324:
++		printk(KERN_NOTICE "Warning: SMBIOS blacklist says broken, "
++		       "but acpi forced\n");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:MISPLACED_INIT: __initdata should be placed after acpi_id_table[]
+#184: FILE: arch/x86/kernel/acpi/boot.c:1352:
++static struct sysfw_id __initdata acpi_id_table[] = {
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+WARNING:MISPLACED_INIT: __initdata should be placed after acpi_id_late[]
+#309: FILE: arch/x86/kernel/acpi/boot.c:1427:
++static struct sysfw_id __initdata acpi_id_late[] = {
+
+WARNING:MISPLACED_INIT: __cpuinitconst should be placed after set_multi_table[]
+#445: FILE: arch/x86/kernel/apic/apic.c:2242:
++static const __cpuinitconst struct sysfw_id set_multi_table[] = {
+
+WARNING:MISPLACED_INIT: __initdata should be placed after apm_id_table[]
+#659: FILE: arch/x86/kernel/apm_32.c:2042:
++static struct sysfw_id __initdata apm_id_table[] = {
+
+WARNING:MISPLACED_INIT: __initdata should be placed after io_delay_0xed_port_table[]
+#1213: FILE: arch/x86/kernel/io_delay.c:61:
++static struct sysfw_id __initdata io_delay_0xed_port_table[] = {
+
+WARNING:MISPLACED_INIT: __initconst should be placed after mmconf_id_table[]
+#1313: FILE: arch/x86/kernel/mmconf-fam10h_64.c:222:
++static const struct sysfw_id __initconst mmconf_id_table[] = {
+
+WARNING:MISPLACED_INIT: __initdata should be placed after reboot_id_table[]
+#1402: FILE: arch/x86/kernel/reboot.c:139:
++static struct sysfw_id __initdata reboot_id_table[] = {
+
+WARNING:MISPLACED_INIT: __initdata should be placed after pci_reboot_id_table[]
+#1636: FILE: arch/x86/kernel/reboot.c:389:
++static struct sysfw_id __initdata pci_reboot_id_table[] = {
+
+WARNING:MISPLACED_INIT: __initdata should be placed after bad_tsc_table[]
+#1764: FILE: arch/x86/kernel/tsc.c:812:
++static struct sysfw_id __initdata bad_tsc_table[] = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1879: FILE: arch/x86/pci/common.c:83:
++static int __devinit can_skip_ioresource_align(const struct sysfw_id *d)
+
+WARNING:HOTPLUG_SECTION: Using __devinitconst is unnecessary
+#1888: FILE: arch/x86/pci/common.c:91:
++can_skip_pciprobe_smbios_table[] __devinitconst = {
+
+ERROR:INIT_ATTRIBUTE: Use of __devinitconst requires a separate use of const
+#1888: FILE: arch/x86/pci/common.c:91:
++can_skip_pciprobe_smbios_table[] __devinitconst = {
+
+Const init definitions should use __initconst instead of
+__initdata.
+
+Similarly init definitions without const require a separate
+use of const.
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1932: FILE: arch/x86/pci/common.c:128:
+ static void __devinit pcibios_fixup_device_resources(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1943: FILE: arch/x86/pci/common.c:182:
++static int __devinit set_bf_sort(const struct sysfw_id *d)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1955: FILE: arch/x86/pci/common.c:191:
++static int __devinit dell_sort_method_decode(const union smbios_struct *ss,
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'ss->header.type'
+#1965: FILE: arch/x86/pci/common.c:197:
++	if ((ss->header.type) != 0xb1)
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#1972: FILE: arch/x86/pci/common.c:203:
++		printk(KERN_INFO "smbios type 0xB1 record - unknown flag\n");
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#1997: FILE: arch/x86/pci/common.c:219:
+ 
++}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1998: FILE: arch/x86/pci/common.c:220:
++}
++static int __devinit find_sort_method(const struct sysfw_id *d)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1998: FILE: arch/x86/pci/common.c:220:
++static int __devinit find_sort_method(const struct sysfw_id *d)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#2010: FILE: arch/x86/pci/common.c:231:
++static int __devinit assign_all_busses(const struct sysfw_id *d)
+
+WARNING:HOTPLUG_SECTION: Using __devinitconst is unnecessary
+#2019: FILE: arch/x86/pci/common.c:240:
++static const struct sysfw_id __devinitconst pciprobe_smbios_table[] = {
+
+WARNING:MISPLACED_INIT: __devinitconst should be placed after pciprobe_smbios_table[]
+#2019: FILE: arch/x86/pci/common.c:240:
++static const struct sysfw_id __devinitconst pciprobe_smbios_table[] = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#2264: FILE: arch/x86/pci/common.c:439:
+ struct pci_bus * __devinit pcibios_scan_root(int busnum)
+
+WARNING:HOTPLUG_SECTION: Using __devinitconst is unnecessary
+#2313: FILE: arch/x86/pci/fixup.c:359:
++static const struct sysfw_id __devinitconst msi_k8t_quirk_table[] = {
+
+WARNING:MISPLACED_INIT: __devinitconst should be placed after msi_k8t_quirk_table[]
+#2313: FILE: arch/x86/pci/fixup.c:359:
++static const struct sysfw_id __devinitconst msi_k8t_quirk_table[] = {
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#2331: FILE: arch/x86/pci/fixup.c:380:
+ static void __devinit pci_fixup_msi_k8t_onboard_sound(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinitconst is unnecessary
+#2344: FILE: arch/x86/pci/fixup.c:416:
++static const struct sysfw_id __devinitconst
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#2377: FILE: arch/x86/pci/fixup.c:442:
+ static void __devinit pci_pre_fixup_toshiba_ohci1394(struct pci_dev *dev)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#2386: FILE: arch/x86/pci/fixup.c:453:
+ static void __devinit pci_post_fixup_toshiba_ohci1394(struct pci_dev *dev)
+
+WARNING:MISPLACED_INIT: __initdata should be placed after pciirq_quirk_table[]
+#2445: FILE: arch/x86/pci/irq.c:1097:
++static struct sysfw_id __initdata pciirq_quirk_table[] = {
+
+WARNING:MISPLACED_INIT: __cpuinitdata should be placed after powernow_id_table[]
+#2612: FILE: drivers/cpufreq/powernow-k7.c:619:
++static struct sysfw_id __cpuinitdata powernow_id_table[] = {
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000270030.commit.50c234c910ddd03a627257cc11704614c0619761 total: 1 errors, 30 warnings, 6 checks, 2370 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000270030.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,136 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'prefix' - possible side-effects?
+#141: FILE: arch/powerpc/include/asm/bitops.h:92:
++#define DEFINE_CLROP(fn, prefix)					\
++static inline void fn(unsigned long mask, volatile unsigned long *_p)	\
++{									\
++	unsigned long old;						\
++	unsigned long *p = (unsigned long *)_p;				\
++									\
++	if (IS_ENABLED(CONFIG_PPC32) &&					\
++	    __builtin_constant_p(mask) && is_rlwinm_mask_valid(mask)) {	\
++		asm volatile (						\
++			prefix						\
++		"1:"	"lwarx	%0,0,%3\n"				\
++			"rlwinm	%0,%0,0,%2\n"				\
++			"stwcx.	%0,0,%3\n"				\
++			"bne- 1b\n"					\
++			: "=&r" (old), "+m" (*p)			\
++			: "n" (~mask), "r" (p)				\
++			: "cc", "memory");				\
++	} else {							\
++		asm volatile (						\
++			prefix						\
++		"1:"	PPC_LLARX(%0,0,%3,0) "\n"			\
++			"andc %0,%0,%2\n"				\
++			PPC_STLCX "%0,0,%3\n"				\
++			"bne- 1b\n"					\
++			: "=&r" (old), "+m" (*p)			\
++			: "r" (mask), "r" (p)				\
++			: "cc", "memory");				\
++	}								\
++}
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#142: FILE: arch/powerpc/include/asm/bitops.h:93:
++static inline void fn(unsigned long mask, volatile unsigned long *_p)	\
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#151: FILE: arch/powerpc/include/asm/bitops.h:102:
++		"1:"	"lwarx	%0,0,%3\n"				\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+WARNING:STRING_FRAGMENTS: Consecutive strings are generally better as a single string
+#151: FILE: arch/powerpc/include/asm/bitops.h:102:
++		"1:"	"lwarx	%0,0,%3\n"				\
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:BxV)
+#161: FILE: arch/powerpc/include/asm/bitops.h:112:
++		"1:"	PPC_LLARX(%0,0,%3,0) "\n"			\
+ 		    	          ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#161: FILE: arch/powerpc/include/asm/bitops.h:112:
++		"1:"	PPC_LLARX(%0,0,%3,0) "\n"			\
+ 		    	            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#161: FILE: arch/powerpc/include/asm/bitops.h:112:
++		"1:"	PPC_LLARX(%0,0,%3,0) "\n"			\
+ 		    	              ^
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:OxV)
+#161: FILE: arch/powerpc/include/asm/bitops.h:112:
++		"1:"	PPC_LLARX(%0,0,%3,0) "\n"			\
+ 		    	               ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#161: FILE: arch/powerpc/include/asm/bitops.h:112:
++		"1:"	PPC_LLARX(%0,0,%3,0) "\n"			\
+ 		    	                 ^
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#201: FILE: arch/powerpc/include/asm/bitops.h:174:
++static inline unsigned long test_and_clear_bits(unsigned long mask, volatile unsigned long *_p)
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#208: FILE: arch/powerpc/include/asm/bitops.h:181:
++		asm volatile (
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#210: FILE: arch/powerpc/include/asm/bitops.h:183:
++		"1:"	"lwarx %0,0,%3\n"
+
+WARNING:STRING_FRAGMENTS: Consecutive strings are generally better as a single string
+#210: FILE: arch/powerpc/include/asm/bitops.h:183:
++		"1:"	"lwarx %0,0,%3\n"
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#219: FILE: arch/powerpc/include/asm/bitops.h:192:
++		asm volatile (
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:BxV)
+#221: FILE: arch/powerpc/include/asm/bitops.h:194:
++		"1:"	PPC_LLARX(%0,0,%3,0) "\n"
+ 		    	          ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#221: FILE: arch/powerpc/include/asm/bitops.h:194:
++		"1:"	PPC_LLARX(%0,0,%3,0) "\n"
+ 		    	            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#221: FILE: arch/powerpc/include/asm/bitops.h:194:
++		"1:"	PPC_LLARX(%0,0,%3,0) "\n"
+ 		    	              ^
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:OxV)
+#221: FILE: arch/powerpc/include/asm/bitops.h:194:
++		"1:"	PPC_LLARX(%0,0,%3,0) "\n"
+ 		    	               ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#221: FILE: arch/powerpc/include/asm/bitops.h:194:
++		"1:"	PPC_LLARX(%0,0,%3,0) "\n"
+ 		    	                 ^
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000027190.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a total: 6 errors, 4 warnings, 9 checks, 119 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000027190.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,85 @@
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH' are not preferred. Consider using octal permissions '0644'.
+#189: FILE: kernel/sched/rt.c:2343:
++					S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH,
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'e' may be better as '(e)' to avoid precedence issues
+#253: FILE: kernel/sched/sched.h:1400:
++#define smart_event(e) do { __get_cpu_var(smart_stat).e++; } while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#253: FILE: kernel/sched/sched.h:1400:
++#define smart_event(e) do { __get_cpu_var(smart_stat).e++; } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'prev_cpu' - possible side-effects?
+#254: FILE: kernel/sched/sched.h:1401:
++#define smart_event_node(prev_cpu, next_cpu, local_event, remote_event) \
++	do {								\
++		if (prev_cpu >= 0 && next_cpu >= 0 &&			\
++		    cpu_to_node(prev_cpu) == cpu_to_node(next_cpu))	\
++			smart_event(local_event);			\
++		else							\
++			smart_event(remote_event);			\
++	} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'prev_cpu' may be better as '(prev_cpu)' to avoid precedence issues
+#254: FILE: kernel/sched/sched.h:1401:
++#define smart_event_node(prev_cpu, next_cpu, local_event, remote_event) \
++	do {								\
++		if (prev_cpu >= 0 && next_cpu >= 0 &&			\
++		    cpu_to_node(prev_cpu) == cpu_to_node(next_cpu))	\
++			smart_event(local_event);			\
++		else							\
++			smart_event(remote_event);			\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'next_cpu' - possible side-effects?
+#254: FILE: kernel/sched/sched.h:1401:
++#define smart_event_node(prev_cpu, next_cpu, local_event, remote_event) \
++	do {								\
++		if (prev_cpu >= 0 && next_cpu >= 0 &&			\
++		    cpu_to_node(prev_cpu) == cpu_to_node(next_cpu))	\
++			smart_event(local_event);			\
++		else							\
++			smart_event(remote_event);			\
++	} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'next_cpu' may be better as '(next_cpu)' to avoid precedence issues
+#254: FILE: kernel/sched/sched.h:1401:
++#define smart_event_node(prev_cpu, next_cpu, local_event, remote_event) \
++	do {								\
++		if (prev_cpu >= 0 && next_cpu >= 0 &&			\
++		    cpu_to_node(prev_cpu) == cpu_to_node(next_cpu))	\
++			smart_event(local_event);			\
++		else							\
++			smart_event(remote_event);			\
++	} while (0)
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000097133.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 2 warnings, 5 checks, 209 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000097133.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

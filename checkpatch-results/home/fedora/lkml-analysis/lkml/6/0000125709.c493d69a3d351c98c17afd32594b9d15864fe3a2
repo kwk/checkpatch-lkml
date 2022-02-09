@@ -1,0 +1,247 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#135: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#149: FILE: arch/x86/include/asm/static_call.h:10:
++extern void __static_call_update(void *tramp, void *func);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'tramp' - possible side-effects?
+#151: FILE: arch/x86/include/asm/static_call.h:12:
++#define DECLARE_STATIC_CALL(tramp, func)				\
++	extern typeof(func) tramp;					\
++	static void __used __section(.discard.static_call_tramps)	\
++		*__static_call_tramp_##tramp = tramp
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:ExV)
+#154: FILE: arch/x86/include/asm/static_call.h:15:
++		*__static_call_tramp_##tramp = tramp
+ 		^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#156: FILE: arch/x86/include/asm/static_call.h:17:
++#define DEFINE_STATIC_CALL(tramp, func)					\
++	DECLARE_STATIC_CALL(tramp, func);				\
++	asm(".pushsection .text, \"ax\"				\n"	\
++	    ".align 4						\n"	\
++	    ".globl " #tramp "					\n"	\
++	    ".type " #tramp ", @function			\n"	\
++	    #tramp ":						\n"	\
++	    "jmp " #func "					\n"	\
++	    ASM_NOP3 "						\n"	\
++	    ".popsection					\n")
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#158: FILE: arch/x86/include/asm/static_call.h:19:
++	asm(".pushsection .text, \"ax\"				\n"	\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#159: FILE: arch/x86/include/asm/static_call.h:20:
++	    ".align 4						\n"	\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#160: FILE: arch/x86/include/asm/static_call.h:21:
++	    ".globl " #tramp "					\n"	\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#161: FILE: arch/x86/include/asm/static_call.h:22:
++	    ".type " #tramp ", @function			\n"	\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#162: FILE: arch/x86/include/asm/static_call.h:23:
++	    #tramp ":						\n"	\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#163: FILE: arch/x86/include/asm/static_call.h:24:
++	    "jmp " #func "					\n"	\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#164: FILE: arch/x86/include/asm/static_call.h:25:
++	    ASM_NOP3 "						\n"	\
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#165: FILE: arch/x86/include/asm/static_call.h:26:
++	    ".popsection					\n")
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/static_call.h> instead of <asm/static_call.h>
+#195: FILE: arch/x86/kernel/setup.c:120:
++#include <asm/static_call.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+WARNING:SPDX_LICENSE_TAG: Improper SPDX comment style for 'arch/x86/kernel/static_call.c', please use '//' instead
+#213: FILE: arch/x86/kernel/static_call.c:1:
++/* SPDX-License-Identifier: GPL-2.0 */
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#213: FILE: arch/x86/kernel/static_call.c:1:
++/* SPDX-License-Identifier: GPL-2.0 */
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/processor.h> instead of <asm/processor.h>
+#222: FILE: arch/x86/kernel/static_call.c:10:
++#include <asm/processor.h>
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#230: FILE: arch/x86/kernel/static_call.c:18:
++};
++extern struct static_call_entry __start_static_call_table[],
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#230: FILE: arch/x86/kernel/static_call.c:18:
++extern struct static_call_entry __start_static_call_table[],
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#231: FILE: arch/x86/kernel/static_call.c:19:
++^I^I^I        __stop_static_call_table[];$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#242: FILE: arch/x86/kernel/static_call.c:30:
++	     entry < __stop_static_call_table; entry++) {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#256: FILE: arch/x86/kernel/static_call.c:44:
++			WARN_ONCE(1, "unexpected trampoline jump opcode %x at %ps",
++				 tramp_opcode, (void *)tramp);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#267: FILE: arch/x86/kernel/static_call.c:55:
++		printk("static_call_init: poking %lx at %lx\n", (unsigned long)call_dest, (insn+1));
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#267: FILE: arch/x86/kernel/static_call.c:55:
++		printk("static_call_init: poking %lx at %lx\n", (unsigned long)call_dest, (insn+1));
+ 		                                                                               ^
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'static_call_init', this function's name, in a string
+#267: FILE: arch/x86/kernel/static_call.c:55:
++		printk("static_call_init: poking %lx at %lx\n", (unsigned long)call_dest, (insn+1));
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#301: FILE: arch/x86/kernel/static_call.c:89:
++	     entry < __stop_static_call_table; entry++) {
++
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#355: FILE: fs/proc/cmdline.c:9:
++extern int my_func_sub(int arg1, int arg2);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#363: FILE: fs/proc/cmdline.c:17:
++	printk("static call (orig): ret=%d\n", ret);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#367: FILE: fs/proc/cmdline.c:21:
++	printk("static call (sub): ret=%d\n", ret);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#371: FILE: fs/proc/cmdline.c:25:
++	printk("static call (add): ret=%d\n", ret);
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#409: FILE: include/linux/static_call.h:9:
++#define DECLARE_STATIC_CALL(ptr, func)					\
++	extern typeof(func) *ptr
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ptr' may be better as '(ptr)' to avoid precedence issues
+#409: FILE: include/linux/static_call.h:9:
++#define DECLARE_STATIC_CALL(ptr, func)					\
++	extern typeof(func) *ptr
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#412: FILE: include/linux/static_call.h:12:
++#define DEFINE_STATIC_CALL(ptr, func)					\
++	typeof(func) *ptr = func
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ptr' may be better as '(ptr)' to avoid precedence issues
+#412: FILE: include/linux/static_call.h:12:
++#define DEFINE_STATIC_CALL(ptr, func)					\
++	typeof(func) *ptr = func
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#521: FILE: tools/objtool/check.c:2234:
++	list_for_each_entry(insn, &file->static_call_list, static_call_node) {
++
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000125709.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 4 errors, 18 warnings, 13 checks, 442 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000125709.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

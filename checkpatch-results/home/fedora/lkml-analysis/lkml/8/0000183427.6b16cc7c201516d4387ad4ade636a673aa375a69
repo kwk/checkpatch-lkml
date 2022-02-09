@@ -1,0 +1,217 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fmt' - possible side-effects?
+#141: FILE: fs/cifs/cifs_debug.h:62:
++#define cifs_dbg_func(ratefunc, type, fmt, ...)				\
++do {									\
++	if ((type) & FYI && cifsFYI & CIFS_INFO) {			\
++		pr_debug_ ## ratefunc("%s: " fmt,			\
++				      __FILE__, ##__VA_ARGS__);		\
++	} else if ((type) & VFS) {					\
++		pr_err_ ## ratefunc("VFS: " fmt, ##__VA_ARGS__);	\
++	} else if ((type) & NOISY && (NOISY != 0)) {			\
++		pr_debug_ ## ratefunc(fmt, ##__VA_ARGS__);		\
++	}								\
+ } while (0)
+
+CHECK:CAMELCASE: Avoid CamelCase: <cifsFYI>
+#143: FILE: fs/cifs/cifs_debug.h:64:
++	if ((type) & FYI && cifsFYI & CIFS_INFO) {			\
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fmt' - possible side-effects?
+#161: FILE: fs/cifs/cifs_debug.h:74:
++#define cifs_dbg(type, fmt, ...)					\
++do {									\
++	if ((type) & ONCE)						\
++		cifs_dbg_func(once, type, fmt, ##__VA_ARGS__);		\
++	else								\
++		cifs_dbg_func(ratelimited, type, fmt, ##__VA_ARGS__);	\
+ } while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fmt' - possible side-effects?
+#184: FILE: fs/cifs/cifs_debug.h:82:
++#define cifs_server_dbg_func(ratefunc, type, fmt, ...)			\
++do {									\
++	const char *sn = "";						\
++	if (server && server->hostname)					\
++		sn = server->hostname;					\
++	if ((type) & FYI && cifsFYI & CIFS_INFO) {			\
++		pr_debug_ ## ratefunc("%s: \\\\%s " fmt,		\
++				      __FILE__, sn, ##__VA_ARGS__);	\
++	} else if ((type) & VFS) {					\
++		pr_err_ ## ratefunc("VFS: \\\\%s " fmt,			\
++				    sn, ##__VA_ARGS__);			\
++	} else if ((type) & NOISY && (NOISY != 0)) {			\
++		pr_debug_ ## ratefunc("\\\\%s " fmt,			\
++				      sn, ##__VA_ARGS__);		\
++	}								\
+ } while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fmt' - possible side-effects?
+#209: FILE: fs/cifs/cifs_debug.h:99:
++#define cifs_server_dbg(type, fmt, ...)					\
++do {									\
++	if ((type) & ONCE)						\
++		cifs_server_dbg_func(once, type, fmt, ##__VA_ARGS__);	\
++	else								\
++		cifs_server_dbg_func(ratelimited, type, fmt,		\
++				     ##__VA_ARGS__);			\
+ } while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fmt' - possible side-effects?
+#233: FILE: fs/cifs/cifs_debug.h:108:
++#define cifs_tcon_dbg_func(ratefunc, type, fmt, ...)			\
++do {									\
++	const char *tn = "";						\
++	if (tcon && tcon->treeName)					\
++		tn = tcon->treeName;					\
++	if ((type) & FYI && cifsFYI & CIFS_INFO) {			\
++		pr_debug_ ## ratefunc("%s: %s "	fmt,			\
++				      __FILE__, tn, ##__VA_ARGS__);	\
++	} else if ((type) & VFS) {					\
++		pr_err_ ## ratefunc("VFS: %s " fmt, tn, ##__VA_ARGS__);	\
++	} else if ((type) & NOISY && (NOISY != 0)) {			\
++		pr_debug_ ## ratefunc("%s " fmt, tn, ##__VA_ARGS__);	\
++	}								\
+ } while (0)
+
+CHECK:CAMELCASE: Avoid CamelCase: <treeName>
+#236: FILE: fs/cifs/cifs_debug.h:111:
++	if (tcon && tcon->treeName)					\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fmt' - possible side-effects?
+#256: FILE: fs/cifs/cifs_debug.h:123:
++#define cifs_tcon_dbg(type, fmt, ...)					\
++do {									\
++	if ((type) & ONCE)						\
++		cifs_tcon_dbg_func(once, type, fmt, ##__VA_ARGS__);	\
++	else								\
++		cifs_tcon_dbg_func(ratelimited, type, fmt,		\
++				   ##__VA_ARGS__);			\
+ } while (0)
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#313: FILE: fs/cifs/cifsencrypt.c:786:
+ 	if (!ctx_arc4) {
++		cifs_dbg(VFS, "Could not allocate arc4 context\n");
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'curr_xid' - possible side-effects?
+#346: FILE: fs/cifs/cifsproto.h:58:
++#define free_xid(curr_xid)						\
++do {									\
++	_free_xid(curr_xid);						\
++	cifs_dbg(FYI, "VFS: leaving %s (xid = %u) rc = %d\n",		\
++		 __func__, curr_xid, (int)rc);				\
++	if (rc)								\
+ 		trace_smb3_exit_err(curr_xid, __func__, (int)rc);	\
++	else								\
++		trace_smb3_exit_done(curr_xid, __func__);		\
+ } while (0)
+
+CHECK:CAMELCASE: Avoid CamelCase: <midCount>
+#526: FILE: fs/cifs/connect.c:1230:
++						atomic_read(&midCount));
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#590: FILE: fs/cifs/connect.c:2219:
+ 			if (vol->password == NULL) {
++				pr_warn("no memory for password\n");
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#616: FILE: fs/cifs/connect.c:2262:
+ 			if (!vol->domainname) {
++				pr_warn("no memory for domainname\n");
+
+CHECK:CAMELCASE: Avoid CamelCase: <Hours>
+#962: FILE: fs/cifs/netmisc.c:964:
++		cifs_dbg(VFS, "Invalid hours %d\n", st->Hours);
+
+CHECK:CAMELCASE: Avoid CamelCase: <ReparseTag>
+#1309: FILE: fs/cifs/smb2ops.c:2776:
++			 le32_to_cpu(buf->ReparseTag));
+
+CHECK:CAMELCASE: Avoid CamelCase: <DialectRevision>
+#1440: FILE: fs/cifs/smb2pdu.c:941:
++				le16_to_cpu(rsp->DialectRevision));
+
+WARNING:LONG_LINE_STRING: line length of 236 exceeds 100 columns
+#1564: FILE: fs/cifs/smbdirect.c:297:
++	log_rdma_event(INFO, "resp message min_version %u max_version %u negotiated_version %u credits_requested %u credits_granted %u status %u max_readwrite_size %u preferred_send_size %u max_receive_size %u max_fragmented_size %u\n",
+
+A string starts before but extends beyond the maximum line length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:LONG_LINE_STRING: line length of 104 exceeds 100 columns
+#1581: FILE: fs/cifs/smbdirect.c:450:
++	log_rdma_recv(INFO, "response=%p type=%d wc status=%d wc opcode %d byte_len=%d pkey_index=%x\n",
+
+WARNING:LONG_LINE_STRING: line length of 108 exceeds 100 columns
+#1597: FILE: fs/cifs/smbdirect.c:518:
++		log_incoming(INFO, "data flags %d data_offset %d data_length %d remaining_data_length %d\n",
+
+WARNING:LONG_LINE_STRING: line length of 103 exceeds 100 columns
+#1618: FILE: fs/cifs/smbdirect.c:631:
++		log_rdma_event(ERR, "Device capability flags = %llx max_fast_reg_page_list_len = %u\n",
+
+WARNING:LONG_LINE_STRING: line length of 126 exceeds 100 columns
+#1635: FILE: fs/cifs/smbdirect.c:892:
++	log_outgoing(INFO, "credits_requested=%d credits_granted=%d data_offset=%d data_length=%d remaining_data_length=%d\n",
+
+WARNING:LONG_LINE_STRING: line length of 146 exceeds 100 columns
+#1670: FILE: fs/cifs/smbdirect.c:1531:
++		log_rdma_event(ERR, "consider lowering send_credit_target = %d. Possible CQE overrun, device reporting max_cpe %d max_qp_wr %d\n",
+
+WARNING:LONG_LINE_STRING: line length of 146 exceeds 100 columns
+#1686: FILE: fs/cifs/smbdirect.c:1540:
++		log_rdma_event(ERR, "consider lowering receive_credit_max = %d. Possible CQE overrun, device reporting max_cpe %d max_qp_wr %d\n",
+
+WARNING:LONG_LINE_STRING: line length of 157 exceeds 100 columns
+#1702: FILE: fs/cifs/smbdirect.c:1850:
++			log_read(INFO, "_get_first_reassembly memcpy %d bytes data_transfer_length-offset=%d after that to_read=%d data_read=%d offset=%d\n",
+
+WARNING:LONG_LINE_STRING: line length of 116 exceeds 100 columns
+#1716: FILE: fs/cifs/smbdirect.c:1861:
++		log_read(INFO, "returning to thread data_read=%d reassembly_data_length=%d first_entry_offset=%d\n",
+
+WARNING:LONG_LINE_STRING: line length of 104 exceeds 100 columns
+#1748: FILE: fs/cifs/smbdirect.c:2025:
++	log_write(INFO, "rqst_idx=%d nvec=%d rqst->rq_npages=%d rq_pagesz=%d rq_tailsz=%d buflen=%lu\n",
+
+WARNING:LONG_LINE_STRING: line length of 119 exceeds 100 columns
+#1763: FILE: fs/cifs/smbdirect.c:2037:
++				log_write(INFO, "sending iov[] from start=%d i=%d nvecs=%d remaining_data_length=%d\n",
+
+WARNING:LONG_LINE_STRING: line length of 102 exceeds 100 columns
+#1777: FILE: fs/cifs/smbdirect.c:2048:
++				log_write(INFO, "iov[%d] iov_base=%p buflen=%d break to %d vectors\n",
+
+WARNING:LONG_LINE_STRING: line length of 119 exceeds 100 columns
+#1807: FILE: fs/cifs/smbdirect.c:2082:
++				log_write(INFO, "sending iov[] from start=%d i=%d nvecs=%d remaining_data_length=%d\n",
+
+WARNING:LONG_LINE_STRING: line length of 106 exceeds 100 columns
+#1821: FILE: fs/cifs/smbdirect.c:2108:
++			log_write(INFO, "sending pages i=%d offset=%d size=%d remaining_data_length=%d\n",
+
+WARNING:LONG_LINE_STRING: line length of 101 exceeds 100 columns
+#1836: FILE: fs/cifs/smbdirect.c:2184:
++				log_rdma_mr(ERR, "ib_alloc_mr failed mr_type=%x max_frmr_depth=%x\n",
+
+CHECK:CAMELCASE: Avoid CamelCase: <midEntry>
+#1878: FILE: fs/cifs/transport.c:155:
++				 midEntry->command, midEntry->mid);
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000183427.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 18 warnings, 14 checks, 1613 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000183427.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

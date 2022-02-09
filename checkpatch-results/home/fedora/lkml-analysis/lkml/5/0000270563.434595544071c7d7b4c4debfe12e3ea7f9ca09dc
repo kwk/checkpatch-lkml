@@ -1,0 +1,268 @@
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'task' may be better as '(task)' to avoid precedence issues
+#208: FILE: include/linux/sched.h:104:
++#define task_is_traced(task)		((task->state & __TASK_TRACED) != 0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'task' may be better as '(task)' to avoid precedence issues
+#210: FILE: include/linux/sched.h:106:
++#define task_is_stopped(task)		((task->state & __TASK_STOPPED) != 0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'task' may be better as '(task)' to avoid precedence issues
+#212: FILE: include/linux/sched.h:108:
++#define task_is_stopped_or_traced(task)	((task->state & (__TASK_STOPPED | __TASK_TRACED)) != 0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'task' - possible side-effects?
+#214: FILE: include/linux/sched.h:110:
++#define task_contributes_to_load(task)	((task->state & TASK_UNINTERRUPTIBLE) != 0 && \
++					 (task->flags & PF_FROZEN) == 0 && \
++					 (task->state & TASK_NOLOAD) == 0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'task' may be better as '(task)' to avoid precedence issues
+#214: FILE: include/linux/sched.h:110:
++#define task_contributes_to_load(task)	((task->state & TASK_UNINTERRUPTIBLE) != 0 && \
++					 (task->flags & PF_FROZEN) == 0 && \
++					 (task->state & TASK_NOLOAD) == 0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#229: FILE: include/linux/sched.h:162:
++#define __set_current_state(state_value) do { current->state = (state_value); } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#230: FILE: include/linux/sched.h:163:
++#define set_current_state(state_value)	 smp_store_mb(current->state, (state_value))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#251: FILE: include/linux/sched.h:175:
++extern long schedule_timeout(long timeout);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#252: FILE: include/linux/sched.h:176:
++extern long schedule_timeout_interruptible(long timeout);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#253: FILE: include/linux/sched.h:177:
++extern long schedule_timeout_killable(long timeout);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#254: FILE: include/linux/sched.h:178:
++extern long schedule_timeout_uninterruptible(long timeout);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#255: FILE: include/linux/sched.h:179:
++extern long schedule_timeout_idle(long timeout);
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#327: FILE: include/linux/sched.h:255:
++# define SCHED_FIXEDPOINT_SCALE		(1L << SCHED_FIXEDPOINT_SHIFT)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#578: FILE: include/linux/sched.h:488:
++	volatile long			state;
+
+ERROR:SPACING: space prohibited before that ':' (ctx:WxV)
+#734: FILE: include/linux/sched.h:584:
++	unsigned			:0;
+ 	        			^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LONG_LINE_COMMENT: line length of 105 exceeds 100 columns
+#881: FILE: include/linux/sched.h:690:
++	/* MM fault and swap info: this can arguably be seen as either mm-specific or thread-specific: */
+
+A comment starts before but extends beyond the maximum line length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:LONG_LINE_COMMENT: line length of 104 exceeds 100 columns
+#1005: FILE: include/linux/sched.h:762:
++	/* Protection against (de-)allocation: mm, files, fs, tty, keyrings, mems_allowed, mempolicy: */
+
+WARNING:TYPO_SPELLING: 'Seqence' may be misspelled - perhaps 'Sequence'?
+#1139: FILE: include/linux/sched.h:846:
++	/* Seqence number to catch updates: */
+ 	   ^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#1174: FILE: include/linux/sched.h:870:
++	struct mutex			perf_event_mutex;
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1461: FILE: include/linux/sched.h:1109:
++extern pid_t task_tgid_nr_ns(struct task_struct *tsk, struct pid_namespace *ns);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "p->pids[PIDTYPE_PID].pid"
+#1480: FILE: include/linux/sched.h:1128:
++	return p->pids[PIDTYPE_PID].pid != NULL;
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:LONG_LINE_COMMENT: line length of 103 exceeds 100 columns
+#1580: FILE: include/linux/sched.h:1205:
++#define PF_NPROC_EXCEEDED	0x00001000	/* set_user() noticed that RLIMIT_NPROC was exceeded */
+
+WARNING:LONG_LINE_COMMENT: line length of 101 exceeds 100 columns
+#1581: FILE: include/linux/sched.h:1206:
++#define PF_USED_MATH		0x00002000	/* If unset the fpu must be initialized before use */
+
+WARNING:LONG_LINE_COMMENT: line length of 105 exceeds 100 columns
+#1592: FILE: include/linux/sched.h:1217:
++#define PF_NO_SETAFFINITY	0x04000000	/* Userland is not allowed to meddle with cpus_allowed */
+
+WARNING:LONG_LINE_COMMENT: line length of 116 exceeds 100 columns
+#1596: FILE: include/linux/sched.h:1221:
++#define PF_SUSPEND_TASK		0x80000000      /* This thread called freeze_processes() and should not be frozen */
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#1608: FILE: include/linux/sched.h:1234:
++#define clear_stopped_child_used_math(child)	do { (child)->flags &= ~PF_USED_MATH; } while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#1609: FILE: include/linux/sched.h:1235:
++#define set_stopped_child_used_math(child)	do { (child)->flags |= PF_USED_MATH; } while (0)
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#1618: FILE: include/linux/sched.h:1242:
++#define conditional_used_math(condition)	conditional_stopped_child_used_math(condition, current)
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1668: FILE: include/linux/sched.h:1291:
++extern int cpuset_cpumask_can_shrink(const struct cpumask *cur, const struct cpumask *trial);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1669: FILE: include/linux/sched.h:1292:
++extern int task_can_attach(struct task_struct *p, const struct cpumask *cs_cpus_allowed);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1676: FILE: include/linux/sched.h:1294:
++extern void do_set_cpus_allowed(struct task_struct *p, const struct cpumask *new_mask);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1677: FILE: include/linux/sched.h:1295:
++extern int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1686: FILE: include/linux/sched.h:1300:
+ }
++static inline int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1712: FILE: include/linux/sched.h:1330:
++extern int sched_setscheduler(struct task_struct *, int, const struct sched_param *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct task_struct *' should also have an identifier name
+#1712: FILE: include/linux/sched.h:1330:
++extern int sched_setscheduler(struct task_struct *, int, const struct sched_param *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#1712: FILE: include/linux/sched.h:1330:
++extern int sched_setscheduler(struct task_struct *, int, const struct sched_param *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const struct sched_param *' should also have an identifier name
+#1712: FILE: include/linux/sched.h:1330:
++extern int sched_setscheduler(struct task_struct *, int, const struct sched_param *);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1713: FILE: include/linux/sched.h:1331:
++extern int sched_setscheduler_nocheck(struct task_struct *, int, const struct sched_param *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct task_struct *' should also have an identifier name
+#1713: FILE: include/linux/sched.h:1331:
++extern int sched_setscheduler_nocheck(struct task_struct *, int, const struct sched_param *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#1713: FILE: include/linux/sched.h:1331:
++extern int sched_setscheduler_nocheck(struct task_struct *, int, const struct sched_param *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const struct sched_param *' should also have an identifier name
+#1713: FILE: include/linux/sched.h:1331:
++extern int sched_setscheduler_nocheck(struct task_struct *, int, const struct sched_param *);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1714: FILE: include/linux/sched.h:1332:
++extern int sched_setattr(struct task_struct *, const struct sched_attr *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct task_struct *' should also have an identifier name
+#1714: FILE: include/linux/sched.h:1332:
++extern int sched_setattr(struct task_struct *, const struct sched_attr *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const struct sched_attr *' should also have an identifier name
+#1714: FILE: include/linux/sched.h:1332:
++extern int sched_setattr(struct task_struct *, const struct sched_attr *);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1734: FILE: include/linux/sched.h:1379:
++extern struct task_struct *find_task_by_pid_ns(pid_t nr, struct pid_namespace *ns);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1742: FILE: include/linux/sched.h:1386:
++extern void kick_process(struct task_struct *tsk);
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000270563.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 1 errors, 21 warnings, 24 checks, 1694 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000270563.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

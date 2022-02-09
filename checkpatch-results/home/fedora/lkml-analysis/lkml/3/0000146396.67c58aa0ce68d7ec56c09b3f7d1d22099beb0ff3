@@ -1,0 +1,187 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#121: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#126: FILE: arch/x86/include/asm/kgraft.h:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#211: FILE: include/linux/kgraft.h:1:
++/*
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#262: FILE: include/linux/kgraft.h:52:
++#define KGR_PATCHED_FUNCTION(_name, _new_function)				\
++	static struct ftrace_ops __kgr_patch_ftrace_ops_slow_ ## _name = {	\
++		.flags = FTRACE_OPS_FL_SAVE_REGS,				\
++	};									\
++	static struct ftrace_ops __kgr_patch_ftrace_ops_fast_ ## _name = {	\
++		.flags = FTRACE_OPS_FL_SAVE_REGS,				\
++	};									\
++	static const struct kgr_patch_fun __kgr_patch_ ## _name = {		\
++		.name = #_name,							\
++		.new_name = #_new_function,					\
++		.new_function = _new_function,					\
++		.ftrace_ops_slow = &__kgr_patch_ftrace_ops_slow_ ## _name,	\
++		.ftrace_ops_fast = &__kgr_patch_ftrace_ops_fast_ ## _name,	\
++	};
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#277: FILE: include/linux/kgraft.h:67:
++#define KGR_PATCH(name)		&__kgr_patch_ ## name
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#280: FILE: include/linux/kgraft.h:70:
++extern int kgr_start_patching(const struct kgr_patch *);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const struct kgr_patch *' should also have an identifier name
+#280: FILE: include/linux/kgraft.h:70:
++extern int kgr_start_patching(const struct kgr_patch *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#305: FILE: kernel/Kconfig.kgraft:4:
++config KGRAFT
++	bool "kGraft infrastructure"
++	depends on DYNAMIC_FTRACE_WITH_REGS
++	depends on HAVE_KGRAFT
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#327: FILE: kernel/kgraft.c:1:
++/*
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#369: FILE: kernel/kgraft.c:43:
++static void kgr_stub_fast(unsigned long ip, unsigned long parent_ip,
++		struct ftrace_ops *ops, struct pt_regs *regs)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#378: FILE: kernel/kgraft.c:52:
++static void kgr_stub_slow(unsigned long ip, unsigned long parent_ip,
++		struct ftrace_ops *ops, struct pt_regs *regs)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#384: FILE: kernel/kgraft.c:58:
++		pr_info("kgr: slow stub: calling old code at %lx\n",
++				c->old);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#388: FILE: kernel/kgraft.c:62:
++		pr_info("kgr: slow stub: calling new code at %lx\n",
++				c->new);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#406: FILE: kernel/kgraft.c:80:
++			pr_info("pid %d (%s) still in kernel after timeout\n",
++					p->pid, p->comm);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#427: FILE: kernel/kgraft.c:101:
++			pr_err("kgr: finalize for %s failed, trying to continue\n",
++					(*patch_fun)->name);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#483: FILE: kernel/kgraft.c:157:
++		pr_err("kgr: we got out of bounds the intended function (%s -> %s)\n",
++				f_name, check_name);
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#507: FILE: kernel/kgraft.c:181:
++	if (!caches) {
++		pr_debug("kgr: unable to allocate fentry caches\n");
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#518: FILE: kernel/kgraft.c:192:
++	pr_debug("kgr: storing %lx to caches->new for %s\n",
++			fentry_loc, patch_fun->new_name);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#529: FILE: kernel/kgraft.c:203:
++	pr_debug("kgr: storing %lx to caches->old for %s\n",
++			fentry_loc, patch_fun->name);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#568: FILE: kernel/kgraft.c:242:
++		pr_debug("kgr: setting filter for %lx (%s) failed\n",
++				caches->old, patch_fun->name);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#575: FILE: kernel/kgraft.c:249:
++		pr_debug("kgr: registering ftrace function for %lx (%s) failed\n",
++				caches->old, patch_fun->name);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#588: FILE: kernel/kgraft.c:262:
++			pr_debug("kgr: unregistering ftrace function for %lx (%s) failed with %d\n",
++					fentry_loc, patch_fun->name, err);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#594: FILE: kernel/kgraft.c:268:
++	pr_debug("kgr: redirection for %lx (%s) done\n", fentry_loc,
++			patch_fun->name);
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000146396.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 1 errors, 8 warnings, 14 checks, 521 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000146396.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

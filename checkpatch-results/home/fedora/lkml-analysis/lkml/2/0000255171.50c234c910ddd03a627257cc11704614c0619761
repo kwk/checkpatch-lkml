@@ -1,0 +1,43 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#80: 
+OK, the patch below builds for me and seems to work even, although I haven't
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__handle' - possible side-effects?
+#159: FILE: include/acpi/platform/aclinux.h:166:
++#define acpi_os_create_lock(__handle)				\
++({								\
++	spinlock_t *lock = ACPI_ALLOCATE(sizeof(*lock));	\
++								\
++	if (lock) {						\
++		*(__handle) = lock;				\
++		spin_lock_init(*(__handle));			\
++	}							\
++	lock ? AE_OK : AE_NO_MEMORY;				\
++})
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#170: FILE: include/acpi/platform/aclinux.h:177:
++#define acpi_os_delete_lock(__handle)	\
++	do {				\
++		ACPI_FREE(__handle);	\
++	} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000255171.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 2 warnings, 1 checks, 71 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000255171.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

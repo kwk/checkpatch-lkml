@@ -1,0 +1,554 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#27: 
+Patch 6 implements low-level uaccess libraries. And using asm-generic version uaccess.h
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#45: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#50: FILE: arch/unicore32/include/asm/uaccess.h:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:EMBEDDED_FILENAME: It's generally not useful to have the filename in the file
+#51: FILE: arch/unicore32/include/asm/uaccess.h:2:
++ * linux/arch/unicore32/include/asm/uaccess.h
+
+Embedding the complete filename path inside the file isn't particularly
+useful as often the path is moved around and becomes incorrect.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#94: FILE: arch/unicore32/include/asm/uaccess.h:45:
++extern int fixup_exception(struct pt_regs *regs);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#100: FILE: arch/unicore32/include/asm/uaccess.h:51:
++extern int __get_user_bad(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#101: FILE: arch/unicore32/include/asm/uaccess.h:52:
++extern int __put_user_bad(void);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'addr' - possible side-effects?
+#128: FILE: arch/unicore32/include/asm/uaccess.h:79:
++#define __range_ok(addr, size) ({		\
++	unsigned long flag, roksum;		\
++	__chk_user_ptr(addr);			\
++	__asm__("add.a %1, %2, %3;\n"		\
++		"bea 1f;\n"			\
++		"subc.a %1, %1, %0;\n"		\
++		"1: cmovub %0, #0"		\
++		: "=&r" (flag), "=&r" (roksum)	\
++		: "r" (addr), "Ir" (size),	\
++		  "0" (current_thread_info()->addr_limit) \
++		: "cc"); \
++	flag; })
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#152: FILE: arch/unicore32/include/asm/uaccess.h:103:
++extern int __get_user_1(void *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#152: FILE: arch/unicore32/include/asm/uaccess.h:103:
++extern int __get_user_1(void *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#153: FILE: arch/unicore32/include/asm/uaccess.h:104:
++extern int __get_user_2(void *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#153: FILE: arch/unicore32/include/asm/uaccess.h:104:
++extern int __get_user_2(void *);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#154: FILE: arch/unicore32/include/asm/uaccess.h:105:
++extern int __get_user_4(void *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#154: FILE: arch/unicore32/include/asm/uaccess.h:105:
++extern int __get_user_4(void *);
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#156: FILE: arch/unicore32/include/asm/uaccess.h:107:
++#define __get_user_x(__r2, __p, __e, __s, __i...)			\
++	   __asm__ __volatile__ (					\
++		"b.l	__get_user_" #__s				\
++		: "=&r" (__e), "=r" (__r2)				\
++		: "0" (__p)						\
++		: __i, "cc")
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#163: FILE: arch/unicore32/include/asm/uaccess.h:114:
++#define get_user(x, p)							\
++	({								\
++		register const typeof(*(p)) __user *__p asm("r0") = (p);\
++		register unsigned long __r2 asm("r2");			\
++		register int __e asm("r0");				\
++		switch (sizeof(*(__p))) {				\
++		case 1:							\
++			__get_user_x(__r2, __p, __e, 1, "lr");		\
++			break;						\
++		case 2:							\
++			__get_user_x(__r2, __p, __e, 2, "r3", "lr");	\
++			break;						\
++		case 4:							\
++			__get_user_x(__r2, __p, __e, 4, "lr");		\
++			break;						\
++		default:						\
++			__e = __get_user_bad();				\
++			break;						\
++		}							\
++		x = (typeof(*(p))) __r2;				\
++		__e;							\
++	})
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#186: FILE: arch/unicore32/include/asm/uaccess.h:137:
++extern int __put_user_1(void *, unsigned int);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#187: FILE: arch/unicore32/include/asm/uaccess.h:138:
++extern int __put_user_2(void *, unsigned int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#187: FILE: arch/unicore32/include/asm/uaccess.h:138:
++extern int __put_user_2(void *, unsigned int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned int' should also have an identifier name
+#187: FILE: arch/unicore32/include/asm/uaccess.h:138:
++extern int __put_user_2(void *, unsigned int);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#188: FILE: arch/unicore32/include/asm/uaccess.h:139:
++extern int __put_user_4(void *, unsigned int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#188: FILE: arch/unicore32/include/asm/uaccess.h:139:
++extern int __put_user_4(void *, unsigned int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned int' should also have an identifier name
+#188: FILE: arch/unicore32/include/asm/uaccess.h:139:
++extern int __put_user_4(void *, unsigned int);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#189: FILE: arch/unicore32/include/asm/uaccess.h:140:
++extern int __put_user_8(void *, unsigned long long);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#189: FILE: arch/unicore32/include/asm/uaccess.h:140:
++extern int __put_user_8(void *, unsigned long long);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned long long' should also have an identifier name
+#189: FILE: arch/unicore32/include/asm/uaccess.h:140:
++extern int __put_user_8(void *, unsigned long long);
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#191: FILE: arch/unicore32/include/asm/uaccess.h:142:
++#define __put_user_x(__r2, __p, __e, __s)				\
++	   __asm__ __volatile__ (					\
++		"b.l	__put_user_" #__s				\
++		: "=&r" (__e)						\
++		: "0" (__p), "r" (__r2)					\
++		: "ip", "lr", "cc")
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#198: FILE: arch/unicore32/include/asm/uaccess.h:149:
++#define put_user(x, p)							\
++	({								\
++		register const typeof(*(p)) __r2 asm("r2") = (x);	\
++		register const typeof(*(p)) __user *__p asm("r0") = (p);\
++		register int __e asm("r0");				\
++		switch (sizeof(*(__p))) {				\
++		case 1:							\
++			__put_user_x(__r2, __p, __e, 1);		\
++			break;						\
++		case 2:							\
++			__put_user_x(__r2, __p, __e, 2);		\
++			break;						\
++		case 4:							\
++			__put_user_x(__r2, __p, __e, 4);		\
++			break;						\
++		case 8:							\
++			__put_user_x(__r2, __p, __e, 8);		\
++			break;						\
++		default:						\
++			__e = __put_user_bad();				\
++			break;						\
++		}							\
++		__e;							\
++	})
+
+CHECK:SPACING: No space is necessary after a cast
+#244: FILE: arch/unicore32/include/asm/uaccess.h:195:
++	(void) 0;							\
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#247: FILE: arch/unicore32/include/asm/uaccess.h:198:
++#define __get_user_err(x, ptr, err)					\
++do {									\
++	unsigned long __gu_addr = (unsigned long)(ptr);			\
++	unsigned long __gu_val;						\
++	__chk_user_ptr(ptr);						\
++	switch (sizeof(*(ptr))) {					\
++	case 1:								\
++		__get_user_asm_byte(__gu_val, __gu_addr, err);		\
++		break;							\
++	case 2:								\
++		__get_user_asm_half(__gu_val, __gu_addr, err);		\
++		break;							\
++	case 4:								\
++		__get_user_asm_word(__gu_val, __gu_addr, err);		\
++		break;							\
++	default:							\
++		(__gu_val) = __get_user_bad();				\
++	}								\
++	(x) = (__typeof__(*(ptr)))__gu_val;				\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'err' - possible side-effects?
+#247: FILE: arch/unicore32/include/asm/uaccess.h:198:
++#define __get_user_err(x, ptr, err)					\
++do {									\
++	unsigned long __gu_addr = (unsigned long)(ptr);			\
++	unsigned long __gu_val;						\
++	__chk_user_ptr(ptr);						\
++	switch (sizeof(*(ptr))) {					\
++	case 1:								\
++		__get_user_asm_byte(__gu_val, __gu_addr, err);		\
++		break;							\
++	case 2:								\
++		__get_user_asm_half(__gu_val, __gu_addr, err);		\
++		break;							\
++	case 4:								\
++		__get_user_asm_word(__gu_val, __gu_addr, err);		\
++		break;							\
++	default:							\
++		(__gu_val) = __get_user_bad();				\
++	}								\
++	(x) = (__typeof__(*(ptr)))__gu_val;				\
++} while (0)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#268: FILE: arch/unicore32/include/asm/uaccess.h:219:
++#define __get_user_asm_byte(x, addr, err)				\
++	__asm__ __volatile__(						\
++	"1:	ldb.u	%1,[%2]\n"					\
++	"2:\n"								\
++	"	.pushsection .fixup,\"ax\"\n"				\
++	"	.align	2\n"						\
++	"3:	mov	%0, %3\n"					\
++	"	mov	%1, #0\n"					\
++	"	b	2b\n"						\
++	"	.popsection\n"						\
++	"	.pushsection __ex_table,\"a\"\n"			\
++	"	.align	3\n"						\
++	"	.long	1b, 3b\n"					\
++	"	.popsection"						\
++	: "+r" (err), "=&r" (x)						\
++	: "r" (addr), "i" (-EFAULT)					\
++	: "cc")
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__gu_addr' - possible side-effects?
+#286: FILE: arch/unicore32/include/asm/uaccess.h:237:
++#define __get_user_asm_half(x, __gu_addr, err)				\
++({									\
++	unsigned long __b1, __b2;					\
++	__get_user_asm_byte(__b1, __gu_addr, err);			\
++	__get_user_asm_byte(__b2, __gu_addr + 1, err);			\
++	(x) = __b1 | (__b2 << 8);					\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'err' - possible side-effects?
+#286: FILE: arch/unicore32/include/asm/uaccess.h:237:
++#define __get_user_asm_half(x, __gu_addr, err)				\
++({									\
++	unsigned long __b1, __b2;					\
++	__get_user_asm_byte(__b1, __gu_addr, err);			\
++	__get_user_asm_byte(__b2, __gu_addr + 1, err);			\
++	(x) = __b1 | (__b2 << 8);					\
++})
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#294: FILE: arch/unicore32/include/asm/uaccess.h:245:
++#define __get_user_asm_word(x, addr, err)				\
++	__asm__ __volatile__(						\
++	"1:	ldw.u	%1,[%2]\n"					\
++	"2:\n"								\
++	"	.pushsection .fixup,\"ax\"\n"				\
++	"	.align	2\n"						\
++	"3:	mov	%0, %3\n"					\
++	"	mov	%1, #0\n"					\
++	"	b	2b\n"						\
++	"	.popsection\n"						\
++	"	.pushsection __ex_table,\"a\"\n"			\
++	"	.align	3\n"						\
++	"	.long	1b, 3b\n"					\
++	"	.popsection"						\
++	: "+r" (err), "=&r" (x)						\
++	: "r" (addr), "i" (-EFAULT)					\
++	: "cc")
+
+CHECK:SPACING: No space is necessary after a cast
+#322: FILE: arch/unicore32/include/asm/uaccess.h:273:
++	(void) 0;							\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#325: FILE: arch/unicore32/include/asm/uaccess.h:276:
++#define __put_user_err(x, ptr, err)					\
++do {									\
++	unsigned long __pu_addr = (unsigned long)(ptr);			\
++	__typeof__(*(ptr)) __pu_val = (x);				\
++	__chk_user_ptr(ptr);						\
++	switch (sizeof(*(ptr))) {					\
++	case 1:								\
++		__put_user_asm_byte(__pu_val, __pu_addr, err);		\
++		break;							\
++	case 2:								\
++		__put_user_asm_half(__pu_val, __pu_addr, err);		\
++		break;							\
++	case 4:								\
++		__put_user_asm_word(__pu_val, __pu_addr, err);		\
++		break;							\
++	case 8:								\
++		__put_user_asm_dword(__pu_val, __pu_addr, err);		\
++		break;							\
++	default:							\
++		__put_user_bad();					\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'err' - possible side-effects?
+#325: FILE: arch/unicore32/include/asm/uaccess.h:276:
++#define __put_user_err(x, ptr, err)					\
++do {									\
++	unsigned long __pu_addr = (unsigned long)(ptr);			\
++	__typeof__(*(ptr)) __pu_val = (x);				\
++	__chk_user_ptr(ptr);						\
++	switch (sizeof(*(ptr))) {					\
++	case 1:								\
++		__put_user_asm_byte(__pu_val, __pu_addr, err);		\
++		break;							\
++	case 2:								\
++		__put_user_asm_half(__pu_val, __pu_addr, err);		\
++		break;							\
++	case 4:								\
++		__put_user_asm_word(__pu_val, __pu_addr, err);		\
++		break;							\
++	case 8:								\
++		__put_user_asm_dword(__pu_val, __pu_addr, err);		\
++		break;							\
++	default:							\
++		__put_user_bad();					\
++	}								\
++} while (0)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#348: FILE: arch/unicore32/include/asm/uaccess.h:299:
++#define __put_user_asm_byte(x, __pu_addr, err)			\
++	__asm__ __volatile__(					\
++	"1:	stb.u	%1,[%2]\n"				\
++	"2:\n"							\
++	"	.pushsection .fixup,\"ax\"\n"			\
++	"	.align	2\n"					\
++	"3:	mov	%0, %3\n"				\
++	"	b	2b\n"					\
++	"	.popsection\n"					\
++	"	.pushsection __ex_table,\"a\"\n"			\
++	"	.align	3\n"					\
++	"	.long	1b, 3b\n"				\
++	"	.popsection"					\
++	: "+r" (err)						\
++	: "r" (x), "r" (__pu_addr), "i" (-EFAULT)		\
++	: "cc")
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__pu_addr' - possible side-effects?
+#365: FILE: arch/unicore32/include/asm/uaccess.h:316:
++#define __put_user_asm_half(x, __pu_addr, err)			\
++({								\
++	unsigned long __temp = (unsigned long)(x);		\
++	__put_user_asm_byte(__temp, __pu_addr, err);		\
++	__put_user_asm_byte(__temp >> 8, __pu_addr + 1, err);	\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'err' - possible side-effects?
+#365: FILE: arch/unicore32/include/asm/uaccess.h:316:
++#define __put_user_asm_half(x, __pu_addr, err)			\
++({								\
++	unsigned long __temp = (unsigned long)(x);		\
++	__put_user_asm_byte(__temp, __pu_addr, err);		\
++	__put_user_asm_byte(__temp >> 8, __pu_addr + 1, err);	\
++})
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#372: FILE: arch/unicore32/include/asm/uaccess.h:323:
++#define __put_user_asm_word(x, __pu_addr, err)			\
++	__asm__ __volatile__(					\
++	"1:	stw.u	%1,[%2]\n"				\
++	"2:\n"							\
++	"	.pushsection .fixup,\"ax\"\n"			\
++	"	.align	2\n"					\
++	"3:	mov	%0, %3\n"				\
++	"	b	2b\n"					\
++	"	.popsection\n"					\
++	"	.pushsection __ex_table,\"a\"\n"			\
++	"	.align	3\n"					\
++	"	.long	1b, 3b\n"				\
++	"	.popsection"					\
++	: "+r" (err)						\
++	: "r" (x), "r" (__pu_addr), "i" (-EFAULT)		\
++	: "cc")
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#392: FILE: arch/unicore32/include/asm/uaccess.h:343:
++#define __put_user_asm_dword(x, __pu_addr, err)			\
++	__asm__ __volatile__(					\
++	"1:	stw.u	" __reg_oper1 ", [%1], #4\n"		\
++	"2:	stw.u	" __reg_oper0 ", [%1]\n"		\
++	"3:\n"							\
++	"	.pushsection .fixup,\"ax\"\n"			\
++	"	.align	2\n"					\
++	"4:	mov	%0, %3\n"				\
++	"	b	3b\n"					\
++	"	.popsection\n"					\
++	"	.pushsection __ex_table,\"a\"\n"			\
++	"	.align	3\n"					\
++	"	.long	1b, 4b\n"				\
++	"	.long	2b, 4b\n"				\
++	"	.popsection"					\
++	: "+r" (err), "+r" (__pu_addr)				\
++	: "r" (x), "i" (-EFAULT)				\
++	: "cc")
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#411: FILE: arch/unicore32/include/asm/uaccess.h:362:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#460: FILE: arch/unicore32/include/asm/uaccess.h:411:
++	long res = -EFAULT;
++	if (access_ok(VERIFY_READ, src, 1))
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#485: FILE: arch/unicore32/lib/clear_user.S:1:
++/*
+
+WARNING:EMBEDDED_FILENAME: It's generally not useful to have the filename in the file
+#486: FILE: arch/unicore32/lib/clear_user.S:2:
++ * linux/arch/unicore32/lib/clear_user.S
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#550: FILE: arch/unicore32/lib/copy_from_user.S:1:
++/*
+
+WARNING:EMBEDDED_FILENAME: It's generally not useful to have the filename in the file
+#551: FILE: arch/unicore32/lib/copy_from_user.S:2:
++ * linux/arch/unicore32/lib/copy_from_user.S
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#663: FILE: arch/unicore32/lib/copy_page.S:1:
++/*
+
+WARNING:EMBEDDED_FILENAME: It's generally not useful to have the filename in the file
+#664: FILE: arch/unicore32/lib/copy_page.S:2:
++ * linux/arch/unicore32/lib/copy_page.S
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#708: FILE: arch/unicore32/lib/copy_template.S:1:
++/*
+
+WARNING:EMBEDDED_FILENAME: It's generally not useful to have the filename in the file
+#709: FILE: arch/unicore32/lib/copy_template.S:2:
++ * linux/arch/unicore32/lib/copy_template.S
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#928: FILE: arch/unicore32/lib/copy_to_user.S:1:
++/*
+
+WARNING:EMBEDDED_FILENAME: It's generally not useful to have the filename in the file
+#929: FILE: arch/unicore32/lib/copy_to_user.S:2:
++ * linux/arch/unicore32/lib/copy_to_user.S
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1031: FILE: arch/unicore32/lib/getuser.S:1:
++/*
+
+WARNING:EMBEDDED_FILENAME: It's generally not useful to have the filename in the file
+#1032: FILE: arch/unicore32/lib/getuser.S:2:
++ * linux/arch/unicore32/lib/getuser.S
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1102: FILE: arch/unicore32/lib/putuser.S:1:
++/*
+
+WARNING:EMBEDDED_FILENAME: It's generally not useful to have the filename in the file
+#1103: FILE: arch/unicore32/lib/putuser.S:2:
++ * linux/arch/unicore32/lib/putuser.S
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1181: FILE: arch/unicore32/lib/strncpy_from_user.S:1:
++/*
+
+WARNING:EMBEDDED_FILENAME: It's generally not useful to have the filename in the file
+#1182: FILE: arch/unicore32/lib/strncpy_from_user.S:2:
++ * linux/arch/unicore32/lib/strncpy_from_user.S
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1232: FILE: arch/unicore32/lib/strnlen_user.S:1:
++/*
+
+WARNING:EMBEDDED_FILENAME: It's generally not useful to have the filename in the file
+#1233: FILE: arch/unicore32/lib/strnlen_user.S:2:
++ * linux/arch/unicore32/lib/strnlen_user.S
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000335018.commit.50c234c910ddd03a627257cc11704614c0619761 total: 7 errors, 32 warnings, 24 checks, 1170 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000335018.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

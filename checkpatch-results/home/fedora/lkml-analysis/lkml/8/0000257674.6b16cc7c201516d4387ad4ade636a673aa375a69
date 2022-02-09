@@ -1,0 +1,78 @@
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*priv->msi_perm)...) over kmalloc(sizeof(struct perm_bits)...)
+#1147: FILE: drivers/vfio/pci/vfio_pci_config.c:1201:
++	priv->msi_perm = kmalloc(sizeof(struct perm_bits), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 25)
+#1392: FILE: drivers/vfio/pci/vfio_pci_config.c:1778:
++	for (i = 1; (pos + i) % 4 && priv->pci_config_map[pos + i] == cap; i++)
+ 		/* nop */;
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#1479: FILE: drivers/vfio/pci/vfio_pci_igd.c:126:
++	size = count = min(count, (size_t)(priv->region[i].size - pos));
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1565: FILE: drivers/vfio/pci/vfio_pci_intrs.c:99:
++		if (priv->pci_2_3) {
+[...]
+ 		} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*priv->ctx)...) over kzalloc(sizeof(struct vfio_pci_irq_ctx)...)
+#1624: FILE: drivers/vfio/pci/vfio_pci_intrs.c:156:
++	priv->ctx = kzalloc(sizeof(struct vfio_pci_irq_ctx), GFP_KERNEL);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#2079: FILE: drivers/vfio/pci/vfio_pci_private.h:124:
+ };
++#define VDEV_TO_PRIV(p) container_of((p), struct vfio_pci_device_private, vdev)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000257674.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 1 warnings, 5 checks, 1998 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000257674.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

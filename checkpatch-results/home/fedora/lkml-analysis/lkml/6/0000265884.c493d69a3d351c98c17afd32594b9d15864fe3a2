@@ -1,0 +1,68 @@
+WARNING:TYPO_SPELLING: 'alot' may be misspelled - perhaps 'a lot'?
+#47: 
+alot for the high frequency irq enable/disable tracepoints.
+^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'tp' - possible side-effects?
+#113: FILE: include/linux/tracepoint.h:136:
++#define __DO_TRACE(tp, proto, args, cond, preempt_on)			\
+ 	do {								\
+ 		struct tracepoint_func *it_func_ptr;			\
+ 		void *it_func;						\
+ 		void *__data;						\
++		int __maybe_unused idx = 0;				\
+ 									\
+ 		if (!(cond))						\
+ 			return;						\
++		if (preempt_on) {					\
++			WARN_ON_ONCE(in_nmi()); /* no srcu from nmi */	\
++			idx = srcu_read_lock(&tracepoint_srcu);         \
++			it_func_ptr = srcu_dereference((tp)->funcs,	\
++						&tracepoint_srcu);	\
++		} else {						\
++			rcu_read_lock_sched_notrace();			\
++			it_func_ptr =					\
++				rcu_dereference_sched((tp)->funcs);	\
++		}							\
++									\
+ 		if (it_func_ptr) {					\
+ 			do {						\
+ 				it_func = (it_func_ptr)->func;		\
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#113: FILE: include/linux/tracepoint.h:136:
++#define __DO_TRACE(tp, proto, args, cond, preempt_on)			\
+ 	do {								\
+ 		struct tracepoint_func *it_func_ptr;			\
+ 		void *it_func;						\
+ 		void *__data;						\
++		int __maybe_unused idx = 0;				\
+ 									\
+ 		if (!(cond))						\
+ 			return;						\
++		if (preempt_on) {					\
++			WARN_ON_ONCE(in_nmi()); /* no srcu from nmi */	\
++			idx = srcu_read_lock(&tracepoint_srcu);         \
++			it_func_ptr = srcu_dereference((tp)->funcs,	\
++						&tracepoint_srcu);	\
++		} else {						\
++			rcu_read_lock_sched_notrace();			\
++			it_func_ptr =					\
++				rcu_dereference_sched((tp)->funcs);	\
++		}							\
++									\
+ 		if (it_func_ptr) {					\
+ 			do {						\
+ 				it_func = (it_func_ptr)->func;		\
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000265884.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 0 errors, 2 warnings, 1 checks, 103 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000265884.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

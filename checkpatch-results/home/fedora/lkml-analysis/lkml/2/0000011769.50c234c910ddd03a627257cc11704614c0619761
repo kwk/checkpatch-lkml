@@ -1,0 +1,481 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#31: 
+   git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git core-rcu-for-linus
+
+WARNING:TYPO_SPELLING: 'susbsystem' may be misspelled - perhaps 'subsystem'?
+#94: 
+      context_tracking: New context tracking susbsystem
+                                             ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#1038: 
+rename from arch/x86/include/asm/rcu.h
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1046: FILE: arch/x86/include/asm/context_tracking.h:1:
++#ifndef _ASM_X86_CONTEXT_TRACKING_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1190: FILE: include/linux/context_tracking.h:1:
++#ifndef _LINUX_CONTEXT_TRACKING_H
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1196: FILE: include/linux/context_tracking.h:7:
++extern void user_enter(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1197: FILE: include/linux/context_tracking.h:8:
++extern void user_exit(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1198: FILE: include/linux/context_tracking.h:9:
++extern void context_tracking_task_switch(struct task_struct *prev,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1310: FILE: include/linux/sched.h:112:
++extern void dump_cpu_task(int cpu);
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#1335: FILE: include/linux/srcu.h:16:
+  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.$
+
+Kernel maintainers reject new instances of the GPL boilerplate paragraph
+directing people to write to the FSF for a copy of the GPL, since the
+FSF has moved in the past and may do so again.
+So do not write paragraphs about writing to the Free Software Foundation's
+mailing address.
+
+See: https://lore.kernel.org/lkml/20131006222342.GT19510@leaf/
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around name.head
+#1349: FILE: include/linux/srcu.h:45:
++#define RCU_BATCH_INIT(name) { NULL, &(name.head) }
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#1368: FILE: include/linux/srcu.h:87:
++#define __SRCU_STRUCT_INIT(name)					\
++	{								\
++		.completed = -300,					\
++		.per_cpu_ref = &name##_srcu_array,			\
++		.queue_lock = __SPIN_LOCK_UNLOCKED(name.queue_lock),	\
++		.running = false,					\
++		.batch_queue = RCU_BATCH_INIT(name.batch_queue),	\
++		.batch_check0 = RCU_BATCH_INIT(name.batch_check0),	\
++		.batch_check1 = RCU_BATCH_INIT(name.batch_check1),	\
++		.batch_done = RCU_BATCH_INIT(name.batch_done),		\
++		.work = __DELAYED_WORK_INITIALIZER(name.work, process_srcu, 0),\
++		__SRCU_DEP_MAP_INIT(name)				\
++	}
+
+WARNING:TYPO_SPELLING: 'dont't' may be misspelled - perhaps 'don't'?
+#1384: FILE: include/linux/srcu.h:103:
++ * dont't call init_srcu_struct() nor cleanup_srcu_struct() on it.
+    ^^^^^^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#1386: FILE: include/linux/srcu.h:105:
++#define DEFINE_SRCU(name)						\
++	static DEFINE_PER_CPU(struct srcu_struct_array, name##_srcu_array);\
++	struct srcu_struct name = __SRCU_STRUCT_INIT(name);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#1386: FILE: include/linux/srcu.h:105:
++#define DEFINE_SRCU(name)						\
++	static DEFINE_PER_CPU(struct srcu_struct_array, name##_srcu_array);\
++	struct srcu_struct name = __SRCU_STRUCT_INIT(name);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#1390: FILE: include/linux/srcu.h:109:
++#define DEFINE_STATIC_SRCU(name)					\
++	static DEFINE_PER_CPU(struct srcu_struct_array, name##_srcu_array);\
++	static struct srcu_struct name = __SRCU_STRUCT_INIT(name);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#1390: FILE: include/linux/srcu.h:109:
++#define DEFINE_STATIC_SRCU(name)					\
++	static DEFINE_PER_CPU(struct srcu_struct_array, name##_srcu_array);\
++	static struct srcu_struct name = __SRCU_STRUCT_INIT(name);
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#1444: FILE: init/Kconfig:509:
++config CONTEXT_TRACKING_FORCE
++	bool "Force context tracking"
++	depends on CONTEXT_TRACKING
+ 	help
++	  Probe on user/kernel boundaries by default in order to
++	  Probe on user/kernel boundaries by default in order to
++	  Probe on user/kernel boundaries by default in order to
++	  Probe on user/kernel boundaries by default in order to
++	  Probe on user/kernel boundaries by default in order to
++	  Probe on user/kernel boundaries by default in order to
++	  Probe on user/kernel boundaries by default in order to
++	  Probe on user/kernel boundaries by default in order to
++	  Probe on user/kernel boundaries by default in order to
++	  Probe on user/kernel boundaries by default in order to
++	  test the features that rely on it such as userspace RCU extended
++	  quiescent states.
++	  This test is there for debugging until we have a real user like the
++	  full dynticks mode.
+ 
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1533: FILE: kernel/context_tracking.c:1:
++#include <linux/context_tracking.h>
+
+WARNING:TYPO_SPELLING: 'occuring' may be misspelled - perhaps 'occurring'?
+#1564: FILE: kernel/context_tracking.c:32:
++	 * Some contexts may involve an exception occuring in an irq,
+ 	                                          ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'occuring' may be misspelled - perhaps 'occurring'?
+#1590: FILE: kernel/context_tracking.c:58:
++	 * Some contexts may involve an exception occuring in an irq,
+ 	                                          ^^^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1609: FILE: kernel/context_tracking.c:77:
++void context_tracking_task_switch(struct task_struct *prev,
++			     struct task_struct *next)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1630: FILE: kernel/ksysfs.c:150:
++}
++static ssize_t rcu_expedited_store(struct kobject *kobj,
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1871: FILE: kernel/rcutorture.c:1372:
+ 		 "test_boost_duration=%d shutdown_secs=%d "
++		 "stall_cpu=%d stall_cpu_holdoff=%d "
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1872: FILE: kernel/rcutorture.c:1373:
++		 "stall_cpu=%d stall_cpu_holdoff=%d "
++		 "n_barrier_cbs=%d "
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'rcu_torture_onoff', this function's name, in a string
+#1901: FILE: kernel/rcutorture.c:1507:
++						 "rcu_torture_onoff task: offline %d failed: errno %d\n",
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "rdp->nxttail[RCU_DONE_TAIL]"
+#1964: FILE: kernel/rcutree.c:304:
++	       rdp->nxttail[RCU_DONE_TAIL] != NULL;
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#2110: FILE: kernel/rcutree.c:897:
++	pr_cont("(detected by %d, t=%ld jiffies, g=%lu, c=%lu, q=%lu)\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2111: FILE: kernel/rcutree.c:898:
++	pr_cont("(detected by %d, t=%ld jiffies, g=%lu, c=%lu, q=%lu)\n",
++	       smp_processor_id(), (long)(jiffies - rsp->gp_start),
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#2139: FILE: kernel/rcutree.c:930:
++	pr_cont(" (t=%lu jiffies g=%lu c=%lu q=%lu)\n",
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!rdp->nxttail[RCU_NEXT_TAIL]"
+#2289: FILE: kernel/rcutree.c:2146:
++	if (unlikely(rdp->nxttail[RCU_NEXT_TAIL] == NULL) || cpu != -1) {
+
+WARNING:DEPRECATED_API: Deprecated use of 'synchronize_sched_expedited', prefer 'synchronize_rcu_expedited' instead
+#2358: FILE: kernel/rcutree.c:2265:
++		synchronize_sched_expedited();
+
+Usage of a deprecated RCU API is detected.  It is recommended to replace
+old flavourful RCU APIs by their new vanilla-RCU counterparts.
+
+The full list of available RCU APIs can be viewed from the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/RCU/whatisRCU.html#full-list-of-rcu-apis
+
+WARNING:DEPRECATED_API: Deprecated use of 'synchronize_rcu_bh_expedited', prefer 'synchronize_rcu_expedited' instead
+#2380: FILE: kernel/rcutree.c:2292:
++		synchronize_rcu_bh_expedited();
+
+WARNING:DEPRECATED_API: Deprecated use of 'synchronize_sched', prefer 'synchronize_rcu' instead
+#2412: FILE: kernel/rcutree.c:2369:
++		synchronize_sched();
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2620: FILE: kernel/rcutree.h:387:
++	void (*call_remote)(struct rcu_head *head,
++		     void (*func)(struct rcu_head *head));
+
+WARNING:MISPLACED_INIT: __initdata should be placed after nocb_buf[NR_CPUS * 5]
+#2730: FILE: kernel/rcutree_plugin.h:45:
++static char __initdata nocb_buf[NR_CPUS * 5];
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#2862: FILE: kernel/rcutree_plugin.h:2151:
++
++
+
+CHECK:UNDOCUMENTED_SETUP: __setup appears un-documented -- check Documentation/admin-guide/kernel-parameters.txt
+#2871: FILE: kernel/rcutree_plugin.h:2160:
++__setup("rcu_nocbs=", rcu_nocb_setup);
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#2917: FILE: kernel/rcutree_plugin.h:2206:
++	return;
++}
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#2931: FILE: kernel/rcutree_plugin.h:2220:
++{
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "rsp->orphan_donelist"
+#2955: FILE: kernel/rcutree_plugin.h:2244:
++	if (rsp->orphan_donelist != NULL) {
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#2958: FILE: kernel/rcutree_plugin.h:2247:
++		ql = qll = 0;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "rsp->orphan_nxtlist"
+#2962: FILE: kernel/rcutree_plugin.h:2251:
++	if (rsp->orphan_nxtlist != NULL) {
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#2965: FILE: kernel/rcutree_plugin.h:2254:
++		ql = qll = 0;
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#3053: FILE: kernel/rcutree_plugin.h:2342:
++}
++static void call_rcu_bh_remote(struct rcu_head *rhp,
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#3058: FILE: kernel/rcutree_plugin.h:2347:
++}
++static void call_rcu_sched_remote(struct rcu_head *rhp,
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#3101: FILE: kernel/rcutree_plugin.h:2390:
++		c = cl = 0;
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!next"
+#3105: FILE: kernel/rcutree_plugin.h:2394:
++			while (next == NULL && &list->next != tail) {
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!rcu_nocb_mask"
+#3139: FILE: kernel/rcutree_plugin.h:2428:
++	if (rcu_nocb_mask == NULL)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#3144: FILE: kernel/rcutree_plugin.h:2433:
++		BUG_ON(IS_ERR(t));
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!rcu_nocb_mask"
+#3152: FILE: kernel/rcutree_plugin.h:2441:
++	if (rcu_nocb_mask == NULL ||
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3221: FILE: kernel/rcutree_trace.c:52:
++static int r_open(struct inode *inode, struct file *file,
++					const struct seq_operations *op)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3225: FILE: kernel/rcutree_trace.c:55:
++	int ret = seq_open(file, op);
++	if (!ret) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3227: FILE: kernel/rcutree_trace.c:57:
++		struct seq_file *m = (struct seq_file *)file->private_data;
++		m->private = inode->i_private;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3259: FILE: kernel/rcutree_trace.c:84:
++	struct rcu_state *rsp = (struct rcu_state *)m->private;
++	seq_printf(m, "bcc: %d nbd: %lu\n",
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3504: FILE: kernel/rcutree_trace.c:297:
++	struct rcu_state *rsp = (struct rcu_state *)m->private;
++	print_one_rcu_state(m, rsp);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3554: FILE: kernel/rcutree_trace.c:339:
++	struct rcu_state *rsp = (struct rcu_state *)m->private;
++	show_one_rcugp(m, rsp);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3663: FILE: kernel/rcutree_trace.c:442:
++		retval = debugfs_create_file("rcudata", 0444,
++				rspdir, rsp, &rcudata_fops);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3668: FILE: kernel/rcutree_trace.c:447:
++		retval = debugfs_create_file("rcuexp", 0444,
++				rspdir, rsp, &rcuexp_fops);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3673: FILE: kernel/rcutree_trace.c:452:
++		retval = debugfs_create_file("rcu_pending", 0444,
++				rspdir, rsp, &rcu_pending_fops);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3678: FILE: kernel/rcutree_trace.c:457:
++		retval = debugfs_create_file("rcubarrier", 0444,
++				rspdir, rsp, &rcubarrier_fops);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3688: FILE: kernel/rcutree_trace.c:464:
++			retval = debugfs_create_file("rcuboost", 0444,
++				rspdir, NULL, &rcu_node_boost_fops);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3699: FILE: kernel/rcutree_trace.c:471:
++		retval = debugfs_create_file("rcugp", 0444,
++				rspdir, rsp, &rcugp_fops);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3708: FILE: kernel/rcutree_trace.c:476:
++		retval = debugfs_create_file("rcuhier", 0444,
++				rspdir, rsp, &rcuhier_fops);
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#3803: FILE: kernel/srcu.c:16:
+  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.$
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000011769.commit.50c234c910ddd03a627257cc11704614c0619761 total: 2 errors, 28 warnings, 35 checks, 3354 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000011769.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

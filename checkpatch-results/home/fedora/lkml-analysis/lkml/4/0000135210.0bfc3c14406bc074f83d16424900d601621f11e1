@@ -1,0 +1,179 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#74: 
+__SC_COMPAT_CAST for s390 is too specific due to 31-bit pointer length, so it's
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 't' - possible side-effects?
+#114: FILE: arch/s390/include/asm/compat.h:15:
++#define __SC_COMPAT_CAST(t, a)						\
++({									\
++	long __ReS = a;							\
++									\
++	BUILD_BUG_ON((sizeof(t) > 4) && !__TYPE_IS_L(t) &&		\
++		     !__TYPE_IS_UL(t) && !__TYPE_IS_PTR(t));		\
++	if (__TYPE_IS_L(t))						\
++		__ReS = (s32)a;						\
++	if (__TYPE_IS_UL(t))						\
++		__ReS = (u32)a;						\
++	if (__TYPE_IS_PTR(t))						\
++		__ReS = a & 0x7fffffff;					\
++	(t)__ReS;							\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'a' - possible side-effects?
+#114: FILE: arch/s390/include/asm/compat.h:15:
++#define __SC_COMPAT_CAST(t, a)						\
++({									\
++	long __ReS = a;							\
++									\
++	BUILD_BUG_ON((sizeof(t) > 4) && !__TYPE_IS_L(t) &&		\
++		     !__TYPE_IS_UL(t) && !__TYPE_IS_PTR(t));		\
++	if (__TYPE_IS_L(t))						\
++		__ReS = (s32)a;						\
++	if (__TYPE_IS_UL(t))						\
++		__ReS = (u32)a;						\
++	if (__TYPE_IS_PTR(t))						\
++		__ReS = a & 0x7fffffff;					\
++	(t)__ReS;							\
++})
+
+CHECK:SPACING: spaces required around that '?' (ctx:VxV)
+#203: FILE: include/linux/compat.h:32:
++#define __TYPE_IS_PTR(t) (!__builtin_types_compatible_p(typeof(0?(t)0:0ULL), u64))
+                                                                 ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces required around that ':' (ctx:VxV)
+#203: FILE: include/linux/compat.h:32:
++#define __TYPE_IS_PTR(t) (!__builtin_types_compatible_p(typeof(0?(t)0:0ULL), u64))
+                                                                      ^
+
+CHECK:CAMELCASE: Avoid CamelCase: <COMPAT_SYSCALL_WRAPx>
+#216: FILE: include/linux/compat.h:728:
++#define COMPAT_SYSCALL_WRAP1(name, ...) COMPAT_SYSCALL_WRAPx(1, _##name, __VA_ARGS__)
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#224: FILE: include/linux/compat.h:736:
++#define __SC_COMPAT_TYPE(t, a) \
++	__typeof(__builtin_choose_expr(sizeof(t) > 4, 0L, (t)0)) a
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 't' - possible side-effects?
+#229: FILE: include/linux/compat.h:741:
++#define __SC_COMPAT_CAST(t, a) ({					\
++	BUILD_BUG_ON((sizeof(t) > 4) && !__TYPE_IS_L(t) &&		\
++		     !__TYPE_IS_UL(t) && !__TYPE_IS_PTR(t));		\
++	((t) ((t)(-1) < 0 ? (s64)(s32)(a) : (u64)(u32)(a)));		\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'a' - possible side-effects?
+#229: FILE: include/linux/compat.h:741:
++#define __SC_COMPAT_CAST(t, a) ({					\
++	BUILD_BUG_ON((sizeof(t) > 4) && !__TYPE_IS_L(t) &&		\
++		     !__TYPE_IS_UL(t) && !__TYPE_IS_PTR(t));		\
++	((t) ((t)(-1) < 0 ? (s64)(s32)(a) : (u64)(u32)(a)));		\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#249: FILE: include/linux/compat.h:761:
++#define COMPAT_SYSCALL_WRAPx(x, name, ...)						\
++asmlinkage long sys##name(__MAP(x,__SC_DECL,__VA_ARGS__));				\
++asmlinkage long compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))			\
++		__attribute__((alias(__stringify(compat_SyS##name))));			\
++asmlinkage long notrace compat_SyS##name(__MAP(x,__SC_COMPAT_TYPE,__VA_ARGS__));	\
++asmlinkage long notrace compat_SyS##name(__MAP(x,__SC_COMPAT_TYPE,__VA_ARGS__))		\
++{											\
++	return sys##name(__MAP(x,__SC_COMPAT_CAST,__VA_ARGS__));			\
++}
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#250: FILE: include/linux/compat.h:762:
++asmlinkage long sys##name(__MAP(x,__SC_DECL,__VA_ARGS__));				\
+                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#250: FILE: include/linux/compat.h:762:
++asmlinkage long sys##name(__MAP(x,__SC_DECL,__VA_ARGS__));				\
+                                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#251: FILE: include/linux/compat.h:763:
++asmlinkage long compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))			\
+                                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#251: FILE: include/linux/compat.h:763:
++asmlinkage long compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))			\
+                                                   ^
+
+CHECK:CAMELCASE: Avoid CamelCase: <compat_SyS##name>
+#252: FILE: include/linux/compat.h:764:
++		__attribute__((alias(__stringify(compat_SyS##name))));			\
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __alias(__stringify(compat_SyS##name)) over __attribute__((alias(__stringify(compat_SyS##name))))
+#252: FILE: include/linux/compat.h:764:
++		__attribute__((alias(__stringify(compat_SyS##name))));			\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#253: FILE: include/linux/compat.h:765:
++asmlinkage long notrace compat_SyS##name(__MAP(x,__SC_COMPAT_TYPE,__VA_ARGS__));	\
+                                                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#253: FILE: include/linux/compat.h:765:
++asmlinkage long notrace compat_SyS##name(__MAP(x,__SC_COMPAT_TYPE,__VA_ARGS__));	\
+                                                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#254: FILE: include/linux/compat.h:766:
++asmlinkage long notrace compat_SyS##name(__MAP(x,__SC_COMPAT_TYPE,__VA_ARGS__))		\
+                                                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#254: FILE: include/linux/compat.h:766:
++asmlinkage long notrace compat_SyS##name(__MAP(x,__SC_COMPAT_TYPE,__VA_ARGS__))		\
+                                                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#256: FILE: include/linux/compat.h:768:
++	return sys##name(__MAP(x,__SC_COMPAT_CAST,__VA_ARGS__));			\
+ 	                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#256: FILE: include/linux/compat.h:768:
++	return sys##name(__MAP(x,__SC_COMPAT_CAST,__VA_ARGS__));			\
+ 	                                         ^
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#332: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#337: FILE: include/linux/syscalls_structs.h:1:
++#ifndef _LINUX_SYSCALL_STRUCTS_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000135210.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 11 errors, 4 warnings, 9 checks, 281 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000135210.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,173 @@
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#83: FILE: include/linux/syscalls.h:193:
++#define __SYSCALL_DEFINE0(linkage, ret, sname)			\
++	__SYSCALL_TRACE0(linkage, ret, sname)			\
++	linkage ret sys_##sname(void)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'linkage' - possible side-effects?
+#83: FILE: include/linux/syscalls.h:193:
++#define __SYSCALL_DEFINE0(linkage, ret, sname)			\
++	__SYSCALL_TRACE0(linkage, ret, sname)			\
++	linkage ret sys_##sname(void)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ret' - possible side-effects?
+#83: FILE: include/linux/syscalls.h:193:
++#define __SYSCALL_DEFINE0(linkage, ret, sname)			\
++	__SYSCALL_TRACE0(linkage, ret, sname)			\
++	linkage ret sys_##sname(void)
+
+CHECK:CAMELCASE: Avoid CamelCase: <__SYSCALL_DEFINEx>
+#95: FILE: include/linux/syscalls.h:221:
++	__SYSCALL_DEFINEx(asmlinkage, long, x, sname, __VA_ARGS__)
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:CAMELCASE: Avoid CamelCase: <__SYSCALL_TRACEx>
+#97: FILE: include/linux/syscalls.h:223:
++#define __SYSCALL_TRACEx(linkage, ret, x, sname, ...)	\
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#97: FILE: include/linux/syscalls.h:223:
++#define __SYSCALL_TRACEx(linkage, ret, x, sname, ...)	\
+ 	static const char *types_##sname[] = {			\
+ 		__SC_STR_TDECL##x(__VA_ARGS__)			\
+ 	};							\
+ 	static const char *args_##sname[] = {			\
+ 		__SC_STR_ADECL##x(__VA_ARGS__)			\
+ 	};							\
++	SYSCALL_METADATA(sname, x);				
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#106: FILE: include/linux/syscalls.h:230:
++^ISYSCALL_METADATA(sname, x);^I^I^I^I$
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#128: FILE: include/linux/syscalls.h:245:
++#define __SYSCALL_DEFINEx(linkage, ret, x, name, ...)			\
++	__SYSCALL_TRACEx(linkage, ret, x, name, __VA_ARGS__)		\
++	linkage ret sys##name(__SC_DECL##x(__VA_ARGS__));		\
++	static inline ret SYSC##name(__SC_DECL##x(__VA_ARGS__));	\
++	linkage ret SyS##name(__SC_LONG##x(__VA_ARGS__))		\
+ 	{								\
+ 		__SC_TEST##x(__VA_ARGS__);				\
++		return (ret) SYSC##name(__SC_CAST##x(__VA_ARGS__));	\
+ 	}								\
+ 	SYSCALL_ALIAS(sys##name, SyS##name);				\
++	static inline ret SYSC##name(__SC_DECL##x(__VA_ARGS__))
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'linkage' - possible side-effects?
+#128: FILE: include/linux/syscalls.h:245:
++#define __SYSCALL_DEFINEx(linkage, ret, x, name, ...)			\
++	__SYSCALL_TRACEx(linkage, ret, x, name, __VA_ARGS__)		\
++	linkage ret sys##name(__SC_DECL##x(__VA_ARGS__));		\
++	static inline ret SYSC##name(__SC_DECL##x(__VA_ARGS__));	\
++	linkage ret SyS##name(__SC_LONG##x(__VA_ARGS__))		\
+ 	{								\
+ 		__SC_TEST##x(__VA_ARGS__);				\
++		return (ret) SYSC##name(__SC_CAST##x(__VA_ARGS__));	\
+ 	}								\
+ 	SYSCALL_ALIAS(sys##name, SyS##name);				\
++	static inline ret SYSC##name(__SC_DECL##x(__VA_ARGS__))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ret' - possible side-effects?
+#128: FILE: include/linux/syscalls.h:245:
++#define __SYSCALL_DEFINEx(linkage, ret, x, name, ...)			\
++	__SYSCALL_TRACEx(linkage, ret, x, name, __VA_ARGS__)		\
++	linkage ret sys##name(__SC_DECL##x(__VA_ARGS__));		\
++	static inline ret SYSC##name(__SC_DECL##x(__VA_ARGS__));	\
++	linkage ret SyS##name(__SC_LONG##x(__VA_ARGS__))		\
+ 	{								\
+ 		__SC_TEST##x(__VA_ARGS__);				\
++		return (ret) SYSC##name(__SC_CAST##x(__VA_ARGS__));	\
+ 	}								\
+ 	SYSCALL_ALIAS(sys##name, SyS##name);				\
++	static inline ret SYSC##name(__SC_DECL##x(__VA_ARGS__))
+
+CHECK:CAMELCASE: Avoid CamelCase: <SyS##name>
+#132: FILE: include/linux/syscalls.h:249:
++	linkage ret SyS##name(__SC_LONG##x(__VA_ARGS__))		\
+
+CHECK:SPACING: No space is necessary after a cast
+#136: FILE: include/linux/syscalls.h:252:
++		return (ret) SYSC##name(__SC_CAST##x(__VA_ARGS__));	\
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'linkage' - possible side-effects?
+#149: FILE: include/linux/syscalls.h:261:
++#define __SYSCALL_DEFINE(linkage, ret, name)				\
++	__SYSCALL_TRACE0(linkage, ret, name)				\
++	linkage ret sys_##name
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ret' - possible side-effects?
+#149: FILE: include/linux/syscalls.h:261:
++#define __SYSCALL_DEFINE(linkage, ret, name)				\
++	__SYSCALL_TRACE0(linkage, ret, name)				\
++	linkage ret sys_##name
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'linkage' - possible side-effects?
+#153: FILE: include/linux/syscalls.h:265:
++#define __SYSCALL_DEFINEx(linkage, ret, x, name, ...)			\
++	__SYSCALL_TRACEx(linkage, ret, x, name, __VA_ARGS__)		\
++	linkage ret sys##name(__SC_DECL##x(__VA_ARGS__))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ret' - possible side-effects?
+#153: FILE: include/linux/syscalls.h:265:
++#define __SYSCALL_DEFINEx(linkage, ret, x, name, ...)			\
++	__SYSCALL_TRACEx(linkage, ret, x, name, __VA_ARGS__)		\
++	linkage ret sys##name(__SC_DECL##x(__VA_ARGS__))
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000285581.commit.50c234c910ddd03a627257cc11704614c0619761 total: 3 errors, 1 warnings, 12 checks, 94 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000285581.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

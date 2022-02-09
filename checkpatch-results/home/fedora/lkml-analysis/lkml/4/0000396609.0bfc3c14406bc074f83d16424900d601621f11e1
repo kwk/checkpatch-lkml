@@ -1,0 +1,193 @@
+WARNING:TYPO_SPELLING: 'allocaing' may be misspelled - perhaps 'allocating'?
+#36: 
+should be provided for allocaing and freeing. DEFINE_EKPROBE_ALLOC_OPS
+                       ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'v' - possible side-effects?
+#57: FILE: include/linux/kprobes.h:277:
++#define __ek_in_range(v, s, e)	(((v) >= (s)) && ((v) < (e)))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#61: FILE: include/linux/kprobes.h:281:
++#define __ek_elem_idx(v, s, e)	(__ek_buf_sz(s, v) / __ek_elem_sz_b(s, e))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#62: FILE: include/linux/kprobes.h:282:
++#define __ek_get_elem(i, s, e)	(&((s)[__ek_elem_sz(s, e) * (i)]))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__t' - possible side-effects?
+#63: FILE: include/linux/kprobes.h:283:
++#define __DEFINE_EKPROBE_ALLOC_OPS(__t, __name)				\
++static inline __t *__ek_alloc_##__name(__t *__s, __t *__e, unsigned long *__b)\
++{									\
++	int __i = find_next_zero_bit(__b, NR_EARLY_KPROBES_SLOTS, 0);	\
++	if (__i >= NR_EARLY_KPROBES_SLOTS)				\
++		return NULL;						\
++	set_bit(__i, __b);						\
++	return __ek_get_elem(__i, __s, __e);				\
++}									\
++static inline int __ek_free_##__name(__t *__v, __t *__s, __t *__e, unsigned long *__b)	\
++{									\
++	if (!__ek_in_range(__v, __s, __e))				\
++		return 0;						\
++	clear_bit(__ek_elem_idx(__v, __s, __e), __b);			\
++	return 1;							\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '__t' may be better as '(__t)' to avoid precedence issues
+#63: FILE: include/linux/kprobes.h:283:
++#define __DEFINE_EKPROBE_ALLOC_OPS(__t, __name)				\
++static inline __t *__ek_alloc_##__name(__t *__s, __t *__e, unsigned long *__b)\
++{									\
++	int __i = find_next_zero_bit(__b, NR_EARLY_KPROBES_SLOTS, 0);	\
++	if (__i >= NR_EARLY_KPROBES_SLOTS)				\
++		return NULL;						\
++	set_bit(__i, __b);						\
++	return __ek_get_elem(__i, __s, __e);				\
++}									\
++static inline int __ek_free_##__name(__t *__v, __t *__s, __t *__e, unsigned long *__b)	\
++{									\
++	if (!__ek_in_range(__v, __s, __e))				\
++		return 0;						\
++	clear_bit(__ek_elem_idx(__v, __s, __e), __b);			\
++	return 1;							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__static' - possible side-effects?
+#80: FILE: include/linux/kprobes.h:300:
++#define __DEFINE_EKPROBE_AREA(__t, __name, __static)			\
++__static __t __ek_##__name##_slots[NR_EARLY_KPROBES_SLOTS];		\
++__static unsigned long __ek_##__name##_bitmap[EARLY_KPROBES_BITMAP_SZ];
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#80: FILE: include/linux/kprobes.h:300:
++#define __DEFINE_EKPROBE_AREA(__t, __name, __static)			\
++__static __t __ek_##__name##_slots[NR_EARLY_KPROBES_SLOTS];		\
++__static unsigned long __ek_##__name##_bitmap[EARLY_KPROBES_BITMAP_SZ];
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__t' - possible side-effects?
+#84: FILE: include/linux/kprobes.h:304:
++#define DEFINE_EKPROBE_ALLOC_OPS(__t, __name, __static)			\
++__DEFINE_EKPROBE_AREA(__t, __name, __static)				\
++__DEFINE_EKPROBE_ALLOC_OPS(__t, __name)					\
++static inline __t *ek_alloc_##__name(void)				\
++{									\
++	return __ek_alloc_##__name(&((__ek_##__name##_slots)[0]),	\
++			&((__ek_##__name##_slots)[NR_EARLY_KPROBES_SLOTS]),\
++			(__ek_##__name##_bitmap));			\
++}									\
++static inline int ek_free_##__name(__t *__s)				\
++{									\
++	return __ek_free_##__name(__s, &((__ek_##__name##_slots)[0]),	\
++			&((__ek_##__name##_slots)[NR_EARLY_KPROBES_SLOTS]),\
++			(__ek_##__name##_bitmap));			\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__name' - possible side-effects?
+#84: FILE: include/linux/kprobes.h:304:
++#define DEFINE_EKPROBE_ALLOC_OPS(__t, __name, __static)			\
++__DEFINE_EKPROBE_AREA(__t, __name, __static)				\
++__DEFINE_EKPROBE_ALLOC_OPS(__t, __name)					\
++static inline __t *ek_alloc_##__name(void)				\
++{									\
++	return __ek_alloc_##__name(&((__ek_##__name##_slots)[0]),	\
++			&((__ek_##__name##_slots)[NR_EARLY_KPROBES_SLOTS]),\
++			(__ek_##__name##_bitmap));			\
++}									\
++static inline int ek_free_##__name(__t *__s)				\
++{									\
++	return __ek_free_##__name(__s, &((__ek_##__name##_slots)[0]),	\
++			&((__ek_##__name##_slots)[NR_EARLY_KPROBES_SLOTS]),\
++			(__ek_##__name##_bitmap));			\
++}
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#100: FILE: include/linux/kprobes.h:320:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__t' - possible side-effects?
+#102: FILE: include/linux/kprobes.h:322:
++#define __DEFINE_EKPROBE_ALLOC_OPS(__t, __name)				\
++static inline __t *__ek_alloc_##__name(__t *__s, __t *__e, unsigned long *__b)\
++{									\
++	return NULL;							\
++}									\
++static inline int __ek_free_##__name(__t *__v, __t *__s, __t *__e, unsigned long *__b)\
++{									\
++	return 0;							\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '__t' may be better as '(__t)' to avoid precedence issues
+#102: FILE: include/linux/kprobes.h:322:
++#define __DEFINE_EKPROBE_ALLOC_OPS(__t, __name)				\
++static inline __t *__ek_alloc_##__name(__t *__s, __t *__e, unsigned long *__b)\
++{									\
++	return NULL;							\
++}									\
++static inline int __ek_free_##__name(__t *__v, __t *__s, __t *__e, unsigned long *__b)\
++{									\
++	return 0;							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__static' - possible side-effects?
+#112: FILE: include/linux/kprobes.h:332:
++#define __DEFINE_EKPROBE_AREA(__t, __name, __static)			\
++__static __t __ek_##__name##_slots[0];					\
++__static unsigned long __ek_##__name##_bitmap[0];
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#112: FILE: include/linux/kprobes.h:332:
++#define __DEFINE_EKPROBE_AREA(__t, __name, __static)			\
++__static __t __ek_##__name##_slots[0];					\
++__static unsigned long __ek_##__name##_bitmap[0];
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__t' - possible side-effects?
+#116: FILE: include/linux/kprobes.h:336:
++#define DEFINE_EKPROBE_ALLOC_OPS(__t, __name, __static)			\
++__DEFINE_EKPROBE_ALLOC_OPS(__t, __name)					\
++static inline __t *ek_alloc_##__name(void)				\
++{									\
++	return NULL;							\
++}									\
++static inline int ek_free_##__name(__t *__s)				\
++{									\
++	return 0;							\
++}
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000396609.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 3 warnings, 13 checks, 83 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000396609.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,164 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#85: FILE: include/linux/completion.h:53:
++#define init_completion(x)				\
++do {							\
++	static struct lock_class_key __key;		\
++	lockdep_init_map_crosslock(&(x)->map,		\
++			&(x)->xlock,			\
++			"(complete)" #x,		\
++			&__key, 0);			\
++	__init_completion(x);				\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'work' - possible side-effects?
+#102: FILE: include/linux/completion.h:70:
++#define COMPLETION_INITIALIZER(work) \
++	{ 0, __WAIT_QUEUE_HEAD_INITIALIZER((work).wait), \
++	STATIC_CROSS_LOCKDEP_MAP_INIT("(complete)" #work, &(work), \
++	&(work).xlock), STATIC_CROSS_LOCK_INIT()}
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#131: FILE: include/linux/completion.h:137:
++extern void __wait_for_completion(struct completion *);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#132: FILE: include/linux/completion.h:138:
++extern void __wait_for_completion_io(struct completion *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct completion *' should also have an identifier name
+#132: FILE: include/linux/completion.h:138:
++extern void __wait_for_completion_io(struct completion *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#133: FILE: include/linux/completion.h:139:
++extern int __wait_for_completion_interruptible(struct completion *x);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#134: FILE: include/linux/completion.h:140:
++extern int __wait_for_completion_killable(struct completion *x);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#135: FILE: include/linux/completion.h:141:
++extern unsigned long __wait_for_completion_timeout(struct completion *x,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#138: FILE: include/linux/completion.h:143:
++extern unsigned long __wait_for_completion_io_timeout(struct completion *x,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#139: FILE: include/linux/completion.h:144:
++extern unsigned long __wait_for_completion_io_timeout(struct completion *x,
+ 						    unsigned long timeout);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#141: FILE: include/linux/completion.h:145:
++extern long __wait_for_completion_interruptible_timeout(
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#141: FILE: include/linux/completion.h:145:
++extern long __wait_for_completion_interruptible_timeout(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#144: FILE: include/linux/completion.h:147:
++extern long __wait_for_completion_killable_timeout(
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#144: FILE: include/linux/completion.h:147:
++extern long __wait_for_completion_killable_timeout(
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#164: FILE: include/linux/completion.h:167:
++	int ret;
++	complete_acquire(x);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#173: FILE: include/linux/completion.h:176:
++	int ret;
++	complete_acquire(x);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#180: FILE: include/linux/completion.h:183:
++static inline unsigned long wait_for_completion_timeout(struct completion *x,
++		unsigned long timeout)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#186: FILE: include/linux/completion.h:189:
++static inline unsigned long wait_for_completion_io_timeout(struct completion *x,
++		unsigned long timeout)
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#191: FILE: include/linux/completion.h:194:
++static inline long wait_for_completion_interruptible_timeout(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#197: FILE: include/linux/completion.h:200:
++static inline long wait_for_completion_killable_timeout(
+
+ERROR:INITIALISED_STATIC: do not initialise statics to 0
+#217: FILE: kernel/locking/lockdep.c:4700:
++static int xlock_might_onstack = 0;
+
+Static variables should not be initialized explicitly to zero.
+Your compiler (or rather your loader) automatically does
+it for you.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#373: FILE: kernel/sched/completion.c:216:
++__wait_for_completion_interruptible_timeout(struct completion *x,
+ 					  unsigned long timeout)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#414: FILE: kernel/sched/completion.c:255:
++__wait_for_completion_killable_timeout(struct completion *x,
+ 				     unsigned long timeout)
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#431: FILE: lib/Kconfig.debug:1009:
++config LOCKDEP_COMPLETE
++	bool "Lock debugging: allow complete to use deadlock detector"
++	select LOCKDEP_CROSSRELEASE
++	default n
++	help
++	 A deadlock caused by wait and complete can be detected by lockdep
++	 using crossrelease feature.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000035621.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 1 errors, 4 warnings, 19 checks, 364 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000035621.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

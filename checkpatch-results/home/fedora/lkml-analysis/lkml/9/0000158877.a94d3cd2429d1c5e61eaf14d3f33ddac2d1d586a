@@ -1,0 +1,102 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#119: FILE: arch/x86/include/asm/cmpxchg_32.h:65:
++#define arch_cmpxchg64(ptr, o, n)					\
++	((__typeof__(*(ptr)))__cmpxchg64((ptr), (unsigned long long)(o), \
++					 (unsigned long long)(n)))
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#122: FILE: arch/x86/include/asm/cmpxchg_32.h:68:
++#define arch_cmpxchg64_local(ptr, o, n)					\
++	((__typeof__(*(ptr)))__cmpxchg64_local((ptr), (unsigned long long)(o), \
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#122: FILE: arch/x86/include/asm/cmpxchg_32.h:68:
++#define arch_cmpxchg64_local(ptr, o, n)					\
++	((__typeof__(*(ptr)))__cmpxchg64_local((ptr), (unsigned long long)(o), \
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ptr' - possible side-effects?
+#125: FILE: arch/x86/include/asm/cmpxchg_32.h:71:
++#define __raw_try_cmpxchg64(_ptr, _pold, _new, lock)		\
++({								\
++	bool success;						\
++	__typeof__(_ptr) _old = (__typeof__(_ptr))(_pold);	\
++	__typeof__(*(_ptr)) __old = *_old;			\
++	__typeof__(*(_ptr)) __new = (_new);			\
++	asm volatile(lock "cmpxchg8b %1"			\
++		     CC_SET(z)					\
++		     : CC_OUT(z) (success),			\
++		       "+m" (*_ptr),				\
++		       "+A" (__old)				\
++		     : "b" ((unsigned int)__new),		\
++		       "c" ((unsigned int)(__new>>32))		\
++		     : "memory");				\
++	if (unlikely(!success))					\
++		*_old = __old;					\
++	likely(success);					\
++})
+
+CHECK:SPACING: spaces preferred around that '>>' (ctx:VxV)
+#137: FILE: arch/x86/include/asm/cmpxchg_32.h:83:
++		       "c" ((unsigned int)(__new>>32))		\
+ 		                                ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#147: FILE: arch/x86/include/asm/cmpxchg_32.h:93:
++#define arch_try_cmpxchg64(ptr, pold, new) ^I^I^I\$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#159: FILE: arch/x86/include/asm/cmpxchg_32.h:135:
++#define arch_try_cmpxchg64(ptr, po, n)				\
++({								\
++	bool success;						\
++	__typeof__(ptr) _old = (__typeof__(ptr))(po);		\
++	__typeof__(*(ptr)) __old = *_old;			\
++	__typeof__(*(ptr)) __new = (n);				\
++	alternative_io(LOCK_PREFIX_HERE				\
++			"call cmpxchg8b_emu",			\
++			"lock; cmpxchg8b (%%esi)" ,		\
++		       X86_FEATURE_CX8,				\
++		       "+A" (__old),				\
++		       "S" ((ptr)),				\
++		       "b" ((unsigned int)__new),		\
++		       "c" ((unsigned int)(__new>>32))		\
++		       : "memory");				\
++	success = (__old == *_old);				\
++	if (unlikely(!success))					\
++		*_old = __old;					\
++	likely(success);					\
++})
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxE)
+#167: FILE: arch/x86/include/asm/cmpxchg_32.h:143:
++			"lock; cmpxchg8b (%%esi)" ,		\
+ 			                          ^
+
+CHECK:SPACING: spaces preferred around that '>>' (ctx:VxV)
+#172: FILE: arch/x86/include/asm/cmpxchg_32.h:148:
++		       "c" ((unsigned int)(__new>>32))		\
+ 		                                ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#190: FILE: arch/x86/include/asm/cmpxchg_64.h:22:
++#define arch_try_cmpxchg64(ptr, po, n)					\
++({									\
++	BUILD_BUG_ON(sizeof(*(ptr)) != 8);				\
++	arch_try_cmpxchg((ptr), (po), (n));				\
++})
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000158877.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a total: 2 errors, 1 warnings, 7 checks, 94 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000158877.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,57 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__isa_driver' - possible side-effects?
+#56: FILE: include/linux/isa.h:48:
++#define module_isa_driver(__isa_driver, __num_isa_dev) \
++static int __init __isa_driver##_init(void) \
++{ \
++	return isa_register_driver(&(__isa_driver), __num_isa_dev); \
++} \
++module_init(__isa_driver##_init); \
++static void __exit __isa_driver##_exit(void) \
++{ \
++	isa_unregister_driver(&(__isa_driver)); \
++} \
++module_exit(__isa_driver##_exit);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#56: FILE: include/linux/isa.h:48:
++#define module_isa_driver(__isa_driver, __num_isa_dev) \
++static int __init __isa_driver##_init(void) \
++{ \
++	return isa_register_driver(&(__isa_driver), __num_isa_dev); \
++} \
++module_init(__isa_driver##_init); \
++static void __exit __isa_driver##_exit(void) \
++{ \
++	isa_unregister_driver(&(__isa_driver)); \
++} \
++module_exit(__isa_driver##_exit);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000102944.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 1 warnings, 1 checks, 25 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000102944.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

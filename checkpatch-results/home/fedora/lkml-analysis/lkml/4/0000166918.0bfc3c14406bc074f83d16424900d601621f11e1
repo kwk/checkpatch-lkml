@@ -1,0 +1,61 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__id' - possible side-effects?
+#264: FILE: drivers/thermal/tegra/soctherm.c:359:
++#define DEFINE_THERMTRIP_SIMPLE_ATTR(__name, __id)			\
++static int __name##_show(void *data, u64 *val)				\
++{									\
++	struct platform_device *pdev = data;				\
++	u32 temp;							\
++	int r;								\
++									\
++	r = thermtrip_read(pdev, __id, &temp);				\
++	if (r < 0)							\
++		return 0;						\
++	*val = temp;							\
++									\
++	return 0;							\
++}									\
++									\
++static int __name##_set(void *data, u64 val)				\
++{									\
++	struct platform_device *pdev = data;				\
++	int r;								\
++									\
++	r = thermtrip_write(pdev, __id, val);				\
++	if (r)								\
++		return r;						\
++	else								\
++		return 0;						\
++}									\
++DEFINE_SIMPLE_ATTRIBUTE(__name##_fops, __name##_show, __name##_set, "%lld\n")
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#352: FILE: drivers/thermal/tegra/soctherm.c:519:
++	file = debugfs_create_file("cpu", S_IRUGO | S_IWUSR, thermtrip_root,
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#358: FILE: drivers/thermal/tegra/soctherm.c:525:
++	file = debugfs_create_file("gpu", S_IRUGO | S_IWUSR, thermtrip_root,
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#365: FILE: drivers/thermal/tegra/soctherm.c:531:
++	file = debugfs_create_file("pll", S_IRUGO | S_IWUSR, thermtrip_root,
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000166918.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 3 warnings, 1 checks, 460 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000166918.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

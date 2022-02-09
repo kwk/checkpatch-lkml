@@ -1,0 +1,197 @@
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#72: FILE: arch/arm/include/asm/uaccess.h:126:
++#define __get_user_x(__r2, __p, __e, __l, __s)				\
+ 	   __asm__ __volatile__ (					\
+ 		__asmeq("%0", "r0") __asmeq("%1", "r2")			\
+ 		__asmeq("%3", "r1")					\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#90: FILE: arch/arm/include/asm/uaccess.h:161:
++#define __get_user_check(x, p)						\
+ 	({								\
+ 		unsigned long __limit = current_thread_info()->addr_limit - 1; \
+ 		register const typeof(*(p)) __user *__p asm("r0") = (p);\
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#112: FILE: arch/arm/include/asm/uaccess.h:210:
++#define __put_user_x(__r2, __p, __e, __l, __s)				\
+ 	   __asm__ __volatile__ (					\
+ 		__asmeq("%0", "r0") __asmeq("%2", "r2")			\
+ 		__asmeq("%3", "r1")					\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#121: FILE: arch/arm/include/asm/uaccess.h:219:
++#define __put_user_check(x, p)						\
+ 	({								\
+ 		unsigned long __limit = current_thread_info()->addr_limit - 1; \
+ 		const typeof(*(p)) __user *__tmp_p = (p);		\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#188: FILE: arch/arm/include/asm/uaccess.h:299:
++#define __get_user_err(x, ptr, err)					\
+ do {									\
+ 	unsigned long __gu_addr = (unsigned long)(ptr);			\
+ 	unsigned long __gu_val;						\
+ 	__chk_user_ptr(ptr);						\
+ 	might_fault();							\
+ 	switch (sizeof(*(ptr))) {					\
++	case 1:	__get_user_asm_byte(__gu_val, __gu_addr, err);	break;	\
++	case 2:	__get_user_asm_half(__gu_val, __gu_addr, err);	break;	\
++	case 4:	__get_user_asm_word(__gu_val, __gu_addr, err);	break;	\
+ 	default: (__gu_val) = __get_user_bad();				\
+ 	}								\
+ 	(x) = (__typeof__(*(ptr)))__gu_val;				\
+ } while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'err' - possible side-effects?
+#188: FILE: arch/arm/include/asm/uaccess.h:299:
++#define __get_user_err(x, ptr, err)					\
+ do {									\
+ 	unsigned long __gu_addr = (unsigned long)(ptr);			\
+ 	unsigned long __gu_val;						\
+ 	__chk_user_ptr(ptr);						\
+ 	might_fault();							\
+ 	switch (sizeof(*(ptr))) {					\
++	case 1:	__get_user_asm_byte(__gu_val, __gu_addr, err);	break;	\
++	case 2:	__get_user_asm_half(__gu_val, __gu_addr, err);	break;	\
++	case 4:	__get_user_asm_word(__gu_val, __gu_addr, err);	break;	\
+ 	default: (__gu_val) = __get_user_bad();				\
+ 	}								\
+ 	(x) = (__typeof__(*(ptr)))__gu_val;				\
+ } while (0)
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#198: FILE: arch/arm/include/asm/uaccess.h:306:
++	case 1:	__get_user_asm_byte(__gu_val, __gu_addr, err);	break;	\
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#199: FILE: arch/arm/include/asm/uaccess.h:307:
++	case 2:	__get_user_asm_half(__gu_val, __gu_addr, err);	break;	\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#200: FILE: arch/arm/include/asm/uaccess.h:308:
++	case 4:	__get_user_asm_word(__gu_val, __gu_addr, err);	break;	\
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#207: FILE: arch/arm/include/asm/uaccess.h:314:
++#define __get_user_asm_byte(x, addr, err)			\
+ 	__asm__ __volatile__(					\
+ 	"1:	" TUSER(ldrb) "	%1,[%2],#0\n"			\
+ 	"2:\n"							\
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#234: FILE: arch/arm/include/asm/uaccess.h:350:
++#define __get_user_asm_word(x, addr, err)			\
+ 	__asm__ __volatile__(					\
+ 	"1:	" TUSER(ldr) "	%1,[%2],#0\n"			\
+ 	"2:\n"							\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#260: FILE: arch/arm/include/asm/uaccess.h:381:
++#define __put_user_err(x, ptr, err)					\
+ do {									\
+ 	unsigned long __pu_addr = (unsigned long)(ptr);			\
+ 	__typeof__(*(ptr)) __pu_val = (x);				\
+ 	__chk_user_ptr(ptr);						\
+ 	might_fault();							\
+ 	switch (sizeof(*(ptr))) {					\
++	case 1: __put_user_asm_byte(__pu_val, __pu_addr, err);	break;	\
++	case 2: __put_user_asm_half(__pu_val, __pu_addr, err);	break;	\
++	case 4: __put_user_asm_word(__pu_val, __pu_addr, err);	break;	\
++	case 8:	__put_user_asm_dword(__pu_val, __pu_addr, err);	break;	\
+ 	default: __put_user_bad();					\
+ 	}								\
+ } while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'err' - possible side-effects?
+#260: FILE: arch/arm/include/asm/uaccess.h:381:
++#define __put_user_err(x, ptr, err)					\
+ do {									\
+ 	unsigned long __pu_addr = (unsigned long)(ptr);			\
+ 	__typeof__(*(ptr)) __pu_val = (x);				\
+ 	__chk_user_ptr(ptr);						\
+ 	might_fault();							\
+ 	switch (sizeof(*(ptr))) {					\
++	case 1: __put_user_asm_byte(__pu_val, __pu_addr, err);	break;	\
++	case 2: __put_user_asm_half(__pu_val, __pu_addr, err);	break;	\
++	case 4: __put_user_asm_word(__pu_val, __pu_addr, err);	break;	\
++	case 8:	__put_user_asm_dword(__pu_val, __pu_addr, err);	break;	\
+ 	default: __put_user_bad();					\
+ 	}								\
+ } while (0)
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#271: FILE: arch/arm/include/asm/uaccess.h:388:
++	case 1: __put_user_asm_byte(__pu_val, __pu_addr, err);	break;	\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#272: FILE: arch/arm/include/asm/uaccess.h:389:
++	case 2: __put_user_asm_half(__pu_val, __pu_addr, err);	break;	\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#273: FILE: arch/arm/include/asm/uaccess.h:390:
++	case 4: __put_user_asm_word(__pu_val, __pu_addr, err);	break;	\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#274: FILE: arch/arm/include/asm/uaccess.h:391:
++	case 8:	__put_user_asm_dword(__pu_val, __pu_addr, err);	break;	\
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#280: FILE: arch/arm/include/asm/uaccess.h:396:
++#define __put_user_asm_byte(x, __pu_addr, err)			\
+ 	__asm__ __volatile__(					\
+ 	"1:	" TUSER(strb) "	%1,[%2],#0\n"			\
+ 	"2:\n"							\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__pu_addr' - possible side-effects?
+#289: FILE: arch/arm/include/asm/uaccess.h:414:
++#define __put_user_asm_half(x, __pu_addr, err)			\
+ ({								\
+ 	unsigned long __temp = (__force unsigned long)(x);	\
+ 	__put_user_asm_byte(__temp, __pu_addr, err);		\
+ 	__put_user_asm_byte(__temp >> 8, __pu_addr + 1, err);	\
+ })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'err' - possible side-effects?
+#289: FILE: arch/arm/include/asm/uaccess.h:414:
++#define __put_user_asm_half(x, __pu_addr, err)			\
+ ({								\
+ 	unsigned long __temp = (__force unsigned long)(x);	\
+ 	__put_user_asm_byte(__temp, __pu_addr, err);		\
+ 	__put_user_asm_byte(__temp >> 8, __pu_addr + 1, err);	\
+ })
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#306: FILE: arch/arm/include/asm/uaccess.h:429:
++#define __put_user_asm_word(x, __pu_addr, err)			\
+ 	__asm__ __volatile__(					\
+ 	"1:	" TUSER(str) "	%1,[%2],#0\n"			\
+ 	"2:\n"							\
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#315: FILE: arch/arm/include/asm/uaccess.h:454:
++#define __put_user_asm_dword(x, __pu_addr, err)			\
+ 	__asm__ __volatile__(					\
+  ARM(	"1:	" TUSER(str) "	" __reg_oper1 ", [%1], #4\n"	) \
+  ARM(	"2:	" TUSER(str) "	" __reg_oper0 ", [%1]\n"	) \
+
+./tmp.djB3TWhDXa//home/fedora/lkml-analysis/lkml/3/patch.offset.0000018409.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 14 errors, 0 warnings, 8 checks, 264 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.djB3TWhDXa//home/fedora/lkml-analysis/lkml/3/patch.offset.0000018409.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

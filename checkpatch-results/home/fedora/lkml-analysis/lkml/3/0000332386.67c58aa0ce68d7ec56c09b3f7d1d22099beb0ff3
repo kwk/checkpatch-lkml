@@ -1,0 +1,994 @@
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#125: FILE: arch/tile/Kconfig:370:
++config KVM_GUEST
++	bool "Build kernel as guest for KVM"
++	default n
++	depends on TILEGX
++	select VIRTIO
++	select VIRTIO_RING
++	select VIRTIO_CONSOLE
++	---help---
++	  This will build a kernel that runs at a lower protection level
++	  than the default kernel and is suitable to run under KVM.
++
++# TILEPro kernels run at PL1; TILE-Gx runs at PL2 unless it's a KVM guest.
+ config KERNEL_PL
+ 	int "Processor protection level for kernel"
+ 	range 1 2
++	default 2 if TILEGX && !KVM_GUEST
++	default 2 if TILEGX && !KVM_GUEST
++	default 2 if TILEGX && !KVM_GUEST
++	default 1 if !TILEGX || KVM_GUEST
+ 	---help---
+ 	  Since MDE 4.2, the Tilera hypervisor runs the kernel
+ 	  at PL2 by default.  If running under an older hypervisor,
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#167: FILE: arch/tile/include/asm/io.h:46:
++extern void *generic_remap_prot(resource_size_t phys_addr, unsigned long size,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#168: FILE: arch/tile/include/asm/io.h:47:
++extern void *generic_remap_prot(resource_size_t phys_addr, unsigned long size,
++	unsigned long flags, pgprot_t prot);
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#173: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#178: FILE: arch/tile/include/asm/kvm.h:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#199: FILE: arch/tile/include/asm/kvm.h:22:
++#define KVM_EMULATE(name) [HV_SYS_##name] = kvm_emulate_hv_##name,
+
+Whitespace before opening bracket '[' is prohibited.
+There are some exceptions:
+
+1. With a type on the left::
+
+    int [] a;
+
+2. At the beginning of a line for slice initialisers::
+
+    [0...10] = 5,
+
+3. Inside a curly brace::
+
+    = { [0...10] = 5 }
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#200: FILE: arch/tile/include/asm/kvm.h:23:
++#define USER_EMULATE(name) [HV_SYS_##name] = kvm_deliver_to_user,
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#201: FILE: arch/tile/include/asm/kvm.h:24:
++#define NO_EMULATE(name) [HV_SYS_##name] = kvm_emulate_illegal,
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#202: FILE: arch/tile/include/asm/kvm.h:25:
++#define BOTH_EMULATE(name) [HV_SYS_##name] = kvm_emulate_hv_##name,
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#204: FILE: arch/tile/include/asm/kvm.h:27:
++#define USER_HCALL(name) [KVM_HCALL_##name] = kvm_deliver_to_user,
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#213: FILE: arch/tile/include/asm/kvm_host.h:1:
++/*
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#267: FILE: arch/tile/include/asm/kvm_host.h:55:
++#define FOR_EACH_GUEST_SPR(f)			\
++	f(INTERRUPT_MASK_1);			\
++	f(INTERRUPT_VECTOR_BASE_1);		\
++	f(EX_CONTEXT_1_0);			\
++	f(EX_CONTEXT_1_1);			\
++	f(SYSTEM_SAVE_1_0);			\
++	f(SYSTEM_SAVE_1_1);			\
++	f(SYSTEM_SAVE_1_2);			\
++	f(SYSTEM_SAVE_1_3);			\
++	f(INTCTRL_1_STATUS);			\
++	f(IPI_MASK_1);				\
++	f(IPI_EVENT_1);				\
++	f(SINGLE_STEP_CONTROL_1);		\
++	f(SINGLE_STEP_EN_1_1);			\
++
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'f' - possible side-effects?
+#267: FILE: arch/tile/include/asm/kvm_host.h:55:
++#define FOR_EACH_GUEST_SPR(f)			\
++	f(INTERRUPT_MASK_1);			\
++	f(INTERRUPT_VECTOR_BASE_1);		\
++	f(EX_CONTEXT_1_0);			\
++	f(EX_CONTEXT_1_1);			\
++	f(SYSTEM_SAVE_1_0);			\
++	f(SYSTEM_SAVE_1_1);			\
++	f(SYSTEM_SAVE_1_2);			\
++	f(SYSTEM_SAVE_1_3);			\
++	f(INTCTRL_1_STATUS);			\
++	f(IPI_MASK_1);				\
++	f(IPI_EVENT_1);				\
++	f(SINGLE_STEP_CONTROL_1);		\
++	f(SINGLE_STEP_EN_1_1);			\
++
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#267: FILE: arch/tile/include/asm/kvm_host.h:55:
++#define FOR_EACH_GUEST_SPR(f)			\
++	f(INTERRUPT_MASK_1);			\
++	f(INTERRUPT_VECTOR_BASE_1);		\
++	f(EX_CONTEXT_1_0);			\
++	f(EX_CONTEXT_1_1);			\
++	f(SYSTEM_SAVE_1_0);			\
++	f(SYSTEM_SAVE_1_1);			\
++	f(SYSTEM_SAVE_1_2);			\
++	f(SYSTEM_SAVE_1_3);			\
++	f(INTCTRL_1_STATUS);			\
++	f(IPI_MASK_1);				\
++	f(IPI_EVENT_1);				\
++	f(SINGLE_STEP_CONTROL_1);		\
++	f(SINGLE_STEP_EN_1_1);			\
++
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#306: FILE: arch/tile/include/asm/kvm_host.h:94:
++extern void kvm_vmresume(struct pt_regs *guest,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#308: FILE: arch/tile/include/asm/kvm_host.h:96:
++extern void kvm_vmexit(unsigned long host_sp);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#309: FILE: arch/tile/include/asm/kvm_host.h:97:
++extern void kvm_trigger_vmexit(struct pt_regs *regs, int exit_reason);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#310: FILE: arch/tile/include/asm/kvm_host.h:98:
++extern void kvm_do_hypervisor_call(struct pt_regs *regs, int fault_num);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#311: FILE: arch/tile/include/asm/kvm_host.h:99:
++extern void kvm_do_vpgtable_miss(struct pt_regs *regs, int fault_num,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned long' should also have an identifier name
+#311: FILE: arch/tile/include/asm/kvm_host.h:99:
++extern void kvm_do_vpgtable_miss(struct pt_regs *regs, int fault_num,
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned long' should also have an identifier name
+#311: FILE: arch/tile/include/asm/kvm_host.h:99:
++extern void kvm_do_vpgtable_miss(struct pt_regs *regs, int fault_num,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#313: FILE: arch/tile/include/asm/kvm_host.h:101:
++extern void kvm_do_vguest_fatal(struct pt_regs *regs, int fault_num);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#315: FILE: arch/tile/include/asm/kvm_host.h:103:
++extern void kvm_vcpu_kick(struct kvm_vcpu *vcpu);
+
+CHECK:SPACING: No space is necessary after a cast
+#327: FILE: arch/tile/include/asm/kvm_host.h:115:
++	((pte_t *) gpmd_page_vaddr(kvm, *(pmd)) + pte_index(address))
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#338: FILE: arch/tile/include/asm/kvm_para.h:1:
++/*
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#364: FILE: arch/tile/include/asm/kvm_virtio.h:1:
++/*
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#382: FILE: arch/tile/include/asm/kvm_virtio.h:19:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#413: FILE: arch/tile/include/asm/module.h:45:
++#define MODULE_ARCH_VERMAGIC CHIP_ARCH_NAME MODULE_PGSZ MODULE_PL MODULE_NOSMP
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#480: FILE: arch/tile/include/asm/page.h:201:
++#define MEM_MODULE_START	(MEM_SV_START + (256*1024*1024)) /* 256 MB */
+                         	                    ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#480: FILE: arch/tile/include/asm/page.h:201:
++#define MEM_MODULE_START	(MEM_SV_START + (256*1024*1024)) /* 256 MB */
+                         	                         ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'prev' - possible side-effects?
+#612: FILE: arch/tile/include/asm/switch_to.h:62:
++#define notify_sim_task_change(prev) do {				\
++	if (unlikely((prev)->state == TASK_DEAD))			\
++		__insn_mtspr(SPR_SIM_CONTROL, SIM_CONTROL_OS_EXIT |	\
++			     ((prev)->pid << _SIM_CONTROL_OPERATOR_BITS)); \
++	__insn_mtspr(SPR_SIM_CONTROL, SIM_CONTROL_OS_SWITCH |		\
++		     (current->pid << _SIM_CONTROL_OPERATOR_BITS));	\
++} while (0)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#683: FILE: arch/tile/include/asm/thread_info.h:151:
++#define _TIF_VIRT_EXIT		(1<<TIF_VIRT_EXIT)
+                       		  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#683: FILE: arch/tile/include/asm/thread_info.h:151:
++#define _TIF_VIRT_EXIT		(1<<TIF_VIRT_EXIT)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#690: FILE: arch/tile/include/asm/thread_info.h:155:
++	(_TIF_SIGPENDING|_TIF_NEED_RESCHED|_TIF_SINGLESTEP|	\
+ 	                ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#690: FILE: arch/tile/include/asm/thread_info.h:155:
++	(_TIF_SIGPENDING|_TIF_NEED_RESCHED|_TIF_SINGLESTEP|	\
+ 	                                  ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxE)
+#690: FILE: arch/tile/include/asm/thread_info.h:155:
++	(_TIF_SIGPENDING|_TIF_NEED_RESCHED|_TIF_SINGLESTEP|	\
+ 	                                                  ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#691: FILE: arch/tile/include/asm/thread_info.h:156:
++	 _TIF_ASYNC_TLB|_TIF_NOTIFY_RESUME|_TIF_VIRT_EXIT)
+ 	               ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#691: FILE: arch/tile/include/asm/thread_info.h:156:
++	 _TIF_ASYNC_TLB|_TIF_NOTIFY_RESUME|_TIF_VIRT_EXIT)
+ 	                                  ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#758: FILE: arch/tile/include/hv/hypervisor.h:822:
++#define HV_CTX_NONE         ((HV_PhysAddr)-1)  /**< Disable page table. */
+                                           ^
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#764: FILE: arch/tile/include/hv/hypervisor.h:828:
++                                       usable with hv_install_virt_context.) */$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#764: FILE: arch/tile/include/hv/hypervisor.h:828:
++#define HV_CTX_GUEST_CACHE  0x4   /**< Let guest control caching flags (only
++                                       usable with hv_install_virt_context.) */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#764: FILE: arch/tile/include/hv/hypervisor.h:828:
++                                       usable with hv_install_virt_context.) */
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#771: FILE: arch/tile/include/hv/hypervisor.h:835:
+ 
++
+
+WARNING:TYPO_SPELLING: 'VAs' may be misspelled - perhaps 'Was'?
+#791: FILE: arch/tile/include/hv/hypervisor.h:855:
++ * used for accesses at PL 0 or 1, i.e. VAs will be passed directly to
+                                         ^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#821: FILE: arch/tile/include/hv/hypervisor.h:885:
++                            HV_ASID asid, __hv32 flags);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#821: FILE: arch/tile/include/hv/hypervisor.h:885:
++                            HV_ASID asid, __hv32 flags);$
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#823: FILE: arch/tile/include/hv/hypervisor.h:887:
++
++
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#851: FILE: arch/tile/include/hv/hypervisor.h:915:
++                             HV_ASID asid, __hv32 flags);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#851: FILE: arch/tile/include/hv/hypervisor.h:915:
++                             HV_ASID asid, __hv32 flags);$
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#882: FILE: arch/tile/include/hv/hypervisor.h:969:
++
++
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#889: FILE: arch/tile/include/hv/hypervisor.h:976:
++
++
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#907: FILE: arch/tile/include/hv/hypervisor.h:1109:
++  HV_INQ_TILES_LOTAR           = 3,$
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#910: FILE: arch/tile/include/hv/hypervisor.h:1112:
++   *  periodically interrupt. */
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#911: FILE: arch/tile/include/hv/hypervisor.h:1113:
++  HV_INQ_TILES_SHARED          = 4$
+
+WARNING:TYPO_SPELLING: 'nework' may be misspelled - perhaps 'network'?
+#935: FILE: arch/tile/include/hv/hypervisor.h:1405:
++/** Static nework processor instruction TLB miss interrupt vector */
+            ^^^^^^
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1080: FILE: arch/tile/include/uapi/arch/sim.h:621:
++  __insn_mtspr(SPR_SIM_CONTROL,$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1081: FILE: arch/tile/include/uapi/arch/sim.h:622:
++               SIM_CONTROL_VCPU | (vcpu << _SIM_CONTROL_OPERATOR_BITS));$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1081: FILE: arch/tile/include/uapi/arch/sim.h:622:
++               SIM_CONTROL_VCPU | (vcpu << _SIM_CONTROL_OPERATOR_BITS));$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1088: FILE: arch/tile/include/uapi/arch/sim.h:629:
++  __insn_mtspr(SPR_SIM_CONTROL,$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1089: FILE: arch/tile/include/uapi/arch/sim.h:630:
++               SIM_CONTROL_VCPU | (-1 << _SIM_CONTROL_OPERATOR_BITS));$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1089: FILE: arch/tile/include/uapi/arch/sim.h:630:
++               SIM_CONTROL_VCPU | (-1 << _SIM_CONTROL_OPERATOR_BITS));$
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1245: FILE: arch/tile/include/uapi/asm/kvm.h:1:
++/*
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#1274: FILE: arch/tile/include/uapi/asm/kvm.h:30:
++#define HV_SYS_GUEST_MASK                 (1 << HV_SYS_GUEST_SHIFT)
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#1426: FILE: arch/tile/include/uapi/asm/kvm.h:182:
++#define KVM_EMULATE(name) [HV_SYS_##name] = qemu_emulate_illegal,
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#1427: FILE: arch/tile/include/uapi/asm/kvm.h:183:
++#define USER_EMULATE(name) [HV_SYS_##name] = qemu_emulate_hv_##name,
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#1428: FILE: arch/tile/include/uapi/asm/kvm.h:184:
++#define NO_EMULATE(name) [HV_SYS_##name] = qemu_emulate_illegal,
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#1429: FILE: arch/tile/include/uapi/asm/kvm.h:185:
++#define BOTH_EMULATE(name) [HV_SYS_##name] = qemu_emulate_hv_##name,
+
+ERROR:BRACKET_SPACE: space prohibited before open square bracket '['
+#1431: FILE: arch/tile/include/uapi/asm/kvm.h:187:
++#define USER_HCALL(name) [KVM_HCALL_##name] = qemu_handle_##name,
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#1434: FILE: arch/tile/include/uapi/asm/kvm.h:190:
++#define HCALL_DEFS \
++	/* For hv_*() */ \
++	KVM_EMULATE(init) \
++	NO_EMULATE(install_context) \
++	KVM_EMULATE(sysconf) \
++	KVM_EMULATE(get_rtc) \
++	KVM_EMULATE(set_rtc) \
++	NO_EMULATE(flush_asid) \
++	NO_EMULATE(flush_page) \
++	NO_EMULATE(flush_pages) \
++	USER_EMULATE(restart) \
++	USER_EMULATE(halt) \
++	USER_EMULATE(power_off) \
++	USER_EMULATE(inquire_physical) \
++	USER_EMULATE(inquire_memory_controller) \
++	KVM_EMULATE(inquire_virtual) \
++	KVM_EMULATE(inquire_asid) \
++	NO_EMULATE(console_read_if_ready) \
++	NO_EMULATE(console_write) \
++	NO_EMULATE(downcall_dispatch) \
++	KVM_EMULATE(inquire_topology) \
++	USER_EMULATE(fs_findfile) \
++	USER_EMULATE(fs_fstat) \
++	USER_EMULATE(fs_pread) \
++	KVM_EMULATE(physaddr_read64) \
++	KVM_EMULATE(physaddr_write64) \
++	USER_EMULATE(get_command_line) \
++	USER_EMULATE(set_caching) \
++	NO_EMULATE(bzero_page) \
++	KVM_EMULATE(register_message_state) \
++	KVM_EMULATE(send_message) \
++	KVM_EMULATE(receive_message) \
++	KVM_EMULATE(inquire_context) \
++	KVM_EMULATE(start_all_tiles) \
++	USER_EMULATE(dev_open) \
++	USER_EMULATE(dev_close) \
++	USER_EMULATE(dev_pread) \
++	USER_EMULATE(dev_pwrite) \
++	USER_EMULATE(dev_poll) \
++	USER_EMULATE(dev_poll_cancel) \
++	USER_EMULATE(dev_preada) \
++	USER_EMULATE(dev_pwritea) \
++	USER_EMULATE(flush_remote) \
++	NO_EMULATE(console_putc) \
++	KVM_EMULATE(inquire_tiles) \
++	KVM_EMULATE(confstr) \
++	USER_EMULATE(reexec) \
++	USER_EMULATE(set_command_line) \
++	USER_EMULATE(store_mapping) \
++	NO_EMULATE(inquire_realpa) \
++	NO_EMULATE(flush_all) \
++	KVM_EMULATE(get_ipi_pte) \
++	KVM_EMULATE(set_pte_super_shift) \
++	KVM_EMULATE(set_speed) \
++	/* For others */ \
++	USER_HCALL(virtio)
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1500: FILE: arch/tile/include/uapi/asm/kvm_virtio.h:1:
++/*
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1558: FILE: arch/tile/include/uapi/asm/kvm_virtio.h:59:
++
++
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1612: FILE: arch/tile/kernel/early_printk.c:29:
+ 
++
+
+WARNING:TYPO_SPELLING: 'VAs' may be misspelled - perhaps 'Was'?
+#1646: FILE: arch/tile/kernel/head_32.S:165:
++	/* The true text VAs are mapped as VA = PA + MEM_SV_START */
+ 	                 ^^^
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2226: FILE: arch/tile/kernel/kvm_virtio.c:1:
++/*
+
+WARNING:TYPO_SPELLING: 'implemenation' may be misspelled - perhaps 'implementation'?
+#2240: FILE: arch/tile/kernel/kvm_virtio.c:15:
++/* Referred lguest & s390 implemenation */
+                           ^^^^^^^^^^^^^
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2312: FILE: arch/tile/kernel/kvm_virtio.c:87:
++static unsigned desc_size(const struct kvm_device_desc *desc)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2345: FILE: arch/tile/kernel/kvm_virtio.c:120:
++	bits = min_t(unsigned, desc->feature_len, sizeof(vdev->features)) * 8;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2356: FILE: arch/tile/kernel/kvm_virtio.c:131:
++static void kvm_get(struct virtio_device *vdev, unsigned int offset,
++		   void *buf, unsigned len)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2356: FILE: arch/tile/kernel/kvm_virtio.c:131:
++		   void *buf, unsigned len)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2360: FILE: arch/tile/kernel/kvm_virtio.c:135:
++	BUG_ON(offset + len > desc->config_len);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2365: FILE: arch/tile/kernel/kvm_virtio.c:140:
++static void kvm_set(struct virtio_device *vdev, unsigned int offset,
++		   const void *buf, unsigned len)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2365: FILE: arch/tile/kernel/kvm_virtio.c:140:
++		   const void *buf, unsigned len)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2369: FILE: arch/tile/kernel/kvm_virtio.c:144:
++	BUG_ON(offset + len > desc->config_len);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2385: FILE: arch/tile/kernel/kvm_virtio.c:160:
++	BUG_ON(!status);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2427: FILE: arch/tile/kernel/kvm_virtio.c:202:
++				     unsigned index,
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#2445: FILE: arch/tile/kernel/kvm_virtio.c:220:
++	config = kvm_vq_config(kdev->desc)+index;
+ 	                                  ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2449: FILE: arch/tile/kernel/kvm_virtio.c:224:
++	vqi->pages = generic_remap_prot(config->pa,
++				vring_size(config->num,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2450: FILE: arch/tile/kernel/kvm_virtio.c:225:
++				vring_size(config->num,
++					KVM_TILE_VIRTIO_RING_ALIGN),
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2513: FILE: arch/tile/kernel/kvm_virtio.c:288:
++static int kvm_find_vqs(struct virtio_device *vdev, unsigned nvqs,
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#2568: FILE: arch/tile/kernel/kvm_virtio.c:343:
++	if (!kdev) {
++		pr_emerg("Cannot allocate kvm dev %u type %u\n",
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2688: FILE: arch/tile/kernel/process.c:458:
++	BUG_ON(task_thread_info(prev)->vcpu);
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#2710: FILE: arch/tile/kernel/process.c:542:
++			(_TIF_NEED_RESCHED|_TIF_SIGPENDING|_TIF_VIRT_EXIT);
+ 			                  ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#2710: FILE: arch/tile/kernel/process.c:542:
++			(_TIF_NEED_RESCHED|_TIF_SIGPENDING|_TIF_VIRT_EXIT);
+ 			                                  ^
+
+WARNING:DEVICE_ATTR_RO: Use DEVICE_ATTR_RO
+#2927: FILE: arch/tile/kernel/sysfs.c:76:
++#endif
+
+The DEVICE_ATTR_RO(name) helper macro can be used instead of
+DEVICE_ATTR(name, 0444, name_show, NULL);
+
+Note that the macro automatically appends _show to the named
+attribute variable of the device for the show method.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#3073: FILE: arch/tile/kvm/entry.S:1:
++/*
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#3170: FILE: arch/tile/kvm/kvm-tile.c:1:
++/*
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/atomic.h> instead of <asm/atomic.h>
+#3198: FILE: arch/tile/kvm/kvm-tile.c:29:
++#include <asm/atomic.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#3204: FILE: arch/tile/kvm/kvm-tile.c:35:
++
++
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!kvm->arch.vpgd"
+#3216: FILE: arch/tile/kvm/kvm-tile.c:47:
++	if (kvm->arch.vpgd == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!get_vpgd_pte"
+#3253: FILE: arch/tile/kvm/kvm-tile.c:84:
++		if (get_vpgd_pte(kvm, gpa) == NULL)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#3273: FILE: arch/tile/kvm/kvm-tile.c:104:
++		BUG_ON(vptep == NULL);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!vptep"
+#3273: FILE: arch/tile/kvm/kvm-tile.c:104:
++		BUG_ON(vptep == NULL);
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#3296: FILE: arch/tile/kvm/kvm-tile.c:127:
++long kvm_arch_dev_ioctl(struct file *filp,
+                                      ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#3313: FILE: arch/tile/kvm/kvm-tile.c:144:
++long kvm_arch_vcpu_ioctl(struct file *filp,
+                                       ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#3362: FILE: arch/tile/kvm/kvm-tile.c:193:
++long kvm_arch_vm_ioctl(struct file *filp,
+                                     ^^^^
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#3513: FILE: arch/tile/kvm/kvm-tile.c:344:
++		pr_err(" r%-2d: "REGFMT" r%-2d: "REGFMT" r%-2d: "REGFMT"\n",
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#3514: FILE: arch/tile/kvm/kvm-tile.c:345:
++		       i, regs->regs[i], i+18, regs->regs[i+18],
+ 		                          ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#3514: FILE: arch/tile/kvm/kvm-tile.c:345:
++		       i, regs->regs[i], i+18, regs->regs[i+18],
+ 		                                           ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#3515: FILE: arch/tile/kvm/kvm-tile.c:346:
++		       i+36, regs->regs[i+36]);
+ 		        ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#3515: FILE: arch/tile/kvm/kvm-tile.c:346:
++		       i+36, regs->regs[i+36]);
+ 		                         ^
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#3516: FILE: arch/tile/kvm/kvm-tile.c:347:
++	pr_err(" r18: "REGFMT" r35: "REGFMT" tp : "REGFMT"\n",
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#3518: FILE: arch/tile/kvm/kvm-tile.c:349:
++	pr_err(" sp : "REGFMT" lr : "REGFMT"\n", regs->sp, regs->lr);
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#3519: FILE: arch/tile/kvm/kvm-tile.c:350:
++	pr_err(" pc : "REGFMT" ex1: %ld     faultnum: %ld\n",
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3551: FILE: arch/tile/kvm/kvm-tile.c:382:
++		struct kvm_translation tr;
++		tr.linear_address = gva;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3577: FILE: arch/tile/kvm/kvm-tile.c:408:
++		struct kvm_translation tr;
++		tr.linear_address = gva;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3603: FILE: arch/tile/kvm/kvm-tile.c:434:
++		struct kvm_translation tr;
++		tr.linear_address = gva;
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#3651: FILE: arch/tile/kvm/kvm-tile.c:482:
++		return panic_hv(vcpu, "Guest is requesting PL %d, but KVM"
++				" guests must request PL 1.\n"
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#3657: FILE: arch/tile/kvm/kvm-tile.c:488:
++		return panic_hv(vcpu, "Client built for hv version %d, but"
++				" this hv is version %d\n",
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#3662: FILE: arch/tile/kvm/kvm-tile.c:493:
++		return panic_hv(vcpu, "Client built for chip %d, but this"
++				" hardware is chip %d\n",
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#3667: FILE: arch/tile/kvm/kvm-tile.c:498:
++		return panic_hv(vcpu, "Client built for chip rev %d, but this"
++				" hardware is chip rev %d\n",
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#3725: FILE: arch/tile/kvm/kvm-tile.c:556:
++	switch (query) {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#3747: FILE: arch/tile/kvm/kvm-tile.c:578:
++			hvbuf[sizeof(hvbuf)-1] = '\0';
+ 			                   ^
+
+CHECK:CAMELCASE: Avoid CamelCase: <HV_RTCTime>
+#3778: FILE: arch/tile/kvm/kvm-tile.c:609:
++	HV_RTCTime *hvtm = (HV_RTCTime *) &vcpu->arch.regs.regs[0];
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:CAMELCASE: Avoid CamelCase: <HV_ASIDRange>
+#3829: FILE: arch/tile/kvm/kvm-tile.c:660:
++	HV_ASIDRange *var = (HV_ASIDRange *)&vcpu->arch.regs.regs[0];
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3879: FILE: arch/tile/kvm/kvm-tile.c:710:
++	struct completion *c = &vcpu->kvm->arch.smp_start;
++	if (is_secondary_vcpu(vcpu) || completion_done(c))
+
+CHECK:SPACING: No space is necessary after a cast
+#3888: FILE: arch/tile/kvm/kvm-tile.c:719:
++	HV_PTE *access = (HV_PTE *) &vcpu->arch.regs.regs[1];
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#3909: FILE: arch/tile/kvm/kvm-tile.c:740:
++	uint64_t val = vcpu->arch.regs.regs[2];
+
+WARNING:TYPO_SPELLING: 'recepient' may be misspelled - perhaps 'recipient'?
+#3936: FILE: arch/tile/kvm/kvm-tile.c:767:
++ * same recepient.  Currently the only messages used by Linux are
+         ^^^^^^^^^
+
+WARNING:NR_CPUS: usage of NR_CPUS is often wrong - consider using cpu_possible(), num_possible_cpus(), for_each_possible_cpu(), etc
+#3948: FILE: arch/tile/kvm/kvm-tile.c:779:
++	HV_Recipient recip[NR_CPUS];
+
+CHECK:SPACING: No space is necessary after a cast
+#4059: FILE: arch/tile/kvm/kvm-tile.c:890:
++	HV_Context *ctx = (HV_Context *) &vcpu->arch.regs.regs[0];
+
+CHECK:SPACING: No space is necessary after a cast
+#4112: FILE: arch/tile/kvm/kvm-tile.c:943:
++	int pl = (int) vcpu->arch.regs.regs[1];
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4125: FILE: arch/tile/kvm/kvm-tile.c:956:
++	if (kvm_write_guest_va(vcpu, vcpu->arch.regs.regs[2],
++			    &target_vcpu->arch.ipi_gpte, sizeof(pte_t))) {
+
+CHECK:SPACING: No space is necessary after a cast
+#4158: FILE: arch/tile/kvm/kvm-tile.c:989:
++	tr.linear_address = (__u64) vcpu->arch.fault_addr;
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!hcall_handlers[hcall_idx]"
+#4212: FILE: arch/tile/kvm/kvm-tile.c:1043:
++			     hcall_handlers[hcall_idx] == NULL))
+
+CHECK:SPACING: No space is necessary after a cast
+#4267: FILE: arch/tile/kvm/kvm-tile.c:1098:
++	if (cpu != me && (unsigned) cpu < nr_cpu_ids && cpu_online(cpu))
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#4267: FILE: arch/tile/kvm/kvm-tile.c:1098:
++	if (cpu != me && (unsigned) cpu < nr_cpu_ids && cpu_online(cpu))
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4340: FILE: arch/tile/kvm/kvm-tile.c:1171:
++		unsigned long delta = get_cycles() - vcpu->arch.vmexit_cycles;
++		count &= SPR_AUX_TILE_TIMER_CONTROL__COUNT_MASK;
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#4371: FILE: arch/tile/kvm/kvm-tile.c:1202:
++	BUG_ON(vpgdir == NULL);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!vpgdir"
+#4371: FILE: arch/tile/kvm/kvm-tile.c:1202:
++	BUG_ON(vpgdir == NULL);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4522: FILE: arch/tile/kvm/kvm-tile.c:1353:
++		struct completion *c = &vcpu->kvm->arch.smp_start;
++		if (wait_for_completion_interruptible(c))
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*vcpu)...) over kzalloc(sizeof(struct kvm_vcpu)...)
+#4602: FILE: arch/tile/kvm/kvm-tile.c:1433:
++	struct kvm_vcpu *vcpu = kzalloc(sizeof(struct kvm_vcpu), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4720: FILE: arch/tile/kvm/kvm-tile.c:1551:
++	struct kvm_vcpu *vcpu = current_thread_info()->vcpu;
++	BUG_ON(vcpu == NULL);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#4720: FILE: arch/tile/kvm/kvm-tile.c:1551:
++	BUG_ON(vcpu == NULL);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!vcpu"
+#4720: FILE: arch/tile/kvm/kvm-tile.c:1551:
++	BUG_ON(vcpu == NULL);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4735: FILE: arch/tile/kvm/kvm-tile.c:1566:
++	struct kvm_vcpu *vcpu = current_thread_info()->vcpu;
++	vcpu->run->exit_reason = exit_reason;
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#4767: FILE: arch/tile/lib/exports.c:57:
++EXPORT_SYMBOL(hv_dev_poll_cancel);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#4782: FILE: arch/tile/lib/exports.c:66:
++EXPORT_SYMBOL(hv_install_guest_context);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#4783: FILE: arch/tile/lib/exports.c:67:
++EXPORT_SYMBOL(hv_install_virt_context);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#4786: FILE: arch/tile/lib/exports.c:70:
++EXPORT_SYMBOL(hv_physaddr_write64);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4880: FILE: arch/tile/mm/pgtable.c:490:
++void *generic_remap_prot(resource_size_t phys_addr, unsigned long size,
++		    unsigned long flags, pgprot_t prot)
+
+CHECK:SPACING: No space is necessary after a cast
+#4917: FILE: arch/tile/mm/pgtable.c:521:
++	return (void *) (offset + (char *)addr);
+
+CHECK:SPACING: No space is necessary after a cast
+#4934: FILE: arch/tile/mm/pgtable.c:538:
++	return (__force void __iomem *) generic_remap_prot(phys_addr,
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000332386.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 18 errors, 66 warnings, 68 checks, 4524 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000332386.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

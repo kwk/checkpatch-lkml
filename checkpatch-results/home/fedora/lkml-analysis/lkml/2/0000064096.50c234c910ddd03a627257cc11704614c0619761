@@ -1,0 +1,255 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#39: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#44: FILE: include/linux/hashtable.h:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'bits' - possible side-effects?
+#58: FILE: include/linux/hashtable.h:15:
++#define DEFINE_HASHTABLE(name, bits)						\
++	struct hlist_head name[HASH_SIZE(bits)] =				\
++			{ [0 ... HASH_SIZE(bits) - 1] = HLIST_HEAD_INIT };
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#58: FILE: include/linux/hashtable.h:15:
++#define DEFINE_HASHTABLE(name, bits)						\
++	struct hlist_head name[HASH_SIZE(bits)] =				\
++			{ [0 ... HASH_SIZE(bits) - 1] = HLIST_HEAD_INIT };
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#62: FILE: include/linux/hashtable.h:19:
++#define DECLARE_HASHTABLE(name, bits)                                   ^I\$
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'bits' may be better as '(bits)' to avoid precedence issues
+#62: FILE: include/linux/hashtable.h:19:
++#define DECLARE_HASHTABLE(name, bits)                                   	\
++	struct hlist_head name[1 << bits];
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#62: FILE: include/linux/hashtable.h:19:
++#define DECLARE_HASHTABLE(name, bits)                                   	\
++	struct hlist_head name[1 << bits];
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'val' - possible side-effects?
+#69: FILE: include/linux/hashtable.h:26:
++#define hash_min(val, bits) ({							\
++	sizeof(val) <= 4 ?							\
++	hash_32(val, bits) :							\
++	hash_long(val, bits);							\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'bits' - possible side-effects?
+#69: FILE: include/linux/hashtable.h:26:
++#define hash_min(val, bits) ({							\
++	sizeof(val) <= 4 ?							\
++	hash_32(val, bits) :							\
++	hash_long(val, bits);							\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'hashtable' - possible side-effects?
+#82: FILE: include/linux/hashtable.h:39:
++#define hash_init(hashtable)							\
++({										\
++	int __i;								\
++										\
++	for (__i = 0; __i < HASH_BITS(hashtable); __i++)			\
++		INIT_HLIST_HEAD(hashtable + __i);				\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'hashtable' - possible side-effects?
+#96: FILE: include/linux/hashtable.h:53:
++#define hash_add(hashtable, node, key)						\
++	hlist_add_head(node, &hashtable[hash_min(key, HASH_BITS(hashtable))]);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'hashtable' may be better as '(hashtable)' to avoid precedence issues
+#96: FILE: include/linux/hashtable.h:53:
++#define hash_add(hashtable, node, key)						\
++	hlist_add_head(node, &hashtable[hash_min(key, HASH_BITS(hashtable))]);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#96: FILE: include/linux/hashtable.h:53:
++#define hash_add(hashtable, node, key)						\
++	hlist_add_head(node, &hashtable[hash_min(key, HASH_BITS(hashtable))]);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'hashtable' - possible side-effects?
+#105: FILE: include/linux/hashtable.h:62:
++#define hash_add_rcu(hashtable, node, key)					\
++	hlist_add_head_rcu(node, &hashtable[hash_min(key, HASH_BITS(hashtable))]);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'hashtable' may be better as '(hashtable)' to avoid precedence issues
+#105: FILE: include/linux/hashtable.h:62:
++#define hash_add_rcu(hashtable, node, key)					\
++	hlist_add_head_rcu(node, &hashtable[hash_min(key, HASH_BITS(hashtable))]);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#105: FILE: include/linux/hashtable.h:62:
++#define hash_add_rcu(hashtable, node, key)					\
++	hlist_add_head_rcu(node, &hashtable[hash_min(key, HASH_BITS(hashtable))]);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'hashtable' - possible side-effects?
+#118: FILE: include/linux/hashtable.h:75:
++#define hash_empty(hashtable)							\
++({										\
++	int __i;								\
++	bool __ret = true;							\
++										\
++	for (__i = 0; __i < HASH_SIZE(hashtable); __i++)			\
++		if (!hlist_empty(&hashtable[__i]))				\
++			__ret = false;						\
++										\
++	__ret;									\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#156: FILE: include/linux/hashtable.h:113:
++#define hash_for_each(name, bkt, node, obj, member)				\
++	for (bkt = 0, node = NULL; node == NULL && bkt < HASH_SIZE(name); bkt++)\
++		hlist_for_each_entry(obj, node, &name[bkt], member)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'bkt' - possible side-effects?
+#156: FILE: include/linux/hashtable.h:113:
++#define hash_for_each(name, bkt, node, obj, member)				\
++	for (bkt = 0, node = NULL; node == NULL && bkt < HASH_SIZE(name); bkt++)\
++		hlist_for_each_entry(obj, node, &name[bkt], member)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'node' - possible side-effects?
+#156: FILE: include/linux/hashtable.h:113:
++#define hash_for_each(name, bkt, node, obj, member)				\
++	for (bkt = 0, node = NULL; node == NULL && bkt < HASH_SIZE(name); bkt++)\
++		hlist_for_each_entry(obj, node, &name[bkt], member)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!node"
+#157: FILE: include/linux/hashtable.h:114:
++	for (bkt = 0, node = NULL; node == NULL && bkt < HASH_SIZE(name); bkt++)\
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#168: FILE: include/linux/hashtable.h:125:
++#define hash_for_each_rcu(name, bkt, node, obj, member)				\
++	for (bkt = 0, node = NULL; node == NULL && bkt < HASH_SIZE(name); bkt++)\
++		hlist_for_each_entry_rcu(obj, node, &name[bkt], member)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'bkt' - possible side-effects?
+#168: FILE: include/linux/hashtable.h:125:
++#define hash_for_each_rcu(name, bkt, node, obj, member)				\
++	for (bkt = 0, node = NULL; node == NULL && bkt < HASH_SIZE(name); bkt++)\
++		hlist_for_each_entry_rcu(obj, node, &name[bkt], member)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'node' - possible side-effects?
+#168: FILE: include/linux/hashtable.h:125:
++#define hash_for_each_rcu(name, bkt, node, obj, member)				\
++	for (bkt = 0, node = NULL; node == NULL && bkt < HASH_SIZE(name); bkt++)\
++		hlist_for_each_entry_rcu(obj, node, &name[bkt], member)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!node"
+#169: FILE: include/linux/hashtable.h:126:
++	for (bkt = 0, node = NULL; node == NULL && bkt < HASH_SIZE(name); bkt++)\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#182: FILE: include/linux/hashtable.h:139:
++#define hash_for_each_safe(name, bkt, node, tmp, obj, member)			\
++	for (bkt = 0, node = NULL; node == NULL && bkt < HASH_SIZE(name); bkt++)\
++		hlist_for_each_entry_safe(obj, node, tmp, &name[bkt], member)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'bkt' - possible side-effects?
+#182: FILE: include/linux/hashtable.h:139:
++#define hash_for_each_safe(name, bkt, node, tmp, obj, member)			\
++	for (bkt = 0, node = NULL; node == NULL && bkt < HASH_SIZE(name); bkt++)\
++		hlist_for_each_entry_safe(obj, node, tmp, &name[bkt], member)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'node' - possible side-effects?
+#182: FILE: include/linux/hashtable.h:139:
++#define hash_for_each_safe(name, bkt, node, tmp, obj, member)			\
++	for (bkt = 0, node = NULL; node == NULL && bkt < HASH_SIZE(name); bkt++)\
++		hlist_for_each_entry_safe(obj, node, tmp, &name[bkt], member)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!node"
+#183: FILE: include/linux/hashtable.h:140:
++	for (bkt = 0, node = NULL; node == NULL && bkt < HASH_SIZE(name); bkt++)\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#195: FILE: include/linux/hashtable.h:152:
++#define hash_for_each_possible(name, obj, node, member, key)			\
++	hlist_for_each_entry(obj, node,	&name[hash_min(key, HASH_BITS(name))], member)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'name' may be better as '(name)' to avoid precedence issues
+#195: FILE: include/linux/hashtable.h:152:
++#define hash_for_each_possible(name, obj, node, member, key)			\
++	hlist_for_each_entry(obj, node,	&name[hash_min(key, HASH_BITS(name))], member)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#208: FILE: include/linux/hashtable.h:165:
++#define hash_for_each_possible_rcu(name, obj, node, member, key)		\
++	hlist_for_each_entry_rcu(obj, node, &name[hash_min(key, HASH_BITS(name))], member)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'name' may be better as '(name)' to avoid precedence issues
+#208: FILE: include/linux/hashtable.h:165:
++#define hash_for_each_possible_rcu(name, obj, node, member, key)		\
++	hlist_for_each_entry_rcu(obj, node, &name[hash_min(key, HASH_BITS(name))], member)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#221: FILE: include/linux/hashtable.h:178:
++#define hash_for_each_possible_safe(name, obj, node, tmp, member, key)		\
++	hlist_for_each_entry_safe(obj, node, tmp,				\
++		&name[hash_min(key, HASH_BITS(name))], member)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'name' may be better as '(name)' to avoid precedence issues
+#221: FILE: include/linux/hashtable.h:178:
++#define hash_for_each_possible_safe(name, obj, node, tmp, member, key)		\
++	hlist_for_each_entry_safe(obj, node, tmp,				\
++		&name[hash_min(key, HASH_BITS(name))], member)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#225: FILE: include/linux/hashtable.h:182:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000064096.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 7 warnings, 29 checks, 183 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000064096.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

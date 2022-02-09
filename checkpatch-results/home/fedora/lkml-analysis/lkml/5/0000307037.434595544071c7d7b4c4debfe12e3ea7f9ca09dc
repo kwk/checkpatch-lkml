@@ -1,0 +1,132 @@
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'f' may be better as '(f)' to avoid precedence issues
+#45: FILE: include/linux/kernel.h:72:
++#define FIELD_SIZEOF(t, f) (sizeof(((t *)0)->f))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'd' - possible side-effects?
+#48: FILE: include/linux/kernel.h:74:
++#define DIV_ROUND_UP_ULL(ll, d) \
+ 	({ unsigned long long _tmp = (ll)+(d)-1; do_div(_tmp, d); _tmp; })
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#74: FILE: include/linux/kernel.h:138:
++#define _RET_IP_	(unsigned long)__builtin_return_address(0)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#240: FILE: include/linux/kernel.h:375:
++int __must_check kstrtoull_from_user(const char __user *s, size_t count,
++				unsigned int base, unsigned long long *res);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#263: FILE: include/linux/kernel.h:398:
++static inline int __must_check kstrtou64_from_user(const char __user *s,
++				size_t count, unsigned int base, u64 *res)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#270: FILE: include/linux/kernel.h:404:
++static inline int __must_check kstrtos64_from_user(const char __user *s,
++				size_t count, unsigned int base, s64 *res)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#277: FILE: include/linux/kernel.h:410:
++static inline int __must_check kstrtou32_from_user(const char __user *s,
++				size_t count, unsigned int base, u32 *res)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#284: FILE: include/linux/kernel.h:416:
++static inline int __must_check kstrtos32_from_user(const char __user *s,
++				size_t count, unsigned int base, s32 *res)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#295: FILE: include/linux/kernel.h:423:
++extern unsigned long simple_strtoul(const char *cp, char **endp,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:CONSIDER_KSTRTO: simple_strtoul is obsolete, use kstrtoul instead
+#295: FILE: include/linux/kernel.h:423:
++extern unsigned long simple_strtoul(const char *cp, char **endp,
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#297: FILE: include/linux/kernel.h:425:
++extern long simple_strtol(const char *cp, char **endp,
+
+WARNING:CONSIDER_KSTRTO: simple_strtol is obsolete, use kstrtol instead
+#297: FILE: include/linux/kernel.h:425:
++extern long simple_strtol(const char *cp, char **endp,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#299: FILE: include/linux/kernel.h:427:
++extern unsigned long long simple_strtoull(const char *cp, char **endp,
+
+WARNING:CONSIDER_KSTRTO: simple_strtoull is obsolete, use kstrtoull instead
+#299: FILE: include/linux/kernel.h:427:
++extern unsigned long long simple_strtoull(const char *cp, char **endp,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#301: FILE: include/linux/kernel.h:429:
++extern long long simple_strtoll(const char *cp, char **endp, unsigned int base);
+
+WARNING:CONSIDER_KSTRTO: simple_strtoll is obsolete, use kstrtoll instead
+#301: FILE: include/linux/kernel.h:429:
++extern long long simple_strtoll(const char *cp, char **endp, unsigned int base);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#347: FILE: include/linux/kernel.h:508:
+ };
++extern void add_taint(unsigned int flag, enum lockdep_ok);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#347: FILE: include/linux/kernel.h:508:
++extern void add_taint(unsigned int flag, enum lockdep_ok);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#348: FILE: include/linux/kernel.h:509:
++extern int test_taint(unsigned int flag);
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#358: FILE: include/linux/kernel.h:867:
++	const typeof(((type *)0)->member)*__mptr = (ptr);	\
+ 	                                 ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'perms' - possible side-effects?
+#377: FILE: include/linux/kernel.h:876:
++#define VERIFY_OCTAL_PERMISSIONS(perms)					\
++	(BUILD_BUG_ON_ZERO((perms) < 0) +				\
++	 BUILD_BUG_ON_ZERO((perms) > 0777) +				\
++	 /* USER_READABLE >= GROUP_READABLE >= OTHER_READABLE */	\
++	 BUILD_BUG_ON_ZERO((((perms) >> 6) & 4) < (((perms) >> 3) & 4)) \
++	 + BUILD_BUG_ON_ZERO((((perms) >> 3) & 4) < ((perms) & 4)) +	\
++	 /* USER_WRITABLE >= GROUP_WRITABLE */				\
++	 BUILD_BUG_ON_ZERO((((perms) >> 6) & 2) < (((perms) >> 3) & 2)) \
++	 +								\
++	 /* OTHER_WRITABLE?  Generally considered a bad idea. */	\
++	 BUILD_BUG_ON_ZERO((perms) & 2) +				\
+ 	 (perms))
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000307037.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 1 errors, 4 warnings, 16 checks, 335 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000307037.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

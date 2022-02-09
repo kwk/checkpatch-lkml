@@ -1,0 +1,165 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#82: 
+> On Wed, Feb 27, 2019 at 3:33 PM Peter Zijlstra <peterz@infradead.org> wrote:
+
+WARNING:TYPO_SPELLING: 'admitedly' may be misspelled - perhaps 'admittedly'?
+#84: 
+> > Urgh, kasan_report() is definitely unsafe. Now, admitedly we should
+                                                    ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'flags' - possible side-effects?
+#123: FILE: arch/x86/include/asm/bug.h:33:
++#define _BUG_FLAGS(ins, flags, ...)					\
+ do {									\
+ 	asm volatile("1:\t" ins "\n"					\
+ 		     ".pushsection __bug_table,\"aw\"\n"		\
++		     "2:\t" __BUG_REL(1b)      "\t# bug_entry::bug_addr\n" \
++		     "\t"  __BUG_REL(%c[file]) "\t# bug_entry::file\n"	\
++		     "\t.word %c[line]"        "\t# bug_entry::line\n"	\
++		     "\t.word %c[flags]"       "\t# bug_entry::flags\n"	\
++		     "\t.org 2b+%c[size]\n"				\
+ 		     ".popsection"					\
++		     : : [file] "i" (__FILE__), [line] "i" (__LINE__),	\
++			 [flags] "i" (flags),				\
++			 [size] "i" (sizeof(struct bug_entry)), ##__VA_ARGS__);	\
+ } while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#123: FILE: arch/x86/include/asm/bug.h:33:
++#define _BUG_FLAGS(ins, flags, ...)					\
+ do {									\
+ 	asm volatile("1:\t" ins "\n"					\
+ 		     ".pushsection __bug_table,\"aw\"\n"		\
++		     "2:\t" __BUG_REL(1b)      "\t# bug_entry::bug_addr\n" \
++		     "\t"  __BUG_REL(%c[file]) "\t# bug_entry::file\n"	\
++		     "\t.word %c[line]"        "\t# bug_entry::line\n"	\
++		     "\t.word %c[flags]"       "\t# bug_entry::flags\n"	\
++		     "\t.org 2b+%c[size]\n"				\
+ 		     ".popsection"					\
++		     : : [file] "i" (__FILE__), [line] "i" (__LINE__),	\
++			 [flags] "i" (flags),				\
++			 [size] "i" (sizeof(struct bug_entry)), ##__VA_ARGS__);	\
+ } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:BxV)
+#133: FILE: arch/x86/include/asm/bug.h:38:
++		     "\t"  __BUG_REL(%c[file]) "\t# bug_entry::file\n"	\
+ 		                     ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:STRING_FRAGMENTS: Consecutive strings are generally better as a single string
+#134: FILE: arch/x86/include/asm/bug.h:39:
++		     "\t.word %c[line]"        "\t# bug_entry::line\n"	\
+
+WARNING:STRING_FRAGMENTS: Consecutive strings are generally better as a single string
+#135: FILE: arch/x86/include/asm/bug.h:40:
++		     "\t.word %c[flags]"       "\t# bug_entry::flags\n"	\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'flags' - possible side-effects?
+#149: FILE: arch/x86/include/asm/bug.h:50:
++#define _BUG_FLAGS(ins, flags, ...)					\
+ do {									\
+ 	asm volatile("1:\t" ins "\n"					\
+ 		     ".pushsection __bug_table,\"aw\"\n"		\
+ 		     "2:\t" __BUG_REL(1b) "\t# bug_entry::bug_addr\n"	\
++		     "\t.word %c[flags]"  "\t# bug_entry::flags\n"	\
++		     "\t.org 2b+%c[size]\n"				\
+ 		     ".popsection"					\
++		     : : [flags] "i" (flags),				\
++			 [size] "i" (sizeof(struct bug_entry)), ##__VA_ARGS__);	\
+ } while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#149: FILE: arch/x86/include/asm/bug.h:50:
++#define _BUG_FLAGS(ins, flags, ...)					\
+ do {									\
+ 	asm volatile("1:\t" ins "\n"					\
+ 		     ".pushsection __bug_table,\"aw\"\n"		\
+ 		     "2:\t" __BUG_REL(1b) "\t# bug_entry::bug_addr\n"	\
++		     "\t.word %c[flags]"  "\t# bug_entry::flags\n"	\
++		     "\t.org 2b+%c[size]\n"				\
+ 		     ".popsection"					\
++		     : : [flags] "i" (flags),				\
++			 [size] "i" (sizeof(struct bug_entry)), ##__VA_ARGS__);	\
+ } while (0)
+
+WARNING:STRING_FRAGMENTS: Consecutive strings are generally better as a single string
+#156: FILE: arch/x86/include/asm/bug.h:55:
++		     "\t.word %c[flags]"  "\t# bug_entry::flags\n"	\
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/bug.h> instead of <asm/bug.h>
+#174: FILE: arch/x86/include/asm/kasan.h:5:
++#include <asm/bug.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+WARNING:LONG_LINE: line length of 106 exceeds 100 columns
+#187: FILE: arch/x86/include/asm/kasan.h:35:
++static __always_inline void kasan_report(unsigned long addr, size_t size, bool is_write, unsigned long ip)
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#205: FILE: include/asm-generic/bug.h:13:
++#define BUGFLAG_KASAN		(1 << 3)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#219: FILE: include/linux/kasan.h:181:
++void __kasan_report(unsigned long addr, size_t size,
+ 		bool is_write, unsigned long ip);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#240: FILE: lib/bug.c:147:
++	unsigned line, warning, once, done, kasan;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#296: FILE: mm/kasan/kasan.h:134:
++void __kasan_report(unsigned long addr, size_t size,
+ 		bool is_write, unsigned long ip);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#309: FILE: mm/kasan/report.c:285:
++void __kasan_report(unsigned long addr, size_t size,
+ 		bool is_write, unsigned long ip)
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000000188.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 0 errors, 9 warnings, 8 checks, 153 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000000188.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

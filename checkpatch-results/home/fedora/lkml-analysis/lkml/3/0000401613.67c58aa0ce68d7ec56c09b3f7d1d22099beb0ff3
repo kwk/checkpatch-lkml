@@ -1,0 +1,239 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_name' - possible side-effects?
+#90: FILE: drivers/input/mouse/trackpoint.c:130:
++#define TRACKPOINT_INT_ATTR(_name, _command, _default)				\
+ 	static struct trackpoint_attr_data trackpoint_attr_##_name = {		\
+ 		.field_offset = offsetof(struct trackpoint_data, _name),	\
+ 		.command = _command,						\
++		.power_on_default = _default,					\
+ 	};									\
+ 	PSMOUSE_DEFINE_ATTR(_name, S_IWUSR | S_IRUGO,				\
+ 			    &trackpoint_attr_##_name,				\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_name' - possible side-effects?
+#103: FILE: drivers/input/mouse/trackpoint.c:168:
++#define TRACKPOINT_BIT_ATTR(_name, _command, _mask, _inv, _default)		\
+ 	static struct trackpoint_attr_data trackpoint_attr_##_name = {		\
++		.field_offset		= offsetof(struct trackpoint_data,	\
++						   _name),			\
++		.command		= _command,				\
++		.mask			= _mask,				\
++		.inverted		= _inv,					\
++		.power_on_default	= _default,				\
+ 	};									\
+ 	PSMOUSE_DEFINE_ATTR(_name, S_IWUSR | S_IRUGO,				\
+ 			    &trackpoint_attr_##_name,				\
+ 			    trackpoint_show_int_attr, trackpoint_set_bit_attr)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_psmouse' - possible side-effects?
+#134: FILE: drivers/input/mouse/trackpoint.c:181:
++#define TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name)				\
++	{									\
++		unsigned char _toggle;						\
++		struct trackpoint_attr_data *_attr = &trackpoint_attr_##_name;	\
++		trackpoint_read(&_psmouse->ps2dev, _attr->command, &_toggle);	\
++		if (((_toggle & _attr->mask) == _attr->mask) !=			\
++		      _tp->_name)						\
++			trackpoint_toggle_bit(&_psmouse->ps2dev,		\
++					      _attr->command,			\
++					      _attr->mask);			\
++	}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_psmouse' may be better as '(_psmouse)' to avoid precedence issues
+#134: FILE: drivers/input/mouse/trackpoint.c:181:
++#define TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name)				\
++	{									\
++		unsigned char _toggle;						\
++		struct trackpoint_attr_data *_attr = &trackpoint_attr_##_name;	\
++		trackpoint_read(&_psmouse->ps2dev, _attr->command, &_toggle);	\
++		if (((_toggle & _attr->mask) == _attr->mask) !=			\
++		      _tp->_name)						\
++			trackpoint_toggle_bit(&_psmouse->ps2dev,		\
++					      _attr->command,			\
++					      _attr->mask);			\
++	}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_tp' may be better as '(_tp)' to avoid precedence issues
+#134: FILE: drivers/input/mouse/trackpoint.c:181:
++#define TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name)				\
++	{									\
++		unsigned char _toggle;						\
++		struct trackpoint_attr_data *_attr = &trackpoint_attr_##_name;	\
++		trackpoint_read(&_psmouse->ps2dev, _attr->command, &_toggle);	\
++		if (((_toggle & _attr->mask) == _attr->mask) !=			\
++		      _tp->_name)						\
++			trackpoint_toggle_bit(&_psmouse->ps2dev,		\
++					      _attr->command,			\
++					      _attr->mask);			\
++	}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_name' may be better as '(_name)' to avoid precedence issues
+#134: FILE: drivers/input/mouse/trackpoint.c:181:
++#define TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name)				\
++	{									\
++		unsigned char _toggle;						\
++		struct trackpoint_attr_data *_attr = &trackpoint_attr_##_name;	\
++		trackpoint_read(&_psmouse->ps2dev, _attr->command, &_toggle);	\
++		if (((_toggle & _attr->mask) == _attr->mask) !=			\
++		      _tp->_name)						\
++			trackpoint_toggle_bit(&_psmouse->ps2dev,		\
++					      _attr->command,			\
++					      _attr->mask);			\
++	}
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#146: FILE: drivers/input/mouse/trackpoint.c:193:
++#define TRACKPOINT_UPDATE(_power_on, _psmouse, _tp, _name)			\
++	if (!_power_on ||							\
++	    _tp->_name != trackpoint_attr_##_name.power_on_default) {		\
++		if (!trackpoint_attr_##_name.mask)				\
++			trackpoint_write(&_psmouse->ps2dev,			\
++					 trackpoint_attr_##_name.command,	\
++					 _tp->_name);				\
++		else								\
++			TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name);		\
++	}
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_power_on' may be better as '(_power_on)' to avoid precedence issues
+#146: FILE: drivers/input/mouse/trackpoint.c:193:
++#define TRACKPOINT_UPDATE(_power_on, _psmouse, _tp, _name)			\
++	if (!_power_on ||							\
++	    _tp->_name != trackpoint_attr_##_name.power_on_default) {		\
++		if (!trackpoint_attr_##_name.mask)				\
++			trackpoint_write(&_psmouse->ps2dev,			\
++					 trackpoint_attr_##_name.command,	\
++					 _tp->_name);				\
++		else								\
++			TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name);		\
++	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_psmouse' - possible side-effects?
+#146: FILE: drivers/input/mouse/trackpoint.c:193:
++#define TRACKPOINT_UPDATE(_power_on, _psmouse, _tp, _name)			\
++	if (!_power_on ||							\
++	    _tp->_name != trackpoint_attr_##_name.power_on_default) {		\
++		if (!trackpoint_attr_##_name.mask)				\
++			trackpoint_write(&_psmouse->ps2dev,			\
++					 trackpoint_attr_##_name.command,	\
++					 _tp->_name);				\
++		else								\
++			TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name);		\
++	}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_psmouse' may be better as '(_psmouse)' to avoid precedence issues
+#146: FILE: drivers/input/mouse/trackpoint.c:193:
++#define TRACKPOINT_UPDATE(_power_on, _psmouse, _tp, _name)			\
++	if (!_power_on ||							\
++	    _tp->_name != trackpoint_attr_##_name.power_on_default) {		\
++		if (!trackpoint_attr_##_name.mask)				\
++			trackpoint_write(&_psmouse->ps2dev,			\
++					 trackpoint_attr_##_name.command,	\
++					 _tp->_name);				\
++		else								\
++			TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name);		\
++	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_tp' - possible side-effects?
+#146: FILE: drivers/input/mouse/trackpoint.c:193:
++#define TRACKPOINT_UPDATE(_power_on, _psmouse, _tp, _name)			\
++	if (!_power_on ||							\
++	    _tp->_name != trackpoint_attr_##_name.power_on_default) {		\
++		if (!trackpoint_attr_##_name.mask)				\
++			trackpoint_write(&_psmouse->ps2dev,			\
++					 trackpoint_attr_##_name.command,	\
++					 _tp->_name);				\
++		else								\
++			TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name);		\
++	}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_tp' may be better as '(_tp)' to avoid precedence issues
+#146: FILE: drivers/input/mouse/trackpoint.c:193:
++#define TRACKPOINT_UPDATE(_power_on, _psmouse, _tp, _name)			\
++	if (!_power_on ||							\
++	    _tp->_name != trackpoint_attr_##_name.power_on_default) {		\
++		if (!trackpoint_attr_##_name.mask)				\
++			trackpoint_write(&_psmouse->ps2dev,			\
++					 trackpoint_attr_##_name.command,	\
++					 _tp->_name);				\
++		else								\
++			TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name);		\
++	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_name' - possible side-effects?
+#146: FILE: drivers/input/mouse/trackpoint.c:193:
++#define TRACKPOINT_UPDATE(_power_on, _psmouse, _tp, _name)			\
++	if (!_power_on ||							\
++	    _tp->_name != trackpoint_attr_##_name.power_on_default) {		\
++		if (!trackpoint_attr_##_name.mask)				\
++			trackpoint_write(&_psmouse->ps2dev,			\
++					 trackpoint_attr_##_name.command,	\
++					 _tp->_name);				\
++		else								\
++			TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name);		\
++	}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_name' may be better as '(_name)' to avoid precedence issues
+#146: FILE: drivers/input/mouse/trackpoint.c:193:
++#define TRACKPOINT_UPDATE(_power_on, _psmouse, _tp, _name)			\
++	if (!_power_on ||							\
++	    _tp->_name != trackpoint_attr_##_name.power_on_default) {		\
++		if (!trackpoint_attr_##_name.mask)				\
++			trackpoint_write(&_psmouse->ps2dev,			\
++					 trackpoint_attr_##_name.command,	\
++					 _tp->_name);				\
++		else								\
++			TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name);		\
++	}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_tp' may be better as '(_tp)' to avoid precedence issues
+#157: FILE: drivers/input/mouse/trackpoint.c:204:
++#define TRACKPOINT_SET_POWER_ON_DEFAULT(_tp, _name)				\
++	(_tp->_name = trackpoint_attr_##_name.power_on_default)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_name' may be better as '(_name)' to avoid precedence issues
+#157: FILE: drivers/input/mouse/trackpoint.c:204:
++#define TRACKPOINT_SET_POWER_ON_DEFAULT(_tp, _name)				\
++	(_tp->_name = trackpoint_attr_##_name.power_on_default)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments should align the * on each line
+#252: FILE: drivers/input/mouse/trackpoint.c:282:
++	/*
++	* These properties can be changed in this driver. Only
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000401613.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 1 errors, 1 warnings, 15 checks, 315 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000401613.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

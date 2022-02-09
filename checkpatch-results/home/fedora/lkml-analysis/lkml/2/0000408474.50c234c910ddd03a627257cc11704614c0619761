@@ -1,0 +1,212 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#284: FILE: drivers/gpu/drm/r128/r128_drv.h:147:
++extern void r128_freelist_reset(struct drm_device *dev);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#287: FILE: drivers/gpu/drm/r128/r128_drv.h:149:
++extern int r128_wait_ring(drm_r128_private_t *dev_priv, int n);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#291: FILE: drivers/gpu/drm/r128/r128_drv.h:151:
++extern int r128_do_cce_idle(drm_r128_private_t *dev_priv);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#292: FILE: drivers/gpu/drm/r128/r128_drv.h:152:
++extern int r128_do_cleanup_cce(struct drm_device *dev);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#299: FILE: drivers/gpu/drm/r128/r128_drv.h:158:
++extern void r128_driver_irq_preinstall(struct drm_device *dev);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#305: FILE: drivers/gpu/drm/r128/r128_drv.h:160:
++extern void r128_driver_irq_uninstall(struct drm_device *dev);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#306: FILE: drivers/gpu/drm/r128/r128_drv.h:161:
++extern void r128_driver_lastclose(struct drm_device *dev);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#307: FILE: drivers/gpu/drm/r128/r128_drv.h:162:
++extern int r128_driver_load(struct drm_device *dev, unsigned long flags);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#308: FILE: drivers/gpu/drm/r128/r128_drv.h:163:
++extern void r128_driver_preclose(struct drm_device *dev,
+
+WARNING:INLINE: plain inline is preferred over __inline__
+#345: FILE: drivers/gpu/drm/r128/r128_drv.h:413:
++static __inline__ void r128_update_ring_snapshot(drm_r128_private_t *dev_priv)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'dev_priv' - possible side-effects?
+#354: FILE: drivers/gpu/drm/r128/r128_drv.h:433:
++#define RING_SPACE_TEST_WITH_RETURN(dev_priv)				\
+ do {									\
+ 	drm_r128_ring_buffer_t *ring = &dev_priv->ring; int i;		\
++	if (ring->space < ring->high_mark) {				\
++		for (i = 0 ; i < dev_priv->usec_timeout ; i++) {	\
++			r128_update_ring_snapshot(dev_priv);		\
++			if (ring->space >= ring->high_mark)		\
+ 				goto __ring_space_done;			\
++			DRM_UDELAY(1);					\
+ 		}							\
++		DRM_ERROR("ring space check failed!\n");		\
++		return -EBUSY;						\
+ 	}								\
+  __ring_space_done:							\
+ 	;								\
+ } while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'dev_priv' may be better as '(dev_priv)' to avoid precedence issues
+#354: FILE: drivers/gpu/drm/r128/r128_drv.h:433:
++#define RING_SPACE_TEST_WITH_RETURN(dev_priv)				\
+ do {									\
+ 	drm_r128_ring_buffer_t *ring = &dev_priv->ring; int i;		\
++	if (ring->space < ring->high_mark) {				\
++		for (i = 0 ; i < dev_priv->usec_timeout ; i++) {	\
++			r128_update_ring_snapshot(dev_priv);		\
++			if (ring->space >= ring->high_mark)		\
+ 				goto __ring_space_done;			\
++			DRM_UDELAY(1);					\
+ 		}							\
++		DRM_ERROR("ring space check failed!\n");		\
++		return -EBUSY;						\
+ 	}								\
+  __ring_space_done:							\
+ 	;								\
+ } while (0)
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#354: FILE: drivers/gpu/drm/r128/r128_drv.h:433:
++#define RING_SPACE_TEST_WITH_RETURN(dev_priv)				\
+ do {									\
+ 	drm_r128_ring_buffer_t *ring = &dev_priv->ring; int i;		\
++	if (ring->space < ring->high_mark) {				\
++		for (i = 0 ; i < dev_priv->usec_timeout ; i++) {	\
++			r128_update_ring_snapshot(dev_priv);		\
++			if (ring->space >= ring->high_mark)		\
+ 				goto __ring_space_done;			\
++			DRM_UDELAY(1);					\
+ 		}							\
++		DRM_ERROR("ring space check failed!\n");		\
++		return -EBUSY;						\
+ 	}								\
+  __ring_space_done:							\
+ 	;								\
+ } while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'dev_priv' - possible side-effects?
+#379: FILE: drivers/gpu/drm/r128/r128_drv.h:450:
++#define VB_AGE_TEST_WITH_RETURN(dev_priv)				\
+ do {									\
+ 	drm_r128_sarea_t *sarea_priv = dev_priv->sarea_priv;		\
++	if (sarea_priv->last_dispatch >= R128_MAX_VB_AGE) {		\
++		int __ret = r128_do_cce_idle(dev_priv);			\
++		if (__ret)						\
++			return __ret;					\
+ 		sarea_priv->last_dispatch = 0;				\
++		r128_freelist_reset(dev);				\
+ 	}								\
+ } while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'dev_priv' may be better as '(dev_priv)' to avoid precedence issues
+#379: FILE: drivers/gpu/drm/r128/r128_drv.h:450:
++#define VB_AGE_TEST_WITH_RETURN(dev_priv)				\
+ do {									\
+ 	drm_r128_sarea_t *sarea_priv = dev_priv->sarea_priv;		\
++	if (sarea_priv->last_dispatch >= R128_MAX_VB_AGE) {		\
++		int __ret = r128_do_cce_idle(dev_priv);			\
++		if (__ret)						\
++			return __ret;					\
+ 		sarea_priv->last_dispatch = 0;				\
++		r128_freelist_reset(dev);				\
+ 	}								\
+ } while (0)
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#379: FILE: drivers/gpu/drm/r128/r128_drv.h:450:
++#define VB_AGE_TEST_WITH_RETURN(dev_priv)				\
+ do {									\
+ 	drm_r128_sarea_t *sarea_priv = dev_priv->sarea_priv;		\
++	if (sarea_priv->last_dispatch >= R128_MAX_VB_AGE) {		\
++		int __ret = r128_do_cce_idle(dev_priv);			\
++		if (__ret)						\
++			return __ret;					\
+ 		sarea_priv->last_dispatch = 0;				\
++		r128_freelist_reset(dev);				\
+ 	}								\
+ } while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#412: FILE: drivers/gpu/drm/r128/r128_drv.h:476:
++#define BEGIN_RING(n) do {						\
++	if (R128_VERBOSE)						\
++		DRM_INFO("BEGIN_RING(%d)\n", (n));			\
++	if (dev_priv->ring.space <= (n) * sizeof(u32)) {		\
+ 		COMMIT_RING();						\
++		r128_wait_ring(dev_priv, (n) * sizeof(u32));		\
+ 	}								\
+ 	_nr = n; dev_priv->ring.space -= (n) * sizeof(u32);		\
+ 	ring = dev_priv->ring.start;					\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#474: FILE: drivers/gpu/drm/r128/r128_drv.h:522:
++#define OUT_RING(x) do {						\
++	if (R128_VERBOSE)						\
++		DRM_INFO("   OUT_RING( 0x%08x ) at 0x%x\n",		\
++			 (unsigned int)(x), write);			\
++	ring[write++] = cpu_to_le32(x);					\
+ 	write &= tail_mask;						\
+ } while (0)
+
+WARNING:INLINE: plain inline is preferred over __inline__
+#524: FILE: drivers/gpu/drm/r128/r128_state.c:83:
++static __inline__ void r128_emit_core(drm_r128_private_t *dev_priv)
+
+WARNING:INLINE: plain inline is preferred over __inline__
+#533: FILE: drivers/gpu/drm/r128/r128_state.c:98:
++static __inline__ void r128_emit_context(drm_r128_private_t *dev_priv)
+
+WARNING:INLINE: plain inline is preferred over __inline__
+#542: FILE: drivers/gpu/drm/r128/r128_state.c:124:
++static __inline__ void r128_emit_setup(drm_r128_private_t *dev_priv)
+
+WARNING:INLINE: plain inline is preferred over __inline__
+#551: FILE: drivers/gpu/drm/r128/r128_state.c:140:
++static __inline__ void r128_emit_masks(drm_r128_private_t *dev_priv)
+
+WARNING:INLINE: plain inline is preferred over __inline__
+#560: FILE: drivers/gpu/drm/r128/r128_state.c:159:
++static __inline__ void r128_emit_window(drm_r128_private_t *dev_priv)
+
+WARNING:INLINE: plain inline is preferred over __inline__
+#569: FILE: drivers/gpu/drm/r128/r128_state.c:174:
++static __inline__ void r128_emit_tex0(drm_r128_private_t *dev_priv)
+
+WARNING:INLINE: plain inline is preferred over __inline__
+#589: FILE: drivers/gpu/drm/r128/r128_state.c:200:
++static __inline__ void r128_emit_tex1(drm_r128_private_t *dev_priv)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!x"
+#789: FILE: drivers/gpu/drm/r128/r128_state.c:996:
++	if (x == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!x"
+#845: FILE: drivers/gpu/drm/r128/r128_state.c:1159:
++	if (x == NULL)
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000408474.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 10 warnings, 17 checks, 785 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000408474.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

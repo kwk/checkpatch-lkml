@@ -1,0 +1,302 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#34: 
+statment. This allows us to create a 'no-op' fastpath, which can subsequently
+
+WARNING:TYPO_SPELLING: 'statment' may be misspelled - perhaps 'statement'?
+#34: 
+statment. This allows us to create a 'no-op' fastpath, which can subsequently
+^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#155: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#160: FILE: include/linux/jump_label.h:1:
++#ifndef _LINUX_JUMP_LABEL_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#180: FILE: include/linux/jump_label.h:21:
++extern void arch_jump_label_transform(struct jump_entry *entry,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#181: FILE: include/linux/jump_label.h:22:
++extern void arch_jump_label_transform(struct jump_entry *entry,
++				 enum jump_label_type type);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#182: FILE: include/linux/jump_label.h:23:
++extern void jump_label_update(unsigned long key, enum jump_label_type type);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#183: FILE: include/linux/jump_label.h:24:
++extern void jump_label_apply_nops(struct module *mod);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#184: FILE: include/linux/jump_label.h:25:
++extern void arch_jump_label_text_poke_early(jump_label_t addr);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#186: FILE: include/linux/jump_label.h:27:
++#define enable_jump_label(key) \
++	jump_label_update((unsigned long)key, JUMP_LABEL_ENABLE);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#189: FILE: include/linux/jump_label.h:30:
++#define disable_jump_label(key) \
++	jump_label_update((unsigned long)key, JUMP_LABEL_DISABLE);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'key' may be better as '(key)' to avoid precedence issues
+#194: FILE: include/linux/jump_label.h:35:
++#define JUMP_LABEL(key, label)			\
++do {						\
++	if (unlikely(*key))			\
++		goto label;			\
++} while (0)
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#194: FILE: include/linux/jump_label.h:35:
++#define JUMP_LABEL(key, label)			\
++do {						\
++	if (unlikely(*key))			\
++		goto label;			\
++} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#200: FILE: include/linux/jump_label.h:41:
++#define enable_jump_label(cond_var)	\
++do {					\
++       *(cond_var) = 1;			\
++} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (0, 7)
+#201: FILE: include/linux/jump_label.h:42:
++do {					\
++       *(cond_var) = 1;			\
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#202: FILE: include/linux/jump_label.h:43:
++       *(cond_var) = 1;^I^I^I\$
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#205: FILE: include/linux/jump_label.h:46:
++#define disable_jump_label(cond_var)	\
++do {					\
++       *(cond_var) = 0;			\
++} while (0)
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (0, 7)
+#206: FILE: include/linux/jump_label.h:47:
++do {					\
++       *(cond_var) = 0;			\
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#207: FILE: include/linux/jump_label.h:48:
++       *(cond_var) = 0;^I^I^I\$
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#253: FILE: kernel/jump_label.c:1:
++/*
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#272: FILE: kernel/jump_label.c:20:
++#define JUMP_LABEL_TABLE_SIZE (1 << JUMP_LABEL_HASH_BITS)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+WARNING:REPEATED_WORD: Possible repeated word: 'the'
+#275: FILE: kernel/jump_label.c:23:
++/* mutex to protect coming/going of the the jump_label table */
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*e)...) over kmalloc(sizeof(struct jump_label_entry)...)
+#344: FILE: kernel/jump_label.c:92:
++	e = kmalloc(sizeof(struct jump_label_entry), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around e->modules
+#353: FILE: kernel/jump_label.c:101:
++	INIT_HLIST_HEAD(&(e->modules));
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#373: FILE: kernel/jump_label.c:121:
++			while ((iter < stop) &&
++				(iter->key == iter_begin->key)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#378: FILE: kernel/jump_label.c:126:
++			entry = add_jump_label_entry(iter_begin->key,
++							count, iter_begin);
+
+WARNING:TABSTOP: Statements should start on a tabstop
+#381: FILE: kernel/jump_label.c:129:
++		 } else {
+
+WARNING:UNNECESSARY_KERN_LEVEL: Possible unnecessary KERN_ERR
+#382: FILE: kernel/jump_label.c:130:
++			WARN_ONCE(1, KERN_ERR "build_jump_hashtable: unexpected entry!\n");
+
+WARNING:TYPO_SPELLING: 'eanble' may be misspelled - perhaps 'enable'?
+#417: FILE: kernel/jump_label.c:165:
++		/* eanble/disable jump labels in modules */
+ 		   ^^^^^^
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around entry->modules
+#418: FILE: kernel/jump_label.c:166:
++		hlist_for_each_entry(e_module, module_node, &(entry->modules),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#419: FILE: kernel/jump_label.c:167:
++		hlist_for_each_entry(e_module, module_node, &(entry->modules),
++							hlist) {
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*e)...) over kmalloc(sizeof(struct jump_label_module_entry)...)
+#461: FILE: kernel/jump_label.c:209:
++	e = kmalloc(sizeof(struct jump_label_module_entry), GFP_KERNEL);
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 32)
+#489: FILE: kernel/jump_label.c:237:
++		while ((iter < mod->jump_entries + mod->num_jump_entries) &&
+[...]
++				iter++;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#490: FILE: kernel/jump_label.c:238:
++		while ((iter < mod->jump_entries + mod->num_jump_entries) &&
++			(iter->key == iter_begin->key)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around e->modules
+#524: FILE: kernel/jump_label.c:272:
++						  &(e->modules), hlist) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'e->nr_entries == 0'
+#530: FILE: kernel/jump_label.c:278:
++			if (hlist_empty(&e->modules) && (e->nr_entries == 0)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#629: FILE: kernel/module.c:2314:
++	mod->jump_entries = section_objs(info, "__jump_table",
++					sizeof(*mod->jump_entries),
+
+WARNING:TYPO_SPELLING: 'suport' may be misspelled - perhaps 'support'?
+#642: FILE: scripts/gcc-goto.sh:2:
++# Test for gcc 'asm goto' suport
+                           ^^^^^^
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 2
+#642: FILE: scripts/gcc-goto.sh:2:
++# Test for gcc 'asm goto' suport
+
+WARNING:LONG_LINE: line length of 124 exceeds 100 columns
+#645: FILE: scripts/gcc-goto.sh:5:
++echo "int main(void) { entry: asm goto (\"\"::::entry); return 0; }" | $1 -x c - -c -o /dev/null >/dev/null 2>&1 && echo "y"
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000377816.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 22 warnings, 18 checks, 516 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000377816.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

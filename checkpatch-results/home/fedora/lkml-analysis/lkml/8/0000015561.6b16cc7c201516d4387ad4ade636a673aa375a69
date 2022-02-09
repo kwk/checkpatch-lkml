@@ -1,0 +1,28 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'count' - possible side-effects?
+#142: FILE: include/linux/sysfs.h:172:
++#define sysfs_strscpy(dest, src, count)                                       \
++({                                                                            \
++	BUILD_BUG_ON(__builtin_constant_p(count) && (count) > PAGE_SIZE);      \
++	__sysfs_strscpy((dest), (src), (count));                               \
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'src' - possible side-effects?
+#161: FILE: include/linux/sysfs.h:191:
++#define sysfs_strcpy(dest, src)                                      \
++sysfs_strscpy((dest), (src),                                         \
++		__builtin_choose_expr(                                \
++			__same_type((src), &(src)[0]),                \
++			PAGE_SIZE,                                    \
++			min(sizeof(src) + 2, PAGE_SIZE)               \
++		)                                                     \
++)
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000015561.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 0 warnings, 2 checks, 58 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000015561.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

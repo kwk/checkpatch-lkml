@@ -1,0 +1,71 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_name' - possible side-effects?
+#94: FILE: kernel/power/main.c:277:
++#define suspend_attr(_name)						\
++static ssize_t _name##_show(struct kobject *kobj,			\
++		struct kobj_attribute *attr, char *buf)			\
++{									\
++	int index;							\
++	enum suspend_stat_step step;					\
++	char *last_failed_stat = NULL;					\
++									\
++	if (strcmp(attr->attr.name, "last_failed_dev") == 0) {		\
++		index = suspend_stats._name + REC_FAILED_NUM - 1;	\
++		index %= REC_FAILED_NUM;				\
++		last_failed_stat = suspend_stats.failed_devs[index];	\
++		return sprintf(buf, "%s\n", last_failed_stat);		\
++	} else if (strcmp(attr->attr.name, "last_failed_step") == 0) {	\
++		index = suspend_stats._name + REC_FAILED_NUM - 1;	\
++		index %= REC_FAILED_NUM;				\
++		step = suspend_stats.failed_steps[index];		\
++		last_failed_stat = suspend_step_name(step);		\
++		return sprintf(buf, "%s\n", last_failed_stat);		\
++	} else if (strcmp(attr->attr.name, "last_failed_errno") == 0) {	\
++		index = suspend_stats._name + REC_FAILED_NUM - 1;	\
++		index %= REC_FAILED_NUM;				\
++		return sprintf(buf, "%d\n", suspend_stats.errno[index]);\
++	}								\
++									\
++	return sprintf(buf, "%d\n", suspend_stats._name);		\
++}									\
++static struct kobj_attribute _name = __ATTR_RO(_name)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_name' may be better as '(_name)' to avoid precedence issues
+#94: FILE: kernel/power/main.c:277:
++#define suspend_attr(_name)						\
++static ssize_t _name##_show(struct kobject *kobj,			\
++		struct kobj_attribute *attr, char *buf)			\
++{									\
++	int index;							\
++	enum suspend_stat_step step;					\
++	char *last_failed_stat = NULL;					\
++									\
++	if (strcmp(attr->attr.name, "last_failed_dev") == 0) {		\
++		index = suspend_stats._name + REC_FAILED_NUM - 1;	\
++		index %= REC_FAILED_NUM;				\
++		last_failed_stat = suspend_stats.failed_devs[index];	\
++		return sprintf(buf, "%s\n", last_failed_stat);		\
++	} else if (strcmp(attr->attr.name, "last_failed_step") == 0) {	\
++		index = suspend_stats._name + REC_FAILED_NUM - 1;	\
++		index %= REC_FAILED_NUM;				\
++		step = suspend_stats.failed_steps[index];		\
++		last_failed_stat = suspend_step_name(step);		\
++		return sprintf(buf, "%s\n", last_failed_stat);		\
++	} else if (strcmp(attr->attr.name, "last_failed_errno") == 0) {	\
++		index = suspend_stats._name + REC_FAILED_NUM - 1;	\
++		index %= REC_FAILED_NUM;				\
++		return sprintf(buf, "%d\n", suspend_stats.errno[index]);\
++	}								\
++									\
++	return sprintf(buf, "%d\n", suspend_stats._name);		\
++}									\
++static struct kobj_attribute _name = __ATTR_RO(_name)
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000160238.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 total: 0 errors, 0 warnings, 2 checks, 101 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000160238.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

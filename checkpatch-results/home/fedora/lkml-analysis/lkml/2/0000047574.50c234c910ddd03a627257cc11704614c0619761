@@ -1,0 +1,236 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#39: 
+http://www.owirobots.com/cart/html/owi-535pc-robotic-arm-kit-with-usb-pc-interface-assembled.html
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#66: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#71: FILE: drivers/staging/usb_robotic_arm/Kconfig:1:
++config USB_ROBOTIC_ARM
++	tristate "OWI/MAPLIN USB Robotic Arm support"
++	depends on USB
++	default N
++	---help---
++	  This enables us to control the OWI/Maplin Robotic Arm
++	  device attached to the USB port.
++
++	  For more details, and to get the userspace utility
++	  programs, please see https://github.com/maxinbjohn/robotic_arm_driver
++
++	  To compile this as a module, choose M here: the module will
++	  be called robotic_arm.
++
++	  If unsure, say N.
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#178: FILE: drivers/staging/usb_robotic_arm/robotic_arm.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:CAMELCASE: Avoid CamelCase: <idVendor>
+#213: FILE: drivers/staging/usb_robotic_arm/robotic_arm.c:36:
++	{.idVendor = 0x1267, .match_flags = USB_DEVICE_ID_MATCH_VENDOR,},
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#316: FILE: drivers/staging/usb_robotic_arm/robotic_arm.c:139:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#320: FILE: drivers/staging/usb_robotic_arm/robotic_arm.c:143:
++
++}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'value' - possible side-effects?
+#322: FILE: drivers/staging/usb_robotic_arm/robotic_arm.c:145:
++#define show_set(value) \
++static ssize_t show_##value(struct device *dev, struct device_attribute *attr,\
++			char *buf)					\
++{									\
++	struct usb_interface *intf = to_usb_interface(dev);		\
++	struct usb_robotic_arm *robotic_arm = usb_get_intfdata(intf);	\
++									\
++	return sprintf(buf, "%d\n", robotic_arm->value);		\
++}                                                                       \
++static ssize_t set_##value(struct device *dev, struct device_attribute *attr,\
++				const char *buf, size_t count)		\
++{                                                                       \
++	struct usb_interface *intf = to_usb_interface(dev);             \
++	struct usb_robotic_arm *robotic_arm = usb_get_intfdata(intf);   \
++	int ret = -ENXIO;						\
++	unsigned long val;						\
++									\
++	ret = kstrtoul(buf, 0, &val);					\
++	if (ret)							\
++		return ret;						\
++	robotic_arm->value = val;					\
++	update_robotic_arm(robotic_arm);                                \
++	return count;                                                   \
++}                                                                       \
++static DEVICE_ATTR(value, S_IRUGO | S_IWUSR, show_##value, set_##value);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'value' may be better as '(value)' to avoid precedence issues
+#322: FILE: drivers/staging/usb_robotic_arm/robotic_arm.c:145:
++#define show_set(value) \
++static ssize_t show_##value(struct device *dev, struct device_attribute *attr,\
++			char *buf)					\
++{									\
++	struct usb_interface *intf = to_usb_interface(dev);		\
++	struct usb_robotic_arm *robotic_arm = usb_get_intfdata(intf);	\
++									\
++	return sprintf(buf, "%d\n", robotic_arm->value);		\
++}                                                                       \
++static ssize_t set_##value(struct device *dev, struct device_attribute *attr,\
++				const char *buf, size_t count)		\
++{                                                                       \
++	struct usb_interface *intf = to_usb_interface(dev);             \
++	struct usb_robotic_arm *robotic_arm = usb_get_intfdata(intf);   \
++	int ret = -ENXIO;						\
++	unsigned long val;						\
++									\
++	ret = kstrtoul(buf, 0, &val);					\
++	if (ret)							\
++		return ret;						\
++	robotic_arm->value = val;					\
++	update_robotic_arm(robotic_arm);                                \
++	return count;                                                   \
++}                                                                       \
++static DEVICE_ATTR(value, S_IRUGO | S_IWUSR, show_##value, set_##value);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#322: FILE: drivers/staging/usb_robotic_arm/robotic_arm.c:145:
++#define show_set(value) \
++static ssize_t show_##value(struct device *dev, struct device_attribute *attr,\
++			char *buf)					\
++{									\
++	struct usb_interface *intf = to_usb_interface(dev);		\
++	struct usb_robotic_arm *robotic_arm = usb_get_intfdata(intf);	\
++									\
++	return sprintf(buf, "%d\n", robotic_arm->value);		\
++}                                                                       \
++static ssize_t set_##value(struct device *dev, struct device_attribute *attr,\
++				const char *buf, size_t count)		\
++{                                                                       \
++	struct usb_interface *intf = to_usb_interface(dev);             \
++	struct usb_robotic_arm *robotic_arm = usb_get_intfdata(intf);   \
++	int ret = -ENXIO;						\
++	unsigned long val;						\
++									\
++	ret = kstrtoul(buf, 0, &val);					\
++	if (ret)							\
++		return ret;						\
++	robotic_arm->value = val;					\
++	update_robotic_arm(robotic_arm);                                \
++	return count;                                                   \
++}                                                                       \
++static DEVICE_ATTR(value, S_IRUGO | S_IWUSR, show_##value, set_##value);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#346: FILE: drivers/staging/usb_robotic_arm/robotic_arm.c:169:
++static DEVICE_ATTR(value, S_IRUGO | S_IWUSR, show_##value, set_##value);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*dev)...) over kzalloc(sizeof(struct usb_robotic_arm)...)
+#362: FILE: drivers/staging/usb_robotic_arm/robotic_arm.c:185:
++	dev = kzalloc(sizeof(struct usb_robotic_arm), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!dev"
+#363: FILE: drivers/staging/usb_robotic_arm/robotic_arm.c:186:
++	if (dev == NULL) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000047574.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 6 warnings, 7 checks, 371 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000047574.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

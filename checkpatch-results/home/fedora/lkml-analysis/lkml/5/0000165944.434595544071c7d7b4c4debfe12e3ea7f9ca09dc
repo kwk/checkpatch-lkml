@@ -1,0 +1,468 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#70: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#75: FILE: arch/riscv/include/asm/asm.h:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#112: FILE: arch/riscv/include/asm/asm.h:38:
++#define RISCV_PTR		.dword
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#122: FILE: arch/riscv/include/asm/asm.h:48:
++#define RISCV_PTR		.word
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#157: FILE: arch/riscv/include/asm/csr.h:1:
++/*
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#288: FILE: arch/riscv/include/asm/linkage.h:1:
++/*
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#304: FILE: arch/riscv/include/asm/linkage.h:17:
++#define __ALIGN		.balign 4
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#314: FILE: arch/riscv/include/asm/string.h:1:
++/*
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#350: FILE: arch/riscv/include/asm/uaccess.h:1:
++/*
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#378: FILE: arch/riscv/include/asm/uaccess.h:29:
++#define __enable_user_access()							\
++	__asm__ __volatile__ ("csrs sstatus, %0" : : "r" (SR_SUM) : "memory")
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#380: FILE: arch/riscv/include/asm/uaccess.h:31:
++#define __disable_user_access()							\
++	__asm__ __volatile__ ("csrc sstatus, %0" : : "r" (SR_SUM) : "memory")
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#410: FILE: arch/riscv/include/asm/uaccess.h:61:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'addr' - possible side-effects?
+#433: FILE: arch/riscv/include/asm/uaccess.h:84:
++#define access_ok(type, addr, size) ({					\
++	__chk_user_ptr(addr);						\
++	likely(__access_ok((unsigned long __force)(addr), (size)));	\
++})
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#465: FILE: arch/riscv/include/asm/uaccess.h:116:
++extern int fixup_exception(struct pt_regs *state);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#516: FILE: arch/riscv/include/asm/uaccess.h:167:
++#define __get_user_8(x, ptr, err)				\
++do {								\
++	u32 __user *__ptr = (u32 __user *)(ptr);		\
++	u32 __lo, __hi;						\
++	uintptr_t __tmp;					\
++	__enable_user_access();					\
++	__asm__ __volatile__ (					\
++		"1:\n"						\
++		"	lw %1, %4\n"				\
++		"2:\n"						\
++		"	lw %2, %5\n"				\
++		"3:\n"						\
++		"	.section .fixup,\"ax\"\n"		\
++		"	.balign 4\n"				\
++		"4:\n"						\
++		"	li %0, %6\n"				\
++		"	li %1, 0\n"				\
++		"	li %2, 0\n"				\
++		"	jump 3b, %3\n"				\
++		"	.previous\n"				\
++		"	.section __ex_table,\"a\"\n"		\
++		"	.balign " RISCV_SZPTR "\n"			\
++		"	" RISCV_PTR " 1b, 4b\n"			\
++		"	" RISCV_PTR " 2b, 4b\n"			\
++		"	.previous"				\
++		: "+r" (err), "=&r" (__lo), "=r" (__hi),	\
++			"=r" (__tmp)				\
++		: "m" (__ptr[__LSW]), "m" (__ptr[__MSW]),	\
++			"i" (-EFAULT));				\
++	__disable_user_access();				\
++	(x) = (__typeof__(x))((__typeof__((x)-(x)))(		\
++		(((u64)__hi << 32) | __lo)));			\
++} while (0)
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#546: FILE: arch/riscv/include/asm/uaccess.h:197:
++	(x) = (__typeof__(x))((__typeof__((x)-(x)))(		\
+ 	                                     ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#552: FILE: arch/riscv/include/asm/uaccess.h:203:
++
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#573: FILE: arch/riscv/include/asm/uaccess.h:224:
++#define __get_user(x, ptr)					\
++({								\
++	register long __gu_err = 0;				\
++	const __typeof__(*(ptr)) __user *__gu_ptr = (ptr);	\
++	__chk_user_ptr(__gu_ptr);				\
++	switch (sizeof(*__gu_ptr)) {				\
++	case 1:							\
++		__get_user_asm("lb", (x), __gu_ptr, __gu_err);	\
++		break;						\
++	case 2:							\
++		__get_user_asm("lh", (x), __gu_ptr, __gu_err);	\
++		break;						\
++	case 4:							\
++		__get_user_asm("lw", (x), __gu_ptr, __gu_err);	\
++		break;						\
++	case 8:							\
++		__get_user_8((x), __gu_ptr, __gu_err);	\
++		break;						\
++	default:						\
++		BUILD_BUG();					\
++	}							\
++	__gu_err;						\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#573: FILE: arch/riscv/include/asm/uaccess.h:224:
++#define __get_user(x, ptr)					\
++({								\
++	register long __gu_err = 0;				\
++	const __typeof__(*(ptr)) __user *__gu_ptr = (ptr);	\
++	__chk_user_ptr(__gu_ptr);				\
++	switch (sizeof(*__gu_ptr)) {				\
++	case 1:							\
++		__get_user_asm("lb", (x), __gu_ptr, __gu_err);	\
++		break;						\
++	case 2:							\
++		__get_user_asm("lh", (x), __gu_ptr, __gu_err);	\
++		break;						\
++	case 4:							\
++		__get_user_asm("lw", (x), __gu_ptr, __gu_err);	\
++		break;						\
++	case 8:							\
++		__get_user_8((x), __gu_ptr, __gu_err);	\
++		break;						\
++	default:						\
++		BUILD_BUG();					\
++	}							\
++	__gu_err;						\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#614: FILE: arch/riscv/include/asm/uaccess.h:265:
++#define get_user(x, ptr)					\
++({								\
++	const __typeof__(*(ptr)) __user *__p = (ptr);		\
++	might_fault();						\
++	access_ok(VERIFY_READ, __p, sizeof(*__p)) ?		\
++		__get_user((x), __p) :				\
++		((x) = 0, -EFAULT);				\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#614: FILE: arch/riscv/include/asm/uaccess.h:265:
++#define get_user(x, ptr)					\
++({								\
++	const __typeof__(*(ptr)) __user *__p = (ptr);		\
++	might_fault();						\
++	access_ok(VERIFY_READ, __p, sizeof(*__p)) ?		\
++		__get_user((x), __p) :				\
++		((x) = 0, -EFAULT);				\
++})
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#623: FILE: arch/riscv/include/asm/uaccess.h:274:
++
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#625: FILE: arch/riscv/include/asm/uaccess.h:276:
++#define __put_user_asm(insn, x, ptr, err)			\
++do {								\
++	uintptr_t __tmp;					\
++	__typeof__(*(ptr)) __x = x;				\
++	__enable_user_access();					\
++	__asm__ __volatile__ (					\
++		"1:\n"						\
++		"	" insn " %z3, %2\n"			\
++		"2:\n"						\
++		"	.section .fixup,\"ax\"\n"		\
++		"	.balign 4\n"				\
++		"3:\n"						\
++		"	li %0, %4\n"				\
++		"	jump 2b, %1\n"				\
++		"	.previous\n"				\
++		"	.section __ex_table,\"a\"\n"		\
++		"	.balign " RISCV_SZPTR "\n"			\
++		"	" RISCV_PTR " 1b, 3b\n"			\
++		"	.previous"				\
++		: "+r" (err), "=r" (__tmp), "=m" (*(ptr))	\
++		: "rJ" (__x), "i" (-EFAULT));			\
++	__disable_user_access();				\
++} while (0)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#650: FILE: arch/riscv/include/asm/uaccess.h:301:
++
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#656: FILE: arch/riscv/include/asm/uaccess.h:307:
++#define __put_user_8(x, ptr, err)				\
++do {								\
++	u32 __user *__ptr = (u32 __user *)(ptr);		\
++	u64 __x = (__typeof__((x)-(x)))(x);			\
++	uintptr_t __tmp;					\
++	__enable_user_access();					\
++	__asm__ __volatile__ (					\
++		"1:\n"						\
++		"	sw %z4, %2\n"				\
++		"2:\n"						\
++		"	sw %z5, %3\n"				\
++		"3:\n"						\
++		"	.section .fixup,\"ax\"\n"		\
++		"	.balign 4\n"				\
++		"4:\n"						\
++		"	li %0, %6\n"				\
++		"	jump 2b, %1\n"				\
++		"	.previous\n"				\
++		"	.section __ex_table,\"a\"\n"		\
++		"	.balign " RISCV_SZPTR "\n"			\
++		"	" RISCV_PTR " 1b, 4b\n"			\
++		"	" RISCV_PTR " 2b, 4b\n"			\
++		"	.previous"				\
++		: "+r" (err), "=r" (__tmp),			\
++			"=m" (__ptr[__LSW]),			\
++			"=m" (__ptr[__MSW])			\
++		: "rJ" (__x), "rJ" (__x >> 32), "i" (-EFAULT));	\
++	__disable_user_access();				\
++} while (0)
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#659: FILE: arch/riscv/include/asm/uaccess.h:310:
++	u64 __x = (__typeof__((x)-(x)))(x);			\
+ 	                         ^
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#688: FILE: arch/riscv/include/asm/uaccess.h:339:
++
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#708: FILE: arch/riscv/include/asm/uaccess.h:359:
++#define __put_user(x, ptr)					\
++({								\
++	register long __pu_err = 0;				\
++	__typeof__(*(ptr)) __user *__gu_ptr = (ptr);		\
++	__chk_user_ptr(__gu_ptr);				\
++	switch (sizeof(*__gu_ptr)) {				\
++	case 1:							\
++		__put_user_asm("sb", (x), __gu_ptr, __pu_err);	\
++		break;						\
++	case 2:							\
++		__put_user_asm("sh", (x), __gu_ptr, __pu_err);	\
++		break;						\
++	case 4:							\
++		__put_user_asm("sw", (x), __gu_ptr, __pu_err);	\
++		break;						\
++	case 8:							\
++		__put_user_8((x), __gu_ptr, __pu_err);	\
++		break;						\
++	default:						\
++		BUILD_BUG();					\
++	}							\
++	__pu_err;						\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#708: FILE: arch/riscv/include/asm/uaccess.h:359:
++#define __put_user(x, ptr)					\
++({								\
++	register long __pu_err = 0;				\
++	__typeof__(*(ptr)) __user *__gu_ptr = (ptr);		\
++	__chk_user_ptr(__gu_ptr);				\
++	switch (sizeof(*__gu_ptr)) {				\
++	case 1:							\
++		__put_user_asm("sb", (x), __gu_ptr, __pu_err);	\
++		break;						\
++	case 2:							\
++		__put_user_asm("sh", (x), __gu_ptr, __pu_err);	\
++		break;						\
++	case 4:							\
++		__put_user_asm("sw", (x), __gu_ptr, __pu_err);	\
++		break;						\
++	case 8:							\
++		__put_user_8((x), __gu_ptr, __pu_err);	\
++		break;						\
++	default:						\
++		BUILD_BUG();					\
++	}							\
++	__pu_err;						\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#748: FILE: arch/riscv/include/asm/uaccess.h:399:
++#define put_user(x, ptr)					\
++({								\
++	__typeof__(*(ptr)) __user *__p = (ptr);			\
++	might_fault();						\
++	access_ok(VERIFY_WRITE, __p, sizeof(*__p)) ?		\
++		__put_user((x), __p) :				\
++		-EFAULT;					\
++})
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#757: FILE: arch/riscv/include/asm/uaccess.h:408:
++
++
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#758: FILE: arch/riscv/include/asm/uaccess.h:409:
++extern unsigned long __must_check __copy_user(void __user *to,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#759: FILE: arch/riscv/include/asm/uaccess.h:410:
++extern unsigned long __must_check __copy_user(void __user *to,
++	const void __user *from, unsigned long n);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#773: FILE: arch/riscv/include/asm/uaccess.h:424:
++extern long strncpy_from_user(char *dest, const char __user *src, long count);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#775: FILE: arch/riscv/include/asm/uaccess.h:426:
++extern long __must_check strlen_user(const char __user *str);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#776: FILE: arch/riscv/include/asm/uaccess.h:427:
++extern long __must_check strnlen_user(const char __user *str, long n);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#796: FILE: arch/riscv/include/asm/word-at-a-time.h:1:
++/*
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#813: FILE: arch/riscv/include/asm/word-at-a-time.h:18:
++
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#823: FILE: arch/riscv/include/asm/word-at-a-time.h:28:
++static inline unsigned long has_zero(unsigned long val,
++	unsigned long *bits, const struct word_at_a_time *c)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#831: FILE: arch/riscv/include/asm/word-at-a-time.h:36:
++static inline unsigned long prep_zero_mask(unsigned long val,
++	unsigned long bits, const struct word_at_a_time *c)
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#857: FILE: arch/riscv/kernel/stacktrace.c:1:
++/*
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#886: FILE: arch/riscv/kernel/stacktrace.c:30:
++static void notrace walk_stackframe(struct task_struct *task,
++	struct pt_regs *regs, bool (*fn)(unsigned long, void *), void *arg)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!task"
+#894: FILE: arch/riscv/kernel/stacktrace.c:38:
++	} else if (task == NULL || task == current) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#895: FILE: arch/riscv/kernel/stacktrace.c:39:
++		const register unsigned long current_sp __asm__ ("sp");
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#929: FILE: arch/riscv/kernel/stacktrace.c:73:
++static void notrace walk_stackframe(struct task_struct *task,
++	struct pt_regs *regs, bool (*fn)(unsigned long, void *), void *arg)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!task"
+#937: FILE: arch/riscv/kernel/stacktrace.c:81:
++	} else if (task == NULL || task == current) {
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#938: FILE: arch/riscv/kernel/stacktrace.c:82:
++		const register unsigned long current_sp __asm__ ("sp");
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#960: FILE: arch/riscv/kernel/stacktrace.c:104:
++
++
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#969: FILE: arch/riscv/kernel/stacktrace.c:113:
++	printk("Call Trace:\n");
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#973: FILE: arch/riscv/kernel/stacktrace.c:117:
++
++
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#993: FILE: arch/riscv/kernel/stacktrace.c:137:
++
++
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1040: FILE: arch/riscv/lib/memcpy.S:1:
++/*
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1144: FILE: arch/riscv/lib/memset.S:1:
++/*
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1268: FILE: arch/riscv/lib/uaccess.S:1:
++#include <linux/linkage.h>
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1399: FILE: arch/riscv/lib/udivdi3.S:1:
++/*
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000165944.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 5 errors, 15 warnings, 35 checks, 1302 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000165944.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

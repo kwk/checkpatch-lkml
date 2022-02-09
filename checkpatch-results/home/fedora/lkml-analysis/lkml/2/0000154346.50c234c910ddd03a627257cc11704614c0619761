@@ -1,0 +1,91 @@
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#144: FILE: drivers/gpu/drm/i915/i915_reg.h:3083:
++#define SDE_GMBUS_CPT		(1 << 17)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#165: FILE: drivers/gpu/drm/i915/intel_drv.h:413:
++extern void intel_gmbus_irq(struct drm_device *dev);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#166: FILE: drivers/gpu/drm/i915/intel_drv.h:414:
++extern void intel_gmbus_irq_enable(struct drm_device *dev);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#167: FILE: drivers/gpu/drm/i915/intel_drv.h:415:
++extern void intel_gmbus_irq_disable(struct drm_device *dev);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#180: FILE: drivers/gpu/drm/i915/intel_i2c.c:234:
+ }
++#define gmbus_wait(DEV_PRIV, COND, MS) \
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'DEV_PRIV' - possible side-effects?
+#180: FILE: drivers/gpu/drm/i915/intel_i2c.c:234:
++#define gmbus_wait(DEV_PRIV, COND, MS) \
++	(((DEV_PRIV)->gmbus_irq_enabled) ? \
++			wait_irq((DEV_PRIV)->gmbus_waitq, (COND), (MS)) : \
++			wait_for((COND), (MS)))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'COND' - possible side-effects?
+#180: FILE: drivers/gpu/drm/i915/intel_i2c.c:234:
++#define gmbus_wait(DEV_PRIV, COND, MS) \
++	(((DEV_PRIV)->gmbus_irq_enabled) ? \
++			wait_irq((DEV_PRIV)->gmbus_waitq, (COND), (MS)) : \
++			wait_for((COND), (MS)))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'MS' - possible side-effects?
+#180: FILE: drivers/gpu/drm/i915/intel_i2c.c:234:
++#define gmbus_wait(DEV_PRIV, COND, MS) \
++	(((DEV_PRIV)->gmbus_irq_enabled) ? \
++			wait_irq((DEV_PRIV)->gmbus_waitq, (COND), (MS)) : \
++			wait_for((COND), (MS)))
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#222: FILE: drivers/gpu/drm/i915/intel_i2c.c:310:
++				if (gmbus_wait(dev_priv,
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#268: FILE: drivers/gpu/drm/i915/intel_i2c.c:366:
++				if (gmbus_wait(dev_priv,
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#281: FILE: drivers/gpu/drm/i915/intel_i2c.c:376:
++		if (gmbus_wait(dev_priv,
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#334: FILE: drivers/gpu/drm/i915/intel_i2c.c:486:
++	struct drm_i915_private *dev_priv = drm_device->dev_private;
++	wake_up(&dev_priv->gmbus_waitq);
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000154346.commit.50c234c910ddd03a627257cc11704614c0619761 total: 3 errors, 1 warnings, 8 checks, 257 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000154346.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

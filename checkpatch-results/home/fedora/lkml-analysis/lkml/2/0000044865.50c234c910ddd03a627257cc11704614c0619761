@@ -1,0 +1,114 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#30: 
+In old days, we have two different API sets for dynamic-allocated per_cpu data
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around name.head
+#56: FILE: include/linux/srcu.h:45:
++#define RCU_BATCH_INIT(name) { NULL, &(name.head) }
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#75: FILE: include/linux/srcu.h:87:
++#define __SRCU_STRUCT_INIT(name)					\
++	{								\
++		.completed = -300,					\
++		.per_cpu_ref = &name##_srcu_array,			\
++		.queue_lock = __SPIN_LOCK_UNLOCKED(name.queue_lock),	\
++		.running = false,					\
++		.batch_queue = RCU_BATCH_INIT(name.batch_queue),	\
++		.batch_check0 = RCU_BATCH_INIT(name.batch_check0),	\
++		.batch_check1 = RCU_BATCH_INIT(name.batch_check1),	\
++		.batch_done = RCU_BATCH_INIT(name.batch_done),		\
++		.work = __DELAYED_WORK_INITIALIZER(name.work, process_srcu),\
++		__SRCU_DEP_MAP_INIT(name)				\
++	}
+
+WARNING:TYPO_SPELLING: 'dont't' may be misspelled - perhaps 'don't'?
+#91: FILE: include/linux/srcu.h:103:
++ * dont't call init_srcu_struct() nor cleanup_srcu_struct() on it.
+    ^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#93: FILE: include/linux/srcu.h:105:
++#define DEFINE_SRCU(name)						\
++	static DEFINE_PER_CPU(struct srcu_struct_array, name##_srcu_array);\
++	struct srcu_struct name = __SRCU_STRUCT_INIT(name);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#93: FILE: include/linux/srcu.h:105:
++#define DEFINE_SRCU(name)						\
++	static DEFINE_PER_CPU(struct srcu_struct_array, name##_srcu_array);\
++	struct srcu_struct name = __SRCU_STRUCT_INIT(name);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#97: FILE: include/linux/srcu.h:109:
++#define DEFINE_STATIC_SRCU(name)						\
++	static DEFINE_PER_CPU(struct srcu_struct_array, name##_srcu_array);\
++	static struct srcu_struct name = __SRCU_STRUCT_INIT(name);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#97: FILE: include/linux/srcu.h:109:
++#define DEFINE_STATIC_SRCU(name)						\
++	static DEFINE_PER_CPU(struct srcu_struct_array, name##_srcu_array);\
++	static struct srcu_struct name = __SRCU_STRUCT_INIT(name);
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000044865.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 4 warnings, 4 checks, 50 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000044865.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

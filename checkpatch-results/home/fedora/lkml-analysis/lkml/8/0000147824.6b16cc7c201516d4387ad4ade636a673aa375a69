@@ -1,0 +1,30 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'expr' - possible side-effects?
+#92: FILE: include/linux/compiler.h:317:
++#define data_race(expr)							\
++({									\
++	__kcsan_disable_current();					\
++	({								\
++		__unqual_scalar_typeof(({ expr; })) __v = ({ expr; });	\
++		__kcsan_enable_current();				\
++		__v;							\
++	});								\
++})
+
+WARNING:DATA_RACE: data_race without comment
+#92: FILE: include/linux/compiler.h:317:
++#define data_race(expr)							\
+
+Applications of data_race() should have a comment so as to document the
+reasoning behind why it was deemed safe.
+
+See: https://lore.kernel.org/lkml/20200401101714.44781-1-elver@google.com/
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000147824.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 1 warnings, 1 checks, 23 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000147824.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

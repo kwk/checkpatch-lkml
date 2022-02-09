@@ -1,0 +1,450 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#41: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#46: FILE: include/linux/closure.h:1:
++#ifndef _LINUX_CLOSURE_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:TYPO_SPELLING: 'Analagous' may be misspelled - perhaps 'Analogous'?
+#264: FILE: include/linux/closure.h:219:
++	 * CLOSURE_TIMER: Analagous to CLOSURE_WAITING, indicates that a closure
+ 	                  ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxE)
+#291: FILE: include/linux/closure.h:246:
++	((1 << CLOSURE_BLOCKING_GUARD)|				\
+ 	                              ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxE)
+#292: FILE: include/linux/closure.h:247:
++	 (1 << CLOSURE_WAITING_GUARD)|				\
+ 	                             ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxE)
+#293: FILE: include/linux/closure.h:248:
++	 (1 << CLOSURE_SLEEPING_GUARD)|				\
+ 	                              ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxE)
+#294: FILE: include/linux/closure.h:249:
++	 (1 << CLOSURE_TIMER_GUARD)|				\
+ 	                           ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxE)
+#295: FILE: include/linux/closure.h:250:
++	 (1 << CLOSURE_RUNNING_GUARD)|				\
+ 	                             ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#299: FILE: include/linux/closure.h:254:
++#define CLOSURE_REMAINING_INITIALIZER	(1|CLOSURE_RUNNING)
+                                      	  ^
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#322: FILE: include/linux/closure.h:277:
++	unsigned		magic;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#345: FILE: include/linux/closure.h:300:
++extern unsigned invalid_closure_type(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#345: FILE: include/linux/closure.h:300:
++extern unsigned invalid_closure_type(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#347: FILE: include/linux/closure.h:302:
++#define __CLOSURE_TYPE(cl, _t)						\
++	  __builtin_types_compatible_p(typeof(cl), struct _t)		\
++		? TYPE_ ## _t :						\
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cl' - possible side-effects?
+#351: FILE: include/linux/closure.h:306:
++#define __closure_type(cl)						\
++(									\
++	__CLOSURE_TYPE(cl, closure)					\
++	__CLOSURE_TYPE(cl, closure_with_waitlist)			\
++	__CLOSURE_TYPE(cl, closure_with_timer)				\
++	__CLOSURE_TYPE(cl, closure_with_waitlist_and_timer)		\
++	invalid_closure_type()						\
++)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#406: FILE: include/linux/closure.h:361:
++	BUG_ON((atomic_inc_return(&cl->remaining) &
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#443: FILE: include/linux/closure.h:398:
++	if (running) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#446: FILE: include/linux/closure.h:401:
++	} else
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cl' - possible side-effects?
+#457: FILE: include/linux/closure.h:412:
++#define __to_internal_closure(cl)				\
++({								\
++	BUILD_BUG_ON(__closure_type(*cl) > MAX_CLOSURE_TYPE);	\
++	(struct closure *) cl;					\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'cl' may be better as '(cl)' to avoid precedence issues
+#457: FILE: include/linux/closure.h:412:
++#define __to_internal_closure(cl)				\
++({								\
++	BUILD_BUG_ON(__closure_type(*cl) > MAX_CLOSURE_TYPE);	\
++	(struct closure *) cl;					\
++})
+
+CHECK:SPACING: No space is necessary after a cast
+#460: FILE: include/linux/closure.h:415:
++	(struct closure *) cl;					\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cl' - possible side-effects?
+#463: FILE: include/linux/closure.h:418:
++#define closure_init_type(cl, parent, running)			\
++do {								\
++	struct closure *_cl = __to_internal_closure(cl);	\
++	_cl->type = __closure_type(*(cl));			\
++	do_closure_init(_cl, parent, running);			\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cl' - possible side-effects?
+#484: FILE: include/linux/closure.h:439:
++#define closure_init(cl, parent)				\
++do {								\
++	memset((cl), 0, sizeof(*(cl)));				\
++	__closure_init(cl, parent);				\
++} while (0)
+
+CHECK:SPACING: space preferred before that '|' (ctx:VxE)
+#493: FILE: include/linux/closure.h:448:
++	atomic_set(&cl->remaining, CLOSURE_REMAINING_INITIALIZER|
+ 	                                                        ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#494: FILE: include/linux/closure.h:449:
++		   CLOSURE_BLOCKING|CLOSURE_STACK);
+ 		                   ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cl' - possible side-effects?
+#504: FILE: include/linux/closure.h:459:
++#define closure_init_unlocked(cl)				\
++do {								\
++	memset((cl), 0, sizeof(*(cl)));				\
++	closure_init_type(cl, NULL, false);			\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cl' - possible side-effects?
+#522: FILE: include/linux/closure.h:477:
++#define closure_lock(cl, parent)				\
++	__closure_lock(__to_internal_closure(cl), parent, &(cl)->wait)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cl' - possible side-effects?
+#534: FILE: include/linux/closure.h:489:
++#define closure_sleep(cl, delay)				\
++	__closure_sleep(__to_internal_closure(cl), delay, &(cl)->timer)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cl' - possible side-effects?
+#537: FILE: include/linux/closure.h:492:
++#define closure_flush(cl)				\
++	__closure_flush(__to_internal_closure(cl), &(cl)->timer)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cl' - possible side-effects?
+#540: FILE: include/linux/closure.h:495:
++#define closure_flush_sync(cl)				\
++	__closure_flush_sync(__to_internal_closure(cl), &(cl)->timer)
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#600: FILE: include/linux/closure.h:555:
++	smp_mb();
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'list' - possible side-effects?
+#625: FILE: include/linux/closure.h:580:
++#define __closure_wait_event(list, cl, condition, _block)		\
++({									\
++	bool block = _block;						\
++	typeof(condition) ret;						\
++									\
++	while (1) {							\
++		ret = (condition);					\
++		if (ret) {						\
++			__closure_wake_up(list);			\
++			if (block)					\
++				closure_sync(cl);			\
++									\
++			break;						\
++		}							\
++									\
++		if (block)						\
++			__closure_start_sleep(cl);			\
++									\
++		if (!closure_wait(list, cl)) {				\
++			if (!block)					\
++				break;					\
++									\
++			schedule();					\
++		}							\
++	}								\
++									\
++	ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cl' - possible side-effects?
+#625: FILE: include/linux/closure.h:580:
++#define __closure_wait_event(list, cl, condition, _block)		\
++({									\
++	bool block = _block;						\
++	typeof(condition) ret;						\
++									\
++	while (1) {							\
++		ret = (condition);					\
++		if (ret) {						\
++			__closure_wake_up(list);			\
++			if (block)					\
++				closure_sync(cl);			\
++									\
++			break;						\
++		}							\
++									\
++		if (block)						\
++			__closure_start_sleep(cl);			\
++									\
++		if (!closure_wait(list, cl)) {				\
++			if (!block)					\
++				break;					\
++									\
++			schedule();					\
++		}							\
++	}								\
++									\
++	ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cl' - possible side-effects?
+#674: FILE: include/linux/closure.h:629:
++#define closure_wait_event(list, cl, condition)				\
++	__closure_wait_event(list, cl, condition, closure_blocking(cl))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_cl' - possible side-effects?
+#692: FILE: include/linux/closure.h:647:
++#define continue_at(_cl, _fn, _wq, ...)					\
++do {									\
++	BUG_ON(!(_cl) || object_is_on_stack(_cl));			\
++	closure_set_ip(_cl);						\
++	set_closure_fn(_cl, _fn, _wq);					\
++	closure_sub(_cl, CLOSURE_RUNNING + 1);				\
++	return __VA_ARGS__;						\
++} while (0)
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#692: FILE: include/linux/closure.h:647:
++#define continue_at(_cl, _fn, _wq, ...)					\
++do {									\
++	BUG_ON(!(_cl) || object_is_on_stack(_cl));			\
++	closure_set_ip(_cl);						\
++	set_closure_fn(_cl, _fn, _wq);					\
++	closure_sub(_cl, CLOSURE_RUNNING + 1);				\
++	return __VA_ARGS__;						\
++} while (0)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#694: FILE: include/linux/closure.h:649:
++	BUG_ON(!(_cl) || object_is_on_stack(_cl));			\
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#712: FILE: lib/Kconfig.debug:381:
++config DEBUG_CLOSURES
++	bool "Debug closures"
++	select DEBUG_FS
++	---help---
++	Keeps all active closures in a linked list and provides a debugfs
++	interface to list them, which makes it possible to see asynchronous
++	operations that get stuck.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#742: FILE: lib/closure.c:1:
++
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#756: FILE: lib/closure.c:15:
++	struct workqueue_struct *wq = cl->wq;
++	if (wq) {
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#756: FILE: lib/closure.c:15:
++	if (wq) {
+[...]
++	} else
+[...]
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#758: FILE: lib/closure.c:17:
++		BUG_ON(!queue_work(wq, &cl->work));
+
+CHECK:BRACES: Unbalanced braces around else statement
+#759: FILE: lib/closure.c:18:
++	} else
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#764: FILE: lib/closure.c:23:
++#define CL_FIELD(type, field)					\
++	case TYPE_ ## type:					\
++	return &container_of(cl, struct type, cl)->field
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#764: FILE: lib/closure.c:23:
++#define CL_FIELD(type, field)					\
++	case TYPE_ ## type:					\
++	return &container_of(cl, struct type, cl)->field
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#792: FILE: lib/closure.c:51:
++	BUG_ON(r & CLOSURE_GUARD_MASK);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#794: FILE: lib/closure.c:53:
++	BUG_ON(!rem && (r & ~CLOSURE_BLOCKING));
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#855: FILE: lib/closure.c:114:
++		struct llist_node *t = list;
++		list = llist_next(list);
+
+WARNING:TYPO_SPELLING: 'succesfully' may be misspelled - perhaps 'successfully'?
+#913: FILE: lib/closure.c:172:
++ * Returns true if the closure was succesfully locked.
+                                    ^^^^^^^^^^^
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#923: FILE: lib/closure.c:182:
++	smp_mb();
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#937: FILE: lib/closure.c:196:
++	struct closure wait;
++	closure_init_stack(&wait);
+
+CHECK:SPACING: No space is necessary after a cast
+#951: FILE: lib/closure.c:210:
++	struct closure *cl = (struct closure *) data;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#952: FILE: lib/closure.c:211:
++	struct closure *cl = (struct closure *) data;
++	closure_sub(cl, CLOSURE_TIMER + 1);
+
+CHECK:SPACING: No space is necessary after a cast
+#960: FILE: lib/closure.c:219:
++	timer->data	= (unsigned long) cl;
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#971: FILE: lib/closure.c:230:
++	BUG_ON(timer_pending(timer));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1004: FILE: lib/closure.c:263:
++	BUG_ON(cl->magic == CLOSURE_MAGIC_ALIVE);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1017: FILE: lib/closure.c:276:
++	BUG_ON(cl->magic != CLOSURE_MAGIC_ALIVE);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1033: FILE: lib/closure.c:292:
++	struct closure *cl;
++	spin_lock_irq(&closure_list_lock);
+
+WARNING:VSPRINTF_POINTER_EXTENSION: Invalid vsprintf pointer extension '%pF' - use %pS instead
+#1038: FILE: lib/closure.c:297:
++		seq_printf(f, "%p: %pF -> %pf p %p r %i ",
++			   cl, (void *) cl->ip, cl->fn, cl->parent,
++			   r & CLOSURE_REMAINING_MASK);
+
+CHECK:SPACING: No space is necessary after a cast
+#1039: FILE: lib/closure.c:298:
++			   cl, (void *) cl->ip, cl->fn, cl->parent,
+
+WARNING:VSPRINTF_POINTER_EXTENSION: Invalid vsprintf pointer extension '%pF' - use %pS instead
+#1051: FILE: lib/closure.c:310:
++		if (r & CLOSURE_WAITING)
++			seq_printf(f, " W %pF\n",
++				   (void *) cl->waiting_on);
+
+CHECK:SPACING: No space is necessary after a cast
+#1053: FILE: lib/closure.c:312:
++				   (void *) cl->waiting_on);
+
+WARNING:PREFER_SEQ_PUTS: Prefer seq_puts to seq_printf
+#1055: FILE: lib/closure.c:314:
++		seq_printf(f, "\n");
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000115434.commit.50c234c910ddd03a627257cc11704614c0619761 total: 2 errors, 27 warnings, 33 checks, 1024 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000115434.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,276 @@
+CHECK:CAMELCASE: Avoid CamelCase: <dwBytesPerLine>
+#108: FILE: drivers/usb/gadget/function/uvc_configfs.c:1201:
++UVCG_FRAME_ATTR(dw_bytes_perline, dwBytesPerLine, 32);
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#206: FILE: drivers/usb/gadget/function/uvc_configfs.c:1914:
++	return container_of(
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'aname' - possible side-effects?
+#216: FILE: drivers/usb/gadget/function/uvc_configfs.c:1924:
++#define UVCG_FRAMEBASED_ATTR_RO(cname, aname, bits)			\
++static ssize_t uvcg_framebased_##cname##_show(struct config_item *item,\
++					char *page)			\
++{									\
++	struct uvcg_framebased *u = to_uvcg_framebased(item);		\
++	struct f_uvc_opts *opts;					\
++	struct config_item *opts_item;					\
++	struct mutex *su_mutex = &u->fmt.group.cg_subsys->su_mutex;	\
++	int result;							\
++									\
++	mutex_lock(su_mutex); /* for navigating configfs hierarchy */	\
++									\
++	opts_item = u->fmt.group.cg_item.ci_parent->ci_parent->ci_parent;\
++	opts = to_f_uvc_opts(opts_item);				\
++									\
++	mutex_lock(&opts->lock);					\
++	result = sprintf(page, "%u\n", le##bits##_to_cpu(u->desc.aname));\
++	mutex_unlock(&opts->lock);					\
++									\
++	mutex_unlock(su_mutex);						\
++	return result;							\
++}									\
++									\
++UVC_ATTR_RO(uvcg_framebased_, cname, aname)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'aname' - possible side-effects?
+#241: FILE: drivers/usb/gadget/function/uvc_configfs.c:1949:
++#define UVCG_FRAMEBASED_ATTR(cname, aname, bits)			\
++static ssize_t uvcg_framebased_##cname##_show(struct config_item *item,\
++				char *page)\
++{									\
++	struct uvcg_framebased *u = to_uvcg_framebased(item);		\
++	struct f_uvc_opts *opts;					\
++	struct config_item *opts_item;					\
++	struct mutex *su_mutex = &u->fmt.group.cg_subsys->su_mutex;	\
++	int result;							\
++									\
++	mutex_lock(su_mutex); /* for navigating configfs hierarchy */	\
++									\
++	opts_item = u->fmt.group.cg_item.ci_parent->ci_parent->ci_parent;\
++	opts = to_f_uvc_opts(opts_item);				\
++									\
++	mutex_lock(&opts->lock);					\
++	result = sprintf(page, "%u\n", le##bits##_to_cpu(u->desc.aname));\
++	mutex_unlock(&opts->lock);					\
++									\
++	mutex_unlock(su_mutex);						\
++	return result;							\
++}									\
++									\
++static ssize_t								\
++uvcg_framebased_##cname##_store(struct config_item *item,		\
++			   const char *page, size_t len)		\
++{									\
++	struct uvcg_framebased *u = to_uvcg_framebased(item);		\
++	struct f_uvc_opts *opts;					\
++	struct config_item *opts_item;					\
++	struct mutex *su_mutex = &u->fmt.group.cg_subsys->su_mutex;	\
++	int ret;							\
++	u8 num;								\
++									\
++	mutex_lock(su_mutex); /* for navigating configfs hierarchy */	\
++									\
++	opts_item = u->fmt.group.cg_item.ci_parent->ci_parent->ci_parent;\
++	opts = to_f_uvc_opts(opts_item);				\
++									\
++	mutex_lock(&opts->lock);					\
++	if (u->fmt.linked || opts->refcnt) {				\
++		ret = -EBUSY;						\
++		goto end;						\
++	}								\
++									\
++	ret = kstrtou8(page, 0, &num);					\
++	if (ret)							\
++		goto end;						\
++									\
++	if (num > 255) {						\
++		ret = -EINVAL;						\
++		goto end;						\
++	}								\
++	u->desc.aname = num;						\
++	ret = len;							\
++end:									\
++	mutex_unlock(&opts->lock);					\
++	mutex_unlock(su_mutex);						\
++	return ret;							\
++}									\
++									\
++UVC_ATTR(uvcg_framebased_, cname, aname)
+
+CHECK:CAMELCASE: Avoid CamelCase: <bFormatIndex>
+#304: FILE: drivers/usb/gadget/function/uvc_configfs.c:2012:
++UVCG_FRAMEBASED_ATTR_RO(b_format_index, bFormatIndex, 8);
+
+CHECK:CAMELCASE: Avoid CamelCase: <bBitsPerPixel>
+#305: FILE: drivers/usb/gadget/function/uvc_configfs.c:2013:
++UVCG_FRAMEBASED_ATTR_RO(b_bits_per_pixel, bBitsPerPixel, 8);
+
+CHECK:CAMELCASE: Avoid CamelCase: <bDefaultFrameIndex>
+#306: FILE: drivers/usb/gadget/function/uvc_configfs.c:2014:
++UVCG_FRAMEBASED_ATTR(b_default_frame_index, bDefaultFrameIndex, 8);
+
+CHECK:CAMELCASE: Avoid CamelCase: <bAspectRatioX>
+#307: FILE: drivers/usb/gadget/function/uvc_configfs.c:2015:
++UVCG_FRAMEBASED_ATTR_RO(b_aspect_ratio_x, bAspectRatioX, 8);
+
+CHECK:CAMELCASE: Avoid CamelCase: <bAspectRatioY>
+#308: FILE: drivers/usb/gadget/function/uvc_configfs.c:2016:
++UVCG_FRAMEBASED_ATTR_RO(b_aspect_ratio_y, bAspectRatioY, 8);
+
+CHECK:CAMELCASE: Avoid CamelCase: <bmInterfaceFlags>
+#309: FILE: drivers/usb/gadget/function/uvc_configfs.c:2017:
++UVCG_FRAMEBASED_ATTR_RO(bm_interface_flags, bmInterfaceFlags, 8);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#315: FILE: drivers/usb/gadget/function/uvc_configfs.c:2023:
++static ssize_t uvcg_framebased_guid_format_show(struct config_item *item,
++							char *page)
+
+CHECK:CAMELCASE: Avoid CamelCase: <guidFormat>
+#328: FILE: drivers/usb/gadget/function/uvc_configfs.c:2036:
++	memcpy(page, ch->desc.guidFormat, sizeof(ch->desc.guidFormat));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#337: FILE: drivers/usb/gadget/function/uvc_configfs.c:2045:
++static ssize_t uvcg_framebased_guid_format_store(struct config_item *item,
++						   const char *page, size_t len)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#378: FILE: drivers/usb/gadget/function/uvc_configfs.c:2086:
++uvcg_framebased_bma_controls_store(struct config_item *item,
++				     const char *page, size_t len)
+
+CHECK:CAMELCASE: Avoid CamelCase: <bmaControls>
+#385: FILE: drivers/usb/gadget/function/uvc_configfs.c:2093:
++UVC_ATTR(uvcg_framebased_, bma_controls, bmaControls);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#407: FILE: drivers/usb/gadget/function/uvc_configfs.c:2115:
++static struct config_group *uvcg_framebased_make(struct config_group *group,
++						   const char *name)
+
+WARNING:REPEATED_WORD: Possible repeated word: 'frame'
+#409: FILE: drivers/usb/gadget/function/uvc_configfs.c:2117:
++	static char guid[] = { /*Declear frame frame based as H264*/
+
+CHECK:CAMELCASE: Avoid CamelCase: <bLength>
+#419: FILE: drivers/usb/gadget/function/uvc_configfs.c:2127:
++	f->desc.bLength			= UVC_DT_FORMAT_FRAMEBASED_SIZE;
+
+CHECK:CAMELCASE: Avoid CamelCase: <bDescriptorType>
+#420: FILE: drivers/usb/gadget/function/uvc_configfs.c:2128:
++	f->desc.bDescriptorType		= USB_DT_CS_INTERFACE;
+
+CHECK:CAMELCASE: Avoid CamelCase: <bDescriptorSubType>
+#421: FILE: drivers/usb/gadget/function/uvc_configfs.c:2129:
++	f->desc.bDescriptorSubType	= UVC_VS_FORMAT_FRAME_BASED;
+
+CHECK:CAMELCASE: Avoid CamelCase: <bCopyProtect>
+#428: FILE: drivers/usb/gadget/function/uvc_configfs.c:2136:
++	f->desc.bCopyProtect		= 0;
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#440: FILE: drivers/usb/gadget/function/uvc_configfs.c:2148:
++};
++static const struct uvcg_config_group_type uvcg_framebased_grp_type = {
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:CAMELCASE: Avoid CamelCase: <bFrameIndex>
+#488: FILE: drivers/usb/gadget/function/uvc_configfs.c:2387:
++	desc->bFrameIndex = frm->frame.b_frame_index;
+
+CHECK:CAMELCASE: Avoid CamelCase: <bmCapabilities>
+#489: FILE: drivers/usb/gadget/function/uvc_configfs.c:2388:
++	desc->bmCapabilities = frm->frame.bm_capabilities;
+
+CHECK:CAMELCASE: Avoid CamelCase: <wWidth>
+#490: FILE: drivers/usb/gadget/function/uvc_configfs.c:2389:
++	desc->wWidth = frm->frame.w_width;
+
+CHECK:CAMELCASE: Avoid CamelCase: <wHeight>
+#491: FILE: drivers/usb/gadget/function/uvc_configfs.c:2390:
++	desc->wHeight = frm->frame.w_height;
+
+CHECK:CAMELCASE: Avoid CamelCase: <dwMinBitRate>
+#492: FILE: drivers/usb/gadget/function/uvc_configfs.c:2391:
++	desc->dwMinBitRate = frm->frame.dw_min_bit_rate;
+
+CHECK:CAMELCASE: Avoid CamelCase: <dwMaxBitRate>
+#493: FILE: drivers/usb/gadget/function/uvc_configfs.c:2392:
++	desc->dwMaxBitRate = frm->frame.dw_max_bit_rate;
+
+CHECK:CAMELCASE: Avoid CamelCase: <dwDefaultFrameInterval>
+#494: FILE: drivers/usb/gadget/function/uvc_configfs.c:2393:
++	desc->dwDefaultFrameInterval = frm->frame.dw_default_frame_interval;
+
+CHECK:CAMELCASE: Avoid CamelCase: <bFrameIntervalType>
+#495: FILE: drivers/usb/gadget/function/uvc_configfs.c:2394:
++	desc->bFrameIntervalType = frm->frame.b_frame_interval_type;
+
+CHECK:CAMELCASE: Avoid CamelCase: <bNumFrameDescriptors>
+#514: FILE: drivers/usb/gadget/function/uvc_configfs.c:2460:
++			f->desc.bNumFrameDescriptors = fmt->num_frames;
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#539: FILE: drivers/usb/gadget/function/uvc_configfs.c:2489:
++			h->bLength = UVC_DT_FRAME_FRAMEBASED_SIZE(
+
+CHECK:CAMELCASE: Avoid CamelCase: <bVariableSize>
+#574: FILE: include/uapi/linux/usb/video.h:583:
++	__u8  bVariableSize;
+
+CHECK:CAMELCASE: Avoid CamelCase: <dwFrameInterval>
+#593: FILE: include/uapi/linux/usb/video.h:602:
++	__u32 dwFrameInterval[];
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#596: FILE: include/uapi/linux/usb/video.h:605:
++#define UVC_DT_FRAME_FRAMEBASED_SIZE(n)                        (26+4*(n))
+                                                                   ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#596: FILE: include/uapi/linux/usb/video.h:605:
++#define UVC_DT_FRAME_FRAMEBASED_SIZE(n)                        (26+4*(n))
+                                                                     ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#601: FILE: include/uapi/linux/usb/video.h:610:
++#define DECLARE_UVC_FRAME_FRAMEBASED(n)		\
++struct UVC_FRAME_FRAMEBASED(n) {		\
++	__u8  bLength;				\
++	__u8  bDescriptorType;			\
++	__u8  bDescriptorSubType;		\
++	__u8  bFrameIndex;			\
++	__u8  bmCapabilities;			\
++	__u16 wWidth;				\
++	__u16 wHeight;				\
++	__u32 dwMinBitRate;			\
++	__u32 dwMaxBitRate;			\
++	__u32 dwDefaultFrameInterval;		\
++	__u8  bFrameIntervalType;		\
++	__u32 dwBytesPerLine;			\
++	__u32 dwFrameInterval[n];		\
++} __attribute__ ((packed))
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000069240.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 0 errors, 1 warnings, 36 checks, 524 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000069240.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,274 @@
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#50: FILE: drivers/clk/qcom/Kconfig:90:
++config MDM_GCC_9615
++	tristate "MDM9615 Global Clock Controller"
++	depends on COMMON_CLK_QCOM
++	help
++	  Support for the global clock controller on mdm9615 devices.
++	  Say Y if you want to use peripheral devices such as UART, SPI,
++	  i2c, USB, SD/eMMC, etc.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#58: FILE: drivers/clk/qcom/Kconfig:98:
++config MDM_LCC_9615
++	tristate "MDM9615 LPASS Clock Controller"
++	select MDM_GCC_9615
++	depends on COMMON_CLK_QCOM
++	help
++	  Support for the LPASS clock controller on mdm9615 devices.
++	  Say Y if you want to use audio devices such as i2s, pcm,
++	  SLIMBus, etc.
++
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#81: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#86: FILE: drivers/clk/qcom/gcc-mdm9615.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1819: FILE: drivers/clk/qcom/lcc-mdm9615.c:1:
++/*
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ns' - possible side-effects?
+#2022: FILE: drivers/clk/qcom/lcc-mdm9615.c:204:
++#define CLK_AIF_OSR_DIV(prefix, _ns, _md, hr)			\
++static struct clk_rcg prefix##_osr_src = {			\
++	.ns_reg = _ns,						\
++	.md_reg = _md,						\
++	.mn = {							\
++		.mnctr_en_bit = 8,				\
++		.mnctr_reset_bit = 7,				\
++		.mnctr_mode_shift = 5,				\
++		.n_val_shift = 24,				\
++		.m_val_shift = 8,				\
++		.width = 8,					\
++	},							\
++	.p = {							\
++		.pre_div_shift = 3,				\
++		.pre_div_width = 2,				\
++	},							\
++	.s = {							\
++		.src_sel_shift = 0,				\
++		.parent_map = lcc_cxo_pll4_map,			\
++	},							\
++	.freq_tbl = clk_tbl_aif_osr_393,			\
++	.clkr = {						\
++		.enable_reg = _ns,				\
++		.enable_mask = BIT(9),				\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_osr_src",		\
++			.parent_names = lcc_cxo_pll4,		\
++			.num_parents = 2,			\
++			.ops = &clk_rcg_ops,			\
++			.flags = CLK_SET_RATE_GATE,		\
++		},						\
++	},							\
++};								\
++								\
++static const char * const lcc_##prefix##_parents[] = {		\
++	#prefix "_osr_src",					\
++};								\
++								\
++static struct clk_branch prefix##_osr_clk = {			\
++	.halt_reg = hr,						\
++	.halt_bit = 1,						\
++	.halt_check = BRANCH_HALT_ENABLE,			\
++	.clkr = {						\
++		.enable_reg = _ns,				\
++		.enable_mask = BIT(21),				\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_osr_clk",		\
++			.parent_names = lcc_##prefix##_parents,	\
++			.num_parents = 1,			\
++			.ops = &clk_branch_ops,			\
++			.flags = CLK_SET_RATE_PARENT,		\
++		},						\
++	},							\
++};								\
++								\
++static struct clk_regmap_div prefix##_div_clk = {		\
++	.reg = _ns,						\
++	.shift = 10,						\
++	.width = 8,						\
++	.clkr = {						\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_div_clk",		\
++			.parent_names = lcc_##prefix##_parents,	\
++			.num_parents = 1,			\
++			.ops = &clk_regmap_div_ops,		\
++		},						\
++	},							\
++};								\
++								\
++static struct clk_branch prefix##_bit_div_clk = {		\
++	.halt_reg = hr,						\
++	.halt_bit = 0,						\
++	.halt_check = BRANCH_HALT_ENABLE,			\
++	.clkr = {						\
++		.enable_reg = _ns,				\
++		.enable_mask = BIT(19),				\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_bit_div_clk",		\
++			.parent_names = (const char *[]){	\
++				#prefix "_div_clk"		\
++			},					\
++			.num_parents = 1,			\
++			.ops = &clk_branch_ops,			\
++			.flags = CLK_SET_RATE_PARENT,		\
++		},						\
++	},							\
++};								\
++								\
++static struct clk_regmap_mux prefix##_bit_clk = {		\
++	.reg = _ns,						\
++	.shift = 18,						\
++	.width = 1,						\
++	.clkr = {						\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_bit_clk",		\
++			.parent_names = (const char *[]){	\
++				#prefix "_bit_div_clk",		\
++				#prefix "_codec_clk",		\
++			},					\
++			.num_parents = 2,			\
++			.ops = &clk_regmap_mux_closest_ops,	\
++			.flags = CLK_SET_RATE_PARENT,		\
++		},						\
++	},							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'hr' - possible side-effects?
+#2022: FILE: drivers/clk/qcom/lcc-mdm9615.c:204:
++#define CLK_AIF_OSR_DIV(prefix, _ns, _md, hr)			\
++static struct clk_rcg prefix##_osr_src = {			\
++	.ns_reg = _ns,						\
++	.md_reg = _md,						\
++	.mn = {							\
++		.mnctr_en_bit = 8,				\
++		.mnctr_reset_bit = 7,				\
++		.mnctr_mode_shift = 5,				\
++		.n_val_shift = 24,				\
++		.m_val_shift = 8,				\
++		.width = 8,					\
++	},							\
++	.p = {							\
++		.pre_div_shift = 3,				\
++		.pre_div_width = 2,				\
++	},							\
++	.s = {							\
++		.src_sel_shift = 0,				\
++		.parent_map = lcc_cxo_pll4_map,			\
++	},							\
++	.freq_tbl = clk_tbl_aif_osr_393,			\
++	.clkr = {						\
++		.enable_reg = _ns,				\
++		.enable_mask = BIT(9),				\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_osr_src",		\
++			.parent_names = lcc_cxo_pll4,		\
++			.num_parents = 2,			\
++			.ops = &clk_rcg_ops,			\
++			.flags = CLK_SET_RATE_GATE,		\
++		},						\
++	},							\
++};								\
++								\
++static const char * const lcc_##prefix##_parents[] = {		\
++	#prefix "_osr_src",					\
++};								\
++								\
++static struct clk_branch prefix##_osr_clk = {			\
++	.halt_reg = hr,						\
++	.halt_bit = 1,						\
++	.halt_check = BRANCH_HALT_ENABLE,			\
++	.clkr = {						\
++		.enable_reg = _ns,				\
++		.enable_mask = BIT(21),				\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_osr_clk",		\
++			.parent_names = lcc_##prefix##_parents,	\
++			.num_parents = 1,			\
++			.ops = &clk_branch_ops,			\
++			.flags = CLK_SET_RATE_PARENT,		\
++		},						\
++	},							\
++};								\
++								\
++static struct clk_regmap_div prefix##_div_clk = {		\
++	.reg = _ns,						\
++	.shift = 10,						\
++	.width = 8,						\
++	.clkr = {						\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_div_clk",		\
++			.parent_names = lcc_##prefix##_parents,	\
++			.num_parents = 1,			\
++			.ops = &clk_regmap_div_ops,		\
++		},						\
++	},							\
++};								\
++								\
++static struct clk_branch prefix##_bit_div_clk = {		\
++	.halt_reg = hr,						\
++	.halt_bit = 0,						\
++	.halt_check = BRANCH_HALT_ENABLE,			\
++	.clkr = {						\
++		.enable_reg = _ns,				\
++		.enable_mask = BIT(19),				\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_bit_div_clk",		\
++			.parent_names = (const char *[]){	\
++				#prefix "_div_clk"		\
++			},					\
++			.num_parents = 1,			\
++			.ops = &clk_branch_ops,			\
++			.flags = CLK_SET_RATE_PARENT,		\
++		},						\
++	},							\
++};								\
++								\
++static struct clk_regmap_mux prefix##_bit_clk = {		\
++	.reg = _ns,						\
++	.shift = 18,						\
++	.width = 1,						\
++	.clkr = {						\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_bit_clk",		\
++			.parent_names = (const char *[]){	\
++				#prefix "_bit_div_clk",		\
++				#prefix "_codec_clk",		\
++			},					\
++			.num_parents = 2,			\
++			.ops = &clk_regmap_mux_closest_ops,	\
++			.flags = CLK_SET_RATE_PARENT,		\
++		},						\
++	},							\
++}
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000012562.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 5 warnings, 2 checks, 2335 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000012562.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

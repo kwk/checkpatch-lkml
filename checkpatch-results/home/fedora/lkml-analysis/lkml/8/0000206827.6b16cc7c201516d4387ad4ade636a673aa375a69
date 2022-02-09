@@ -1,0 +1,254 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#74: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#110: FILE: arch/x86/kvm/svm/avic.c:32:
++module_param(avic, int, S_IRUGO);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#132: FILE: arch/x86/kvm/svm/avic.c:54:
++#define AVIC_VM_ID_NR			(1 << AVIC_VM_ID_BITS)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'x' may be better as '(x)' to avoid precedence issues
+#135: FILE: arch/x86/kvm/svm/avic.c:57:
++#define AVIC_GATAG(x, y)		(((x & AVIC_VM_ID_MASK) << AVIC_VCPU_ID_BITS) | \
++						(y & AVIC_VCPU_ID_MASK))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'y' may be better as '(y)' to avoid precedence issues
+#135: FILE: arch/x86/kvm/svm/avic.c:57:
++#define AVIC_GATAG(x, y)		(((x & AVIC_VM_ID_MASK) << AVIC_VCPU_ID_BITS) | \
++						(y & AVIC_VCPU_ID_MASK))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'x' may be better as '(x)' to avoid precedence issues
+#137: FILE: arch/x86/kvm/svm/avic.c:59:
++#define AVIC_GATAG_TO_VMID(x)		((x >> AVIC_VCPU_ID_BITS) & AVIC_VM_ID_MASK)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'x' may be better as '(x)' to avoid precedence issues
+#138: FILE: arch/x86/kvm/svm/avic.c:60:
++#define AVIC_GATAG_TO_VCPUID(x)		(x & AVIC_VCPU_ID_MASK)
+
+ERROR:INITIALISED_STATIC: do not initialise statics to 0
+#147: FILE: arch/x86/kvm/svm/avic.c:69:
++static u32 next_vm_id = 0;
+
+Static variables should not be initialized explicitly to zero.
+Your compiler (or rather your loader) automatically does
+it for you.
+
+ERROR:INITIALISED_STATIC: do not initialise statics to 0
+#148: FILE: arch/x86/kvm/svm/avic.c:70:
++static bool next_vm_id_wrapped = 0;
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#250: FILE: arch/x86/kvm/svm/avic.c:172:
++	vm_id = next_vm_id = (next_vm_id + 1) & AVIC_VM_ID_MASK;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'kvm->arch.apic_access_page_done == activate'
+#323: FILE: arch/x86/kvm/svm/avic.c:245:
++	if ((kvm->arch.apic_access_page_done == activate) ||
++	    (kvm->mm != current->mm))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'kvm->mm != current->mm'
+#323: FILE: arch/x86/kvm/svm/avic.c:245:
++	if ((kvm->arch.apic_access_page_done == activate) ||
++	    (kvm->mm != current->mm))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'apic < 0'
+#457: FILE: arch/x86/kvm/svm/avic.c:379:
++		if ((apic < 0) || (apic > 7) ||
++		    (cluster >= 0xf))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'apic > 7'
+#457: FILE: arch/x86/kvm/svm/avic.c:379:
++		if ((apic < 0) || (apic > 7) ||
++		    (cluster >= 0xf))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'cluster >= 0xf'
+#457: FILE: arch/x86/kvm/svm/avic.c:379:
++		if ((apic < 0) || (apic > 7) ||
++		    (cluster >= 0xf))
+
+CHECK:SPACING: No space is necessary after a cast
+#463: FILE: arch/x86/kvm/svm/avic.c:385:
++	logical_apic_id_table = (u32 *) page_address(kvm_svm->avic_logical_id_table_page);
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#680: FILE: arch/x86/kvm/svm/avic.c:602:
++	return;
++}
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#752: FILE: arch/x86/kvm/svm/avic.c:674:
++	return;
++}
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#760: FILE: arch/x86/kvm/svm/avic.c:682:
++	smp_mb__after_atomic();
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#762: FILE: arch/x86/kvm/svm/avic.c:684:
++	if (avic_vcpu_is_running(vcpu)) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#768: FILE: arch/x86/kvm/svm/avic.c:690:
++	} else
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'pi->prev_ga_tag != 0'
+#806: FILE: arch/x86/kvm/svm/avic.c:728:
++	if (pi->ir_data && (pi->prev_ga_tag != 0)) {
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*ir)...) over kzalloc(sizeof(struct amd_svm_iommu_ir)...)
+#825: FILE: arch/x86/kvm/svm/avic.c:747:
++	ir = kzalloc(sizeof(struct amd_svm_iommu_ir), GFP_KERNEL_ACCOUNT);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#885: FILE: arch/x86/kvm/svm/avic.c:807:
++		       uint32_t guest_irq, bool set)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#924: FILE: arch/x86/kvm/svm/avic.c:846:
++			pi.ga_tag = AVIC_GATAG(to_kvm_svm(kvm)->avic_vm_id,
++						     svm->vcpu.vcpu_id);
+
+WARNING:TYPO_SPELLING: 'upto' may be misspelled - perhaps 'up to'?
+#1043: FILE: arch/x86/kvm/svm/avic.c:965:
++	 * we can support host APIC ID upto 255.
+ 	                               ^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around svm->avic_physical_id_cache
+#1048: FILE: arch/x86/kvm/svm/avic.c:970:
++	entry = READ_ONCE(*(svm->avic_physical_id_cache));
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around svm->avic_physical_id_cache
+#1058: FILE: arch/x86/kvm/svm/avic.c:980:
++	WRITE_ONCE(*(svm->avic_physical_id_cache), entry);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around svm->avic_physical_id_cache
+#1071: FILE: arch/x86/kvm/svm/avic.c:993:
++	entry = READ_ONCE(*(svm->avic_physical_id_cache));
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around svm->avic_physical_id_cache
+#1076: FILE: arch/x86/kvm/svm/avic.c:998:
++	WRITE_ONCE(*(svm->avic_physical_id_cache), entry);
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#2326: FILE: arch/x86/kvm/svm/svm.h:390:
++#define AVIC_LOGICAL_ID_ENTRY_VALID_MASK		(1 << 31)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#2330: FILE: arch/x86/kvm/svm/svm.h:394:
++#define AVIC_PHYSICAL_ID_ENTRY_IS_RUNNING_MASK		(1ULL << 62)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#2331: FILE: arch/x86/kvm/svm/svm.h:395:
++#define AVIC_PHYSICAL_ID_ENTRY_VALID_MASK		(1ULL << 63)
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#2375: FILE: arch/x86/kvm/svm/svm.h:439:
++		       uint32_t guest_irq, bool set);
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000206827.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 2 errors, 6 warnings, 26 checks, 2280 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000206827.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

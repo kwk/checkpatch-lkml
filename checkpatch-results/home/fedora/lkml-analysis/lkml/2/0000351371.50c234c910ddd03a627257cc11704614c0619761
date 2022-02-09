@@ -1,0 +1,212 @@
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#75: FILE: arch/x86/include/asm/msr-index.h:84:
++#define DEBUGCTLMSR_ENABLE_UNCORE_PMI	(1UL << 13)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#98: FILE: arch/x86/include/asm/perf_event.h:134:
++extern void init_uncore_pmu(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#139: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#144: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.c:1:
++#include "perf_event_intel_uncore.h"
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#228: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.c:85:
++		if (event->attr.exclude_user || event->attr.exclude_kernel
++			|| event->attr.exclude_hv || event->attr.exclude_idle)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#404: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.c:261:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#488: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.c:345:
++perf_event_uncore_nmi_handler(struct notifier_block *self,
++			 unsigned long cmd, void *__args)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'handled > 1'
+#525: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.c:382:
++	if ((handled > 1) ||
++		/* the next nmi could be a back-to-back nmi */
++	    ((__get_cpu_var(pmu_uncore_nmi).marked == this_nmi) &&
++	     (__get_cpu_var(pmu_uncore_nmi).handled > 1))) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#526: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.c:383:
++	if ((handled > 1) ||
++		/* the next nmi could be a back-to-back nmi */
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#569: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.c:426:
++	pr_cont("Nehalem uncore pmu, \n");
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#569: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.c:426:
++	pr_cont("Nehalem uncore pmu, \n");
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc_node(sizeof(*uncore_events[node])...) over kmalloc_node(sizeof(struct node_hw_events)...)
+#572: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.c:429:
++		uncore_events[node] = kmalloc_node(sizeof(struct node_hw_events),
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#573: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.c:430:
++		uncore_events[node] = kmalloc_node(sizeof(struct node_hw_events),
++			GFP_KERNEL | __GFP_ZERO, node);
+
+WARNING:USE_DEVICE_INITCALL: please use device_initcall() or more appropriate function instead of __initcall() (see include/linux/init.h)
+#618: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.c:475:
++__initcall(uncore_per_cpu_init);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#625: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.h:1:
++#include <linux/perf_event.h>
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/nmi.h> instead of <asm/nmi.h>
+#641: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.h:17:
++#include <asm/nmi.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/compat.h> instead of <asm/compat.h>
+#642: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.h:18:
++#include <asm/compat.h>
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#655: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.h:31:
++#define MSR_UNCORE_PERF_GLOBAL_CTRL_EN_FC0 (1ULL << 32)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#656: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.h:32:
++#define MSR_UNCORE_PERF_GLOBAL_CTRL_PMI_CORE0 (1ULL << 48)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#657: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.h:33:
++#define MSR_UNCORE_PERF_GLOBAL_CTRL_PMI_FRZ (1ULL << 63)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#659: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.h:35:
++#define MSR_UNCORE_PERF_GLOBAL_STATUS_OVF_PMI	(1ULL << 61)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#660: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.h:36:
++#define MSR_UNCORE_PERF_GLOBAL_STATUS_CHG       (1ULL << 63)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#662: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.h:38:
++#define MSR_UNCORE_FIXED_EN	(1ULL << 0)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#663: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.h:39:
++#define MSR_UNCORE_FIXED_PMI	(1ULL << 2)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#667: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.h:43:
++#define UNCORE_EVENTSEL_OCC_CTR_RST		(1ULL << 17)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#668: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.h:44:
++#define UNCORE_EVENTSEL_EDGE			(1ULL << 18)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#669: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.h:45:
++#define UNCORE_EVENTSEL_PMI			(1ULL << 20)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#670: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.h:46:
++#define UNCORE_EVENTSEL_ENABLE			(1ULL << 22)
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#671: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.h:47:
++#define UNCORE_EVENTSEL_INV			(1ULL << 23)
+
+WARNING:USE_SPINLOCK_T: struct spinlock should be spinlock_t
+#708: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.h:84:
++	struct spinlock lock;
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#711: FILE: arch/x86/kernel/cpu/perf_event_intel_uncore.h:87:
++extern u64 x86_perf_event_update(struct perf_event *event, int cntval_bits);
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000351371.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 7 warnings, 24 checks, 618 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000351371.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,240 @@
+WARNING:TYPO_SPELLING: 'Concurency' may be misspelled - perhaps 'Concurrency'?
+#53: 
+Subject: [RFC][PATCH v2 5/5] sched: User Mode Concurency Groups
+                                              ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:BAD_SIGN_OFF: Non-standard signature: Originally-by:
+#71: 
+Originally-by: Peter Oskolkov <posk@google.com>
+
+The signed-off-by line does not fall in line with the standards
+specified by the community.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#130: FILE: arch/x86/include/asm/thread_info.h:111:
++#define _TIF_UMCG		(1 << TIF_UMCG)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#249: FILE: include/linux/sched.h:2322:
++extern void umcg_sys_enter(struct pt_regs *regs, long syscall);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#250: FILE: include/linux/sched.h:2323:
++extern void umcg_sys_exit(struct pt_regs *regs);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#251: FILE: include/linux/sched.h:2324:
++extern void umcg_notify_resume(struct pt_regs *regs);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#252: FILE: include/linux/sched.h:2325:
++extern void umcg_worker_exit(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#253: FILE: include/linux/sched.h:2326:
++extern void umcg_clear_child(struct task_struct *tsk);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#273: FILE: include/linux/sched.h:2346:
++extern void umcg_wq_worker_sleeping(struct task_struct *tsk);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#274: FILE: include/linux/sched.h:2347:
++extern void umcg_wq_worker_running(struct task_struct *tsk);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#293: FILE: include/linux/sched.h:2366:
++}
++static inline void umcg_execve(struct task_struct *tsk)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#296: FILE: include/linux/sched.h:2369:
++}
++static inline void umcg_handle_exit(void)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#299: FILE: include/linux/sched.h:2372:
++}
++static inline void umcg_wq_worker_sleeping(struct task_struct *tsk)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#302: FILE: include/linux/sched.h:2375:
++}
++static inline void umcg_wq_worker_running(struct task_struct *tsk)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_self' - possible side-effects?
+#709: FILE: kernel/sched/umcg.c:40:
++#define umcg_pin_and_load(_self, _pagep, _member)				\
++({										\
++	__label__ __out;							\
++	int __ret = -EFAULT;							\
++										\
++	if (pin_user_pages_fast((unsigned long)(_self), 1, 0, &(_pagep)) != 1)	\
++		goto __out;							\
++										\
++	if (!PageAnon(_pagep) ||						\
++	    get_user(_member, &(_self)->_member)) {				\
++		unpin_user_page(_pagep);					\
++		goto __out;							\
++	}									\
++	__ret = 0;								\
++__out:	__ret;									\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_pagep' - possible side-effects?
+#709: FILE: kernel/sched/umcg.c:40:
++#define umcg_pin_and_load(_self, _pagep, _member)				\
++({										\
++	__label__ __out;							\
++	int __ret = -EFAULT;							\
++										\
++	if (pin_user_pages_fast((unsigned long)(_self), 1, 0, &(_pagep)) != 1)	\
++		goto __out;							\
++										\
++	if (!PageAnon(_pagep) ||						\
++	    get_user(_member, &(_self)->_member)) {				\
++		unpin_user_page(_pagep);					\
++		goto __out;							\
++	}									\
++	__ret = 0;								\
++__out:	__ret;									\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_member' - possible side-effects?
+#709: FILE: kernel/sched/umcg.c:40:
++#define umcg_pin_and_load(_self, _pagep, _member)				\
++({										\
++	__label__ __out;							\
++	int __ret = -EFAULT;							\
++										\
++	if (pin_user_pages_fast((unsigned long)(_self), 1, 0, &(_pagep)) != 1)	\
++		goto __out;							\
++										\
++	if (!PageAnon(_pagep) ||						\
++	    get_user(_member, &(_self)->_member)) {				\
++		unpin_user_page(_pagep);					\
++		goto __out;							\
++	}									\
++	__ret = 0;								\
++__out:	__ret;									\
++})
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#709: FILE: kernel/sched/umcg.c:40:
++#define umcg_pin_and_load(_self, _pagep, _member)				\
++({										\
++	__label__ __out;							\
++	int __ret = -EFAULT;							\
++										\
++	if (pin_user_pages_fast((unsigned long)(_self), 1, 0, &(_pagep)) != 1)	\
++		goto __out;							\
++										\
++	if (!PageAnon(_pagep) ||						\
++	    get_user(_member, &(_self)->_member)) {				\
++		unpin_user_page(_pagep);					\
++		goto __out;							\
++	}									\
++	__ret = 0;								\
++__out:	__ret;									\
++})
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#847: FILE: kernel/sched/umcg.c:178:
++		case CLOCK_REALTIME:      now = ktime_get_real_ns();     break;
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#848: FILE: kernel/sched/umcg.c:179:
++		case CLOCK_MONOTONIC:     now = ktime_get_ns();          break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#849: FILE: kernel/sched/umcg.c:180:
++		case CLOCK_BOOTTIME:      now = ktime_get_boottime_ns(); break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#850: FILE: kernel/sched/umcg.c:181:
++		case CLOCK_TAI:           now = ktime_get_clocktai_ns(); break;
+
+CHECK:CAMELCASE: Avoid CamelCase: <Efault>
+#857: FILE: kernel/sched/umcg.c:188:
++	unsafe_get_user(old, &self->state, Efault);
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#885: FILE: kernel/sched/umcg.c:216:
++#define __UMCG_DIE(stmt, reason)	do {				\
++	stmt;								\
++	pr_warn_ratelimited("%s: killing task %s/%d because: " reason "\n",\
++			    __func__, current->comm, current->pid);	\
++	force_sig(SIGKILL);						\
++	return;								\
++} while (0)
+
+ERROR:SPACING: space required after that ',' (ctx:BxV)
+#893: FILE: kernel/sched/umcg.c:224:
++#define UMCG_DIE(reason)	__UMCG_DIE(,reason)
+                         	           ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#923: FILE: kernel/sched/umcg.c:254:
++	int ret = umcg_update_state(tsk, self, UMCG_TASK_RUNNABLE, UMCG_TASK_RUNNING);
++	if (ret)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#933: FILE: kernel/sched/umcg.c:264:
++	int ret = umcg_wake_task(tsk->umcg_server, tsk->umcg_server_task);
++	if (ret == -EAGAIN) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1248: FILE: kernel/sched/umcg.c:579:
++	struct task_struct *task = umcg_get_task(tid);
++	if (!task)
+
+WARNING:TYPO_SPELLING: 'transfering' may be misspelled - perhaps 'transferring'?
+#1345: FILE: kernel/sched/umcg.c:676:
++ * that task will be made RUNNING and woken -- transfering the running context
+                                                ^^^^^^^^^^^
+
+./tmp.L8M9DVV7bm//home/fedora/lkml-analysis/lkml/11/patch.offset.0000020761.commit.172f2ee9a2cc7645fcf7b58ab0a6fc17d4080426 total: 5 errors, 8 warnings, 16 checks, 1475 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.L8M9DVV7bm//home/fedora/lkml-analysis/lkml/11/patch.offset.0000020761.commit.172f2ee9a2cc7645fcf7b58ab0a6fc17d4080426 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

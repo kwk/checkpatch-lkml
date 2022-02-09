@@ -1,0 +1,249 @@
+WARNING:TYPO_SPELLING: 'eachother' may be misspelled - perhaps 'each other'?
+#34: 
+TODO: split out statistics, backlog, & write interfaces from eachother.
+                                                             ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#163: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#168: FILE: mm/memlayout-debugfs.c:1:
++#include <linux/debugfs.h>
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#180: FILE: mm/memlayout-debugfs.c:13:
++DEFINE_KFIFO(ml_backlog, struct memlayout *,
++		roundup_pow_of_two(CONFIG_DNUMA_BACKLOG));
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#185: FILE: mm/memlayout-debugfs.c:18:
++		struct memlayout *old_ml;
++		BUG_ON(!kfifo_get(&ml_backlog, &old_ml));
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#185: FILE: mm/memlayout-debugfs.c:18:
++		BUG_ON(!kfifo_get(&ml_backlog, &old_ml));
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#196: FILE: mm/memlayout-debugfs.c:29:
++	 * save memory */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#216: FILE: mm/memlayout-debugfs.c:49:
++	((size_t)(DIV_ROUND_UP(sizeof(unsigned) * 8, 3) \
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#233: FILE: mm/memlayout-debugfs.c:66:
++static void _ml_dbgfs_create_range(struct dentry *base,
++		struct rangemap_entry *rme, char *name)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#236: FILE: mm/memlayout-debugfs.c:69:
++	struct dentry *rd;
++	sprintf(name, "%05lx-%05lx", rme->pfn_start, rme->pfn_end);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#238: FILE: mm/memlayout-debugfs.c:71:
++	rd = debugfs_create_file(name, 0400, base,
++				(void *)(uintptr_t)rme->nid, &range_fops);
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#240: FILE: mm/memlayout-debugfs.c:73:
++		pr_devel("debugfs: failed to create "RME_FMT"\n",
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#241: FILE: mm/memlayout-debugfs.c:74:
++		pr_devel("debugfs: failed to create "RME_FMT"\n",
++				RME_EXP(rme));
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#243: FILE: mm/memlayout-debugfs.c:76:
++		pr_devel("debugfs: created "RME_FMT"\n", RME_EXP(rme));
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#257: FILE: mm/memlayout-debugfs.c:90:
++	char name[ML_LAYOUT_NAME_SZ];
++	ml_layout_name(ml, name);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '___type' may be better as '(___type)' to avoid precedence issues
+#265: FILE: mm/memlayout-debugfs.c:98:
++#define DEFINE_DEBUGFS_GET(___type)					\
++	static int debugfs_## ___type ## _get(void *data, u64 *val)	\
++	{								\
++		*val = *(___type *)data;				\
++		return 0;						\
++	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '___type' - possible side-effects?
+#275: FILE: mm/memlayout-debugfs.c:108:
++#define DEFINE_WATCHED_ATTR(___type, ___var)			\
++	static int ___var ## _watch_set(void *data, u64 val)	\
++	{							\
++		___type old_val = *(___type *)data;		\
++		int ret = ___var ## _watch(old_val, val);	\
++		if (!ret)					\
++			*(___type *)data = val;			\
++		return ret;					\
++	}							\
++	DEFINE_SIMPLE_ATTRIBUTE(___var ## _fops,		\
++			debugfs_ ## ___type ## _get,		\
++			___var ## _watch_set, "%llu\n");
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#275: FILE: mm/memlayout-debugfs.c:108:
++#define DEFINE_WATCHED_ATTR(___type, ___var)			\
++	static int ___var ## _watch_set(void *data, u64 val)	\
++	{							\
++		___type old_val = *(___type *)data;		\
++		int ret = ___var ## _watch(old_val, val);	\
++		if (!ret)					\
++			*(___type *)data = val;			\
++		return ret;					\
++	}							\
++	DEFINE_SIMPLE_ATTRIBUTE(___var ## _fops,		\
++			debugfs_ ## ___type ## _get,		\
++			___var ## _watch_set, "%llu\n");
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#299: FILE: mm/memlayout-debugfs.c:132:
++	int ret = 0;
++	mutex_lock(&dnuma_user_lock);
+
+WARNING:TYPO_SPELLING: 'exsists' may be misspelled - perhaps 'exists'?
+#356: FILE: mm/memlayout-debugfs.c:189:
++ * only used for the layout which exsists prior to fs initialization
+                                   ^^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#371: FILE: mm/memlayout-debugfs.c:204:
++	old_ml = rcu_dereference_protected(pfn_to_node_map,
++			mutex_is_locked(&memlayout_lock));
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#380: FILE: mm/memlayout-debugfs.c:213:
++	 * function) is only called by ml_dbgfs_create_root() */
+
+WARNING:TYPO_SPELLING: 'seperate' may be misspelled - perhaps 'separate'?
+#431: FILE: mm/memlayout-debugfs.c:264:
++	/* TODO: place in a different dir? (to keep memlayout & dnuma seperate)
+ 	                                                              ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'exsist' may be misspelled - perhaps 'exists'?
+#433: FILE: mm/memlayout-debugfs.c:266:
++	/* FIXME: use debugfs_create_atomic64() [does not yet exsist]. */
+ 	                                                      ^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#446: FILE: mm/memlayout-debugfs.c:279:
++	debugfs_create_file("node",  0200, root_dentry,
++			&dnuma_user_node, &dnuma_user_node_fops);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#448: FILE: mm/memlayout-debugfs.c:281:
++	debugfs_create_file("commit",  0200, root_dentry,
++			&dnuma_user_commit, &dnuma_user_commit_fops);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#450: FILE: mm/memlayout-debugfs.c:283:
++	debugfs_create_file("clear",  0200, root_dentry,
++			&dnuma_user_clear, &dnuma_user_clear_fops);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#483: FILE: mm/memlayout-debugfs.c:316:
++	char name[ML_REGION_NAME_SZ];
++	if (ml->d)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#490: FILE: mm/memlayout-debugfs.c:323:
++	char name[ML_LAYOUT_NAME_SZ];
++	_ml_dbgfs_set_current(ml, name);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#513: FILE: mm/memlayout-debugfs.h:1:
++#ifndef LINUX_MM_MEMLAYOUT_DEBUGFS_H_
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#538: FILE: mm/memlayout-debugfs.h:26:
++static inline void ml_dbgfs_create_range(struct memlayout *ml,
++		struct rangemap_entry *rme)
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000399662.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 18 warnings, 13 checks, 545 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000399662.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

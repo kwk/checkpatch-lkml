@@ -1,0 +1,419 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:BAD_SIGN_OFF: Do not use whitespace before Signed-off-by:
+#56: FILE: Documentation/stable_kernel_rules.txt:43:
+     Signed-off-by: Ingo Molnar <mingo@elte.hu>
+
+The signed-off-by line does not fall in line with the standards
+specified by the community.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
+
+WARNING:TYPO_SPELLING: 'EXTRAVERSION' may be misspelled - perhaps 'EXTROVERSION'?
+#68: FILE: Makefile:4:
++EXTRAVERSION = .20
+ ^^^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#131: FILE: arch/arm/plat-mxc/include/mach/iomux-v3.h:76:
++#define PAD_CTL_PUE			(1 << 6 | PAD_CTL_PKE)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#133: FILE: arch/arm/plat-mxc/include/mach/iomux-v3.h:78:
++#define PAD_CTL_PUS_47K_UP		(1 << 4 | PAD_CTL_PUE)
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*vcpu)...) over kzalloc(sizeof(struct kvm_vcpu)...)
+#201: FILE: arch/s390/kvm/kvm-s390.c:320:
++	vcpu = kzalloc(sizeof(struct kvm_vcpu), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+ERROR:INLINE_LOCATION: inline keyword should sit between storage class and type
+#225: FILE: arch/sparc/include/asm/spinlock_32.h:133:
++static void inline arch_write_unlock(arch_rwlock_t *lock)
+
+The inline keyword should sit between storage class and type.
+
+For example, the following segment::
+
+  inline static int example_function(void)
+  {
+          ...
+  }
+
+should be::
+
+  static inline int example_function(void)
+  {
+          ...
+  }
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#227: FILE: arch/sparc/include/asm/spinlock_32.h:135:
++	__asm__ __volatile__(
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#275: FILE: arch/sparc/kernel/pcic.c:352:
++		extern volatile int t_nmi[4];
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#275: FILE: arch/sparc/kernel/pcic.c:352:
++		extern volatile int t_nmi[4];
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#276: FILE: arch/sparc/kernel/pcic.c:353:
++		extern int pcic_nmi_trap_patch[4];
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#302: FILE: arch/x86/include/asm/processor.h:784:
++	mb();
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#461: FILE: arch/x86/xen/smp.c:186:
++			"The nosmp parameter is incompatible with Xen; " \
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#539: FILE: drivers/char/hvc_console.c:166:
++				 * but spin in case of -EAGAIN */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#611: FILE: drivers/hid/usbhid/hid-quirks.c:69:
++	{ USB_VENDOR_ID_SIGMA_MICRO, USB_DEVICE_ID_SIGMA_MICRO_KEYBOARD, HID_QUIRK_NO_INIT_REPORTS },
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#624: FILE: drivers/hwmon/w83627ehf.c:1276:
++static inline void __devinit w83627ehf_init_device(struct w83627ehf_data *data,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#769: FILE: drivers/media/video/uvc/uvcvideo.h:607:
++extern int uvc_video_resume(struct uvc_streaming *stream, int reset);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'hw->subsystem_vendor_id == 0x103C'
+#805: FILE: drivers/net/e1000/e1000_hw.c:3847:
++	if ((hw->subsystem_vendor_id == 0x103C) && (eeprom_data == 0x16d6))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'eeprom_data == 0x16d6'
+#805: FILE: drivers/net/e1000/e1000_hw.c:3847:
++	if ((hw->subsystem_vendor_id == 0x103C) && (eeprom_data == 0x16d6))
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#821: FILE: drivers/net/irda/smsc-ircc2.c:518:
++static int __devinit smsc_ircc_open(unsigned int fir_base, unsigned int sir_base, u8 dma, u8 irq)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#836: FILE: drivers/net/rionet.c:91:
++#define RIONET_GET_DESTID(x)	((*((u8 *)x + 4) << 8) | *((u8 *)x + 5))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'x' may be better as '(x)' to avoid precedence issues
+#836: FILE: drivers/net/rionet.c:91:
++#define RIONET_GET_DESTID(x)	((*((u8 *)x + 4) << 8) | *((u8 *)x + 5))
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#849: FILE: drivers/net/usb/asix.c:1445:
++	USB_DEVICE (0x0b95, 0x772b),
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#850: FILE: drivers/net/usb/asix.c:1446:
++	.driver_info = (unsigned long) &ax88772_info,
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'ccwgroup_online_show' to 'online_show' 'ccwgroup_online_store' to 'online_store'
+#976: FILE: drivers/s390/cio/ccwgroup.c:121:
++static DEVICE_ATTR(online, 0644, ccwgroup_online_show, ccwgroup_online_store);
+
+The function names used in DEVICE_ATTR is unusual.
+Typically, the store and show functions are used with <attr>_store and
+<attr>_show, where <attr> is a named attribute variable of the device.
+
+Consider the following examples::
+
+  static DEVICE_ATTR(type, 0444, type_show, NULL);
+  static DEVICE_ATTR(power, 0644, power_show, power_store);
+
+The function names should preferably follow the above pattern.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#983: FILE: drivers/s390/cio/ccwgroup.c:128:
++};
++static struct attribute_group ccwgroup_attr_group = {
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#986: FILE: drivers/s390/cio/ccwgroup.c:131:
++};
++static const struct attribute_group *ccwgroup_attr_groups[] = {
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1350: FILE: drivers/usb/core/devio.c:627:
++		if (alt_setting
++		 && alt_setting->desc.bInterfaceClass == USB_CLASS_PRINTER)
+
+CHECK:CAMELCASE: Avoid CamelCase: <bInterfaceClass>
+#1350: FILE: drivers/usb/core/devio.c:627:
++		 && alt_setting->desc.bInterfaceClass == USB_CLASS_PRINTER)
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:CAMELCASE: Avoid CamelCase: <bRequestType>
+#1362: FILE: drivers/usb/core/devio.c:779:
++	ret = check_ctrlrecip(ps, ctrl.bRequestType, ctrl.bRequest,
+
+CHECK:CAMELCASE: Avoid CamelCase: <bRequest>
+#1362: FILE: drivers/usb/core/devio.c:779:
++	ret = check_ctrlrecip(ps, ctrl.bRequestType, ctrl.bRequest,
+
+CHECK:CAMELCASE: Avoid CamelCase: <wIndex>
+#1363: FILE: drivers/usb/core/devio.c:780:
++			      ctrl.wIndex);
+
+WARNING:TYPO_SPELLING: 'Semicondutor' may be misspelled - perhaps 'Semiconductor'?
+#1417: FILE: drivers/usb/host/fhci-sched.c:4:
++ * Copyright (c) Freescale Semicondutor, Inc. 2006, 2011.
+                            ^^^^^^^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1444: FILE: drivers/usb/host/fhci-sched.c:829:
++			td = fhci_td_fill(fhci, urb, urb_priv, ed, cnt++,
++				(usb_pipeout(urb->pipe) ? FHCI_TA_IN :
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 25)
+#1447: FILE: drivers/usb/host/fhci-sched.c:832:
++		else
++			 td = fhci_td_fill(fhci, urb, urb_priv, ed, cnt++,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1449: FILE: drivers/usb/host/fhci-sched.c:834:
++			 td = fhci_td_fill(fhci, urb, urb_priv, ed, cnt++,
++				FHCI_TA_IN,
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1479: FILE: drivers/usb/host/xhci-mem.c:121:
++			struct xhci_segment *next = seg->next;
++			xhci_segment_free(xhci, seg);
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxE)
+#1543: FILE: drivers/usb/serial/ftdi_sio.c:186:
++	{ USB_DEVICE(FTDI_VID, FTDI_8U2232C_PID) ,
+ 	                                         ^
+
+WARNING:TRACING_LOGGING: Unnecessary ftrace-like logging - prefer using ftrace
+#1574: FILE: drivers/usb/serial/ftdi_sio.c:1757:
++	dbg("%s", __func__);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1640: FILE: drivers/usb/serial/pl2303.c:629:
++			unsigned tmp = 12*1000*1000*32 / baud;
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1640: FILE: drivers/usb/serial/pl2303.c:629:
++			unsigned tmp = 12*1000*1000*32 / baud;
+ 			                 ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1640: FILE: drivers/usb/serial/pl2303.c:629:
++			unsigned tmp = 12*1000*1000*32 / baud;
+ 			                      ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1640: FILE: drivers/usb/serial/pl2303.c:629:
++			unsigned tmp = 12*1000*1000*32 / baud;
+ 			                           ^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1641: FILE: drivers/usb/serial/pl2303.c:630:
++			unsigned tmp = 12*1000*1000*32 / baud;
++			buf[3] = 0x80;
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1648: FILE: drivers/usb/serial/pl2303.c:637:
++			if (tmp > 256) {
++				tmp %= 256;
++			}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1813: FILE: fs/9p/v9fs.c:83:
++	if (!strcmp(s, "loose")) {
+[...]
++	} else if (!strcmp(s, "fscache")) {
+[...]
++	} else if (!strcmp(s, "none")) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1822: FILE: fs/9p/v9fs.c:92:
++	} else
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#1823: FILE: fs/9p/v9fs.c:93:
++		printk(KERN_INFO "9p: Unknown Cache mode %s.\n", s);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#1867: FILE: fs/9p/v9fs.c:219:
++					printk(KERN_INFO "9p: Unknown access "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1868: FILE: fs/9p/v9fs.c:220:
++					printk(KERN_INFO "9p: Unknown access "
++							"argument %s.\n", s);
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'cookie == 1'
+#2036: FILE: fs/nfsd/nfs4proc.c:680:
++	if ((cookie == 1) || (cookie == 2) ||
+ 	    (cookie == 0 && memcmp(readdir->rd_verf.data, zeroverf.data, NFS4_VERIFIER_SIZE)))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'cookie == 2'
+#2036: FILE: fs/nfsd/nfs4proc.c:680:
++	if ((cookie == 1) || (cookie == 2) ||
+ 	    (cookie == 0 && memcmp(readdir->rd_verf.data, zeroverf.data, NFS4_VERIFIER_SIZE)))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2159: FILE: include/linux/jiffies.h:306:
++extern clock_t jiffies_to_clock_t(unsigned long x);
+
+ERROR:SPACING: space required before the open parenthesis '('
+#2310: FILE: net/9p/client.c:233:
++	if(tag >= c->max_tag)
+
+WARNING:NETWORKING_BLOCK_COMMENT_STYLE: networking block comments don't use an empty /* line, use /* Comment...
+#2334: FILE: net/9p/client.c:1043:
++	/*
++	 * Fid is not valid even after a failed clunk
+
+CHECK:CAMELCASE: Avoid CamelCase: <Qdisc>
+#2500: FILE: net/sched/sch_api.c:1198:
++static bool tc_qdisc_dump_ignore(struct Qdisc *q)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2614: FILE: net/x25/af_x25.c:298:
++			if (x25_sk(s)->cudmatchlength > 0 &&
++				skb->len >= x25_sk(s)->cudmatchlength) {
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000206272.commit.50c234c910ddd03a627257cc11704614c0619761 total: 3 errors, 25 warnings, 29 checks, 2107 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000206272.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

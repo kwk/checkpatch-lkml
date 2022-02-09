@@ -1,0 +1,79 @@
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#162: FILE: include/linux/irqchip.h:31:
++#define IRQCHIP_DECLARE(name, compat, fn) OF_DECLARE_2(irqchip, name, compat, fn);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#167: FILE: include/linux/irqchip.h:36:
++extern int platform_irqchip_probe(struct platform_device *pdev);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#171: FILE: include/linux/irqchip.h:40:
++static const struct of_device_id __irqchip_match_table[] = {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#174: FILE: include/linux/irqchip.h:43:
++#define IRQCHIP_MODULE_END(drv_name)			\
++	{},						\
++};							\
++MODULE_DEVICE_TABLE(of, __irqchip_match_table);		\
++static struct platform_driver drv_name##_driver = {	\
++	.probe  = platform_irqchip_probe,		\
++	.driver = {					\
++		.name = #drv_name,			\
++		.of_match_table = __irqchip_match_table,\
++	},						\
++};							\
++module_platform_driver(drv_name##_driver);
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000187440.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 2 warnings, 2 checks, 73 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000187440.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

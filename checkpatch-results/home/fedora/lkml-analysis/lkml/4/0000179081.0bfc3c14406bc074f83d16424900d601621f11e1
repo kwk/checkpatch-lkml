@@ -1,0 +1,137 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#33: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#38: FILE: include/linux/brick/lib_pairing_heap.h:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#68: FILE: include/linux/brick/lib_pairing_heap.h:31:
++#define _PAIRING_HEAP_TYPEDEF(KEYTYPE, KEYDEF)				\
++									\
++struct pairing_heap_##KEYTYPE {						\
++	KEYDEF								\
++	struct pairing_heap_##KEYTYPE *next;				\
++	struct pairing_heap_##KEYTYPE *subheaps;			\
++};									\
++/* this comment is for keeping TRAILING_SEMICOLON happy */
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'KEYTYPE' - possible side-effects?
+#79: FILE: include/linux/brick/lib_pairing_heap.h:42:
++#define PAIRING_HEAP_TYPEDEF(KEYTYPE)					\
++	_PAIRING_HEAP_TYPEDEF(KEYTYPE, KEYTYPE key;)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_STATIC' - possible side-effects?
+#84: FILE: include/linux/brick/lib_pairing_heap.h:47:
++#define _PAIRING_HEAP_FUNCTIONS(_STATIC, KEYTYPE, CMP)			\
++									\
++_STATIC									\
++struct pairing_heap_##KEYTYPE *_ph_merge_##KEYTYPE(struct pairing_heap_##KEYTYPE *heap1,\
++	struct pairing_heap_##KEYTYPE *heap2)				\
++{									\
++	if (!heap1)							\
++		return heap2;						\
++	if (!heap2)							\
++		return heap1;						\
++	if (CMP(heap1, heap2) < 0) {					\
++		heap2->next = heap1->subheaps;				\
++		heap1->subheaps = heap2;				\
++		return heap1;						\
++	}								\
++	heap1->next = heap2->subheaps;					\
++	heap2->subheaps = heap1;					\
++	return heap2;							\
++}									\
++									\
++_STATIC									\
++void ph_insert_##KEYTYPE(struct pairing_heap_##KEYTYPE **heap, struct pairing_heap_##KEYTYPE *new)\
++{									\
++	new->next = NULL;						\
++	new->subheaps = NULL;						\
++	*heap = _ph_merge_##KEYTYPE(*heap, new);			\
++}									\
++									\
++_STATIC									\
++void ph_delete_min_##KEYTYPE(struct pairing_heap_##KEYTYPE **heap)	\
++{									\
++	struct pairing_heap_##KEYTYPE *tmplist = NULL;			\
++	struct pairing_heap_##KEYTYPE *ptr;				\
++	struct pairing_heap_##KEYTYPE *next;				\
++	struct pairing_heap_##KEYTYPE *res;				\
++	if (!*heap) {							\
++		return;							\
++	}								\
++	for (ptr = (*heap)->subheaps; ptr; ptr = next) {		\
++		struct pairing_heap_##KEYTYPE *p2 = ptr->next;		\
++		next = p2;						\
++		if (p2) {						\
++			next = p2->next;				\
++			ptr = _ph_merge_##KEYTYPE(ptr, p2);		\
++		}							\
++		ptr->next = tmplist;					\
++		tmplist = ptr;						\
++	}								\
++	res = NULL;							\
++	for (ptr = tmplist; ptr; ptr = next) {				\
++		next = ptr->next;					\
++		res = _ph_merge_##KEYTYPE(res, ptr);			\
++	}								\
++	*heap = res;							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'a' - possible side-effects?
+#141: FILE: include/linux/brick/lib_pairing_heap.h:104:
++#define PAIRING_HEAP_COMPARE(a, b) ((a)->key < (b)->key ? -1 : ((a)->key > (b)->key ? 1 : 0))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'b' - possible side-effects?
+#141: FILE: include/linux/brick/lib_pairing_heap.h:104:
++#define PAIRING_HEAP_COMPARE(a, b) ((a)->key < (b)->key ? -1 : ((a)->key > (b)->key ? 1 : 0))
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000179081.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 4 warnings, 4 checks, 110 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000179081.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

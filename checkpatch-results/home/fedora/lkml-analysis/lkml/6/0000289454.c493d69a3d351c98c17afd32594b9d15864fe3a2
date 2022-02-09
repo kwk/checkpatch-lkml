@@ -1,0 +1,389 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#138: FILE: arch/s390/Kconfig:571:
++choice
++	prompt "Expoline default"
++	depends on EXPOLINE
++	default EXPOLINE_FULL
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#143: FILE: arch/s390/Kconfig:576:
++config EXPOLINE_OFF
++	bool "spectre_v2=off"
++
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#146: FILE: arch/s390/Kconfig:579:
++config EXPOLINE_AUTO
++	bool "spectre_v2=auto"
++
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#149: FILE: arch/s390/Kconfig:582:
++config EXPOLINE_FULL
++	bool "spectre_v2=on"
++
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#187: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#192: FILE: arch/s390/include/asm/alternative.h:1:
++#ifndef _ASM_S390_ALTERNATIVE_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#245: FILE: arch/s390/include/asm/alternative.h:54:
++#define oldinstr_total_len	e_oldinstr_pad_end"b-661b"
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'num' - possible side-effects?
+#246: FILE: arch/s390/include/asm/alternative.h:55:
++#define altinstr_len(num)	e_altinstr(num)"b-"b_altinstr(num)"b"
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'num' - possible side-effects?
+#247: FILE: arch/s390/include/asm/alternative.h:56:
++#define oldinstr_pad_len(num) \
++	"-(((" altinstr_len(num) ")-(" oldinstr_len ")) > 0) * " \
++	"((" altinstr_len(num) ")-(" oldinstr_len "))"
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'len' - possible side-effects?
+#251: FILE: arch/s390/include/asm/alternative.h:60:
++#define INSTR_LEN_SANITY_CHECK(len)					\
++	".if " len " > 254\n"						\
++	"\t.error \"cpu alternatives does not support instructions "	\
++		"blocks > 254 bytes\"\n"				\
++	".endif\n"							\
++	".if (" len ") %% 2\n"						\
++	"\t.error \"cpu alternatives instructions length is odd\"\n"	\
++	".endif\n"
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'num' - possible side-effects?
+#260: FILE: arch/s390/include/asm/alternative.h:69:
++#define OLDINSTR_PADDING(oldinstr, num)					\
++	".if " oldinstr_pad_len(num) " > 6\n"				\
++	"\tjg " e_oldinstr_pad_end "f\n"				\
++	"6620:\n"							\
++	"\t.fill (" oldinstr_pad_len(num) " - (6620b-662b)) / 2, 2, 0x0700\n" \
++	".else\n"							\
++	"\t.fill " oldinstr_pad_len(num) " / 6, 6, 0xc0040000\n"	\
++	"\t.fill " oldinstr_pad_len(num) " %% 6 / 4, 4, 0x47000000\n"	\
++	"\t.fill " oldinstr_pad_len(num) " %% 6 %% 4 / 2, 2, 0x0700\n"	\
++	".endif\n"
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'oldinstr' - possible side-effects?
+#271: FILE: arch/s390/include/asm/alternative.h:80:
++#define OLDINSTR(oldinstr, num)						\
++	"661:\n\t" oldinstr "\n662:\n"					\
++	OLDINSTR_PADDING(oldinstr, num)					\
++	e_oldinstr_pad_end ":\n"					\
++	INSTR_LEN_SANITY_CHECK(oldinstr_len)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'oldinstr' - possible side-effects?
+#277: FILE: arch/s390/include/asm/alternative.h:86:
++#define OLDINSTR_2(oldinstr, num1, num2)				\
++	"661:\n\t" oldinstr "\n662:\n"					\
++	".if " altinstr_len(num1) " < " altinstr_len(num2) "\n"		\
++	OLDINSTR_PADDING(oldinstr, num2)				\
++	".else\n"							\
++	OLDINSTR_PADDING(oldinstr, num1)				\
++	".endif\n"							\
++	e_oldinstr_pad_end ":\n"					\
++	INSTR_LEN_SANITY_CHECK(oldinstr_len)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'num1' - possible side-effects?
+#277: FILE: arch/s390/include/asm/alternative.h:86:
++#define OLDINSTR_2(oldinstr, num1, num2)				\
++	"661:\n\t" oldinstr "\n662:\n"					\
++	".if " altinstr_len(num1) " < " altinstr_len(num2) "\n"		\
++	OLDINSTR_PADDING(oldinstr, num2)				\
++	".else\n"							\
++	OLDINSTR_PADDING(oldinstr, num1)				\
++	".endif\n"							\
++	e_oldinstr_pad_end ":\n"					\
++	INSTR_LEN_SANITY_CHECK(oldinstr_len)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'num2' - possible side-effects?
+#277: FILE: arch/s390/include/asm/alternative.h:86:
++#define OLDINSTR_2(oldinstr, num1, num2)				\
++	"661:\n\t" oldinstr "\n662:\n"					\
++	".if " altinstr_len(num1) " < " altinstr_len(num2) "\n"		\
++	OLDINSTR_PADDING(oldinstr, num2)				\
++	".else\n"							\
++	OLDINSTR_PADDING(oldinstr, num1)				\
++	".endif\n"							\
++	e_oldinstr_pad_end ":\n"					\
++	INSTR_LEN_SANITY_CHECK(oldinstr_len)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'num' - possible side-effects?
+#287: FILE: arch/s390/include/asm/alternative.h:96:
++#define ALTINSTR_ENTRY(facility, num)					\
++	"\t.long 661b - .\n"			/* old instruction */	\
++	"\t.long " b_altinstr(num)"b - .\n"	/* alt instruction */	\
++	"\t.word " __stringify(facility) "\n"	/* facility bit    */	\
++	"\t.byte " oldinstr_total_len "\n"	/* source len	   */	\
++	"\t.byte " altinstr_len(num) "\n"	/* alt instruction len */
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'num' - possible side-effects?
+#294: FILE: arch/s390/include/asm/alternative.h:103:
++#define ALTINSTR_REPLACEMENT(altinstr, num)	/* replacement */	\
++	b_altinstr(num)":\n\t" altinstr "\n" e_altinstr(num) ":\n"	\
++	INSTR_LEN_SANITY_CHECK(altinstr_len(num))
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#331: FILE: arch/s390/include/asm/alternative.h:140:
++#define alternative(oldinstr, altinstr, facility)			\
++	asm volatile(ALTERNATIVE(oldinstr, altinstr, facility) : : : "memory")
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#334: FILE: arch/s390/include/asm/alternative.h:143:
++#define alternative_2(oldinstr, altinstr1, facility1, altinstr2, facility2) \
++	asm volatile(ALTERNATIVE_2(oldinstr, altinstr1, facility1,	    \
++				   altinstr2, facility2) ::: "memory")
+
+ERROR:SPACING: spaces required around that ':' (ctx:ExV)
+#364: FILE: arch/s390/include/asm/barrier.h:67:
++		    :"=d" (mask) : "d" (size-1), "d" (index) :"cc");
+ 		    ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#364: FILE: arch/s390/include/asm/barrier.h:67:
++		    :"=d" (mask) : "d" (size-1), "d" (index) :"cc");
+ 		                            ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:WxV)
+#364: FILE: arch/s390/include/asm/barrier.h:67:
++		    :"=d" (mask) : "d" (size-1), "d" (index) :"cc");
+ 		                                             ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:ExV)
+#369: FILE: arch/s390/include/asm/barrier.h:72:
++	    :"=d" (mask) : "d" (size), "d" (index) :"cc");
+ 	    ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:WxV)
+#369: FILE: arch/s390/include/asm/barrier.h:72:
++	    :"=d" (mask) : "d" (size), "d" (index) :"cc");
+ 	                                           ^
+
+CHECK:SPACING: No space is necessary after a cast
+#386: FILE: arch/s390/include/asm/facility.h:20:
++	unsigned char *ptr = (unsigned char *) facilities;
+
+CHECK:SPACING: No space is necessary after a cast
+#395: FILE: arch/s390/include/asm/facility.h:29:
++	unsigned char *ptr = (unsigned char *) facilities;
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#414: FILE: arch/s390/include/asm/kvm_host.h:213:
++#define FPF_BPBC ^I0x20$
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#430: FILE: arch/s390/include/asm/lowcore.h:145:
++	__u8	pad_0x0442[0x0e00-0x0442];	/* 0x0442 */
+ 	    	                 ^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#475: FILE: arch/s390/include/asm/processor.h:92:
++extern void __bpon(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#483: FILE: arch/s390/include/asm/processor.h:381:
++extern int s390_isolate_bp(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#484: FILE: arch/s390/include/asm/processor.h:382:
++extern int s390_isolate_bp_guest(void);
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#519: FILE: arch/s390/include/uapi/asm/kvm.h:231:
++#define KVM_SYNC_BPBC   (1UL << 10)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#567: FILE: arch/s390/kernel/alternative.c:1:
++#include <linux/module.h>
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#650: FILE: arch/s390/kernel/alternative.c:84:
++			WARN_ONCE(1, "cpu alternatives instructions length is "
++				     "odd, skipping patching\n");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1309: FILE: arch/s390/kernel/module.c:336:
++				unsigned int *ij;
++				ij = me->core_layout.base +
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#1314: FILE: arch/s390/kernel/module.c:341:
++					(((unsigned long) ij - 8 -
+
+CHECK:SPACING: No space is necessary after a cast
+#1315: FILE: arch/s390/kernel/module.c:342:
++					  (unsigned long) ip) / 2);
+
+CHECK:CAMELCASE: Avoid CamelCase: <Elf_Shdr>
+#1326: FILE: arch/s390/kernel/module.c:450:
++	const Elf_Shdr *s;
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:SPACING: No space is necessary after a cast
+#1349: FILE: arch/s390/kernel/module.c:473:
++		aseg = (void *) s->sh_addr;
+
+WARNING:TYPO_SPELLING: 'explicitely' may be misspelled - perhaps 'explicitly'?
+#1390: FILE: arch/s390/kernel/nospec-branch.c:17:
++		 * The user explicitely requested nobp=1, enable it and
+ 		            ^^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1401: FILE: arch/s390/kernel/nospec-branch.c:28:
++}
++early_param("nobp", nobp_setup_early);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1408: FILE: arch/s390/kernel/nospec-branch.c:35:
++}
++early_param("nospec", nospec_setup_early);
+
+WARNING:IS_ENABLED_CONFIG: IS_ENABLED(CC_USING_EXPOLINE) is normally used as IS_ENABLED(CONFIG_CC_USING_EXPOLINE)
+#1412: FILE: arch/s390/kernel/nospec-branch.c:39:
++	if (IS_ENABLED(CC_USING_EXPOLINE) && !nospec_disable)
+
+WARNING:IS_ENABLED_CONFIG: IS_ENABLED(CC_USING_EXPOLINE) is normally used as IS_ENABLED(CONFIG_CC_USING_EXPOLINE)
+#1430: FILE: arch/s390/kernel/nospec-branch.c:57:
++	if (IS_ENABLED(CC_USING_EXPOLINE) && !nospec_disable)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1447: FILE: arch/s390/kernel/nospec-branch.c:74:
++}
++early_param("nospectre_v2", nospectre_v2_setup_early);
+
+WARNING:IS_ENABLED_CONFIG: IS_ENABLED(CC_USING_EXPOLINE) is normally used as IS_ENABLED(CONFIG_CC_USING_EXPOLINE)
+#1451: FILE: arch/s390/kernel/nospec-branch.c:78:
++	if (IS_ENABLED(CC_USING_EXPOLINE)) {
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1478: FILE: arch/s390/kernel/nospec-branch.c:105:
++}
++early_param("spectre_v2", spectre_v2_setup_early);
+
+CHECK:SPACING: No space is necessary after a cast
+#1490: FILE: arch/s390/kernel/nospec-branch.c:117:
++		instr = (u8 *) epo + *epo;
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#1535: FILE: arch/s390/kernel/nospec-branch.c:162:
++extern s32 __nospec_return_start[], __nospec_return_end[];
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#2248: FILE: drivers/char/tpm/tpm-interface.c:561:
++	u8 save[TPM_HEADER_SIZE + 3*sizeof(u32)];
+ 	                           ^
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#2279: FILE: drivers/char/tpm/tpm-interface.c:592:
++}
++/**
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct xgbe_prv_data *' should also have an identifier name
+#3050: FILE: drivers/net/ethernet/amd/xgbe/xgbe.h:880:
++	void (*an_pre)(struct xgbe_prv_data *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct xgbe_prv_data *' should also have an identifier name
+#3051: FILE: drivers/net/ethernet/amd/xgbe/xgbe.h:881:
++	void (*an_post)(struct xgbe_prv_data *);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#3593: FILE: include/linux/hmm.h:516:
++
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4178: FILE: net/packet/af_packet.c:3684:
++				ret = packet_set_ring(sk, &req_u, 0,
++						    optname == PACKET_TX_RING);
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000289454.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 6 errors, 18 warnings, 32 checks, 3916 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000289454.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

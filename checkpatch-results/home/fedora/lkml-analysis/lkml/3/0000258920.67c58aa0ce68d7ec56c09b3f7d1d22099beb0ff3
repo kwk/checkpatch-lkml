@@ -1,0 +1,300 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#25: 
+the closure code was never intended to be bcache specific - hopefully it can be
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#104: 
+deleted file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#817: FILE: include/linux/closure.h:1:
++#ifndef _LINUX_CLOSURE_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#982: FILE: include/linux/closure.h:166:
++	((CLOSURE_DESTRUCTOR|CLOSURE_WAITING|CLOSURE_SLEEPING|	\
+ 	                    ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#982: FILE: include/linux/closure.h:166:
++	((CLOSURE_DESTRUCTOR|CLOSURE_WAITING|CLOSURE_SLEEPING|	\
+ 	                                    ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxE)
+#982: FILE: include/linux/closure.h:166:
++	((CLOSURE_DESTRUCTOR|CLOSURE_WAITING|CLOSURE_SLEEPING|	\
+ 	                                                     ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#983: FILE: include/linux/closure.h:167:
++	  CLOSURE_RUNNING|CLOSURE_STACK) << 1)
+ 	                 ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#986: FILE: include/linux/closure.h:170:
++#define CLOSURE_REMAINING_INITIALIZER	(1|CLOSURE_RUNNING)
+                                      	  ^
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1007: FILE: include/linux/closure.h:191:
++	unsigned		magic;
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1079: FILE: include/linux/closure.h:263:
++	BUG_ON(object_is_on_stack(cl));
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1090: FILE: include/linux/closure.h:274:
++	struct workqueue_struct *wq = cl->wq;
++	if (wq) {
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1090: FILE: include/linux/closure.h:274:
++	if (wq) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1092: FILE: include/linux/closure.h:276:
++		BUG_ON(!queue_work(wq, &cl->work));
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1093: FILE: include/linux/closure.h:277:
++	} else
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1103: FILE: include/linux/closure.h:287:
++	BUG_ON((atomic_inc_return(&cl->remaining) &
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#1132: FILE: include/linux/closure.h:316:
++	atomic_set(&cl->remaining, CLOSURE_REMAINING_INITIALIZER|CLOSURE_STACK);
+ 	                                                        ^
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#1140: FILE: include/linux/closure.h:324:
++	smp_mb();
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'list' - possible side-effects?
+#1166: FILE: include/linux/closure.h:350:
++#define closure_wait_event(list, cl, condition)				\
++({									\
++	typeof(condition) ret;						\
++									\
++	while (1) {							\
++		ret = (condition);					\
++		if (ret) {						\
++			__closure_wake_up(list);			\
++			closure_sync(cl);				\
++			break;						\
++		}							\
++									\
++		__closure_start_sleep(cl);				\
++									\
++		if (!closure_wait(list, cl))				\
++			schedule();					\
++	}								\
++									\
++	ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cl' - possible side-effects?
+#1166: FILE: include/linux/closure.h:350:
++#define closure_wait_event(list, cl, condition)				\
++({									\
++	typeof(condition) ret;						\
++									\
++	while (1) {							\
++		ret = (condition);					\
++		if (ret) {						\
++			__closure_wake_up(list);			\
++			closure_sync(cl);				\
++			break;						\
++		}							\
++									\
++		__closure_start_sleep(cl);				\
++									\
++		if (!closure_wait(list, cl))				\
++			schedule();					\
++	}								\
++									\
++	ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_cl' - possible side-effects?
+#1200: FILE: include/linux/closure.h:384:
++#define continue_at(_cl, _fn, _wq)					\
++do {									\
++	set_closure_fn(_cl, _fn, _wq);					\
++	closure_sub(_cl, CLOSURE_RUNNING + 1);				\
++	return;								\
++} while (0)
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#1200: FILE: include/linux/closure.h:384:
++#define continue_at(_cl, _fn, _wq)					\
++do {									\
++	set_closure_fn(_cl, _fn, _wq);					\
++	closure_sub(_cl, CLOSURE_RUNNING + 1);				\
++	return;								\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_cl' - possible side-effects?
+#1229: FILE: include/linux/closure.h:413:
++#define continue_at_nobarrier(_cl, _fn, _wq)				\
++do {									\
++	set_closure_fn(_cl, _fn, _wq);					\
++	closure_queue(_cl);						\
++	return;								\
++} while (0)
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#1229: FILE: include/linux/closure.h:413:
++#define continue_at_nobarrier(_cl, _fn, _wq)				\
++do {									\
++	set_closure_fn(_cl, _fn, _wq);					\
++	closure_queue(_cl);						\
++	return;								\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_cl' - possible side-effects?
+#1245: FILE: include/linux/closure.h:429:
++#define closure_return_with_destructor(_cl, _destructor)		\
++do {									\
++	set_closure_fn(_cl, _destructor, NULL);				\
++	closure_sub(_cl, CLOSURE_RUNNING - CLOSURE_DESTRUCTOR + 1);	\
++	return;								\
++} while (0)
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#1245: FILE: include/linux/closure.h:429:
++#define closure_return_with_destructor(_cl, _destructor)		\
++do {									\
++	set_closure_fn(_cl, _destructor, NULL);				\
++	closure_sub(_cl, CLOSURE_RUNNING - CLOSURE_DESTRUCTOR + 1);	\
++	return;								\
++} while (0)
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#1276: FILE: lib/Kconfig.debug:1243:
++config CLOSURE_DEBUG
++	bool "Debug closures"
++	select DEBUG_FS
++	---help---
++	Keeps all active closures in a linked list and provides a debugfs
++	interface to list them, which makes it possible to see asynchronous
++	operations that get stuck.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1306: FILE: lib/closure.c:1:
++/*
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1321: FILE: lib/closure.c:16:
++	BUG_ON(flags & CLOSURE_GUARD_MASK);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1322: FILE: lib/closure.c:17:
++	BUG_ON(!r && (flags & ~CLOSURE_DESTRUCTOR));
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1379: FILE: lib/closure.c:74:
++		struct llist_node *t = list;
++		list = llist_next(list);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1449: FILE: lib/closure.c:144:
++	BUG_ON(cl->magic == CLOSURE_MAGIC_ALIVE);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1462: FILE: lib/closure.c:157:
++	BUG_ON(cl->magic != CLOSURE_MAGIC_ALIVE);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1478: FILE: lib/closure.c:173:
++	struct closure *cl;
++	spin_lock_irq(&closure_list_lock);
+
+WARNING:VSPRINTF_POINTER_EXTENSION: Invalid vsprintf pointer extension '%pF' - use %pS instead
+#1483: FILE: lib/closure.c:178:
++		seq_printf(f, "%p: %pF -> %pf p %p r %i ",
++			   cl, (void *) cl->ip, cl->fn, cl->parent,
++			   r & CLOSURE_REMAINING_MASK);
+
+CHECK:SPACING: No space is necessary after a cast
+#1484: FILE: lib/closure.c:179:
++			   cl, (void *) cl->ip, cl->fn, cl->parent,
+
+WARNING:VSPRINTF_POINTER_EXTENSION: Invalid vsprintf pointer extension '%pF' - use %pS instead
+#1494: FILE: lib/closure.c:189:
++		if (r & CLOSURE_WAITING)
++			seq_printf(f, " W %pF\n",
++				   (void *) cl->waiting_on);
+
+CHECK:SPACING: No space is necessary after a cast
+#1496: FILE: lib/closure.c:191:
++				   (void *) cl->waiting_on);
+
+WARNING:PREFER_SEQ_PUTS: Prefer seq_puts to seq_printf
+#1498: FILE: lib/closure.c:193:
++		seq_printf(f, "\n");
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000258920.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 23 warnings, 15 checks, 742 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000258920.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

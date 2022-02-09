@@ -1,0 +1,305 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#52: 
+The conversion from backend /proc/scsi_target/mib/ context output to configfs
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#105: FILE: drivers/target/target_core_fabric_configfs.c:247:
++static struct config_group *target_core_mappedlun_stat_mkdir(
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#109: FILE: drivers/target/target_core_fabric_configfs.c:251:
++	return ERR_PTR(-ENOSYS);
+
+ENOSYS means that a nonexistent system call was called.
+Earlier, it was wrongly used for things like invalid operations on
+otherwise valid syscalls.  This should be avoided in new code.
+
+See: https://lore.kernel.org/lkml/5eb299021dec23c1a48fa7d9f2c8b794e967766d.1408730669.git.luto@amacapital.net/
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#112: FILE: drivers/target/target_core_fabric_configfs.c:254:
++static void target_core_mappedlun_stat_rmdir(
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#117: FILE: drivers/target/target_core_fabric_configfs.c:259:
++	return;
++}
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#125: FILE: drivers/target/target_core_fabric_configfs.c:267:
++TF_CIT_SETUP(tpg_mappedlun_stat, NULL, &target_fabric_mappedlun_stat_group_ops,
++		NULL);
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*lacl_cg->default_groups)...) over kzalloc(sizeof(struct config_group)...)
+#151: FILE: drivers/target/target_core_fabric_configfs.c:367:
++	lacl_cg->default_groups = kzalloc(sizeof(struct config_group) * 2,
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#152: FILE: drivers/target/target_core_fabric_configfs.c:368:
++	lacl_cg->default_groups = kzalloc(sizeof(struct config_group) * 2,
++				GFP_KERNEL);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#154: FILE: drivers/target/target_core_fabric_configfs.c:370:
++		printk(KERN_ERR "Unable to allocate lacl_cg->default_groups\n");
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#154: FILE: drivers/target/target_core_fabric_configfs.c:370:
++	if (!lacl_cg->default_groups) {
++		printk(KERN_ERR "Unable to allocate lacl_cg->default_groups\n");
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#162: FILE: drivers/target/target_core_fabric_configfs.c:378:
++	config_group_init_type_name(&lacl->ml_stat_grps.stat_group,
++			"statistics", &TF_CIT_TMPL(tf)->tfc_tpg_mappedlun_stat_cit);
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*ml_stat_grp->default_groups)...) over kzalloc(sizeof(struct config_group)...)
+#167: FILE: drivers/target/target_core_fabric_configfs.c:383:
++	ml_stat_grp->default_groups = kzalloc(sizeof(struct config_group) * 3,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#168: FILE: drivers/target/target_core_fabric_configfs.c:384:
++	ml_stat_grp->default_groups = kzalloc(sizeof(struct config_group) * 3,
++				GFP_KERNEL);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#170: FILE: drivers/target/target_core_fabric_configfs.c:386:
++		printk(KERN_ERR "Unable to allocate ml_stat_grp->default_groups\n");
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#170: FILE: drivers/target/target_core_fabric_configfs.c:386:
++	if (!ml_stat_grp->default_groups) {
++		printk(KERN_ERR "Unable to allocate ml_stat_grp->default_groups\n");
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#235: FILE: drivers/target/target_core_stat.c:1235:
++#define DEV_STAT_SCSI_AUTH_INTR_ATTR(_name, _mode)			\
++static struct target_stat_scsi_auth_intr_attribute			\
++			target_stat_scsi_auth_intr_##_name =		\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	target_stat_scsi_auth_intr_show_attr_##_name,			\
++	target_stat_scsi_auth_intr_store_attr_##_name);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#242: FILE: drivers/target/target_core_stat.c:1242:
++#define DEV_STAT_SCSI_AUTH_INTR_ATTR_RO(_name)				\
++static struct target_stat_scsi_auth_intr_attribute			\
++			target_stat_scsi_auth_intr_##_name =		\
++	__CONFIGFS_EATTR_RO(_name,					\
++	target_stat_scsi_auth_intr_show_attr_##_name);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#248: FILE: drivers/target/target_core_stat.c:1248:
++static ssize_t target_stat_scsi_auth_intr_show_attr_inst(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#267: FILE: drivers/target/target_core_stat.c:1267:
++	ret = snprintf(page, PAGE_SIZE, "%u\n",
++			TPG_TFO(tpg)->tpg_get_inst_index(tpg));
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#273: FILE: drivers/target/target_core_stat.c:1273:
++static ssize_t target_stat_scsi_auth_intr_show_attr_dev(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#299: FILE: drivers/target/target_core_stat.c:1299:
++static ssize_t target_stat_scsi_auth_intr_show_attr_port(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#323: FILE: drivers/target/target_core_stat.c:1323:
++static ssize_t target_stat_scsi_auth_intr_show_attr_indx(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#345: FILE: drivers/target/target_core_stat.c:1345:
++static ssize_t target_stat_scsi_auth_intr_show_attr_dev_or_port(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#367: FILE: drivers/target/target_core_stat.c:1367:
++static ssize_t target_stat_scsi_auth_intr_show_attr_intr_name(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#389: FILE: drivers/target/target_core_stat.c:1389:
++static ssize_t target_stat_scsi_auth_intr_show_attr_map_indx(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#411: FILE: drivers/target/target_core_stat.c:1411:
++static ssize_t target_stat_scsi_auth_intr_show_attr_att_count(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#433: FILE: drivers/target/target_core_stat.c:1433:
++static ssize_t target_stat_scsi_auth_intr_show_attr_num_cmds(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#455: FILE: drivers/target/target_core_stat.c:1455:
++static ssize_t target_stat_scsi_auth_intr_show_attr_read_mbytes(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#477: FILE: drivers/target/target_core_stat.c:1477:
++static ssize_t target_stat_scsi_auth_intr_show_attr_write_mbytes(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#499: FILE: drivers/target/target_core_stat.c:1499:
++static ssize_t target_stat_scsi_auth_intr_show_attr_hs_num_cmds(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#521: FILE: drivers/target/target_core_stat.c:1521:
++static ssize_t target_stat_scsi_auth_intr_show_attr_creation_time(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#544: FILE: drivers/target/target_core_stat.c:1544:
++static ssize_t target_stat_scsi_auth_intr_show_attr_row_status(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#567: FILE: drivers/target/target_core_stat.c:1567:
++CONFIGFS_EATTR_OPS(target_stat_scsi_auth_intr, se_ml_stat_grps,
++		scsi_auth_intr_group);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#603: FILE: drivers/target/target_core_stat.c:1603:
++#define DEV_STAT_SCSI_ATTR_INTR_PORT_ATTR(_name, _mode)			\
++static struct target_stat_scsi_att_intr_port_attribute			\
++		target_stat_scsi_att_intr_port_##_name =		\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	target_stat_scsi_att_intr_port_show_attr_##_name,		\
++	target_stat_scsi_att_intr_port_store_attr_##_name);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#610: FILE: drivers/target/target_core_stat.c:1610:
++#define DEV_STAT_SCSI_ATTR_INTR_PORT_ATTR_RO(_name)			\
++static struct target_stat_scsi_att_intr_port_attribute			\
++		target_stat_scsi_att_intr_port_##_name =		\
++	__CONFIGFS_EATTR_RO(_name,					\
++	target_stat_scsi_att_intr_port_show_attr_##_name);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#616: FILE: drivers/target/target_core_stat.c:1616:
++static ssize_t target_stat_scsi_att_intr_port_show_attr_inst(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#635: FILE: drivers/target/target_core_stat.c:1635:
++	ret = snprintf(page, PAGE_SIZE, "%u\n",
++			TPG_TFO(tpg)->tpg_get_inst_index(tpg));
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#641: FILE: drivers/target/target_core_stat.c:1641:
++static ssize_t target_stat_scsi_att_intr_port_show_attr_dev(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#667: FILE: drivers/target/target_core_stat.c:1667:
++static ssize_t target_stat_scsi_att_intr_port_show_attr_port(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#691: FILE: drivers/target/target_core_stat.c:1691:
++static ssize_t target_stat_scsi_att_intr_port_show_attr_indx(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#711: FILE: drivers/target/target_core_stat.c:1711:
++	ret = snprintf(page, PAGE_SIZE, "%u\n",
++			TPG_TFO(tpg)->sess_get_index(se_sess));
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#717: FILE: drivers/target/target_core_stat.c:1717:
++static ssize_t target_stat_scsi_att_intr_port_show_attr_port_auth_indx(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#739: FILE: drivers/target/target_core_stat.c:1739:
++static ssize_t target_stat_scsi_att_intr_port_show_attr_port_ident(
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "sess_get_initiator_sid"
+#760: FILE: drivers/target/target_core_stat.c:1760:
++	if (TPG_TFO(tpg)->sess_get_initiator_sid != NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#762: FILE: drivers/target/target_core_stat.c:1762:
++		TPG_TFO(tpg)->sess_get_initiator_sid(se_sess,
++				(unsigned char *)&buf[0], 64);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#771: FILE: drivers/target/target_core_stat.c:1771:
++CONFIGFS_EATTR_OPS(target_stat_scsi_att_intr_port, se_ml_stat_grps,
++		scsi_att_intr_port_group);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#803: FILE: drivers/target/target_core_stat.c:1803:
++	config_group_init_type_name(&ML_STAT_GRPS(lacl)->scsi_auth_intr_group,
++			"scsi_auth_intr", &target_stat_scsi_auth_intr_cit);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#805: FILE: drivers/target/target_core_stat.c:1805:
++	config_group_init_type_name(&ML_STAT_GRPS(lacl)->scsi_att_intr_port_group,
++			"scsi_att_intr_port", &target_stat_scsi_att_intr_port_cit);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#819: FILE: drivers/target/target_core_stat.h:6:
++extern void target_stat_setup_mappedlun_default_groups(struct se_lun_acl *);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct se_lun_acl *' should also have an identifier name
+#819: FILE: drivers/target/target_core_stat.h:6:
++extern void target_stat_setup_mappedlun_default_groups(struct se_lun_acl *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000305153.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 12 warnings, 38 checks, 738 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000305153.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

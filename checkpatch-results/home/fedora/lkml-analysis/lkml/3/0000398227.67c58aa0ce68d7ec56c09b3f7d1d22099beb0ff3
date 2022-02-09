@@ -1,0 +1,52 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#96: FILE: include/linux/tick.h:161:
++extern int tick_nohz_full_cpu(int cpu);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#185: FILE: kernel/time/tick-sched.c:116:
+ 	if (unlikely(tick_do_timer_cpu == TICK_DO_TIMER_NONE)
++	    && !tick_nohz_full_cpu(cpu))
+
+CHECK:UNDOCUMENTED_SETUP: __setup appears un-documented -- check Documentation/admin-guide/kernel-parameters.txt
+#227: FILE: kernel/time/tick-sched.c:168:
++__setup("nohz_full=", tick_nohz_full_setup);
+
+WARNING:MISPLACED_INIT: __initdata should be placed after nohz_full_buf[NR_CPUS + 1]
+#245: FILE: kernel/time/tick-sched.c:194:
++static char __initdata nohz_full_buf[NR_CPUS + 1];
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#274: FILE: kernel/time/tick-sched.c:221:
+ 		pr_warning("NO_HZ: Must keep at least one online CPU "
++			   "out of nohz_full range\n");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000398227.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 2 warnings, 3 checks, 202 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000398227.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,169 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#31: 
+It fixes the behaviour of the keys using incorrect HID usage codes and exposes the macro playback mode and current profile to the user space through sysfs attributes. It also adds two LED class devices controlling the "record" LED and the backlight.
+
+CHECK:INVALID_UTF8: Invalid UTF-8, patch and commit message should be encoded in UTF-8
+#34: 
+Signed-off-by: Clément Vuchener <clement.vuchener@gmail.com>
+                 ^
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#47: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#75: FILE: drivers/hid/Kconfig:174:
++config HID_CORSAIR
++	tristate "Corsair devices"
++	depends on HID && USB && LEDS_CLASS
++	---help---
++	Support for Corsair devices that are not fully compliant with the
++	HID standard.
++
++	Supported devices:
++	- Vengeance K90
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#118: FILE: drivers/hid/hid-corsair.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#141: FILE: drivers/hid/hid-corsair.c:24:
++#define CORSAIR_USE_K90_MACRO	(1<<0)
+                              	  ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#141: FILE: drivers/hid/hid-corsair.c:24:
++#define CORSAIR_USE_K90_MACRO	(1<<0)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#142: FILE: drivers/hid/hid-corsair.c:25:
++#define CORSAIR_USE_K90_BACKLIGHT	(1<<1)
+                                  	  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#142: FILE: drivers/hid/hid-corsair.c:25:
++#define CORSAIR_USE_K90_BACKLIGHT	(1<<1)
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#195: FILE: drivers/hid/hid-corsair.c:78:
++module_param_array_named(gkey_codes, corsair_gkey_map, ushort, NULL, S_IRUGO);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#204: FILE: drivers/hid/hid-corsair.c:87:
++			 NULL, S_IRUGO);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#214: FILE: drivers/hid/hid-corsair.c:97:
++			 NULL, S_IRUGO);
+
+WARNING:UNNECESSARY_MODIFIER: Integer promotion: Using 'hh' in '%02hhx' is unnecessary
+#282: FILE: drivers/hid/hid-corsair.c:165:
++		dev_warn(dev,
++			 "Read invalid backlight brightness: %02hhx.\n",
++			 data[4]);
+
+WARNING:UNNECESSARY_MODIFIER: Integer promotion: Using 'hh' in '%02hhx' is unnecessary
+#454: FILE: drivers/hid/hid-corsair.c:337:
++		dev_warn(dev, "Read invalid current profile: %02hhx.\n",
++			 data[7]);
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'k90_show_macro_mode' to 'macro_mode_show' 'k90_store_macro_mode' to 'macro_mode_store'
+#488: FILE: drivers/hid/hid-corsair.c:371:
++}
+
+The function names used in DEVICE_ATTR is unusual.
+Typically, the store and show functions are used with <attr>_store and
+<attr>_show, where <attr> is a named attribute variable of the device.
+
+Consider the following examples::
+
+  static DEVICE_ATTR(type, 0444, type_show, NULL);
+  static DEVICE_ATTR(power, 0644, power_show, power_store);
+
+The function names should preferably follow the above pattern.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'k90_show_current_profile' to 'current_profile_show' 'k90_store_current_profile' to 'current_profile_store'
+#491: FILE: drivers/hid/hid-corsair.c:374:
++static DEVICE_ATTR(current_profile, 0644, k90_show_current_profile,
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*drvdata->backlight)...) over kzalloc(sizeof(struct k90_led)...)
+#515: FILE: drivers/hid/hid-corsair.c:398:
++	drvdata->backlight = kzalloc(sizeof(struct k90_led), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*k90)...) over kzalloc(sizeof(struct k90_drvdata)...)
+#559: FILE: drivers/hid/hid-corsair.c:442:
++	k90 = kzalloc(sizeof(struct k90_drvdata), GFP_KERNEL);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!drvdata"
+#645: FILE: drivers/hid/hid-corsair.c:528:
++	if (drvdata == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:CAMELCASE: Avoid CamelCase: <bInterfaceNumber>
+#661: FILE: drivers/hid/hid-corsair.c:544:
++	if (usbif->cur_altsetting->desc.bInterfaceNumber == 0) {
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000254617.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 11 warnings, 9 checks, 727 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000254617.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

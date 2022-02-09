@@ -1,0 +1,156 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#77: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/kvm_host.h> instead of <asm/kvm_host.h>
+#89: FILE: arch/x86/kvm/vmx/tdx_ops.h:8:
++#include <asm/kvm_host.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'err' - possible side-effects?
+#162: FILE: arch/x86/kvm/vmx/tdx_ops.h:81:
++#define pr_seamcall_error(op, err)					  \
++	pr_err_ratelimited("SEAMCALL[" #op "] failed: 0x%llx (cpu %d)\n", \
++			   SEAMCALL_##op ? (err) : (err), smp_processor_id());
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#162: FILE: arch/x86/kvm/vmx/tdx_ops.h:81:
++#define pr_seamcall_error(op, err)					  \
++	pr_err_ratelimited("SEAMCALL[" #op "] failed: 0x%llx (cpu %d)\n", \
++			   SEAMCALL_##op ? (err) : (err), smp_processor_id());
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'err' - possible side-effects?
+#166: FILE: arch/x86/kvm/vmx/tdx_ops.h:85:
++#define TDX_ERR(err, op)			\
++({						\
++	int __ret_warn_on = WARN_ON_ONCE(err);	\
++						\
++	if (unlikely(__ret_warn_on))		\
++		pr_seamcall_error(op, err);	\
++	__ret_warn_on;				\
++})
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#194: FILE: arch/x86/kvm/vmx/tdx_ops.h:113:
++	"2: \n\t"			\
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#209: FILE: arch/x86/kvm/vmx/tdx_ops.h:128:
++#define seamcall_0(fn)^I ^I^I^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#211: FILE: arch/x86/kvm/vmx/tdx_ops.h:130:
++#define seamcall_1(fn, rcx)^I ^I^I^I^I^I\$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ex' - possible side-effects?
+#229: FILE: arch/x86/kvm/vmx/tdx_ops.h:148:
++#define seamcall_N_2(fn, ex, inputs...)					\
++do {									\
++	u64 ret;							\
++									\
++	asm volatile(__seamcall						\
++		     : ASM_CALL_CONSTRAINT, "=a"(ret),			\
++		       "=c"((ex)->rcx), "=d"((ex)->rdx)			\
++		     : "a"(SEAMCALL_##fn), inputs			\
++		     : );						\
++	return ret;							\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ex' - possible side-effects?
+#261: FILE: arch/x86/kvm/vmx/tdx_ops.h:180:
++#define seamcall_N_3(fn, ex, inputs...)					\
++do {									\
++	register long r8_out asm("r8");					\
++	u64 ret;							\
++									\
++	asm volatile(__seamcall						\
++		     : ASM_CALL_CONSTRAINT, "=a"(ret),			\
++		       "=c"((ex)->rcx), "=d"((ex)->rdx), "=r"(r8_out)	\
++		     : "a"(SEAMCALL_##fn), inputs			\
++		     : );						\
++	(ex)->r8 = r8_out;						\
++	return ret;							\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ex' - possible side-effects?
+#295: FILE: arch/x86/kvm/vmx/tdx_ops.h:214:
++#define seamcall_N_4(fn, ex, inputs...)					\
++do {									\
++	register long r8_out asm("r8");					\
++	register long r9_out asm("r9");					\
++	u64 ret;							\
++									\
++	asm volatile(__seamcall						\
++		     : ASM_CALL_CONSTRAINT, "=a"(ret), "=c"((ex)->rcx),	\
++		       "=d"((ex)->rdx), "=r"(r8_out), "=r"(r9_out)	\
++		     : "a"(SEAMCALL_##fn), inputs			\
++		     : );						\
++	(ex)->r8 = r8_out;						\
++	(ex)->r9 = r9_out;						\
++	return ret;							\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ex' - possible side-effects?
+#331: FILE: arch/x86/kvm/vmx/tdx_ops.h:250:
++#define seamcall_N_5(fn, ex, inputs...)					\
++do {									\
++	register long r8_out asm("r8");					\
++	register long r9_out asm("r9");					\
++	register long r10_out asm("r10");				\
++	u64 ret;							\
++									\
++	asm volatile(__seamcall						\
++		     : ASM_CALL_CONSTRAINT, "=a"(ret), "=c"((ex)->rcx),	\
++		       "=d"((ex)->rdx), "=r"(r8_out), "=r"(r9_out),	\
++		       "=r"(r10_out)					\
++		     : "a"(SEAMCALL_##fn), inputs			\
++		     : );						\
++	(ex)->r8 = r8_out;						\
++	(ex)->r9 = r9_out;						\
++	(ex)->r10 = r10_out;						\
++	return ret;							\
++} while (0)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#527: FILE: arch/x86/kvm/vmx/tdx_ops.h:446:
++static inline u64 tdremovepage(hpa_t tdr, gpa_t gpa, int level,
++				struct tdx_ex_ret *ex)
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000194074.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a total: 0 errors, 5 warnings, 8 checks, 531 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000194074.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

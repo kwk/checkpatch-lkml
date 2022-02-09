@@ -1,0 +1,94 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'HEAD' - possible side-effects?
+#151: FILE: include/linux/lsm_hooks.h:1843:
++#define LSM_HOOK_INIT(HEAD, HOOK) \
++	{ .head = &security_hook_heads.HEAD, .hook = { .HEAD = HOOK } }
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#186: FILE: include/linux/lsm_hooks.h:1871:
++static inline void security_delete_hooks(struct security_hook_list *hooks,
++						int count)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#195: FILE: include/linux/lsm_hooks.h:1880:
++extern int __init security_module_enable(const char *module);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#196: FILE: include/linux/lsm_hooks.h:1881:
++extern void __init capability_add_hooks(void);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'FUNC' - possible side-effects?
+#669: FILE: security/security.c:114:
++#define call_void_hook(FUNC, ...)				\
++	do {							\
++		struct security_hook_list *P;			\
++								\
++		list_for_each_entry(P, &security_hook_heads.FUNC, list)	\
++			P->hook.FUNC(__VA_ARGS__);		\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'FUNC' - possible side-effects?
+#677: FILE: security/security.c:122:
++#define call_int_hook(FUNC, IRC, ...) ({			\
++	int RC = IRC;						\
++	do {							\
++		struct security_hook_list *P;			\
++								\
++		list_for_each_entry(P, &security_hook_heads.FUNC, list) { \
++			RC = P->hook.FUNC(__VA_ARGS__);		\
++			if (RC != 0)				\
++				break;				\
++		}						\
++	} while (0);						\
++	RC;							\
++})
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#773: FILE: security/security.c:388:
++	ret = call_int_hook(inode_init_security, -EOPNOTSUPP, inode, dir, qstr,
+ 						&lsm_xattr->name,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#786: FILE: security/security.c:638:
++	ret = call_int_hook(inode_setxattr, 1, dentry, name, value, size,
+ 				flags);
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#858: FILE: security/security.c:996:
++	int rc = -ENOSYS;
+
+ENOSYS means that a nonexistent system call was called.
+Earlier, it was wrongly used for things like invalid operations on
+otherwise valid syscalls.  This should be avoided in new code.
+
+See: https://lore.kernel.org/lkml/5eb299021dec23c1a48fa7d9f2c8b794e967766d.1408730669.git.luto@amacapital.net/
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#863: FILE: security/security.c:1001:
++		if (thisrc != -ENOSYS) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#950: FILE: security/security.c:1469:
++	list_for_each_entry(hp, &security_hook_heads.xfrm_state_pol_flow_match,
++				list) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1395: FILE: security/selinux/hooks.c:2112:
++	rc = cred_has_capability(current_cred(), CAP_SYS_ADMIN,
++					SECURITY_CAP_NOAUDIT);
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#1750: FILE: security/yama/yama_lsm.c:157:
++	int rc = -ENOSYS;
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000351119.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 3 warnings, 10 checks, 1612 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000351119.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,59 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'wq' - possible side-effects?
+#42: FILE: fs/fuse/dev.c:26:
++#define wait_fatal_freezable(wq, condition, exclusive)			\
++({									\
++	int __ret = 0;							\
++	do {								\
++		if (exclusive)						\
++			__ret = wait_event_interruptible_exclusive(wq,	\
++							condition);	\
++		else							\
++			__ret = wait_event_interruptible(wq,		\
++							condition);	\
++		if (!__ret || fatal_signal_pending(current))		\
++			break;						\
++		if (!freezing(current))					\
++			continue;					\
++	} while (try_to_freeze());					\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'condition' - possible side-effects?
+#42: FILE: fs/fuse/dev.c:26:
++#define wait_fatal_freezable(wq, condition, exclusive)			\
++({									\
++	int __ret = 0;							\
++	do {								\
++		if (exclusive)						\
++			__ret = wait_event_interruptible_exclusive(wq,	\
++							condition);	\
++		else							\
++			__ret = wait_event_interruptible(wq,		\
++							condition);	\
++		if (!__ret || fatal_signal_pending(current))		\
++			break;						\
++		if (!freezing(current))					\
++			continue;					\
++	} while (try_to_freeze());					\
++	__ret;								\
++})
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#98: FILE: fs/fuse/dev.c:177:
++		intr = wait_fatal_freezable(fc->blocked_waitq,
++				!fuse_block_alloc(fc, for_background), true);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#114: FILE: fs/fuse/dev.c:470:
++		err = wait_fatal_freezable(req->waitq,
++				test_bit(FR_FINISHED, &req->flags), false);
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000315189.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 0 warnings, 4 checks, 77 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000315189.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

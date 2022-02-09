@@ -1,0 +1,170 @@
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#68: FILE: arch/x86/kvm/Kconfig:66:
++config VMCSINFO_INTEL
++	tristate "Export VMCSINFO for Intel processors"
++	depends on KVM_INTEL
++	---help---
++	  Provides support for exporting VMCSINFO on Intel processors equipped
++	  with the VT extensions. The VMCSINFO contains a VMCS revision
++	  identifier and offsets of VMCS fields.
++
++	  To compile this as a module, choose M here: the module
++	  will be called vmcsinfo-intel.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#105: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#110: FILE: arch/x86/kvm/vmcsinfo.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:STATIC_CONST_CHAR_ARRAY: const array should probably be static const
+#173: FILE: arch/x86/kvm/vmcsinfo.c:64:
++const char vmcs_group_name[] = "vmcs";
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#175: FILE: arch/x86/kvm/vmcsinfo.c:66:
++#define BUILD_OFFSET_SHOW(field_code)                                         \
++static ssize_t _##field_code##_show(struct device *dev,                       \
++				    struct device_attribute *attr,            \
++				    char *buf)                                \
++{                                                                             \
++	return sprintf(buf, "%d\n",                                           \
++		       vmcsinfo.vmcs_field_to_offset_table[0x##field_code]);  \
++}                                                                             \
++static DEVICE_ATTR(field_code, 0444, _##field_code##_show, NULL);             \
++
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:DEVICE_ATTR_RO: Use DEVICE_ATTR_RO
+#514: FILE: arch/x86/kvm/vmcsinfo.c:405:
++}
+
+The DEVICE_ATTR_RO(name) helper macro can be used instead of
+DEVICE_ATTR(name, 0444, name_show, NULL);
+
+Note that the macro automatically appends _show to the named
+attribute variable of the device for the show method.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+WARNING:TYPO_SPELLING: 'caculating' may be misspelled - perhaps 'calculating'?
+#529: FILE: arch/x86/kvm/vmcsinfo.c:420:
++ * For caculating offsets of fields in VMCS data, we index every 16-bit
+        ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'offset' - possible side-effects?
+#548: FILE: arch/x86/kvm/vmcsinfo.c:439:
++#define ENCODING_OFFSET(offset)                                     \
++	((((offset) & OFFSET_LOW_MASK) << 1) +                      \
++	((((offset) & OFFSET_HIGH_MASK) << 2) | 0x100))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'index' - possible side-effects?
+#554: FILE: arch/x86/kvm/vmcsinfo.c:445:
++#define DECODING_OFFSET_LE(index)                                   \
++	((((index) >> 1) & OFFSET_LOW_MASK) +                       \
++	(((index) >> 2) & OFFSET_HIGH_MASK))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'index' - possible side-effects?
+#561: FILE: arch/x86/kvm/vmcsinfo.c:452:
++#define DECODING_OFFSET(index, n)                                   \
++	((index & 1) ? (DECODING_OFFSET_LE(__swab##n(index))) :     \
++	(DECODING_OFFSET_LE(index)))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'index' may be better as '(index)' to avoid precedence issues
+#561: FILE: arch/x86/kvm/vmcsinfo.c:452:
++#define DECODING_OFFSET(index, n)                                   \
++	((index & 1) ? (DECODING_OFFSET_LE(__swab##n(index))) :     \
++	(DECODING_OFFSET_LE(index)))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#571: FILE: arch/x86/kvm/vmcsinfo.c:462:
++#define FIELD_OFFSETNW(field, offset)                               \
++do {                                                                \
++	if (sizeof(offset) == 8)                                    \
++		vmcsinfo_field(field, DECODING_OFFSET(offset, 64)); \
++	else                                                        \
++		vmcsinfo_field(field, DECODING_OFFSET(offset, 32)); \
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'offset' - possible side-effects?
+#571: FILE: arch/x86/kvm/vmcsinfo.c:462:
++#define FIELD_OFFSETNW(field, offset)                               \
++do {                                                                \
++	if (sizeof(offset) == 8)                                    \
++		vmcsinfo_field(field, DECODING_OFFSET(offset, 64)); \
++	else                                                        \
++		vmcsinfo_field(field, DECODING_OFFSET(offset, 32)); \
++} while (0)
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#636: FILE: arch/x86/kvm/vmcsinfo.c:527:
++	if (!vmcs) {
++		return -ENOMEM;
++	}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000096658.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 8 warnings, 6 checks, 619 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000096658.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

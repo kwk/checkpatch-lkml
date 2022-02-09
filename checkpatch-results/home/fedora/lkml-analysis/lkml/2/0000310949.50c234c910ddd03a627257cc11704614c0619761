@@ -1,0 +1,130 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#216: FILE: arch/tile/include/asm/pgtable.h:252:
++extern void set_pte(pte_t *ptep, pte_t pte);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#310: FILE: arch/tile/include/asm/thread_info.h:71:
++#define THREAD_SIZE_PAGES (1 << THREAD_SIZE_ORDER)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#370: FILE: arch/tile/kernel/machine_kexec.c:245:
++		unsigned long pfn = i << (HPAGE_SHIFT - PAGE_SHIFT);
++		if (pfn_valid(pfn))
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#447: FILE: arch/tile/kernel/pci-dma.c:165:
++	BUG_ON(offset + size > PAGE_SIZE);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:MISPLACED_INIT: __initdata should be placed after node_percpu[MAX_NUMNODES]
+#472: FILE: arch/tile/kernel/setup.c:62:
++static unsigned long __initdata node_percpu[MAX_NUMNODES];
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#495: FILE: arch/tile/kernel/setup.c:573:
++	int size = __per_cpu_end - __per_cpu_start;
++	size += PERCPU_MODULE_RESERVE;
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#517: FILE: arch/tile/kernel/setup.c:679:
++		printk(KERN_DEBUG "  Normal zone: %ld per-cpu pages\n",
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#525: FILE: arch/tile/kernel/setup.c:1317:
++	BUG_ON(node_percpu[nid] < size);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#647: FILE: arch/tile/mm/pgtable.c:171:
++	BUG_ON(pgd_addr_invalid(addr));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#648: FILE: arch/tile/mm/pgtable.c:172:
++	BUG_ON(addr < PAGE_OFFSET);  /* only for kernel LOWMEM */
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#651: FILE: arch/tile/mm/pgtable.c:175:
++	BUG_ON(!pud_present(*pud));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#653: FILE: arch/tile/mm/pgtable.c:177:
++	BUG_ON(!pmd_present(*pmd));
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#676: FILE: arch/tile/mm/pgtable.c:200:
++		pmd_t *copy_pmd;
++		pgd = list_to_pgd(pos) + pgd_index(addr);
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#712: FILE: arch/tile/mm/pgtable.c:293:
++	gfp_t flags = GFP_KERNEL|__GFP_REPEAT|__GFP_ZERO;
+ 	                        ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#712: FILE: arch/tile/mm/pgtable.c:293:
++	gfp_t flags = GFP_KERNEL|__GFP_REPEAT|__GFP_ZERO;
+ 	                                     ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#731: FILE: arch/tile/mm/pgtable.c:314:
++		init_page_count(p+i);
+ 		                 ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#732: FILE: arch/tile/mm/pgtable.c:315:
++		inc_zone_page_state(p+i, NR_PAGETABLE);
+ 		                     ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#750: FILE: arch/tile/mm/pgtable.c:336:
++		__free_page(p+i);
+ 		             ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#751: FILE: arch/tile/mm/pgtable.c:337:
++		dec_zone_page_state(p+i, NR_PAGETABLE);
+ 		                     ^
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000310949.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 11 warnings, 8 checks, 663 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000310949.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

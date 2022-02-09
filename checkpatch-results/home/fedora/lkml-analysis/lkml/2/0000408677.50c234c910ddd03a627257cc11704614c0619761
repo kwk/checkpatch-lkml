@@ -1,0 +1,289 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:MAINTAINERS_STYLE: Misordered MAINTAINERS entry - list file patterns in alphabetic order
+#163: FILE: MAINTAINERS:3190:
++F:	drivers/hwmon/jc42.c
++F:	Documentation/hwmon/jc42
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#208: FILE: drivers/hwmon/jc42.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#228: FILE: drivers/hwmon/jc42.c:21:
++ * along with this program; if not, write to the Free Software$
+
+Kernel maintainers reject new instances of the GPL boilerplate paragraph
+directing people to write to the FSF for a copy of the GPL, since the
+FSF has moved in the past and may do so again.
+So do not write paragraphs about writing to the Free Software Foundation's
+mailing address.
+
+See: https://lore.kernel.org/lkml/20131006222342.GT19510@leaf/
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#229: FILE: drivers/hwmon/jc42.c:22:
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#244: FILE: drivers/hwmon/jc42.c:37:
++    0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, I2C_CLIENT_END };$
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#262: FILE: drivers/hwmon/jc42.c:55:
++#define JC42_CFG_CRIT_ONLY	(1 << 2)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#263: FILE: drivers/hwmon/jc42.c:56:
++#define JC42_CFG_SHUTDOWN	(1 << 8)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#268: FILE: drivers/hwmon/jc42.c:61:
++#define JC42_CAP_RANGE		(1 << 2)
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#346: FILE: drivers/hwmon/jc42.c:139:
++	struct mutex	update_lock;
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'value' may be better as '(value)' to avoid precedence issues
+#462: FILE: drivers/hwmon/jc42.c:255:
++#define show(value)	\
++static ssize_t show_##value(struct device *dev,				\
++			    struct device_attribute *attr,		\
++			    char *buf)					\
++{									\
++	struct jc42_data *data = jc42_update_device(dev);		\
++	if (IS_ERR(data))						\
++		return PTR_ERR(data);					\
++	return sprintf(buf, "%d\n", jc42_temp_from_reg(data->value));	\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'value' - possible side-effects?
+#510: FILE: drivers/hwmon/jc42.c:303:
++#define set(value, reg)	\
++static ssize_t set_##value(struct device *dev,				\
++			   struct device_attribute *attr,		\
++			   const char *buf, size_t count)		\
++{									\
++	struct i2c_client *client = to_i2c_client(dev);			\
++	struct jc42_data *data = i2c_get_clientdata(client);		\
++	int err, ret = count;						\
++	long val;							\
++	if (strict_strtol(buf, 10, &val) < 0)				\
++		return -EINVAL;						\
++	mutex_lock(&data->update_lock);					\
++	data->value = jc42_temp_to_reg(val, data->extended);		\
++	err = jc42_write_value(client, reg, data->value);		\
++	if (err < 0)							\
++		ret = err;						\
++	mutex_unlock(&data->update_lock);				\
++	return ret;							\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'value' may be better as '(value)' to avoid precedence issues
+#510: FILE: drivers/hwmon/jc42.c:303:
++#define set(value, reg)	\
++static ssize_t set_##value(struct device *dev,				\
++			   struct device_attribute *attr,		\
++			   const char *buf, size_t count)		\
++{									\
++	struct i2c_client *client = to_i2c_client(dev);			\
++	struct jc42_data *data = i2c_get_clientdata(client);		\
++	int err, ret = count;						\
++	long val;							\
++	if (strict_strtol(buf, 10, &val) < 0)				\
++		return -EINVAL;						\
++	mutex_lock(&data->update_lock);					\
++	data->value = jc42_temp_to_reg(val, data->extended);		\
++	err = jc42_write_value(client, reg, data->value);		\
++	if (err < 0)							\
++		ret = err;						\
++	mutex_unlock(&data->update_lock);				\
++	return ret;							\
++}
+
+WARNING:CONSIDER_KSTRTO: strict_strtol is obsolete, use kstrtol instead
+#519: FILE: drivers/hwmon/jc42.c:312:
++	if (strict_strtol(buf, 10, &val) < 0)				\
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#535: FILE: drivers/hwmon/jc42.c:328:
++ * Pick best choice and go from there. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:CONSIDER_KSTRTO: strict_strtoul is obsolete, use kstrtoul instead
+#547: FILE: drivers/hwmon/jc42.c:340:
++	if (strict_strtoul(buf, 10, &val) < 0)
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'show_temp_input' to 'temp1_input_show'
+#586: FILE: drivers/hwmon/jc42.c:379:
++}
+
+The function names used in DEVICE_ATTR is unusual.
+Typically, the store and show functions are used with <attr>_store and
+<attr>_show, where <attr> is a named attribute variable of the device.
+
+Consider the following examples::
+
+  static DEVICE_ATTR(type, 0444, type_show, NULL);
+  static DEVICE_ATTR(power, 0644, power_show, power_store);
+
+The function names should preferably follow the above pattern.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#588: FILE: drivers/hwmon/jc42.c:381:
++static DEVICE_ATTR(temp1_input, S_IRUGO,
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'show_temp_crit' to 'temp1_crit_show' 'set_temp_crit' to 'temp1_crit_store'
+#590: FILE: drivers/hwmon/jc42.c:383:
++static DEVICE_ATTR(temp1_crit, S_IWUSR | S_IRUGO,
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR | S_IRUGO' are not preferred. Consider using octal permissions '0644'.
+#590: FILE: drivers/hwmon/jc42.c:383:
++static DEVICE_ATTR(temp1_crit, S_IWUSR | S_IRUGO,
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'show_temp_min' to 'temp1_min_show' 'set_temp_min' to 'temp1_min_store'
+#592: FILE: drivers/hwmon/jc42.c:385:
++static DEVICE_ATTR(temp1_min, S_IWUSR | S_IRUGO,
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR | S_IRUGO' are not preferred. Consider using octal permissions '0644'.
+#592: FILE: drivers/hwmon/jc42.c:385:
++static DEVICE_ATTR(temp1_min, S_IWUSR | S_IRUGO,
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'show_temp_max' to 'temp1_max_show' 'set_temp_max' to 'temp1_max_store'
+#594: FILE: drivers/hwmon/jc42.c:387:
++static DEVICE_ATTR(temp1_max, S_IWUSR | S_IRUGO,
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR | S_IRUGO' are not preferred. Consider using octal permissions '0644'.
+#594: FILE: drivers/hwmon/jc42.c:387:
++static DEVICE_ATTR(temp1_max, S_IWUSR | S_IRUGO,
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'show_temp_crit_hyst' to 'temp1_crit_hyst_show' 'set_temp_crit_hyst' to 'temp1_crit_hyst_store'
+#597: FILE: drivers/hwmon/jc42.c:390:
++static DEVICE_ATTR(temp1_crit_hyst, S_IWUSR | S_IRUGO,
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR | S_IRUGO' are not preferred. Consider using octal permissions '0644'.
+#597: FILE: drivers/hwmon/jc42.c:390:
++static DEVICE_ATTR(temp1_crit_hyst, S_IWUSR | S_IRUGO,
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'show_temp_max_hyst' to 'temp1_max_hyst_show'
+#599: FILE: drivers/hwmon/jc42.c:392:
++static DEVICE_ATTR(temp1_max_hyst, S_IRUGO,
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#599: FILE: drivers/hwmon/jc42.c:392:
++static DEVICE_ATTR(temp1_max_hyst, S_IRUGO,
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#602: FILE: drivers/hwmon/jc42.c:395:
++static SENSOR_DEVICE_ATTR(temp1_crit_alarm, S_IRUGO, show_alarm, NULL,
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#604: FILE: drivers/hwmon/jc42.c:397:
++static SENSOR_DEVICE_ATTR(temp1_min_alarm, S_IRUGO, show_alarm, NULL,
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#606: FILE: drivers/hwmon/jc42.c:399:
++static SENSOR_DEVICE_ATTR(temp1_max_alarm, S_IRUGO, show_alarm, NULL,
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#650: FILE: drivers/hwmon/jc42.c:443:
++		if (manid == jc42_chips[i].manid
++		    && (devid & jc42_chips[i].devid_mask) ==
+
+WARNING:STRLCPY: Prefer strscpy over strlcpy - see: https://lore.kernel.org/r/CAHk-=wgfRnXz0W3D37d01q3JFkr_i_uTL=V6A6G1oUZcprmknw@mail.gmail.com/
+#652: FILE: drivers/hwmon/jc42.c:445:
++			strlcpy(info->type, "jc42", I2C_NAME_SIZE);
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*data)...) over kzalloc(sizeof(struct jc42_data)...)
+#665: FILE: drivers/hwmon/jc42.c:458:
++	data = kzalloc(sizeof(struct jc42_data), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#718: FILE: drivers/hwmon/jc42.c:511:
++	struct jc42_data *data = i2c_get_clientdata(client);
++	hwmon_device_unregister(data->hwmon_dev);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#730: FILE: drivers/hwmon/jc42.c:523:
++	int ret = i2c_smbus_read_word_data(client, reg);
++	if (ret < 0)
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000408677.commit.50c234c910ddd03a627257cc11704614c0619761 total: 2 errors, 25 warnings, 9 checks, 728 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000408677.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,129 @@
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'cond' may be better as '(cond)' to avoid precedence issues
+#127: FILE: include/linux/rculist.h:48:
++#define __list_check_rcu(dummy, cond, ...)				\
++	({								\
++	RCU_LOCKDEP_WARN(!cond && !rcu_read_lock_any_held(),		\
++			 "RCU-list traversed in non-reader section!");	\
++	 })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pos' - possible side-effects?
+#152: FILE: include/linux/rculist.h:366:
++#define list_for_each_entry_rcu(pos, head, member, cond...)		\
++	for (__list_check_rcu(dummy, ## cond, 0),			\
++	     pos = list_entry_rcu((head)->next, typeof(*pos), member);	\
++		&pos->member != (head);					\
+ 		pos = list_entry_rcu(pos->member.next, typeof(*pos), member))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'head' - possible side-effects?
+#152: FILE: include/linux/rculist.h:366:
++#define list_for_each_entry_rcu(pos, head, member, cond...)		\
++	for (__list_check_rcu(dummy, ## cond, 0),			\
++	     pos = list_entry_rcu((head)->next, typeof(*pos), member);	\
++		&pos->member != (head);					\
+ 		pos = list_entry_rcu(pos->member.next, typeof(*pos), member))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'member' - possible side-effects?
+#152: FILE: include/linux/rculist.h:366:
++#define list_for_each_entry_rcu(pos, head, member, cond...)		\
++	for (__list_check_rcu(dummy, ## cond, 0),			\
++	     pos = list_entry_rcu((head)->next, typeof(*pos), member);	\
++		&pos->member != (head);					\
+ 		pos = list_entry_rcu(pos->member.next, typeof(*pos), member))
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#171: FILE: include/linux/rculist.h:641:
++#define hlist_for_each_entry_rcu(pos, head, member, cond...)		\
++	for (__list_check_rcu(dummy, ## cond, 0),			\
++	     pos = hlist_entry_safe (rcu_dereference_raw(hlist_first_rcu(head)),\
+ 			typeof(*(pos)), member);			\
+ 		pos;							\
+ 		pos = hlist_entry_safe(rcu_dereference_raw(hlist_next_rcu(\
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pos' - possible side-effects?
+#171: FILE: include/linux/rculist.h:641:
++#define hlist_for_each_entry_rcu(pos, head, member, cond...)		\
++	for (__list_check_rcu(dummy, ## cond, 0),			\
++	     pos = hlist_entry_safe (rcu_dereference_raw(hlist_first_rcu(head)),\
+ 			typeof(*(pos)), member);			\
+ 		pos;							\
+ 		pos = hlist_entry_safe(rcu_dereference_raw(hlist_next_rcu(\
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#173: FILE: include/linux/rculist.h:643:
++	     pos = hlist_entry_safe (rcu_dereference_raw(hlist_first_rcu(head)),\
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#232: FILE: kernel/rcu/update.c:94:
++#define rcu_read_lock_held_common()		\
++	if (!debug_lockdep_rcu_enabled())	\
++		return 1;			\
++	if (!rcu_is_watching())			\
++		return 0;			\
++	if (!rcu_lockdep_current_cpu_online())	\
++		return 0;
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#232: FILE: kernel/rcu/update.c:94:
++#define rcu_read_lock_held_common()		\
++	if (!debug_lockdep_rcu_enabled())	\
++		return 1;			\
++	if (!rcu_is_watching())			\
++		return 0;			\
++	if (!rcu_lockdep_current_cpu_online())	\
++		return 0;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#232: FILE: kernel/rcu/update.c:94:
++#define rcu_read_lock_held_common()		\
++	if (!debug_lockdep_rcu_enabled())	\
++		return 1;			\
++	if (!rcu_is_watching())			\
++		return 0;			\
++	if (!rcu_lockdep_current_cpu_online())	\
++		return 0;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000177672.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 total: 2 errors, 3 warnings, 5 checks, 160 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000177672.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

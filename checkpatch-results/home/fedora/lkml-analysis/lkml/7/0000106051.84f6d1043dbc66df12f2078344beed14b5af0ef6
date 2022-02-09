@@ -1,0 +1,195 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#92: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:INCLUDE_LINUX: Use #include <linux/cacheflush.h> instead of <asm/cacheflush.h>
+#113: FILE: drivers/iommu/intel-pgtable.c:17:
++#include <asm/cacheflush.h>
+
+WARNING:INCLUDE_LINUX: Use #include <linux/pgtable.h> instead of <asm/pgtable.h>
+#114: FILE: drivers/iommu/intel-pgtable.c:18:
++#include <asm/pgtable.h>
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'domain' - possible side-effects?
+#122: FILE: drivers/iommu/intel-pgtable.c:26:
++#define pgtable_populate(domain, nm)					\
++do {									\
++	void *__new = alloc_pgtable_page(domain->nid);			\
++	if (!__new)							\
++		return -ENOMEM;						\
++	smp_wmb();							\
++	spin_lock(&(domain)->page_table_lock);				\
++	if (nm ## _present(*nm)) {					\
++		free_pgtable_page(__new);				\
++	} else {							\
++		set_##nm(nm, __##nm(__pa(__new) | _PAGE_TABLE));	\
++		domain_flush_cache(domain, nm, sizeof(nm##_t));		\
++	}								\
++	spin_unlock(&(domain)->page_table_lock);			\
++} while(0);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'domain' may be better as '(domain)' to avoid precedence issues
+#122: FILE: drivers/iommu/intel-pgtable.c:26:
++#define pgtable_populate(domain, nm)					\
++do {									\
++	void *__new = alloc_pgtable_page(domain->nid);			\
++	if (!__new)							\
++		return -ENOMEM;						\
++	smp_wmb();							\
++	spin_lock(&(domain)->page_table_lock);				\
++	if (nm ## _present(*nm)) {					\
++		free_pgtable_page(__new);				\
++	} else {							\
++		set_##nm(nm, __##nm(__pa(__new) | _PAGE_TABLE));	\
++		domain_flush_cache(domain, nm, sizeof(nm##_t));		\
++	}								\
++	spin_unlock(&(domain)->page_table_lock);			\
++} while(0);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'nm' - possible side-effects?
+#122: FILE: drivers/iommu/intel-pgtable.c:26:
++#define pgtable_populate(domain, nm)					\
++do {									\
++	void *__new = alloc_pgtable_page(domain->nid);			\
++	if (!__new)							\
++		return -ENOMEM;						\
++	smp_wmb();							\
++	spin_lock(&(domain)->page_table_lock);				\
++	if (nm ## _present(*nm)) {					\
++		free_pgtable_page(__new);				\
++	} else {							\
++		set_##nm(nm, __##nm(__pa(__new) | _PAGE_TABLE));	\
++		domain_flush_cache(domain, nm, sizeof(nm##_t));		\
++	}								\
++	spin_unlock(&(domain)->page_table_lock);			\
++} while(0);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'nm' may be better as '(nm)' to avoid precedence issues
+#122: FILE: drivers/iommu/intel-pgtable.c:26:
++#define pgtable_populate(domain, nm)					\
++do {									\
++	void *__new = alloc_pgtable_page(domain->nid);			\
++	if (!__new)							\
++		return -ENOMEM;						\
++	smp_wmb();							\
++	spin_lock(&(domain)->page_table_lock);				\
++	if (nm ## _present(*nm)) {					\
++		free_pgtable_page(__new);				\
++	} else {							\
++		set_##nm(nm, __##nm(__pa(__new) | _PAGE_TABLE));	\
++		domain_flush_cache(domain, nm, sizeof(nm##_t));		\
++	}								\
++	spin_unlock(&(domain)->page_table_lock);			\
++} while(0);
+
+WARNING:DO_WHILE_MACRO_WITH_TRAILING_SEMICOLON: do {} while (0) macros should not be semicolon terminated
+#122: FILE: drivers/iommu/intel-pgtable.c:26:
++#define pgtable_populate(domain, nm)					\
++do {									\
++	void *__new = alloc_pgtable_page(domain->nid);			\
++	if (!__new)							\
++		return -ENOMEM;						\
++	smp_wmb();							\
++	spin_lock(&(domain)->page_table_lock);				\
++	if (nm ## _present(*nm)) {					\
++		free_pgtable_page(__new);				\
++	} else {							\
++		set_##nm(nm, __##nm(__pa(__new) | _PAGE_TABLE));	\
++		domain_flush_cache(domain, nm, sizeof(nm##_t));		\
++	}								\
++	spin_unlock(&(domain)->page_table_lock);			\
++} while(0);
+
+do {} while(0) macros should not have a trailing semicolon.
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#127: FILE: drivers/iommu/intel-pgtable.c:31:
++	smp_wmb();							\
+
+ERROR:SPACING: space required before the open parenthesis '('
+#136: FILE: drivers/iommu/intel-pgtable.c:40:
++} while(0);
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#149: FILE: drivers/iommu/intel-pgtable.c:53:
++	first_pte = pte = pte_offset_kernel(pmd, addr);
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#243: FILE: drivers/iommu/intel-pgtable.c:147:
++	BUG_ON(addr >= end);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:TYPO_SPELLING: 'vitual' may be misspelled - perhaps 'virtual'?
+#258: FILE: drivers/iommu/intel-pgtable.c:162:
++ * mmunmap: Unmap an existing mapping between a range of IO vitual address
+                                                             ^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#426: FILE: drivers/iommu/intel-pgtable.c:330:
++	BUG_ON(addr >= end);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#490: FILE: include/trace/events/intel_iommu.h:103:
++DECLARE_EVENT_CLASS(domain_map,
++	TP_PROTO(struct dmar_domain *domain, unsigned long addr,
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#495: FILE: include/trace/events/intel_iommu.h:108:
++	TP_STRUCT__entry(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#502: FILE: include/trace/events/intel_iommu.h:115:
++	TP_fast_assign(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#515: FILE: include/trace/events/intel_iommu.h:128:
++DEFINE_EVENT(domain_map, domain_mm_map,
++	TP_PROTO(struct dmar_domain *domain, unsigned long addr,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#522: FILE: include/trace/events/intel_iommu.h:135:
++DECLARE_EVENT_CLASS(domain_unmap,
++	TP_PROTO(struct dmar_domain *domain, unsigned long addr,
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#527: FILE: include/trace/events/intel_iommu.h:140:
++	TP_STRUCT__entry(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#533: FILE: include/trace/events/intel_iommu.h:146:
++	TP_fast_assign(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#544: FILE: include/trace/events/intel_iommu.h:157:
++DEFINE_EVENT(domain_unmap, domain_mm_unmap,
++	TP_PROTO(struct dmar_domain *domain, unsigned long addr,
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000106051.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 total: 1 errors, 8 warnings, 13 checks, 452 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000106051.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

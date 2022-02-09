@@ -1,0 +1,625 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#288: FILE: arch/arm/kernel/module-plts.c:65:
++	BUG_ON(pltsec->plt_count * PLT_ENT_SIZE > pltsec->plt->sh_size);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:CAMELCASE: Avoid CamelCase: <Elf32_Rel>
+#297: FILE: arch/arm/kernel/module-plts.c:140:
++			       const Elf32_Rel *rel, int num, Elf32_Word dstidx)
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:CAMELCASE: Avoid CamelCase: <Elf32_Word>
+#297: FILE: arch/arm/kernel/module-plts.c:140:
++			       const Elf32_Rel *rel, int num, Elf32_Word dstidx)
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#424: FILE: arch/arm/kernel/setup.c:83:
++extern void early_mm_init(const struct machine_desc *);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const struct machine_desc *' should also have an identifier name
+#424: FILE: arch/arm/kernel/setup.c:83:
++extern void early_mm_init(const struct machine_desc *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#794: FILE: arch/arm64/include/asm/barrier.h:45:
++#define __smp_store_release(p, v)					\
+ do {									\
++	union { typeof(*p) __val; char __c[1]; } __u =			\
++		{ .__val = (__force typeof(*p)) (v) }; 			\
+ 	compiletime_assert_atomic_type(*p);				\
+ 	switch (sizeof(*p)) {						\
+ 	case 1:								\
+ 		asm volatile ("stlrb %w1, %0"				\
++				: "=Q" (*p)				\
++				: "r" (*(__u8 *)__u.__c)		\
++				: "memory");				\
+ 		break;							\
+ 	case 2:								\
+ 		asm volatile ("stlrh %w1, %0"				\
++				: "=Q" (*p)				\
++				: "r" (*(__u16 *)__u.__c)		\
++				: "memory");				\
+ 		break;							\
+ 	case 4:								\
+ 		asm volatile ("stlr %w1, %0"				\
++				: "=Q" (*p)				\
++				: "r" (*(__u32 *)__u.__c)		\
++				: "memory");				\
+ 		break;							\
+ 	case 8:								\
+ 		asm volatile ("stlr %1, %0"				\
++				: "=Q" (*p)				\
++				: "r" (*(__u64 *)__u.__c)		\
++				: "memory");				\
+ 		break;							\
+ 	}								\
+ } while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'p' may be better as '(p)' to avoid precedence issues
+#794: FILE: arch/arm64/include/asm/barrier.h:45:
++#define __smp_store_release(p, v)					\
+ do {									\
++	union { typeof(*p) __val; char __c[1]; } __u =			\
++		{ .__val = (__force typeof(*p)) (v) }; 			\
+ 	compiletime_assert_atomic_type(*p);				\
+ 	switch (sizeof(*p)) {						\
+ 	case 1:								\
+ 		asm volatile ("stlrb %w1, %0"				\
++				: "=Q" (*p)				\
++				: "r" (*(__u8 *)__u.__c)		\
++				: "memory");				\
+ 		break;							\
+ 	case 2:								\
+ 		asm volatile ("stlrh %w1, %0"				\
++				: "=Q" (*p)				\
++				: "r" (*(__u16 *)__u.__c)		\
++				: "memory");				\
+ 		break;							\
+ 	case 4:								\
+ 		asm volatile ("stlr %w1, %0"				\
++				: "=Q" (*p)				\
++				: "r" (*(__u32 *)__u.__c)		\
++				: "memory");				\
+ 		break;							\
+ 	case 8:								\
+ 		asm volatile ("stlr %1, %0"				\
++				: "=Q" (*p)				\
++				: "r" (*(__u64 *)__u.__c)		\
++				: "memory");				\
+ 		break;							\
+ 	}								\
+ } while (0)
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#797: FILE: arch/arm64/include/asm/barrier.h:48:
++^I^I{ .__val = (__force typeof(*p)) (v) }; ^I^I^I\$
+
+CHECK:SPACING: No space is necessary after a cast
+#797: FILE: arch/arm64/include/asm/barrier.h:48:
++		{ .__val = (__force typeof(*p)) (v) }; 			\
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/uaccess.h> instead of <asm/uaccess.h>
+#923: FILE: arch/arm64/kernel/hw_breakpoint.c:39:
++#include <asm/uaccess.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1081: FILE: arch/powerpc/include/asm/mmu_context.h:123:
++}
++#define switch_mm_irqs_off switch_mm_irqs_off
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1083: FILE: arch/powerpc/include/asm/mmu_context.h:125:
++
++
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1408: FILE: arch/powerpc/platforms/powernv/pci.h:232:
++extern void pnv_pci_ioda2_tce_invalidate_entire(struct pnv_phb *phb, bool rm);
+
+CHECK:CAMELCASE: Avoid CamelCase: <Elf64_Nhdr>
+#1436: FILE: arch/s390/kernel/crash_dump.c:436:
++	Elf64_Nhdr *note;
+
+CHECK:SPACING: No space is necessary after a cast
+#1438: FILE: arch/s390/kernel/crash_dump.c:438:
++	note = (Elf64_Nhdr *) ptr;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1659: FILE: arch/x86/kvm/x86.c:3334:
++		if (xstate_bv & ~kvm_supported_xcr0() ||
++			mxcsr & ~mxcsr_feature_mask)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1665: FILE: arch/x86/kvm/x86.c:3339:
++		if (xstate_bv & ~XFEATURE_MASK_FPSSE ||
++			mxcsr & ~mxcsr_feature_mask)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1792: FILE: drivers/block/drbd/drbd_req.c:331:
++	 * we need to keep the req object around. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#1846: FILE: drivers/char/lp.c:865:
++			printk(KERN_INFO "lp: too many ports, %s ignored.\n",
+
+WARNING:TYPO_SPELLING: 'unparseable' may be misspelled - perhaps 'unparsable'?
+#1894: FILE: drivers/char/tpm/tpm2_eventlog.c:74:
++		/* Algorithm without known length. Such event is unparseable. */
+ 		                                                 ^^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1925: FILE: drivers/char/tpm/tpm_i2c_nuvoton.c:52:
++#define TPM_I2C_BUS_DELAY              1000      ^I/* usec */$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1927: FILE: drivers/char/tpm/tpm_i2c_nuvoton.c:54:
++#define TPM_I2C_RETRY_DELAY_LONG       (10 * 1000) ^I/* usec */$
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2343: FILE: drivers/gpio/gpio-omap.c:214:
++static int omap2_set_gpio_debounce(struct gpio_bank *bank, unsigned offset,
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2344: FILE: drivers/gpio/gpio-omap.c:215:
++				   unsigned debounce)
+
+WARNING:ENOTSUPP: ENOTSUPP is not a SUSV4 error code, prefer EOPNOTSUPP
+#2353: FILE: drivers/gpio/gpio-omap.c:223:
++		return -ENOTSUPP;
+
+ENOTSUPP is not a standard error code and should be avoided in new patches.
+EOPNOTSUPP should be used instead.
+
+See: https://lore.kernel.org/netdev/20200510182252.GA411829@lunn.ch/
+
+CHECK:SPACING: No space is necessary after a cast
+#2403: FILE: drivers/gpu/drm/amd/amdgpu/dce_v10_0.c:1093:
++	tmp = div_u64((u64) dmif_size * (u64) wm->disp_clk, mc_latency + 512);
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#2440: FILE: drivers/gpu/drm/amd/amdgpu/dce_v10_0.c:1211:
++		line_time = min((u32) (1000000UL * (u32)mode->crtc_htotal / (u32)mode->clock), (u32)65535);
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:SPACING: No space is necessary after a cast
+#2440: FILE: drivers/gpu/drm/amd/amdgpu/dce_v10_0.c:1211:
++		line_time = min((u32) (1000000UL * (u32)mode->crtc_htotal / (u32)mode->clock), (u32)65535);
+
+CHECK:SPACING: No space is necessary after a cast
+#2470: FILE: drivers/gpu/drm/amd/amdgpu/dce_v11_0.c:1062:
++	tmp = div_u64((u64) dmif_size * (u64) wm->disp_clk, mc_latency + 512);
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#2507: FILE: drivers/gpu/drm/amd/amdgpu/dce_v11_0.c:1180:
++		line_time = min((u32) (1000000UL * (u32)mode->crtc_htotal / (u32)mode->clock), (u32)65535);
+
+CHECK:SPACING: No space is necessary after a cast
+#2507: FILE: drivers/gpu/drm/amd/amdgpu/dce_v11_0.c:1180:
++		line_time = min((u32) (1000000UL * (u32)mode->crtc_htotal / (u32)mode->clock), (u32)65535);
+
+CHECK:SPACING: No space is necessary after a cast
+#2537: FILE: drivers/gpu/drm/amd/amdgpu/dce_v6_0.c:864:
++	tmp = div_u64((u64) dmif_size * (u64) wm->disp_clk, mc_latency + 512);
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#2579: FILE: drivers/gpu/drm/amd/amdgpu/dce_v6_0.c:987:
++		line_time = min((u32) (1000000UL * (u32)mode->crtc_htotal / (u32)mode->clock), (u32)65535);
+
+CHECK:SPACING: No space is necessary after a cast
+#2579: FILE: drivers/gpu/drm/amd/amdgpu/dce_v6_0.c:987:
++		line_time = min((u32) (1000000UL * (u32)mode->crtc_htotal / (u32)mode->clock), (u32)65535);
+
+CHECK:SPACING: No space is necessary after a cast
+#2628: FILE: drivers/gpu/drm/amd/amdgpu/dce_v8_0.c:977:
++	tmp = div_u64((u64) dmif_size * (u64) wm->disp_clk, mc_latency + 512);
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#2665: FILE: drivers/gpu/drm/amd/amdgpu/dce_v8_0.c:1095:
++		line_time = min((u32) (1000000UL * (u32)mode->crtc_htotal / (u32)mode->clock), (u32)65535);
+
+CHECK:SPACING: No space is necessary after a cast
+#2665: FILE: drivers/gpu/drm/amd/amdgpu/dce_v8_0.c:1095:
++		line_time = min((u32) (1000000UL * (u32)mode->crtc_htotal / (u32)mode->clock), (u32)65535);
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#2696: FILE: drivers/gpu/drm/drm_edid.c:83:
++#define EDID_QUIRK_FORCE_10BPC			(1 << 11)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#2764: FILE: drivers/gpu/drm/nouveau/nv50_display.c:1118:
++	u32 offset = asyw->image.offset;
++	if (asyh->curs.handle != handle || asyh->curs.offset != offset) {
+
+WARNING:TYPO_SPELLING: 'bufers' may be misspelled - perhaps 'buffers'?
+#3240: FILE: drivers/infiniband/hw/hfi1/verbs.c:1527:
++static DEFINE_MUTEX(cntr_names_lock); /* protects the *_cntr_names bufers */
+                                                                    ^^^^^^
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#3374: FILE: drivers/md/dm-bufio.c:1556:
++        unsigned long retain_bytes = ACCESS_ONCE(dm_bufio_retain_bytes);$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#3374: FILE: drivers/md/dm-bufio.c:1556:
++        unsigned long retain_bytes = ACCESS_ONCE(dm_bufio_retain_bytes);$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#3375: FILE: drivers/md/dm-bufio.c:1557:
++        return retain_bytes >> (c->sectors_per_block_bits + SECTOR_SHIFT);$
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3375: FILE: drivers/md/dm-bufio.c:1557:
++        unsigned long retain_bytes = ACCESS_ONCE(dm_bufio_retain_bytes);
++        return retain_bytes >> (c->sectors_per_block_bits + SECTOR_SHIFT);
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#3375: FILE: drivers/md/dm-bufio.c:1557:
++        return retain_bytes >> (c->sectors_per_block_bits + SECTOR_SHIFT);$
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#3424: FILE: drivers/md/dm-bufio.c:1945:
++module_param_named(retain_bytes, dm_bufio_retain_bytes, ulong, S_IRUGO | S_IWUSR);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3555: FILE: drivers/md/dm-mpath.c:524:
++		bool queue_dying = blk_queue_dying(q);
++		DMERR_LIMIT("blk_get_request() returned %ld%s - requeuing",
+
+ERROR:SPACING: space required before the open parenthesis '('
+#3650: FILE: drivers/md/md.c:7064:
++	if(did_set_md_closing)
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#3683: FILE: drivers/md/persistent-data/dm-space-map-disk.c:146:
++	uint32_t old_count;
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'ev == SM_FREE'
+#3689: FILE: drivers/md/persistent-data/dm-space-map-disk.c:151:
++	if (!r && (ev == SM_FREE)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#3713: FILE: drivers/md/raid5.c:2328:
++	conf->active_name = 1-conf->active_name;
+ 	                     ^
+
+CHECK:CAMELCASE: Avoid CamelCase: <bNumEndpoints>
+#3875: FILE: drivers/media/usb/cx231xx/cx231xx-audio.c:700:
++	if (uif->altsetting[0].desc.bNumEndpoints < isoc_pipe + 1) {
+
+CHECK:CAMELCASE: Avoid CamelCase: <wMaxPacketSize>
+#3947: FILE: drivers/media/usb/cx231xx/cx231xx-cards.c:1450:
++		tmp = le16_to_cpu(uif->altsetting[i].endpoint[isoc_pipe].desc.wMaxPacketSize);
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#4192: FILE: drivers/media/usb/dvb-usb/ttusb2.c:392:
++			if (3 + msg[i+1].len > sizeof(ibuf)) {
+ 			             ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#4193: FILE: drivers/media/usb/dvb-usb/ttusb2.c:393:
++				err("i2c rd len=%d too high", msg[i+1].len);
+ 				                                   ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4478: FILE: drivers/mtd/nand/orion_nand.c:93:
++	info = devm_kzalloc(&pdev->dev,
++			sizeof(struct orion_nand_info),
+
+CHECK:CAMELCASE: Avoid CamelCase: <bcdDevice>
+#4550: FILE: drivers/net/irda/irda-usb.c:1080:
++		le16_to_cpu(self->usbdev->descriptor.bcdDevice));
+
+WARNING:NETWORKING_BLOCK_COMMENT_STYLE: networking block comments don't use an empty /* line, use /* Comment...
+#4610: FILE: drivers/net/wireless/marvell/mwifiex/pcie.c:1613:
++	/*
++	 * Need to keep a reference, since core driver might free up this
+
+CHECK:CAMELCASE: Avoid CamelCase: <fc_myDID>
+#5284: FILE: drivers/scsi/lpfc/lpfc_sli.c:4214:
++		phba->pport->fc_myDID = 0;
+
+CHECK:CAMELCASE: Avoid CamelCase: <fc_prevDID>
+#5285: FILE: drivers/scsi/lpfc/lpfc_sli.c:4215:
++		phba->pport->fc_prevDID = 0;
+
+CHECK:CAMELCASE: Avoid CamelCase: <curCR>
+#5349: FILE: drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c:630:
++	curCR = rtl92e_readw(dev, EPROM_CMD);
+
+CHECK:CAMELCASE: Avoid CamelCase: <wLength>
+#5512: FILE: drivers/usb/class/cdc-acm.c:326:
++		if (le16_to_cpu(dr->wLength) != 2) {
+
+CHECK:CAMELCASE: Avoid CamelCase: <bNotificationType>
+#5531: FILE: drivers/usb/class/cdc-acm.c:370:
++			dr->bNotificationType, dr->wIndex, dr->wLength);
+
+CHECK:CAMELCASE: Avoid CamelCase: <wIndex>
+#5531: FILE: drivers/usb/class/cdc-acm.c:370:
++			dr->bNotificationType, dr->wIndex, dr->wLength);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5609: FILE: drivers/usb/core/hcd.c:1726:
++			dev_dbg(&udev->dev, "hcd_unlink_urb %pK fail %d\n",
+ 					urb, retval);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5631: FILE: drivers/usb/core/hub.c:366:
++static int get_hub_descriptor(struct usb_device *hdev,
++		struct usb_hub_descriptor *desc)
+
+CHECK:CAMELCASE: Avoid CamelCase: <bNbrPorts>
+#5648: FILE: drivers/usb/core/hub.c:389:
++			size = USB_DT_HUB_NONVAR_SIZE + desc->bNbrPorts / 8 + 1;
+
+CHECK:CAMELCASE: Avoid CamelCase: <idVendor>
+#5952: FILE: drivers/usb/misc/chaoskey.c:197:
++	if (le16_to_cpu(udev->descriptor.idVendor) != ALEA_VENDOR_ID)
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#6254: FILE: drivers/usb/storage/ene_ub6250.c:449:
+ struct ene_ub6250_info {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#6265: FILE: drivers/usb/storage/ene_ub6250.c:500:
++	struct ene_ub6250_info *info = (struct ene_ub6250_info *) extra;
+
+CHECK:SPACING: No space is necessary after a cast
+#6277: FILE: drivers/usb/storage/ene_ub6250.c:870:
++	struct ene_ub6250_info *info = (struct ene_ub6250_info *) us->extra;
+
+CHECK:CAMELCASE: Avoid CamelCase: <ExtraDat>
+#6300: FILE: drivers/usb/storage/ene_ub6250.c:921:
++	ExtraDat->ovrflg   = bbuf[0];
+
+CHECK:SPACING: No space is necessary after a cast
+#6310: FILE: drivers/usb/storage/ene_ub6250.c:1343:
++	struct ene_ub6250_info *info = (struct ene_ub6250_info *) us->extra;
+
+CHECK:CAMELCASE: Avoid CamelCase: <PhyBlock>
+#6355: FILE: drivers/usb/storage/ene_ub6250.c:1584:
++				ms_lib_read_extrablock(us, PhyBlock, 0, 0x80,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6356: FILE: drivers/usb/storage/ene_ub6250.c:1585:
++				ms_lib_read_extrablock(us, PhyBlock, 0, 0x80,
++						bbuf);
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#6365: FILE: drivers/usb/storage/ene_ub6250.c:1591:
++			extdat.mngflg = bbuf[index+1];
+ 			                          ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#6366: FILE: drivers/usb/storage/ene_ub6250.c:1592:
++			extdat.logadr = memstick_logaddr(bbuf[index+2],
+ 			                                           ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6367: FILE: drivers/usb/storage/ene_ub6250.c:1593:
++			extdat.logadr = memstick_logaddr(bbuf[index+2],
++					bbuf[index+3]);
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#6367: FILE: drivers/usb/storage/ene_ub6250.c:1593:
++					bbuf[index+3]);
+ 					          ^
+
+CHECK:SPACING: No space is necessary after a cast
+#6394: FILE: drivers/usb/storage/ene_ub6250.c:2103:
++	info->MS_Status = *(struct MS_STATUS *) bbuf;
+
+CHECK:CAMELCASE: Avoid CamelCase: <MS_Status>
+#6394: FILE: drivers/usb/storage/ene_ub6250.c:2103:
++	info->MS_Status = *(struct MS_STATUS *) bbuf;
+
+CHECK:SPACING: No space is necessary after a cast
+#6440: FILE: drivers/usb/storage/ene_ub6250.c:2172:
++	info->SD_Status =  *(struct SD_STATUS *) bbuf;
+
+CHECK:CAMELCASE: Avoid CamelCase: <SD_Status>
+#6440: FILE: drivers/usb/storage/ene_ub6250.c:2172:
++	info->SD_Status =  *(struct SD_STATUS *) bbuf;
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*us->extra)...) over kzalloc(sizeof(struct ene_ub6250_info)...)
+#6496: FILE: drivers/usb/storage/ene_ub6250.c:2330:
++	us->extra = kzalloc(sizeof(struct ene_ub6250_info), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6543: FILE: drivers/uwb/i1480/dfu/usb.c:357:
++	if (iface->num_altsetting > 1 &&
++			le16_to_cpu(udev->descriptor.idProduct) == 0xbabe) {
+
+CHECK:CAMELCASE: Avoid CamelCase: <idProduct>
+#6543: FILE: drivers/uwb/i1480/dfu/usb.c:357:
++			le16_to_cpu(udev->descriptor.idProduct) == 0xbabe) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6714: FILE: fs/nfs/pagelist.c:33:
++static bool nfs_pgarray_set(struct nfs_page_array *p, unsigned int pagecount,
++					gfp_t gfp_flags)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6882: FILE: fs/notify/fanotify/fanotify_user.c:322:
++				list_add_tail(&kevent->list,
++					&group->fanotify_data.access_list);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#6956: FILE: include/linux/kprobes.h:350:
++extern void wait_for_kprobe_optimizer(void);
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000193409.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 3 errors, 25 warnings, 62 checks, 5901 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000193409.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

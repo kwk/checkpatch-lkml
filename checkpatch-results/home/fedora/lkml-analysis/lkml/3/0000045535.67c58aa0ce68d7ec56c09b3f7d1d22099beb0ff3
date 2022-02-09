@@ -1,0 +1,974 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#38: 
+implements a simpler FTL, that allows extensions such as atomic IOs, metadata
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#96: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#101: FILE: block/blk-lightnvm.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#118: FILE: block/blk-lightnvm.c:18:
++ * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139,$
+
+Kernel maintainers reject new instances of the GPL boilerplate paragraph
+directing people to write to the FSF for a copy of the GPL, since the
+FSF has moved in the past and may do so again.
+So do not write paragraphs about writing to the Free Software Foundation's
+mailing address.
+
+See: https://lore.kernel.org/lkml/20131006222342.GT19510@leaf/
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*nvm)...) over kmalloc(sizeof(struct nvm_dev)...)
+#137: FILE: block/blk-lightnvm.c:37:
++	nvm = kmalloc(sizeof(struct nvm_dev), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#254: FILE: block/blk-mq.c:1404:
++	rq_size = round_up(sizeof(struct request) + cmd_size,
+ 				cache_line_size());
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#362: FILE: block/blk.h:258:
++extern void blk_lightnvm_unregister(struct request_queue *);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request_queue *' should also have an identifier name
+#362: FILE: block/blk.h:258:
++extern void blk_lightnvm_unregister(struct request_queue *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#363: FILE: block/blk.h:259:
++extern int blk_lightnvm_map(struct nvm_dev *nvm, struct request *rq);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#364: FILE: block/blk.h:260:
++extern int blk_lightnvm_init_sysfs(struct device *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct device *' should also have an identifier name
+#364: FILE: block/blk.h:260:
++extern int blk_lightnvm_init_sysfs(struct device *);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#365: FILE: block/blk.h:261:
++extern void blk_lightnvm_remove_sysfs(struct device *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct device *' should also have an identifier name
+#365: FILE: block/blk.h:261:
++extern void blk_lightnvm_remove_sysfs(struct device *);
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#421: FILE: drivers/lightnvm/Kconfig:5:
++menuconfig LIGHTNVM
++	bool "LightNVM support"
++	depends on BLK_DEV
++	default y
++	---help---
++	  Say Y here to get to enable Open-channel SSDs compatible with LightNVM
++	  to be recognized.
++
++	  LightNVM implements some internals of SSDs within the host.
++	  Devices are required to support LightNVM, and allow them to managed by
++	  the host. LightNVM is used together with an open-channel firmware, that
++	  exposes direct access to the underlying non-volatile memory.
++
++	  If you say N, all options in this submenu will be skipped and disabled;
++	  only do this if you know what you are doing.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#454: FILE: drivers/lightnvm/core.c:1:
++#include <linux/lightnvm.h>
+
+WARNING:USE_LOCKDEP: Where possible, use lockdep_assert_held instead of assertions based on spin_is_locked
+#463: FILE: drivers/lightnvm/core.c:10:
++	NVM_ASSERT(spin_is_locked(&s->rev_lock));
+
+lockdep_assert_held() annotations should be preferred over
+assertions based on spin_is_locked()
+
+See: https://www.kernel.org/doc/html/latest/locking/lockdep-design.html#annotations
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#475: FILE: drivers/lightnvm/core.c:22:
++void nvm_update_map(struct nvm_stor *s, sector_t l_addr, struct nvm_addr *p,
++					int is_gc)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#480: FILE: drivers/lightnvm/core.c:27:
++	BUG_ON(l_addr >= s->nr_pages);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#481: FILE: drivers/lightnvm/core.c:28:
++	BUG_ON(p->addr >= s->nr_pages);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#534: FILE: drivers/lightnvm/core.c:81:
++	BUG_ON(!block);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#566: FILE: drivers/lightnvm/core.c:113:
++	/* pr_debug("p: %p s: %llu l: %u pp:%p e:%u (%u)\n",
++			p, p->addr, pb->l_addr, p, err, rq_data_dir(rq)); */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#566: FILE: drivers/lightnvm/core.c:113:
++			p, p->addr, pb->l_addr, p, err, rq_data_dir(rq)); */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#579: FILE: drivers/lightnvm/core.c:126:
++	 * except GC reads */
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#632: FILE: drivers/lightnvm/core.c:179:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#642: FILE: drivers/lightnvm/core.c:189:
++		BUG_ON(is_gc);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#651: FILE: drivers/lightnvm/core.c:198:
++	/*printk("nvm: W %llu(%llu) B: %u\n", p->addr, p->addr * NR_PHY_IN_LOG,
++			p->block->id);*/
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#651: FILE: drivers/lightnvm/core.c:198:
++			p->block->id);*/
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#668: FILE: drivers/lightnvm/gc.c:1:
++#include <linux/lightnvm.h>
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#704: FILE: drivers/lightnvm/gc.c:37:
++	mod_timer(&s->gc_timer,
++			jiffies + msecs_to_jiffies(s->config.gc_time));
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#708: FILE: drivers/lightnvm/gc.c:41:
++ * l to p and p to l mappings. */
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#741: FILE: drivers/lightnvm/gc.c:74:
++		BUG_ON(src.addr >= s->nr_pages);
+
+WARNING:TYPO_SPELLING: 'occuring' may be misspelled - perhaps 'occurring'?
+#766: FILE: drivers/lightnvm/gc.c:99:
++		 * occuring, we just let it stall the pipeline.
+ 		   ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#773: FILE: drivers/lightnvm/gc.c:106:
++		 * and then update its mapping to its new place. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#794: FILE: drivers/lightnvm/gc.c:127:
++		 * moved in the meantime. */
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#845: FILE: drivers/lightnvm/gc.c:178:
++	BUG_ON(!s);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#864: FILE: drivers/lightnvm/gc.c:197:
++ * of the list */
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#871: FILE: drivers/lightnvm/gc.c:204:
++	BUG_ON(!a || !b);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#880: FILE: drivers/lightnvm/gc.c:213:
++ * requires pool->lock */
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#886: FILE: drivers/lightnvm/gc.c:219:
++	BUG_ON(list_empty(prio_list));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#911: FILE: drivers/lightnvm/gc.c:244:
++	while (nr_blocks_need > pool->nr_free_blocks &&
++					!list_empty(&gpool->prio_list)) {
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#922: FILE: drivers/lightnvm/gc.c:255:
++		BUG_ON(!block_is_full(block));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#923: FILE: drivers/lightnvm/gc.c:256:
++		BUG_ON(atomic_inc_return(&block->gc_running) != 1);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#966: FILE: drivers/lightnvm/gc.c:299:
++		struct greedy_pool *gpool = greedy_pool(pool);
++		if (!gpool || !gpool->block_mem)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#983: FILE: drivers/lightnvm/gc.c:316:
++	pool_mem = kcalloc(s->nr_pools, sizeof(struct greedy_pool),
++						GFP_KERNEL);
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#985: FILE: drivers/lightnvm/gc.c:318:
++	if (!pool_mem) {
++		pr_err("nvm: failed allocating pools for greedy GC\n");
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer vzalloc(sizeof(*gpool->block_mem)...) over vzalloc(sizeof(struct greedy_block)...)
+#999: FILE: drivers/lightnvm/gc.c:332:
++		gpool->block_mem = vzalloc(sizeof(struct greedy_block) * s->nr_blks_per_pool);
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#1001: FILE: drivers/lightnvm/gc.c:334:
++		if (!gpool->block_mem) {
++			pr_err("nvm: failed allocating blocks for greedy "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1002: FILE: drivers/lightnvm/gc.c:335:
++			pr_err("nvm: failed allocating blocks for greedy "
++				"GC (in pool %d of %d)!\n", i, s->nr_pools);
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1044: FILE: drivers/lightnvm/nvm.c:1:
++/*
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1074: FILE: drivers/lightnvm/nvm.c:31:
++
++
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#1087: FILE: drivers/lightnvm/nvm.c:44:
++extern struct nvm_target_type nvm_target_rrpc;
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#1088: FILE: drivers/lightnvm/nvm.c:45:
++extern struct nvm_gc_type nvm_gc_greedy;
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#1142: FILE: drivers/lightnvm/nvm.c:99:
++		rq->cmd_flags |= (REQ_NVM|REQ_NVM_MAPPED);
+ 		                         ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#1152: FILE: drivers/lightnvm/nvm.c:109:
++	if (rq->cmd_flags & (REQ_NVM|REQ_NVM_MAPPED))
+ 	                            ^
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#1214: FILE: drivers/lightnvm/nvm.c:171:
++		pool->nr_free_blocks = pool->nr_blocks =
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer vzalloc(sizeof(*pool->blocks)...) over vzalloc(sizeof(struct nvm_block)...)
+#1218: FILE: drivers/lightnvm/nvm.c:175:
++		pool->blocks = vzalloc(sizeof(struct nvm_block) *
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#1261: FILE: drivers/lightnvm/nvm.c:218:
++	s->krqd_wq = alloc_workqueue("knvm-work", WQ_MEM_RECLAIM|WQ_UNBOUND,
+ 	                                                        ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1262: FILE: drivers/lightnvm/nvm.c:219:
++	s->krqd_wq = alloc_workqueue("knvm-work", WQ_MEM_RECLAIM|WQ_UNBOUND,
++						s->nr_pools);
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer vzalloc(sizeof(*s->trans_map)...) over vzalloc(sizeof(struct nvm_addr)...)
+#1286: FILE: drivers/lightnvm/nvm.c:243:
++	s->trans_map = vzalloc(sizeof(struct nvm_addr) * s->nr_pages);
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer vmalloc(sizeof(*s->rev_trans_map)...) over vmalloc(sizeof(struct nvm_rev_addr)...)
+#1290: FILE: drivers/lightnvm/nvm.c:247:
++	s->rev_trans_map = vmalloc(sizeof(struct nvm_rev_addr)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1374: FILE: drivers/lightnvm/nvm.c:331:
++		_addr_cache = kmem_cache_create("nvm_addr_cache",
++				sizeof(struct nvm_addr), 0, 0, NULL);
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*s)...) over kzalloc(sizeof(struct nvm_stor)...)
+#1385: FILE: drivers/lightnvm/nvm.c:342:
++	s = kzalloc(sizeof(struct nvm_stor), GFP_KERNEL);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1413: FILE: drivers/lightnvm/nvm.c:370:
++	pr_debug("lightnvm dev: ver %u type %u chnls %u\n",
++			s->id.ver_id, s->id.nvm_type, s->id.nchannels);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1441: FILE: drivers/lightnvm/nvm.c:398:
++	pr_info("lightnvm: allocated %lu physical pages (%lu KB)\n",
++			s->nr_pages, s->nr_pages * s->sector_size / 1024);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1510: FILE: drivers/lightnvm/nvm.h:1:
++/*
+
+CHECK:INVALID_UTF8: Invalid UTF-8, patch and commit message should be encoded in UTF-8
+#1511: FILE: drivers/lightnvm/nvm.h:2:
++ * Copyright (C) 2014 Matias Bjørling.
+                                ^
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1540: FILE: drivers/lightnvm/nvm.h:31:
++#define NVM_ASSERT(c) BUG_ON((c) == 0)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1568: FILE: drivers/lightnvm/nvm.h:59:
++ * in-flight addresses. */
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#1575: FILE: drivers/lightnvm/nvm.h:66:
++		spinlock_t lock;
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#1617: FILE: drivers/lightnvm/nvm.h:108:
++		spinlock_t lock;
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1622: FILE: drivers/lightnvm/nvm.h:113:
++					 *  and ready for use */
+
+WARNING:REPEATED_WORD: Possible repeated word: 'not'
+#1644: FILE: drivers/lightnvm/nvm.h:135:
++ * In those that are not not, private is NULL.
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#1647: FILE: drivers/lightnvm/nvm.h:138:
++	spinlock_t lock;
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#1673: FILE: drivers/lightnvm/nvm.h:164:
++	spinlock_t lock;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#1752: FILE: drivers/lightnvm/nvm.h:243:
++	uint32_t sector_size;
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1759: FILE: drivers/lightnvm/nvm.h:250:
++	 * addresses are used when writing to the disk block device. */
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#1763: FILE: drivers/lightnvm/nvm.h:254:
++	spinlock_t rev_lock;
+
+WARNING:TYPO_SPELLING: 'usuable' may be misspelled - perhaps 'usable'?
+#1790: FILE: drivers/lightnvm/nvm.h:281:
++	/* Calculated/Cached values. These do not reflect the actual usuable
+ 	                                                             ^^^^^^^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1791: FILE: drivers/lightnvm/nvm.h:282:
++	 * blocks at run-time. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1796: FILE: drivers/lightnvm/nvm.h:287:
++	 * strategy */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1798: FILE: drivers/lightnvm/nvm.h:289:
++				 * to point to the next write append point */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1806: FILE: drivers/lightnvm/nvm.h:297:
++	 * utilization. */
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_ap *' should also have an identifier name
+#1843: FILE: drivers/lightnvm/nvm.h:334:
++void nvm_set_ap_cur(struct nvm_ap *, struct nvm_block *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_block *' should also have an identifier name
+#1843: FILE: drivers/lightnvm/nvm.h:334:
++void nvm_set_ap_cur(struct nvm_ap *, struct nvm_block *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_block *' should also have an identifier name
+#1844: FILE: drivers/lightnvm/nvm.h:335:
++sector_t nvm_alloc_phys_addr(struct nvm_block *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct work_struct *' should also have an identifier name
+#1847: FILE: drivers/lightnvm/nvm.h:338:
++void nvm_delayed_bio_submit(struct work_struct *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct work_struct *' should also have an identifier name
+#1848: FILE: drivers/lightnvm/nvm.h:339:
++void nvm_deferred_bio_submit(struct work_struct *);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1851: FILE: drivers/lightnvm/nvm.h:342:
++ * when increasing responsibility. */
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_ap *' should also have an identifier name
+#1852: FILE: drivers/lightnvm/nvm.h:343:
++struct nvm_addr *nvm_alloc_addr_from_ap(struct nvm_ap *, int is_gc);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_stor *' should also have an identifier name
+#1855: FILE: drivers/lightnvm/nvm.h:346:
++int nvm_write_rq(struct nvm_stor *, struct request *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request *' should also have an identifier name
+#1855: FILE: drivers/lightnvm/nvm.h:346:
++int nvm_write_rq(struct nvm_stor *, struct request *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_stor *' should also have an identifier name
+#1856: FILE: drivers/lightnvm/nvm.h:347:
++int __nvm_write_rq(struct nvm_stor *, struct request *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request *' should also have an identifier name
+#1856: FILE: drivers/lightnvm/nvm.h:347:
++int __nvm_write_rq(struct nvm_stor *, struct request *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#1856: FILE: drivers/lightnvm/nvm.h:347:
++int __nvm_write_rq(struct nvm_stor *, struct request *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_stor *' should also have an identifier name
+#1857: FILE: drivers/lightnvm/nvm.h:348:
++int nvm_read_rq(struct nvm_stor *, struct request *rq);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_stor *' should also have an identifier name
+#1858: FILE: drivers/lightnvm/nvm.h:349:
++int nvm_erase_block(struct nvm_stor *, struct nvm_block *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_block *' should also have an identifier name
+#1858: FILE: drivers/lightnvm/nvm.h:349:
++int nvm_erase_block(struct nvm_stor *, struct nvm_block *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_stor *' should also have an identifier name
+#1859: FILE: drivers/lightnvm/nvm.h:350:
++void nvm_update_map(struct nvm_stor *, sector_t, struct nvm_addr *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'sector_t' should also have an identifier name
+#1859: FILE: drivers/lightnvm/nvm.h:350:
++void nvm_update_map(struct nvm_stor *, sector_t, struct nvm_addr *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_addr *' should also have an identifier name
+#1859: FILE: drivers/lightnvm/nvm.h:350:
++void nvm_update_map(struct nvm_stor *, sector_t, struct nvm_addr *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#1859: FILE: drivers/lightnvm/nvm.h:350:
++void nvm_update_map(struct nvm_stor *, sector_t, struct nvm_addr *, int);
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#1860: FILE: drivers/lightnvm/nvm.h:351:
++void nvm_setup_rq(struct nvm_stor *, struct request *, struct nvm_addr *, sector_t, unsigned int flags);
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_stor *' should also have an identifier name
+#1860: FILE: drivers/lightnvm/nvm.h:351:
++void nvm_setup_rq(struct nvm_stor *, struct request *, struct nvm_addr *, sector_t, unsigned int flags);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request *' should also have an identifier name
+#1860: FILE: drivers/lightnvm/nvm.h:351:
++void nvm_setup_rq(struct nvm_stor *, struct request *, struct nvm_addr *, sector_t, unsigned int flags);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_addr *' should also have an identifier name
+#1860: FILE: drivers/lightnvm/nvm.h:351:
++void nvm_setup_rq(struct nvm_stor *, struct request *, struct nvm_addr *, sector_t, unsigned int flags);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'sector_t' should also have an identifier name
+#1860: FILE: drivers/lightnvm/nvm.h:351:
++void nvm_setup_rq(struct nvm_stor *, struct request *, struct nvm_addr *, sector_t, unsigned int flags);
+
+WARNING:TYPO_SPELLING: 'maintanence' may be misspelled - perhaps 'maintenance'?
+#1862: FILE: drivers/lightnvm/nvm.h:353:
++/*   Block maintanence */
+            ^^^^^^^^^^^
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_block *' should also have an identifier name
+#1863: FILE: drivers/lightnvm/nvm.h:354:
++void nvm_reset_block(struct nvm_block *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_dev *' should also have an identifier name
+#1865: FILE: drivers/lightnvm/nvm.h:356:
++void nvm_endio(struct nvm_dev *, struct request *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request *' should also have an identifier name
+#1865: FILE: drivers/lightnvm/nvm.h:356:
++void nvm_endio(struct nvm_dev *, struct request *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#1865: FILE: drivers/lightnvm/nvm.h:356:
++void nvm_endio(struct nvm_dev *, struct request *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_pool *' should also have an identifier name
+#1868: FILE: drivers/lightnvm/nvm.h:359:
++struct nvm_block *nvm_pool_get_block(struct nvm_pool *, int is_gc);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_block *' should also have an identifier name
+#1873: FILE: drivers/lightnvm/nvm.h:364:
++void nvm_pool_put_block(struct nvm_block *);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#1875: FILE: drivers/lightnvm/nvm.h:366:
++#define nvm_for_each_pool(n, pool, i) \
++		for ((i) = 0, pool = &(n)->pools[0]; \
++			(i) < (n)->nr_pools; (i)++, pool = &(n)->pools[(i)])
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pool' - possible side-effects?
+#1875: FILE: drivers/lightnvm/nvm.h:366:
++#define nvm_for_each_pool(n, pool, i) \
++		for ((i) = 0, pool = &(n)->pools[0]; \
++			(i) < (n)->nr_pools; (i)++, pool = &(n)->pools[(i)])
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#1875: FILE: drivers/lightnvm/nvm.h:366:
++#define nvm_for_each_pool(n, pool, i) \
++		for ((i) = 0, pool = &(n)->pools[0]; \
++			(i) < (n)->nr_pools; (i)++, pool = &(n)->pools[(i)])
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#1879: FILE: drivers/lightnvm/nvm.h:370:
++#define nvm_for_each_ap(n, ap, i) \
++		for ((i) = 0, ap = &(n)->aps[0]; \
++			(i) < (n)->nr_aps; (i)++, ap = &(n)->aps[(i)])
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ap' - possible side-effects?
+#1879: FILE: drivers/lightnvm/nvm.h:370:
++#define nvm_for_each_ap(n, ap, i) \
++		for ((i) = 0, ap = &(n)->aps[0]; \
++			(i) < (n)->nr_aps; (i)++, ap = &(n)->aps[(i)])
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#1879: FILE: drivers/lightnvm/nvm.h:370:
++#define nvm_for_each_ap(n, ap, i) \
++		for ((i) = 0, ap = &(n)->aps[0]; \
++			(i) < (n)->nr_aps; (i)++, ap = &(n)->aps[(i)])
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#1883: FILE: drivers/lightnvm/nvm.h:374:
++#define pool_for_each_block(p, b, i) \
++		for ((i) = 0, b = &(p)->blocks[0]; \
++			(i) < (p)->nr_blocks; (i)++, b = &(p)->blocks[(i)])
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'b' - possible side-effects?
+#1883: FILE: drivers/lightnvm/nvm.h:374:
++#define pool_for_each_block(p, b, i) \
++		for ((i) = 0, b = &(p)->blocks[0]; \
++			(i) < (p)->nr_blocks; (i)++, b = &(p)->blocks[(i)])
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#1883: FILE: drivers/lightnvm/nvm.h:374:
++#define pool_for_each_block(p, b, i) \
++		for ((i) = 0, b = &(p)->blocks[0]; \
++			(i) < (p)->nr_blocks; (i)++, b = &(p)->blocks[(i)])
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'b' - possible side-effects?
+#1887: FILE: drivers/lightnvm/nvm.h:378:
++#define block_for_each_page(b, p) \
++		for ((p)->addr = block_to_addr((b)), (p)->block = (b); \
++			(p)->addr < block_to_addr((b)) \
++				+ (b)->pool->s->nr_pages_per_blk; \
++			(p)->addr++)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#1887: FILE: drivers/lightnvm/nvm.h:378:
++#define block_for_each_page(b, p) \
++		for ((p)->addr = block_to_addr((b)), (p)->block = (b); \
++			(p)->addr < block_to_addr((b)) \
++				+ (b)->pool->s->nr_pages_per_blk; \
++			(p)->addr++)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1913: FILE: drivers/lightnvm/nvm.h:404:
++static inline struct nvm_pool *paddr_to_pool(struct nvm_stor *s,
++							sector_t p_addr)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1919: FILE: drivers/lightnvm/nvm.h:410:
++static inline struct nvm_ap *block_to_ap(struct nvm_stor *s,
++							struct nvm_block *b)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1937: FILE: drivers/lightnvm/nvm.h:428:
++	BUG_ON(!dev);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1942: FILE: drivers/lightnvm/nvm.h:433:
++static inline struct nvm_inflight *nvm_laddr_to_inflight(struct nvm_stor *s,
++							sector_t l_addr)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1949: FILE: drivers/lightnvm/nvm.h:440:
++static inline int request_equals(struct nvm_inflight_request *r,
++			sector_t laddr_start, sector_t laddr_end)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1955: FILE: drivers/lightnvm/nvm.h:446:
++static inline int request_intersects(struct nvm_inflight_request *r,
++				sector_t laddr_start, sector_t laddr_end)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1963: FILE: drivers/lightnvm/nvm.h:454:
++static void __nvm_lock_rq_sgmt(struct nvm_stor *s, struct nvm_inflight *inflight,
++			int spin, sector_t laddr_start, unsigned nsectors)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1963: FILE: drivers/lightnvm/nvm.h:454:
++			int spin, sector_t laddr_start, unsigned nsectors)
+
+WARNING:LONG_LINE_COMMENT: line length of 102 exceeds 100 columns
+#1993: FILE: drivers/lightnvm/nvm.h:484:
++	/*pr_debug("%s: \tlocked sgmt_range{start:%zu, end:%zu}\n", __func__, r->l_start, r->l_end);*/
+
+A comment starts before but extends beyond the maximum line length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1996: FILE: drivers/lightnvm/nvm.h:487:
++static inline unsigned incr_iflight_ndx(unsigned curr_ndx)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1996: FILE: drivers/lightnvm/nvm.h:487:
++static inline unsigned incr_iflight_ndx(unsigned curr_ndx)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2005: FILE: drivers/lightnvm/nvm.h:496:
++static void __nvm_lock_laddr_range(struct nvm_stor *s, int spin,
++					sector_t laddr, unsigned nsectors)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2005: FILE: drivers/lightnvm/nvm.h:496:
++					sector_t laddr, unsigned nsectors)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2009: FILE: drivers/lightnvm/nvm.h:500:
++	unsigned blk_id, map_ndx;
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2012: FILE: drivers/lightnvm/nvm.h:503:
++	BUG_ON((laddr + nsectors) > s->nr_pages);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2021: FILE: drivers/lightnvm/nvm.h:512:
++		unsigned off = laddr - blk_laddr;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2022: FILE: drivers/lightnvm/nvm.h:513:
++		unsigned segment_len = min(s->nr_pages_per_blk - off, nsectors);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2042: FILE: drivers/lightnvm/nvm.h:533:
++static void __nvm_unlock_rq_sgmt(struct nvm_stor *s, struct nvm_inflight *inflight,
++				sector_t laddr_start, unsigned int nsectors)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#2048: FILE: drivers/lightnvm/nvm.h:539:
++
++
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2050: FILE: drivers/lightnvm/nvm.h:541:
++	BUG_ON(list_empty(&inflight->reqs));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2057: FILE: drivers/lightnvm/nvm.h:548:
++	BUG_ON(!r || !request_equals(r, laddr_start, laddr_end));
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#2059: FILE: drivers/lightnvm/nvm.h:550:
++	r->l_start = r->l_end = LTOP_POISON;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2067: FILE: drivers/lightnvm/nvm.h:558:
++static inline void nvm_unlock_laddr_range(struct nvm_stor *s, sector_t laddr,
++					unsigned int nsectors)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2071: FILE: drivers/lightnvm/nvm.h:562:
++	unsigned blk_id, map_ndx;
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2074: FILE: drivers/lightnvm/nvm.h:565:
++	BUG_ON((laddr + nsectors) > s->nr_pages);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2083: FILE: drivers/lightnvm/nvm.h:574:
++		unsigned off = laddr - blk_laddr;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2084: FILE: drivers/lightnvm/nvm.h:575:
++		unsigned sgmt_len = min(s->nr_pages_per_blk - off, nsectors);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2104: FILE: drivers/lightnvm/sysfs.c:1:
++#include <linux/lightnvm.h>
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2123: FILE: drivers/lightnvm/sysfs.c:20:
++static ssize_t nvm_attr_show(struct device *dev, char *page,
++			      ssize_t (*fn)(struct nvm_dev *, char *))
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#2139: FILE: drivers/lightnvm/sysfs.c:36:
++	__ATTR(_name, S_IRUGO, nvm_attr_do_show_##_name, NULL)
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2178: FILE: drivers/lightnvm/targets.c:1:
++#include "nvm.h"
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2195: FILE: drivers/lightnvm/targets.c:18:
++	BUG_ON(!pool);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2242: FILE: drivers/lightnvm/targets.c:65:
++ * the addr. We assume that there is no data and doesn't take a ref */
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2247: FILE: drivers/lightnvm/targets.c:70:
++	BUG_ON(!(l_addr >= 0 && l_addr < s->nr_pages));
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2262: FILE: drivers/lightnvm/targets.c:85:
++		 * is copied to the new place. */
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#2272: FILE: drivers/lightnvm/targets.c:95:
++
++}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2289: FILE: drivers/lightnvm/targets.c:112:
++	 * sure that we maintain evenness between the block pools. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2293: FILE: drivers/lightnvm/targets.c:116:
++	 * estimate. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2305: FILE: drivers/lightnvm/targets.c:128:
++static struct nvm_block *nvm_map_block_rr(struct nvm_stor *s, sector_t l_addr,
++					int is_gc)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2491: FILE: include/linux/blkdev.h:1627:
++extern int blk_lightnvm_register(struct request_queue *, struct lightnvm_dev_ops *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request_queue *' should also have an identifier name
+#2491: FILE: include/linux/blkdev.h:1627:
++extern int blk_lightnvm_register(struct request_queue *, struct lightnvm_dev_ops *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct lightnvm_dev_ops *' should also have an identifier name
+#2491: FILE: include/linux/blkdev.h:1627:
++extern int blk_lightnvm_register(struct request_queue *, struct lightnvm_dev_ops *);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2509: FILE: include/linux/lightnvm.h:1:
++#ifndef LIGHTNVM_H
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_dev *' should also have an identifier name
+#2612: FILE: include/linux/lightnvm.h:104:
++int nvm_init(struct nvm_dev *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_dev *' should also have an identifier name
+#2613: FILE: include/linux/lightnvm.h:105:
++void nvm_exit(struct nvm_dev *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_dev *' should also have an identifier name
+#2614: FILE: include/linux/lightnvm.h:106:
++int nvm_map_rq(struct nvm_dev *, struct request *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request *' should also have an identifier name
+#2614: FILE: include/linux/lightnvm.h:106:
++int nvm_map_rq(struct nvm_dev *, struct request *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nvm_dev *' should also have an identifier name
+#2615: FILE: include/linux/lightnvm.h:107:
++void nvm_complete_request(struct nvm_dev *, struct request *, int err);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct request *' should also have an identifier name
+#2615: FILE: include/linux/lightnvm.h:107:
++void nvm_complete_request(struct nvm_dev *, struct request *, int err);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct device *' should also have an identifier name
+#2617: FILE: include/linux/lightnvm.h:109:
++int nvm_add_sysfs(struct device *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct device *' should also have an identifier name
+#2618: FILE: include/linux/lightnvm.h:110:
++void nvm_remove_sysfs(struct device *);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2627: FILE: include/trace/events/nvm.h:1:
++#undef TRACE_SYSTEM
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2637: FILE: include/trace/events/nvm.h:11:
++DECLARE_EVENT_CLASS(nvm__rq_map,
++	TP_PROTO(struct request *rq),
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#2640: FILE: include/trace/events/nvm.h:14:
++	TP_STRUCT__entry(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#2647: FILE: include/trace/events/nvm.h:21:
++	TP_fast_assign(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2655: FILE: include/trace/events/nvm.h:29:
++	TP_printk("sector %llu phys_sector %llu data_len %u flags: %s",
++		(unsigned long long)__entry->sector,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2659: FILE: include/trace/events/nvm.h:33:
++		__print_flags(__entry->flags, " ",
++			{REQ_NVM, "N"},
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2672: FILE: include/trace/events/nvm.h:46:
++DEFINE_EVENT(nvm__rq_map, nvm_rq_map_begin,
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2687: FILE: include/trace/events/nvm.h:61:
++DEFINE_EVENT(nvm__rq_map, nvm_rq_map_end,
++
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000045535.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 1 errors, 117 warnings, 65 checks, 2482 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000045535.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

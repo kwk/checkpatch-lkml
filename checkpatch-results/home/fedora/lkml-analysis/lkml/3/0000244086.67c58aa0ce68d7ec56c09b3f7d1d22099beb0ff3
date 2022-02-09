@@ -1,0 +1,99 @@
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#75: FILE: drivers/target/target_core_file.c:278:
++		if (!fd_prot->prot_buf) {
++			pr_err("Unable to allocate fd_prot->prot_buf\n");
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*fd_prot->prot_sg)...) over kzalloc(sizeof(struct scatterlist)...)
+#81: FILE: drivers/target/target_core_file.c:284:
++		fd_prot->prot_sg = kzalloc(sizeof(struct scatterlist) *
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#81: FILE: drivers/target/target_core_file.c:284:
++		fd_prot->prot_sg = kzalloc(sizeof(struct scatterlist) *
++					   fd_prot->prot_sg_nents, GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#84: FILE: drivers/target/target_core_file.c:287:
++		if (!fd_prot->prot_sg) {
++			pr_err("Unable to allocate fd_prot->prot_sg\n");
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#91: FILE: drivers/target/target_core_file.c:294:
++		for_each_sg(fd_prot->prot_sg, sg, fd_prot->prot_sg_nents, i) {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'fd_do_prot_rw', this function's name, in a string
+#102: FILE: drivers/target/target_core_file.c:305:
++			pr_err("kernel_write() for fd_do_prot_rw failed:"
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#103: FILE: drivers/target/target_core_file.c:306:
++			pr_err("kernel_write() for fd_do_prot_rw failed:"
++			       " %d\n", rc);
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'fd_do_prot_rw', this function's name, in a string
+#109: FILE: drivers/target/target_core_file.c:312:
++			pr_err("kernel_read() for fd_do_prot_rw failed:"
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#110: FILE: drivers/target/target_core_file.c:313:
++			pr_err("kernel_read() for fd_do_prot_rw failed:"
++			       " %d\n", rc);
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000244086.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 7 warnings, 2 checks, 159 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000244086.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

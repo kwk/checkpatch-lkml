@@ -1,0 +1,73 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#37: 
+Gitweb:     https://git.kernel.org/tip/19c60923010b3f56f10ca1fb6d537c9cc852b3f1
+
+WARNING:TYPO_SPELLING: 'declarated' may be misspelled - perhaps 'declared'?
+#53: 
+as it's not declarated as modifiable in ____down_read().
+            ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sem' - possible side-effects?
+#89: FILE: arch/x86/include/asm/rwsem.h:63:
++#define ____down_read(sem, slow_path)					\
++({									\
++	struct rw_semaphore* ret;					\
++	asm volatile("# beginning down_read\n\t"			\
++		     LOCK_PREFIX _ASM_INC "(%[sem])\n\t"		\
++		     /* adds 0x00000001 */				\
++		     "  jns        1f\n"				\
++		     "  call " slow_path "\n"				\
++		     "1:\n\t"						\
++		     "# ending down_read\n\t"				\
++		     : "+m" (sem->count), "=a" (ret),			\
++			ASM_CALL_CONSTRAINT				\
++		     : [sem] "a" (sem)					\
++		     : "memory", "cc");					\
++	ret;								\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'sem' may be better as '(sem)' to avoid precedence issues
+#89: FILE: arch/x86/include/asm/rwsem.h:63:
++#define ____down_read(sem, slow_path)					\
++({									\
++	struct rw_semaphore* ret;					\
++	asm volatile("# beginning down_read\n\t"			\
++		     LOCK_PREFIX _ASM_INC "(%[sem])\n\t"		\
++		     /* adds 0x00000001 */				\
++		     "  jns        1f\n"				\
++		     "  call " slow_path "\n"				\
++		     "1:\n\t"						\
++		     "# ending down_read\n\t"				\
++		     : "+m" (sem->count), "=a" (ret),			\
++			ASM_CALL_CONSTRAINT				\
++		     : [sem] "a" (sem)					\
++		     : "memory", "cc");					\
++	ret;								\
++})
+
+ERROR:POINTER_LOCATION: "foo* bar" should be "foo *bar"
+#91: FILE: arch/x86/include/asm/rwsem.h:65:
++	struct rw_semaphore* ret;					\
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000090023.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 1 errors, 2 warnings, 2 checks, 61 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000090023.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

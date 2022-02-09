@@ -1,0 +1,1530 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#116: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#192: FILE: arch/h8300/include/asm/asm-offsets.h:1:
++#include <generated/asm-offsets.h>
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#199: FILE: arch/h8300/include/asm/atomic.h:1:
++#ifndef __ARCH_H8300_ATOMIC__
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#364: FILE: arch/h8300/include/asm/bitops.h:1:
++#ifndef _H8300_BITOPS_H
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'OP' - possible side-effects?
+#402: FILE: arch/h8300/include/asm/bitops.h:39:
++#define H8300_GEN_BITOP(FNAME, OP)				\
++static inline void FNAME(int nr, volatile unsigned long *addr)	\
++{								\
++	unsigned char *b_addr;					\
++	unsigned char bit = nr & 7;				\
++								\
++	b_addr = (unsigned char *)addr + ((nr >> 3) ^ 3);	\
++	if (__builtin_constant_p(nr)) {				\
++		__asm__(OP " %1,%0" : "+WU"(*b_addr) : "i"(nr & 7));	\
++	} else {						\
++		__asm__(OP " %s1,%0" : "+WU"(*b_addr) : "r"(bit));	\
++	}							\
++}
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#403: FILE: arch/h8300/include/asm/bitops.h:40:
++static inline void FNAME(int nr, volatile unsigned long *addr)	\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'OP' - possible side-effects?
+#456: FILE: arch/h8300/include/asm/bitops.h:93:
++#define H8300_GEN_TEST_BITOP(FNNAME, OP)				\
++static inline int FNNAME(int nr, void *addr)				\
++{									\
++	int retval = 0;							\
++	char ccrsave;							\
++	unsigned char *b_addr;						\
++	unsigned char bit = nr & 7;					\
++									\
++	b_addr = (unsigned char *)addr + ((nr >> 3) ^ 3);		\
++	if (__builtin_constant_p(nr)) {					\
++		__asm__("stc ccr,%s2\n\t"				\
++			"orc #0x80,ccr\n\t"				\
++			"bld %4,%1\n\t"					\
++			OP " %4,%1\n\t"					\
++			"rotxl.l %0\n\t"				\
++			"ldc %s2,ccr"					\
++			: "=r"(retval), "+WU" (*b_addr), "=&r"(ccrsave)	\
++			: "0"(retval), "i"(nr & 7) : "cc");		\
++	} else {							\
++		__asm__("stc ccr,%t3\n\t"				\
++			"orc #0x80,ccr\n\t"				\
++			"btst %s3,%1\n\t"				\
++			OP " %s3,%1\n\t"				\
++			"beq 1f\n\t"					\
++			"inc.l #1,%0\n\t"				\
++			"1:\n"						\
++			"ldc %t3,ccr"					\
++			: "=r"(retval), "+WU" (*b_addr)			\
++			: "0" (retval), "r"(bit) : "cc");		\
++	}								\
++	return retval;							\
++}									\
++									\
++static inline int __ ## FNNAME(int nr, void *addr)			\
++{									\
++	int retval = 0;							\
++	unsigned char *b_addr;						\
++	unsigned char bit = nr & 7;					\
++									\
++	b_addr = (unsigned char *)addr + ((nr >> 3) ^ 3);		\
++	if (__builtin_constant_p(nr)) {					\
++		__asm__("bld %3,%1\n\t"					\
++			OP " %3,%1\n\t"					\
++			"rotxl.l %0\n\t"				\
++			: "=r"(retval), "+WU"(*b_addr)			\
++			: "0" (retval), "i"(nr & 7));			\
++	} else {							\
++		__asm__("btst %s3,%1\n\t"				\
++			OP " %s3,%1\n\t"				\
++			"beq 1f\n\t"					\
++			"inc.l #1,%0\n\t"				\
++			"1:"						\
++			: "=r"(retval), "+WU"(*b_addr)			\
++			: "0" (retval), "r"(bit));			\
++	}								\
++	return retval;							\
++}
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#555: FILE: arch/h8300/include/asm/bootparams.h:1:
++/*
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#556: FILE: arch/h8300/include/asm/bootparams.h:2:
++/*
++H8/300 kernel boot parameters
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#578: FILE: arch/h8300/include/asm/bug.h:1:
++#ifndef _H8300_BUG_H
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#587: FILE: arch/h8300/include/asm/bug.h:10:
++extern void die(const char *str, struct pt_regs *fp, unsigned long err);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#596: FILE: arch/h8300/include/asm/cache.h:1:
++#ifndef __ARCH_H8300_CACHE_H
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#601: FILE: arch/h8300/include/asm/cache.h:6:
++#define        L1_CACHE_BYTES  (1 << L1_CACHE_SHIFT)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#613: FILE: arch/h8300/include/asm/checksum.h:1:
++#ifndef _H8300_CHECKSUM_H
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#641: FILE: arch/h8300/include/asm/checksum.h:29:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#649: FILE: arch/h8300/include/asm/checksum.h:37:
++extern __wsum csum_partial_copy_from_user(const void __user *src, void *dst,
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#654: FILE: arch/h8300/include/asm/checksum.h:42:
++
++
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#671: FILE: arch/h8300/include/asm/checksum.h:59:
++
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#679: FILE: arch/h8300/include/asm/checksum.h:67:
++csum_tcpudp_nofold(__be32 saddr, __be32 daddr, unsigned short len,
++		  unsigned short proto, __wsum sum)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#712: FILE: arch/h8300/include/asm/checksum.h:100:
++extern __sum16 ip_compute_csum(const void *buff, int len);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#721: FILE: arch/h8300/include/asm/cmpxchg.h:1:
++#ifndef __ARCH_H8300_CMPXCHG__
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#726: FILE: arch/h8300/include/asm/cmpxchg.h:6:
++#define xchg(ptr, x) \
++	((__typeof__(*(ptr)))__xchg((unsigned long)(x), (ptr), \
++				    sizeof(*(ptr))))
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#731: FILE: arch/h8300/include/asm/cmpxchg.h:11:
++#define __xg(x) ((volatile struct __xchg_dummy *)(x))
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#734: FILE: arch/h8300/include/asm/cmpxchg.h:14:
++				   volatile void *ptr, int size)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#772: FILE: arch/h8300/include/asm/cmpxchg.h:52:
++#define cmpxchg_local(ptr, o, n)					 \
++	((__typeof__(*(ptr)))__cmpxchg_local_generic((ptr),		 \
++						     (unsigned long)(o), \
++						     (unsigned long)(n), \
++						     sizeof(*(ptr))))
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#792: FILE: arch/h8300/include/asm/cputime.h:1:
++#ifndef __H8300_CPUTIME_H
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#804: FILE: arch/h8300/include/asm/delay.h:1:
++#ifndef _H8300_DELAY_H
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#836: FILE: arch/h8300/include/asm/delay.h:33:
++	usecs /= (loops_per_jiffy*HZ);
+ 	                         ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#848: FILE: arch/h8300/include/asm/device.h:1:
++/*
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#861: FILE: arch/h8300/include/asm/dma-mapping.h:1:
++#ifndef _H8300_DMA_MAPPING_H
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#876: FILE: arch/h8300/include/asm/dma-mapping.h:16:
++extern void *dma_alloc_coherent(struct device *, size_t,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#878: FILE: arch/h8300/include/asm/dma-mapping.h:18:
++extern void dma_free_coherent(struct device *, size_t,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct device *' should also have an identifier name
+#878: FILE: arch/h8300/include/asm/dma-mapping.h:18:
++extern void dma_free_coherent(struct device *, size_t,
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'size_t' should also have an identifier name
+#878: FILE: arch/h8300/include/asm/dma-mapping.h:18:
++extern void dma_free_coherent(struct device *, size_t,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#878: FILE: arch/h8300/include/asm/dma-mapping.h:18:
++extern void dma_free_coherent(struct device *, size_t,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'dma_addr_t' should also have an identifier name
+#878: FILE: arch/h8300/include/asm/dma-mapping.h:18:
++extern void dma_free_coherent(struct device *, size_t,
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#902: FILE: arch/h8300/include/asm/dma-mapping.h:42:
++}
++static inline void dma_free_noncoherent(struct device *dev, size_t size,
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#907: FILE: arch/h8300/include/asm/dma-mapping.h:47:
++}
++static inline void dma_cache_sync(struct device *dev, void *vaddr, size_t size,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#913: FILE: arch/h8300/include/asm/dma-mapping.h:53:
++extern dma_addr_t dma_map_single(struct device *, void *, size_t,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#920: FILE: arch/h8300/include/asm/dma-mapping.h:60:
++extern dma_addr_t dma_map_page(struct device *, struct page *,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#928: FILE: arch/h8300/include/asm/dma-mapping.h:68:
++extern int dma_map_sg(struct device *, struct scatterlist *, int,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#935: FILE: arch/h8300/include/asm/dma-mapping.h:75:
++extern void dma_sync_single_for_device(struct device *, dma_addr_t, size_t,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#937: FILE: arch/h8300/include/asm/dma-mapping.h:77:
++extern void dma_sync_sg_for_device(struct device *, struct scatterlist *, int,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct device *' should also have an identifier name
+#937: FILE: arch/h8300/include/asm/dma-mapping.h:77:
++extern void dma_sync_sg_for_device(struct device *, struct scatterlist *, int,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct scatterlist *' should also have an identifier name
+#937: FILE: arch/h8300/include/asm/dma-mapping.h:77:
++extern void dma_sync_sg_for_device(struct device *, struct scatterlist *, int,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#937: FILE: arch/h8300/include/asm/dma-mapping.h:77:
++extern void dma_sync_sg_for_device(struct device *, struct scatterlist *, int,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#941: FILE: arch/h8300/include/asm/dma-mapping.h:81:
++static inline void dma_sync_single_range_for_device(struct device *dev,
++		dma_addr_t dma_handle, unsigned long offset, size_t size,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#959: FILE: arch/h8300/include/asm/dma-mapping.h:99:
++static inline void dma_sync_single_range_for_cpu(struct device *dev,
++		dma_addr_t dma_handle, unsigned long offset, size_t size,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#972: FILE: arch/h8300/include/asm/dma-mapping.h:112:
++extern int dma_common_mmap(struct device *dev, struct vm_area_struct *vma,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#974: FILE: arch/h8300/include/asm/dma-mapping.h:114:
++extern int dma_common_get_sgtable(struct device *dev, struct sg_table *sgt,
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#988: FILE: arch/h8300/include/asm/elf.h:1:
++#ifndef __ASM_H8300_ELF_H
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/user.h> instead of <asm/user.h>
+#996: FILE: arch/h8300/include/asm/elf.h:9:
++#include <asm/user.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#998: FILE: arch/h8300/include/asm/elf.h:11:
++typedef unsigned long elf_greg_t;
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#1001: FILE: arch/h8300/include/asm/elf.h:14:
++typedef elf_greg_t elf_gregset_t[ELF_NGREG];
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#1002: FILE: arch/h8300/include/asm/elf.h:15:
++typedef unsigned long elf_fpregset_t;
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#1022: FILE: arch/h8300/include/asm/elf.h:35:
++#define ELF_PLAT_INIT(_r)	(_r)->er1 = 0
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#1027: FILE: arch/h8300/include/asm/elf.h:40:
++/* This is the location that an ET_DYN program is loaded if exec'ed.  Typical
++   use of this is to invoke "./ld.so someprog" to test out a new version of
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1029: FILE: arch/h8300/include/asm/elf.h:42:
++   that it will "exec", and that there is sufficient room for the brk.  */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#1034: FILE: arch/h8300/include/asm/elf.h:47:
++/* This yields a mask that user programs can use to figure out what
++   instruction set this cpu supports.  */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1034: FILE: arch/h8300/include/asm/elf.h:47:
++   instruction set this cpu supports.  */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#1039: FILE: arch/h8300/include/asm/elf.h:52:
++/* This yields a string that ld.so will use to load implementation
++   specific libraries for optimization.  This is more specific in
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1040: FILE: arch/h8300/include/asm/elf.h:53:
++   intent than poking at uname or /proc/cpuinfo.  */
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1095: FILE: arch/h8300/include/asm/emergency-restart.h:1:
++#ifndef _ASM_EMERGENCY_RESTART_H
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1107: FILE: arch/h8300/include/asm/flat.h:1:
++/*
+
+WARNING:REPEATED_WORD: Possible repeated word: 'is'
+#1123: FILE: arch/h8300/include/asm/flat.h:17:
++ * is is 0 (davidm@snapgear.com)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'rel' may be better as '(rel)' to avoid precedence issues
+#1126: FILE: arch/h8300/include/asm/flat.h:20:
++#define	flat_get_relocate_addr(rel)		(rel & ~0x00000001)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#1130: FILE: arch/h8300/include/asm/flat.h:24:
++#define flat_put_addr_at_rp(rp, addr, rel) \
++	put_unaligned (((*(char *)(rp)) << 24) | ((addr) & 0x00ffffff), (rp))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'rp' - possible side-effects?
+#1130: FILE: arch/h8300/include/asm/flat.h:24:
++#define flat_put_addr_at_rp(rp, addr, rel) \
++	put_unaligned (((*(char *)(rp)) << 24) | ((addr) & 0x00ffffff), (rp))
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#1131: FILE: arch/h8300/include/asm/flat.h:25:
++	put_unaligned (((*(char *)(rp)) << 24) | ((addr) & 0x00ffffff), (rp))
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1140: FILE: arch/h8300/include/asm/io.h:1:
++#ifndef _H8300_IO_H
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1165: FILE: arch/h8300/include/asm/io.h:26:
++static inline unsigned short _swapw(volatile unsigned short v)
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1181: FILE: arch/h8300/include/asm/io.h:42:
++static inline unsigned long _swapl(volatile unsigned long v)
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1204: FILE: arch/h8300/include/asm/io.h:65:
++	({ u8 __v = *(volatile u8 *)((uintptr_t)(addr) & 0x00ffffff); __v; })
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1207: FILE: arch/h8300/include/asm/io.h:68:
++	({ u16 __v = *(volatile u16 *)((uintptr_t)(addr) & 0x00ffffff); __v; })
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1210: FILE: arch/h8300/include/asm/io.h:71:
++	({ u32 __v = *(volatile u32 *)((uintptr_t)(addr) & 0x00ffffff); __v; })
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#1212: FILE: arch/h8300/include/asm/io.h:73:
++#define writeb(b, addr) (void)((*(volatile u8 *) \
++				((uintptr_t)(addr) & 0x00ffffff)) = (b))
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1212: FILE: arch/h8300/include/asm/io.h:73:
++#define writeb(b, addr) (void)((*(volatile u8 *) \
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#1215: FILE: arch/h8300/include/asm/io.h:76:
++#define writew(b, addr) (void)((*(volatile u16 *) \
++				((uintptr_t)(addr) & 0x00ffffff)) = (b))
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1215: FILE: arch/h8300/include/asm/io.h:76:
++#define writew(b, addr) (void)((*(volatile u16 *) \
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#1218: FILE: arch/h8300/include/asm/io.h:79:
++#define writel(b, addr) (void)((*(volatile u32 *)			\
++				((uintptr_t)(addr) & 0x00ffffff)) = (b))
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1218: FILE: arch/h8300/include/asm/io.h:79:
++#define writel(b, addr) (void)((*(volatile u32 *)			\
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1243: FILE: arch/h8300/include/asm/io.h:104:
++	return (*(volatile u8 *)ABWCR & (1 << ((addr >> 21) & 7))) == 0;
+
+CHECK:SPACING: No space is necessary after a cast
+#1248: FILE: arch/h8300/include/asm/io.h:109:
++	volatile unsigned char  *ap_b = (volatile unsigned char *) addr;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1248: FILE: arch/h8300/include/asm/io.h:109:
++	volatile unsigned char  *ap_b = (volatile unsigned char *) addr;
+
+CHECK:SPACING: No space is necessary after a cast
+#1249: FILE: arch/h8300/include/asm/io.h:110:
++	volatile unsigned short *ap_w = (volatile unsigned short *) addr;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1249: FILE: arch/h8300/include/asm/io.h:110:
++	volatile unsigned short *ap_w = (volatile unsigned short *) addr;
+
+CHECK:SPACING: No space is necessary after a cast
+#1250: FILE: arch/h8300/include/asm/io.h:111:
++	unsigned char *bp = (unsigned char *) buf;
+
+CHECK:SPACING: No space is necessary after a cast
+#1263: FILE: arch/h8300/include/asm/io.h:124:
++	volatile unsigned short *ap = (volatile unsigned short *) addr;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1263: FILE: arch/h8300/include/asm/io.h:124:
++	volatile unsigned short *ap = (volatile unsigned short *) addr;
+
+CHECK:SPACING: No space is necessary after a cast
+#1264: FILE: arch/h8300/include/asm/io.h:125:
++	unsigned short *bp = (unsigned short *) buf;
+
+CHECK:SPACING: No space is necessary after a cast
+#1272: FILE: arch/h8300/include/asm/io.h:133:
++	volatile unsigned long *ap = (volatile unsigned long *) addr;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1272: FILE: arch/h8300/include/asm/io.h:133:
++	volatile unsigned long *ap = (volatile unsigned long *) addr;
+
+CHECK:SPACING: No space is necessary after a cast
+#1273: FILE: arch/h8300/include/asm/io.h:134:
++	unsigned long *bp = (unsigned long *) buf;
+
+CHECK:SPACING: No space is necessary after a cast
+#1281: FILE: arch/h8300/include/asm/io.h:142:
++	volatile unsigned short *ap = (volatile unsigned short *) addr;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1281: FILE: arch/h8300/include/asm/io.h:142:
++	volatile unsigned short *ap = (volatile unsigned short *) addr;
+
+CHECK:SPACING: No space is necessary after a cast
+#1282: FILE: arch/h8300/include/asm/io.h:143:
++	unsigned short *bp = (unsigned short *) buf;
+
+CHECK:SPACING: No space is necessary after a cast
+#1290: FILE: arch/h8300/include/asm/io.h:151:
++	volatile unsigned long *ap = (volatile unsigned long *) addr;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1290: FILE: arch/h8300/include/asm/io.h:151:
++	volatile unsigned long *ap = (volatile unsigned long *) addr;
+
+CHECK:SPACING: No space is necessary after a cast
+#1291: FILE: arch/h8300/include/asm/io.h:152:
++	unsigned long *bp = (unsigned long *) buf;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1299: FILE: arch/h8300/include/asm/io.h:160:
++	volatile unsigned char  *ap_b;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1300: FILE: arch/h8300/include/asm/io.h:161:
++	volatile unsigned short *ap_w;
+
+CHECK:SPACING: No space is necessary after a cast
+#1301: FILE: arch/h8300/include/asm/io.h:162:
++	unsigned char *bp = (unsigned char *) buf;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1304: FILE: arch/h8300/include/asm/io.h:165:
++		ap_w = (volatile unsigned short *)(addr & ~1);
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1308: FILE: arch/h8300/include/asm/io.h:169:
++		ap_b = (volatile unsigned char *)addr;
+
+CHECK:SPACING: No space is necessary after a cast
+#1316: FILE: arch/h8300/include/asm/io.h:177:
++	volatile unsigned short *ap = (volatile unsigned short *) addr;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1316: FILE: arch/h8300/include/asm/io.h:177:
++	volatile unsigned short *ap = (volatile unsigned short *) addr;
+
+CHECK:SPACING: No space is necessary after a cast
+#1317: FILE: arch/h8300/include/asm/io.h:178:
++	unsigned short *bp = (unsigned short *) buf;
+
+CHECK:SPACING: No space is necessary after a cast
+#1325: FILE: arch/h8300/include/asm/io.h:186:
++	volatile unsigned long *ap = (volatile unsigned long *) addr;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1325: FILE: arch/h8300/include/asm/io.h:186:
++	volatile unsigned long *ap = (volatile unsigned long *) addr;
+
+CHECK:SPACING: No space is necessary after a cast
+#1326: FILE: arch/h8300/include/asm/io.h:187:
++	unsigned long *bp = (unsigned long *) buf;
+
+CHECK:SPACING: No space is necessary after a cast
+#1334: FILE: arch/h8300/include/asm/io.h:195:
++	volatile unsigned short *ap = (volatile unsigned short *) addr;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1334: FILE: arch/h8300/include/asm/io.h:195:
++	volatile unsigned short *ap = (volatile unsigned short *) addr;
+
+CHECK:SPACING: No space is necessary after a cast
+#1335: FILE: arch/h8300/include/asm/io.h:196:
++	unsigned short *bp = (unsigned short *) buf;
+
+CHECK:SPACING: No space is necessary after a cast
+#1343: FILE: arch/h8300/include/asm/io.h:204:
++	volatile unsigned long *ap = (volatile unsigned long *) addr;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1343: FILE: arch/h8300/include/asm/io.h:204:
++	volatile unsigned long *ap = (volatile unsigned long *) addr;
+
+CHECK:SPACING: No space is necessary after a cast
+#1344: FILE: arch/h8300/include/asm/io.h:205:
++	unsigned long *bp = (unsigned long *) buf;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'addr' - possible side-effects?
+#1361: FILE: arch/h8300/include/asm/io.h:222:
++#define inb(addr)    ((h8300_buswidth(addr)) ? \
++		      readw((addr) & ~1) & 0xff:readb(addr))
+
+CHECK:SPACING: spaces required around that ':' (ctx:VxV)
+#1362: FILE: arch/h8300/include/asm/io.h:223:
++		      readw((addr) & ~1) & 0xff:readb(addr))
+ 		                               ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#1365: FILE: arch/h8300/include/asm/io.h:226:
++#define outb(x, addr) ((void)((h8300_buswidth(addr) && \
++			       ((addr) & 1)) ? \
++			      writew(x, (addr) & ~1) : writeb(x, addr)))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'addr' - possible side-effects?
+#1365: FILE: arch/h8300/include/asm/io.h:226:
++#define outb(x, addr) ((void)((h8300_buswidth(addr) && \
++			       ((addr) & 1)) ? \
++			      writew(x, (addr) & ~1) : writeb(x, addr)))
+
+CHECK:SPACING: No space is necessary after a cast
+#1368: FILE: arch/h8300/include/asm/io.h:229:
++#define outw(x, addr) ((void) writew(_swapw(x), addr))
+
+CHECK:SPACING: No space is necessary after a cast
+#1369: FILE: arch/h8300/include/asm/io.h:230:
++#define outl(x, addr) ((void) writel(_swapl(x), addr))
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1394: FILE: arch/h8300/include/asm/io.h:255:
++#define ioread8_rep(p,d,c)	insb(p,d,c)
+                      ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1394: FILE: arch/h8300/include/asm/io.h:255:
++#define ioread8_rep(p,d,c)	insb(p,d,c)
+                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1394: FILE: arch/h8300/include/asm/io.h:255:
++#define ioread8_rep(p,d,c)	insb(p,d,c)
+                           	      ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1394: FILE: arch/h8300/include/asm/io.h:255:
++#define ioread8_rep(p,d,c)	insb(p,d,c)
+                           	        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1395: FILE: arch/h8300/include/asm/io.h:256:
++#define ioread16_rep(p,d,c)	insw(p,d,c)
+                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1395: FILE: arch/h8300/include/asm/io.h:256:
++#define ioread16_rep(p,d,c)	insw(p,d,c)
+                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1395: FILE: arch/h8300/include/asm/io.h:256:
++#define ioread16_rep(p,d,c)	insw(p,d,c)
+                            	      ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1395: FILE: arch/h8300/include/asm/io.h:256:
++#define ioread16_rep(p,d,c)	insw(p,d,c)
+                            	        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1396: FILE: arch/h8300/include/asm/io.h:257:
++#define ioread32_rep(p,d,c)	insl(p,d,c)
+                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1396: FILE: arch/h8300/include/asm/io.h:257:
++#define ioread32_rep(p,d,c)	insl(p,d,c)
+                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1396: FILE: arch/h8300/include/asm/io.h:257:
++#define ioread32_rep(p,d,c)	insl(p,d,c)
+                            	      ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1396: FILE: arch/h8300/include/asm/io.h:257:
++#define ioread32_rep(p,d,c)	insl(p,d,c)
+                            	        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1397: FILE: arch/h8300/include/asm/io.h:258:
++#define iowrite8_rep(p,s,c)	outsb(p,s,c)
+                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1397: FILE: arch/h8300/include/asm/io.h:258:
++#define iowrite8_rep(p,s,c)	outsb(p,s,c)
+                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1397: FILE: arch/h8300/include/asm/io.h:258:
++#define iowrite8_rep(p,s,c)	outsb(p,s,c)
+                            	       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1397: FILE: arch/h8300/include/asm/io.h:258:
++#define iowrite8_rep(p,s,c)	outsb(p,s,c)
+                            	         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1398: FILE: arch/h8300/include/asm/io.h:259:
++#define iowrite16_rep(p,s,c)	outsw(p,s,c)
+                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1398: FILE: arch/h8300/include/asm/io.h:259:
++#define iowrite16_rep(p,s,c)	outsw(p,s,c)
+                          ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1398: FILE: arch/h8300/include/asm/io.h:259:
++#define iowrite16_rep(p,s,c)	outsw(p,s,c)
+                             	       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1398: FILE: arch/h8300/include/asm/io.h:259:
++#define iowrite16_rep(p,s,c)	outsw(p,s,c)
+                             	         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1399: FILE: arch/h8300/include/asm/io.h:260:
++#define iowrite32_rep(p,s,c)	outsl(p,s,c)
+                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1399: FILE: arch/h8300/include/asm/io.h:260:
++#define iowrite32_rep(p,s,c)	outsl(p,s,c)
+                          ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1399: FILE: arch/h8300/include/asm/io.h:260:
++#define iowrite32_rep(p,s,c)	outsl(p,s,c)
+                             	       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#1399: FILE: arch/h8300/include/asm/io.h:260:
++#define iowrite32_rep(p,s,c)	outsl(p,s,c)
+                             	         ^
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1408: FILE: arch/h8300/include/asm/io.h:269:
++
++
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1415: FILE: arch/h8300/include/asm/io.h:276:
++extern void *__ioremap(unsigned long physaddr, unsigned long size,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1417: FILE: arch/h8300/include/asm/io.h:278:
++extern void __iounmap(void *addr, unsigned long size);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1423: FILE: arch/h8300/include/asm/io.h:284:
++}
++static inline void *ioremap_nocache(unsigned long physaddr,
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1428: FILE: arch/h8300/include/asm/io.h:289:
++}
++static inline void *ioremap_writethrough(unsigned long physaddr,
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1433: FILE: arch/h8300/include/asm/io.h:294:
++}
++static inline void *ioremap_fullcache(unsigned long physaddr,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1439: FILE: arch/h8300/include/asm/io.h:300:
++extern void iounmap(void *addr);
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1446: FILE: arch/h8300/include/asm/io.h:307:
++	return *(volatile unsigned char *)addr;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1451: FILE: arch/h8300/include/asm/io.h:312:
++	return *(volatile unsigned short *)addr;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1456: FILE: arch/h8300/include/asm/io.h:317:
++	return *(volatile unsigned long *)addr;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1461: FILE: arch/h8300/include/asm/io.h:322:
++	*(volatile unsigned char *)addr = b;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1466: FILE: arch/h8300/include/asm/io.h:327:
++	*(volatile unsigned short *)addr = b;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#1471: FILE: arch/h8300/include/asm/io.h:332:
++	*(volatile unsigned long *)addr = b;
+
+CHECK:SPACING: No space is necessary after a cast
+#1493: FILE: arch/h8300/include/asm/io.h:354:
++#define phys_to_virt(vaddr)	((void *) (vaddr))
+
+CHECK:SPACING: No space is necessary after a cast
+#1494: FILE: arch/h8300/include/asm/io.h:355:
++#define virt_to_phys(vaddr)	((unsigned long) (vaddr))
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1518: FILE: arch/h8300/include/asm/irq.h:1:
++#ifndef _H8300_IRQ_H_
+
+WARNING:INLINE: plain inline is preferred over __inline__
+#1535: FILE: arch/h8300/include/asm/irq.h:18:
++static __inline__ int irq_canonicalize(int irq)
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1550: FILE: arch/h8300/include/asm/irqflags.h:1:
++#ifndef _H8300_IRQFLAGS_H
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1648: FILE: arch/h8300/include/asm/mc146818rtc.h:1:
++/*
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1663: FILE: arch/h8300/include/asm/mutex.h:1:
++/*
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1678: FILE: arch/h8300/include/asm/page.h:1:
++#ifndef _H8300_PAGE_H
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#1684: FILE: arch/h8300/include/asm/page.h:7:
++#define MAP_NR(addr) (((uintptr_t)(addr)-PAGE_OFFSET) >> PAGE_SHIFT)
+                                         ^
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1695: FILE: arch/h8300/include/asm/page_offset.h:1:
++
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1704: FILE: arch/h8300/include/asm/pci.h:1:
++#ifndef _ASM_H8300_PCI_H
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1729: FILE: arch/h8300/include/asm/pgtable.h:1:
++#ifndef _H8300_PGTABLE_H
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1734: FILE: arch/h8300/include/asm/pgtable.h:6:
++extern void paging_init(void);
+
+CHECK:SPACING: No space is necessary after a cast
+#1750: FILE: arch/h8300/include/asm/pgtable.h:22:
++#define swapper_pg_dir ((pgd_t *) 0)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1760: FILE: arch/h8300/include/asm/pgtable.h:32:
++extern unsigned int kobjsize(const void *objp);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1761: FILE: arch/h8300/include/asm/pgtable.h:33:
++extern int is_in_rom(unsigned long);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned long' should also have an identifier name
+#1761: FILE: arch/h8300/include/asm/pgtable.h:33:
++extern int is_in_rom(unsigned long);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1784: FILE: arch/h8300/include/asm/processor.h:1:
++/*
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_regs' - possible side-effects?
+#1868: FILE: arch/h8300/include/asm/processor.h:85:
++#define start_thread(_regs, _pc, _usp)				\
++do {								\
++	(_regs)->pc = (_pc);					\
++	(_regs)->ccr = 0x00;	   /* clear all flags */	\
++	(_regs)->er5 = current->mm->start_data;	/* GOT base */	\
++	(_regs)->sp =((unsigned long)(_usp)) - sizeof(unsigned long)*3; \
++} while (0)
+
+ERROR:SPACING: spaces required around that '=' (ctx:WxV)
+#1873: FILE: arch/h8300/include/asm/processor.h:90:
++	(_regs)->sp =((unsigned long)(_usp)) - sizeof(unsigned long)*3; \
+ 	            ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1873: FILE: arch/h8300/include/asm/processor.h:90:
++	(_regs)->sp =((unsigned long)(_usp)) - sizeof(unsigned long)*3; \
+ 	                                                            ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_regs' - possible side-effects?
+#1877: FILE: arch/h8300/include/asm/processor.h:94:
++#define start_thread(_regs, _pc, _usp)				\
++do {								\
++	(_regs)->pc = (_pc);					\
++	(_regs)->ccr = 0x00;	   /* clear kernel flag */	\
++	(_regs)->exr = 0x78;	   /* enable all interrupts */	\
++	(_regs)->er5 = current->mm->start_data;	/* GOT base */	\
++	/* 14 = space for retaddr(4), vector(4), er0(4) and exr(2) on stack */ \
++	(_regs)->sp =((unsigned long)(_usp)) - 14;		\
++} while (0)
+
+ERROR:SPACING: spaces required around that '=' (ctx:WxV)
+#1884: FILE: arch/h8300/include/asm/processor.h:101:
++	(_regs)->sp =((unsigned long)(_usp)) - 14;		\
+ 	            ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'tsk' - possible side-effects?
+#1909: FILE: arch/h8300/include/asm/processor.h:126:
++#define	KSTK_EIP(tsk)	\
++	({			 \
++		unsigned long eip = 0;	      \
++		if ((tsk)->thread.esp0 > PAGE_SIZE &&	\
++		    MAP_NR((tsk)->thread.esp0) < max_mapnr)	 \
++			eip = ((struct pt_regs *) (tsk)->thread.esp0)->pc; \
++		eip; })
+
+CHECK:SPACING: No space is necessary after a cast
+#1914: FILE: arch/h8300/include/asm/processor.h:131:
++			eip = ((struct pt_regs *) (tsk)->thread.esp0)->pc; \
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'tsk' - possible side-effects?
+#1917: FILE: arch/h8300/include/asm/processor.h:134:
++#define	KSTK_ESP(tsk)	((tsk) == current ? rdusp() : (tsk)->thread.usp)
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1934: FILE: arch/h8300/include/asm/ptrace.h:1:
++#ifndef _H8300_PTRACE_H
+
+CHECK:SPACING: No space is necessary after a cast
+#1962: FILE: arch/h8300/include/asm/ptrace.h:29:
++	((struct pt_regs *) (task_stack_page(task) + THREAD_SIZE) - 1)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1964: FILE: arch/h8300/include/asm/ptrace.h:31:
++extern long h8300_get_reg(struct task_struct *task, int regno);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1965: FILE: arch/h8300/include/asm/ptrace.h:32:
++extern int h8300_put_reg(struct task_struct *task, int regno,
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1976: FILE: arch/h8300/include/asm/segment.h:1:
++#ifndef _H8300_SEGMENT_H
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#1993: FILE: arch/h8300/include/asm/segment.h:18:
++typedef struct {
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2031: FILE: arch/h8300/include/asm/sh_bios.h:1:
++/* eCos HAL interface header */
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#2048: FILE: arch/h8300/include/asm/sh_bios.h:18:
++		int (*set_console_comm)(int);
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#2060: FILE: arch/h8300/include/asm/sh_bios.h:30:
++{
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#2061: FILE: arch/h8300/include/asm/sh_bios.h:31:
++
++}
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2070: FILE: arch/h8300/include/asm/signal.h:1:
++#ifndef _H8300_SIGNAL_H
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#2076: FILE: arch/h8300/include/asm/signal.h:7:
++/* Most things should be clean enough to redefine this at will, if care
++   is taken to make libc match.  */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2076: FILE: arch/h8300/include/asm/signal.h:7:
++   is taken to make libc match.  */
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#2082: FILE: arch/h8300/include/asm/signal.h:13:
++typedef unsigned long old_sigset_t;		/* at least 32 bits */
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#2084: FILE: arch/h8300/include/asm/signal.h:15:
++typedef struct {
+
+ERROR:DEFINE_ARCH_HAS: #define of '__ARCH_HAS_SA_RESTORER' is wrong - use Kconfig variables or standard guards instead
+#2088: FILE: arch/h8300/include/asm/signal.h:19:
++#define __ARCH_HAS_SA_RESTORER
+
+The ARCH_HAS_xyz and ARCH_HAVE_xyz patterns are wrong.
+
+For big conceptual features use Kconfig symbols instead.  And for
+smaller things where we have compatibility fallback functions but
+want architectures able to override them with optimized ones, we
+should either use weak functions (appropriate for some cases), or
+the symbol that protects them should be the same symbol we use.
+
+See: https://lore.kernel.org/lkml/CA+55aFycQ9XJvEOsiM3txHL5bjUc8CeKWJNR_H+MiicaddB42Q@mail.gmail.com/
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2100: FILE: arch/h8300/include/asm/smp.h:1:
++/* nothing required here yet */
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2107: FILE: arch/h8300/include/asm/spinlock.h:1:
++#ifndef __H8300_SPINLOCK_H
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2119: FILE: arch/h8300/include/asm/string.h:1:
++#ifndef _H8300_STRING_H_
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2128: FILE: arch/h8300/include/asm/string.h:10:
++extern void *memset(void *s, int c, size_t count);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2131: FILE: arch/h8300/include/asm/string.h:13:
++extern void *memcpy(void *d, const void *s, size_t count);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2142: FILE: arch/h8300/include/asm/switch_to.h:1:
++#ifndef _H8300_SWITCH_TO_H
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'prev' - possible side-effects?
+#2175: FILE: arch/h8300/include/asm/switch_to.h:34:
++#define switch_to(prev, next, last) \
++do {			     \
++	void *_last;					    \
++	__asm__ __volatile__(				    \
++		"mov.l	%1, er0\n\t"			    \
++		"mov.l	%2, er1\n\t"			    \
++		"mov.l	%3, er2\n\t"			    \
++		"jsr @_resume\n\t"			    \
++		"mov.l	er2,%0\n\t"			    \
++		: "=r" (_last)				    \
++		: "r" (&(prev->thread)),		    \
++		  "r" (&(next->thread)),		    \
++		  "g" (prev)				    \
++		: "cc", "er0", "er1", "er2", "er3");	    \
++	(last) = _last;					    \
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'prev' may be better as '(prev)' to avoid precedence issues
+#2175: FILE: arch/h8300/include/asm/switch_to.h:34:
++#define switch_to(prev, next, last) \
++do {			     \
++	void *_last;					    \
++	__asm__ __volatile__(				    \
++		"mov.l	%1, er0\n\t"			    \
++		"mov.l	%2, er1\n\t"			    \
++		"mov.l	%3, er2\n\t"			    \
++		"jsr @_resume\n\t"			    \
++		"mov.l	er2,%0\n\t"			    \
++		: "=r" (_last)				    \
++		: "r" (&(prev->thread)),		    \
++		  "r" (&(next->thread)),		    \
++		  "g" (prev)				    \
++		: "cc", "er0", "er1", "er2", "er3");	    \
++	(last) = _last;					    \
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'next' may be better as '(next)' to avoid precedence issues
+#2175: FILE: arch/h8300/include/asm/switch_to.h:34:
++#define switch_to(prev, next, last) \
++do {			     \
++	void *_last;					    \
++	__asm__ __volatile__(				    \
++		"mov.l	%1, er0\n\t"			    \
++		"mov.l	%2, er1\n\t"			    \
++		"mov.l	%3, er2\n\t"			    \
++		"jsr @_resume\n\t"			    \
++		"mov.l	er2,%0\n\t"			    \
++		: "=r" (_last)				    \
++		: "r" (&(prev->thread)),		    \
++		  "r" (&(next->thread)),		    \
++		  "g" (prev)				    \
++		: "cc", "er0", "er1", "er2", "er3");	    \
++	(last) = _last;					    \
++} while (0)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around prev->thread
+#2185: FILE: arch/h8300/include/asm/switch_to.h:44:
++		: "r" (&(prev->thread)),		    \
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around next->thread
+#2186: FILE: arch/h8300/include/asm/switch_to.h:45:
++		  "r" (&(next->thread)),		    \
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2199: FILE: arch/h8300/include/asm/syscall.h:1:
++#ifndef __ASM_H8300_SYSCALLS_32_H
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2219: FILE: arch/h8300/include/asm/syscall.h:21:
++	BUG_ON(i + n > 6);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#2247: FILE: arch/h8300/include/asm/syscall.h:49:
++
++
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2261: FILE: arch/h8300/include/asm/thread_info.h:1:
++/* thread_info.h: h8300 low-level thread information
+
+WARNING:TYPO_SPELLING: 'preemptable' may be misspelled - perhaps 'preemptible'?
+#2286: FILE: arch/h8300/include/asm/thread_info.h:26:
++	int		   preempt_count;	/* 0 => preemptable, <0 => BUG */
+ 	   		                 	        ^^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'tsk' may be better as '(tsk)' to avoid precedence issues
+#2293: FILE: arch/h8300/include/asm/thread_info.h:33:
++#define INIT_THREAD_INFO(tsk)			\
++{						\
++	.task =		&tsk,			\
++	.exec_domain =	&default_exec_domain,	\
++	.flags =	0,			\
++	.cpu =		0,			\
++	.preempt_count = INIT_PREEMPT_COUNT,	\
++	.restart_block	= {			\
++		.fn = do_no_restart_syscall,	\
++	},					\
++}
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#2308: FILE: arch/h8300/include/asm/thread_info.h:48:
++
++
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#2315: FILE: arch/h8300/include/asm/thread_info.h:55:
++
++
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#2321: FILE: arch/h8300/include/asm/thread_info.h:61:
++	__asm__("mov.l	sp, %0 \n\t"
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#2324: FILE: arch/h8300/include/asm/thread_info.h:64:
++		: "i" (~(THREAD_SIZE-1) & 0xffff));
+ 		                    ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#2354: FILE: arch/h8300/include/asm/thread_info.h:94:
++#define _TIF_SYSCALL_TRACE	(1 << TIF_SYSCALL_TRACE)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#2355: FILE: arch/h8300/include/asm/thread_info.h:95:
++#define _TIF_SIGPENDING		(1 << TIF_SIGPENDING)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#2356: FILE: arch/h8300/include/asm/thread_info.h:96:
++#define _TIF_NEED_RESCHED	(1 << TIF_NEED_RESCHED)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#2357: FILE: arch/h8300/include/asm/thread_info.h:97:
++#define _TIF_NOTIFY_RESUME	(1 << TIF_NOTIFY_RESUME)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#2358: FILE: arch/h8300/include/asm/thread_info.h:98:
++#define _TIF_SINGLESTEP		(1 << TIF_SINGLESTEP)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#2359: FILE: arch/h8300/include/asm/thread_info.h:99:
++#define _TIF_SYSCALL_AUDIT	(1 << TIF_SYSCALL_AUDIT)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#2360: FILE: arch/h8300/include/asm/thread_info.h:100:
++#define _TIF_SYSCALL_TRACEPOINT	(1 << TIF_SYSCALL_TRACEPOINT)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#2361: FILE: arch/h8300/include/asm/thread_info.h:101:
++#define _TIF_POLLING_NRFLAG	(1 << TIF_POLLING_NRFLAG)
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2386: FILE: arch/h8300/include/asm/timer.h:1:
++#ifndef __H8300_TIMER_H
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2423: FILE: arch/h8300/include/asm/timex.h:1:
++/*
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#2431: FILE: arch/h8300/include/asm/timex.h:9:
++#define CLOCK_TICK_RATE (CONFIG_CPU_CLOCK*1000/8192) /* Timer input freq. */
+                                          ^
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#2431: FILE: arch/h8300/include/asm/timex.h:9:
++#define CLOCK_TICK_RATE (CONFIG_CPU_CLOCK*1000/8192) /* Timer input freq. */
+                                               ^
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#2433: FILE: arch/h8300/include/asm/timex.h:11:
++typedef unsigned long cycles_t;
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2448: FILE: arch/h8300/include/asm/tlb.h:1:
++#ifndef __H8300_TLB_H__
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2462: FILE: arch/h8300/include/asm/topology.h:1:
++#ifndef _ASM_H8300_TOPOLOGY_H
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2474: FILE: arch/h8300/include/asm/traps.h:1:
++/*
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2487: FILE: arch/h8300/include/asm/traps.h:14:
++extern void _system_call(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2488: FILE: arch/h8300/include/asm/traps.h:15:
++extern void _interrupt_entry(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2489: FILE: arch/h8300/include/asm/traps.h:16:
++extern void _trace_break(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2490: FILE: arch/h8300/include/asm/traps.h:17:
++extern void _nmi(void);
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#2494: FILE: arch/h8300/include/asm/traps.h:21:
++#define VECTOR(address) ((JMP_OP)|((unsigned long)address))
+                                  ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#2495: FILE: arch/h8300/include/asm/traps.h:22:
++#define REDIRECT(address) ((JSR_OP)|((unsigned long)address))
+                                    ^
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2511: FILE: arch/h8300/include/asm/uaccess.h:1:
++#ifndef __H8300_UACCESS_H
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'addr' - possible side-effects?
+#2530: FILE: arch/h8300/include/asm/uaccess.h:20:
++#define	RANGE_CHECK_OK(addr, size, lower, upper) \
++	(((addr) >= (lower)) && (((addr) + (size)) < (upper)))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2556: FILE: arch/h8300/include/asm/uaccess.h:46:
++extern unsigned long search_exception_table(unsigned long);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned long' should also have an identifier name
+#2556: FILE: arch/h8300/include/asm/uaccess.h:46:
++extern unsigned long search_exception_table(unsigned long);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#2558: FILE: arch/h8300/include/asm/uaccess.h:48:
++
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#2564: FILE: arch/h8300/include/asm/uaccess.h:54:
++#define put_user(x, ptr)				\
++({							\
++	int __pu_err = 0;				\
++	typeof(*(ptr)) __pu_val = (x);			\
++	switch (sizeof(*(ptr))) {			\
++	case 1:						\
++	/* failthrough */ \
++	case 2:						\
++	/* failthrough */ \
++	case 4:						\
++		*(ptr) = x;				\
++		break;					\
++	case 8:						\
++		memcpy(ptr, &__pu_val, sizeof(*(ptr))); \
++		break;					\
++	default:					\
++		__pu_err = __put_user_bad();		\
++		break;					\
++	}						\
++	__pu_err;					\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#2564: FILE: arch/h8300/include/asm/uaccess.h:54:
++#define put_user(x, ptr)				\
++({							\
++	int __pu_err = 0;				\
++	typeof(*(ptr)) __pu_val = (x);			\
++	switch (sizeof(*(ptr))) {			\
++	case 1:						\
++	/* failthrough */ \
++	case 2:						\
++	/* failthrough */ \
++	case 4:						\
++		*(ptr) = x;				\
++		break;					\
++	case 8:						\
++		memcpy(ptr, &__pu_val, sizeof(*(ptr))); \
++		break;					\
++	default:					\
++		__pu_err = __put_user_bad();		\
++		break;					\
++	}						\
++	__pu_err;					\
++})
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2591: FILE: arch/h8300/include/asm/uaccess.h:81:
++extern int __put_user_bad(void);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#2607: FILE: arch/h8300/include/asm/uaccess.h:97:
++#define get_user(x, ptr)					\
++({								\
++	typeof(*(ptr)) __gu_val;				\
++	int __gu_err = 0;					\
++	switch (sizeof(*(ptr))) {				\
++	case 1:							\
++		*(u8 *)&__gu_val = *((u8 *)(ptr));		\
++		break;						\
++	case 2:							\
++		*(u16 *)&__gu_val = *((u16 *)ptr);		\
++		break;						\
++	case 4:							\
++		*(u32 *)&__gu_val = *((u32 *)ptr);		\
++		break;						\
++	case 8:							\
++		memcpy((void *)&__gu_val, ptr, sizeof(*(ptr)));	\
++		break;						\
++	default:						\
++		__gu_err = __get_user_bad();			\
++		break;						\
++	}							\
++	(x) = (typeof(*(ptr)))__gu_val;				\
++	__gu_err;						\
++})
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2633: FILE: arch/h8300/include/asm/uaccess.h:123:
++extern int __get_user_bad(void);
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#2643: FILE: arch/h8300/include/asm/uaccess.h:133:
++#define copy_to_user_ret(to, from, n, retval) \
++	({ if (copy_to_user(to, from, n)) return retval; })
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#2646: FILE: arch/h8300/include/asm/uaccess.h:136:
++#define copy_from_user_ret(to, from, n, retval) \
++	({ if (copy_from_user(to, from, n)) return retval; })
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2662: FILE: arch/h8300/include/asm/unaligned.h:1:
++#ifndef _ASM_H8300_UNALIGNED_H
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2679: FILE: arch/h8300/include/asm/user.h:1:
++#ifndef _H8300_USER_H
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#2685: FILE: arch/h8300/include/asm/user.h:7:
++/* Core file format: The core file is written in such a way that gdb
++   can understand it and provide useful information to the user (under
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#2712: FILE: arch/h8300/include/asm/user.h:34:
++/* This is the old layout of "struct pt_regs" as of Linux 1.x, and
++   is still the layout used by user (the new pt_regs doesn't have
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2713: FILE: arch/h8300/include/asm/user.h:35:
++   all registers). */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#2724: FILE: arch/h8300/include/asm/user.h:46:
++/* When the kernel dumps core, it starts by dumping the user struct -
++   this will be used by gdb to figure out where the data and stack segments
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2725: FILE: arch/h8300/include/asm/user.h:47:
++   are within the file, and what virtual addresses to use. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#2728: FILE: arch/h8300/include/asm/user.h:50:
++/* We start with the registers, to mimic the way that "memory" is returned
++   from the ptrace(3,...) function.  */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2728: FILE: arch/h8300/include/asm/user.h:50:
++   from the ptrace(3,...) function.  */
+
+WARNING:UNNECESSARY_INT: Prefer 'unsigned long' over 'unsigned long int' as the int is unnecessary
+#2732: FILE: arch/h8300/include/asm/user.h:54:
++	unsigned long int u_tsize;	/* Text segment size (pages). */
+
+WARNING:UNNECESSARY_INT: Prefer 'unsigned long' over 'unsigned long int' as the int is unnecessary
+#2733: FILE: arch/h8300/include/asm/user.h:55:
++	unsigned long int u_dsize;	/* Data segment size (pages). */
+
+WARNING:UNNECESSARY_INT: Prefer 'unsigned long' over 'unsigned long int' as the int is unnecessary
+#2734: FILE: arch/h8300/include/asm/user.h:56:
++	unsigned long int u_ssize;	/* Stack segment size (pages). */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#2737: FILE: arch/h8300/include/asm/user.h:59:
++	unsigned long start_stack;	/* Starting virtual address of stack area.
++					   This is actually the bottom of the stack,
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2739: FILE: arch/h8300/include/asm/user.h:61:
++					   esp register.  */
+
+WARNING:UNNECESSARY_INT: Prefer 'long' over 'long int' as the int is unnecessary
+#2740: FILE: arch/h8300/include/asm/user.h:62:
++	long int signal;		/* Signal that caused the core dump. */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#2747: FILE: arch/h8300/include/asm/user.h:69:
++};
++#define NBPG PAGE_SIZE
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000405978.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 32 errors, 124 warnings, 117 checks, 2374 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000405978.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

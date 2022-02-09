@@ -1,0 +1,174 @@
+WARNING:TYPO_SPELLING: 'errrors' may be misspelled - perhaps 'errors'?
+#85: 
+	errrors
+	^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:TYPO_SPELLING: 'tranfers' may be misspelled - perhaps 'transfers'?
+#94: 
+created with the tranfers, errors, writes and reads attributes which
+                 ^^^^^^^^
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#115: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'file' - possible side-effects?
+#205: FILE: drivers/net/phy/mdio_bus.c:254:
++#define MDIO_BUS_STATS_ATTR(field, file)				\
++static ssize_t mdio_bus_##field##_show(struct device *dev,		\
++				       struct device_attribute *attr,	\
++				       char *buf)			\
++{									\
++	struct mii_bus *bus = to_mii_bus(dev);				\
++	return mdio_bus_global_stats_##field##_show(bus, buf);		\
++}									\
++static struct device_attribute dev_attr_mdio_bus_##field = {		\
++	.attr = { .name = file, .mode = 0444 },				\
++	.show = mdio_bus_##field##_show,				\
++};									\
++static ssize_t mdio_bus_device_##field##_show(struct device *dev,	\
++					      struct device_attribute *attr,\
++					      char *buf)		\
++{									\
++	struct mdio_device *mdiodev = to_mdio_device(dev);		\
++	struct mii_bus *bus = mdiodev->bus;				\
++	int addr = mdiodev->addr;					\
++	return mdio_bus_stats_##field##_show(&bus->stats[addr], buf);	\
++}									\
++static struct device_attribute dev_attr_mdio_bus_device_##field = {	\
++	.attr = { .name = file, .mode = 0444 },				\
++	.show = mdio_bus_device_##field##_show,				\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#231: FILE: drivers/net/phy/mdio_bus.c:280:
++#define MDIO_BUS_STATS_SHOW_NAME(name, file, field)			\
++static ssize_t mdio_bus_stats_##name##_show(struct mdio_bus_stats *s,	\
++					    char *buf)			\
++{									\
++	unsigned int start;						\
++	ssize_t len;							\
++	u64 tmp = 0;							\
++	do {								\
++		start = u64_stats_fetch_begin(&s->syncp);		\
++		tmp += u64_stats_read(&s->field);			\
++	} while (u64_stats_fetch_retry(&s->syncp, start));		\
++	len = sprintf(buf, "%llu\n", tmp);				\
++	return len;							\
++}									\
++static ssize_t mdio_bus_global_stats_##name##_show(struct mii_bus *bus,	\
++						   char *buf)		\
++{									\
++	struct mdio_bus_stats *s;					\
++	unsigned int start;						\
++	unsigned int i;							\
++	ssize_t len;							\
++	u64 tmp = 0;							\
++	for (i = 0; i < PHY_MAX_ADDR; i++) {				\
++		s = &bus->stats[i];					\
++		do {							\
++			start = u64_stats_fetch_begin(&s->syncp);	\
++			tmp += u64_stats_read(&s->field);		\
++		} while (u64_stats_fetch_retry(&s->syncp, start));	\
++	}								\
++	len = sprintf(buf, "%llu\n", tmp);				\
++	return len;							\
++}									\
++MDIO_BUS_STATS_ATTR(name, file)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#231: FILE: drivers/net/phy/mdio_bus.c:280:
++#define MDIO_BUS_STATS_SHOW_NAME(name, file, field)			\
++static ssize_t mdio_bus_stats_##name##_show(struct mdio_bus_stats *s,	\
++					    char *buf)			\
++{									\
++	unsigned int start;						\
++	ssize_t len;							\
++	u64 tmp = 0;							\
++	do {								\
++		start = u64_stats_fetch_begin(&s->syncp);		\
++		tmp += u64_stats_read(&s->field);			\
++	} while (u64_stats_fetch_retry(&s->syncp, start));		\
++	len = sprintf(buf, "%llu\n", tmp);				\
++	return len;							\
++}									\
++static ssize_t mdio_bus_global_stats_##name##_show(struct mii_bus *bus,	\
++						   char *buf)		\
++{									\
++	struct mdio_bus_stats *s;					\
++	unsigned int start;						\
++	unsigned int i;							\
++	ssize_t len;							\
++	u64 tmp = 0;							\
++	for (i = 0; i < PHY_MAX_ADDR; i++) {				\
++		s = &bus->stats[i];					\
++		do {							\
++			start = u64_stats_fetch_begin(&s->syncp);	\
++			tmp += u64_stats_read(&s->field);		\
++		} while (u64_stats_fetch_retry(&s->syncp, start));	\
++	}								\
++	len = sprintf(buf, "%llu\n", tmp);				\
++	return len;							\
++}									\
++MDIO_BUS_STATS_ATTR(name, file)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#265: FILE: drivers/net/phy/mdio_bus.c:314:
++#define MDIO_BUS_STATS_SHOW(field)					\
++	MDIO_BUS_STATS_SHOW_NAME(field, __stringify(field), field)
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#290: FILE: drivers/net/phy/mdio_bus.c:339:
++#define MDIO_BUS_STATS_ADDR_SHOW_GROUP(addr)				\
++	MDIO_BUS_STATS_ADDR_SHOW(transfers, addr);			\
++	MDIO_BUS_STATS_ADDR_SHOW(errors, addr);				\
++	MDIO_BUS_STATS_ADDR_SHOW(writes, addr);				\
++	MDIO_BUS_STATS_ADDR_SHOW(reads, addr)				\
++
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'addr' - possible side-effects?
+#290: FILE: drivers/net/phy/mdio_bus.c:339:
++#define MDIO_BUS_STATS_ADDR_SHOW_GROUP(addr)				\
++	MDIO_BUS_STATS_ADDR_SHOW(transfers, addr);			\
++	MDIO_BUS_STATS_ADDR_SHOW(errors, addr);				\
++	MDIO_BUS_STATS_ADDR_SHOW(writes, addr);				\
++	MDIO_BUS_STATS_ADDR_SHOW(reads, addr)				\
++
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#329: FILE: drivers/net/phy/mdio_bus.c:378:
++#define MDIO_BUS_STATS_ADDR_ATTR_GROUP(addr)				\
++	&dev_attr_mdio_bus_addr_transfers_##addr.attr,			\
++	&dev_attr_mdio_bus_addr_errors_##addr.attr,			\
++	&dev_attr_mdio_bus_addr_writes_##addr.attr,			\
++	&dev_attr_mdio_bus_addr_reads_##addr.attr			\
++
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000283838.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 2 errors, 3 warnings, 5 checks, 359 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000283838.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

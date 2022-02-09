@@ -1,0 +1,864 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+ERROR:GLOBAL_INITIALISERS: do not initialise globals to 0
+#407: FILE: arch/x86/kernel/ldt.c:23:
++int sysctl_ldt16 = 0;
+
+Global variables should not be initialized explicitly to
+0 (or NULL, false, etc.).  Your compiler (or rather your
+loader, which is responsible for zeroing out the relevant
+sections) automatically does it for you.
+
+WARNING:MISPLACED_INIT: __initconst should be placed after snb_ids[]
+#459: FILE: arch/x86/kernel/setup.c:628:
++	static const __initconst u16 snb_ids[] = {
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+WARNING:MISPLACED_INIT: __initconst should be placed after bad_pages[]
+#468: FILE: arch/x86/kernel/setup.c:661:
++	static const __initconst unsigned long bad_pages[] = {
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#613: FILE: arch/x86/platform/efi/efi.c:119:
++}
++early_param("efi_no_storage_paranoia", setup_storage_paranoia);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#665: FILE: arch/x86/platform/efi/efi.c:1015:
++	if ((remaining_size - size < EFI_MIN_RESERVE) &&
++		!efi_no_storage_paranoia) {
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#666: FILE: arch/x86/platform/efi/efi.c:1016:
++		!efi_no_storage_paranoia) {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#726: FILE: arch/x86/vdso/vdso32-setup.c:44:
++extern int sysctl_ldt16;
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:REPEATED_WORD: Possible repeated word: 'this'
+#766: FILE: drivers/acpi/blacklist.c:331:
++	 * Without this this EEEpc exports a non working WMI interface, with
+
+CHECK:SPACING: No space is necessary after a cast
+#832: FILE: drivers/atm/ambassador.c:805:
++	    skb, skb->head, (long) skb_end_offset(skb));
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:TYPO_SPELLING: 'occured' may be misspelled - perhaps 'occurred'?
+#870: FILE: drivers/base/dd.c:131:
++ * trigger event has already occured and will be stuck there.
+                              ^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around smi_info->si_lock
+#1080: FILE: drivers/char/ipmi/ipmi_si_intf.c:1101:
++	spin_unlock_irqrestore(&(smi_info->si_lock), flags);
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#1104: FILE: drivers/char/random.c:872:
++		entropy_count = orig = ACCESS_ONCE(r->entropy_count);
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#1114: FILE: drivers/char/random.c:875:
++			nbytes = entropy_count/8 - reserved;
+ 			                      ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1117: FILE: drivers/char/random.c:878:
++			entropy_count -= nbytes*8;
+ 			                       ^
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#1189: FILE: drivers/firmware/Kconfig:56:
++config EFI_VARS_PSTORE
++	bool "Register efivars backend for pstore"
++	depends on EFI_VARS && PSTORE
++	default y
++	help
++	  Say Y here to enable use efivars as a backend to pstore. This
++	  will allow writing console messages, crash dumps, or anything
++	  else supported by pstore to EFI variables.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1260: FILE: drivers/firmware/efivars.c:426:
++check_var_size_locked(struct efivars *efivars, u32 attributes,
++			unsigned long size)
+
+CHECK:CAMELCASE: Avoid CamelCase: <Attributes>
+#1285: FILE: drivers/firmware/efivars.c:558:
++	status = check_var_size_locked(efivars, new_var->Attributes,
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1286: FILE: drivers/firmware/efivars.c:559:
++	status = check_var_size_locked(efivars, new_var->Attributes,
++	       new_var->DataSize + utf16_strsize(new_var->VariableName, 1024));
+
+CHECK:CAMELCASE: Avoid CamelCase: <DataSize>
+#1286: FILE: drivers/firmware/efivars.c:559:
++	       new_var->DataSize + utf16_strsize(new_var->VariableName, 1024));
+
+CHECK:CAMELCASE: Avoid CamelCase: <VariableName>
+#1286: FILE: drivers/firmware/efivars.c:559:
++	       new_var->DataSize + utf16_strsize(new_var->VariableName, 1024));
+
+CHECK:CAMELCASE: Avoid CamelCase: <VendorGuid>
+#1291: FILE: drivers/firmware/efivars.c:563:
++						    &new_var->VendorGuid,
+
+CHECK:CAMELCASE: Avoid CamelCase: <Data>
+#1294: FILE: drivers/firmware/efivars.c:566:
++						    new_var->Data);
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#1472: FILE: drivers/firmware/efivars.c:877:
++	return;
++}
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1497: FILE: drivers/firmware/efivars.c:923:
++	status = check_var_size_locked(efivars, new_var->Attributes,
++	       new_var->DataSize + utf16_strsize(new_var->VariableName, 1024));
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#1570: FILE: drivers/firmware/efivars.c:1052:
++		if (!variable_name) {
++			pr_err("efivars: Memory allocation failed.\n");
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1578: FILE: drivers/firmware/efivars.c:1060:
++			status = efivars->ops->get_next_variable(
+
+WARNING:UNNECESSARY_ELSE: else is not generally useful after a break or return
+#1584: FILE: drivers/firmware/efivars.c:1066:
++				break;
++			} else {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1586: FILE: drivers/firmware/efivars.c:1068:
++				if (!variable_is_present(variable_name,
++				    &vendor)) {
+
+WARNING:UNNECESSARY_ELSE: else is not generally useful after a break or return
+#1597: FILE: drivers/firmware/efivars.c:1079:
++			break;
++		} else
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1597: FILE: drivers/firmware/efivars.c:1079:
++		} else
+
+WARNING:PREFER_SEQ_PUTS: Prefer seq_puts to seq_printf
+#1706: FILE: drivers/gpu/drm/i915/i915_debugfs.c:754:
++	seq_printf(m, "Kernel: " UTS_RELEASE "\n");
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#1719: FILE: drivers/gpu/drm/i915/i915_drv.h:299:
++#define QUIRK_INVERT_BRIGHTNESS (1<<2)
+                                   ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#1719: FILE: drivers/gpu/drm/i915/i915_drv.h:299:
++#define QUIRK_INVERT_BRIGHTNESS (1<<2)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#1720: FILE: drivers/gpu/drm/i915/i915_drv.h:300:
++#define QUIRK_NO_PCH_PWM_ENABLE (1<<3)
+                                   ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#1720: FILE: drivers/gpu/drm/i915/i915_drv.h:300:
++#define QUIRK_NO_PCH_PWM_ENABLE (1<<3)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1728: FILE: drivers/gpu/drm/i915/i915_drv.h:1401:
++extern void i915_redisable_vga(struct drm_device *dev);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!work"
+#1794: FILE: drivers/gpu/drm/i915/i915_irq.c:1254:
++	if (work == NULL ||
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!work"
+#1821: FILE: drivers/gpu/drm/i915/intel_display.c:7253:
++	if (work == NULL || atomic_read(&work->pending) < INTEL_FLIP_COMPLETE) {
+
+ERROR:INLINE_LOCATION: inline keyword should sit between storage class and type
+#1852: FILE: drivers/gpu/drm/i915/intel_display.c:7342:
++inline static void intel_mark_page_flip_active(struct intel_crtc *intel_crtc)
+
+The inline keyword should sit between storage class and type.
+
+For example, the following segment::
+
+  inline static int example_function(void)
+  {
+          ...
+  }
+
+should be::
+
+  static inline int example_function(void)
+  {
+          ...
+  }
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1919: FILE: drivers/gpu/drm/i915/intel_display.c:9211:
++	struct drm_i915_private *dev_priv = dev->dev_private;
++	dev_priv->quirks |= QUIRK_INVERT_BRIGHTNESS;
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#2108: FILE: drivers/gpu/drm/i915/intel_panel.c:195:
++MODULE_PARM_DESC(invert_brightness, "Invert backlight brightness "
++	"(-1 force normal, 0 machine defaults, 1 force inversion), please "
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#2109: FILE: drivers/gpu/drm/i915/intel_panel.c:196:
++	"(-1 force normal, 0 machine defaults, 1 force inversion), please "
++	"report PCI device ID, subsystem vendor and subsystem device ID "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#2110: FILE: drivers/gpu/drm/i915/intel_panel.c:197:
++	"report PCI device ID, subsystem vendor and subsystem device ID "
++	"to dri-devel@lists.freedesktop.org, if your machine needs it. "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#2111: FILE: drivers/gpu/drm/i915/intel_panel.c:198:
++	"to dri-devel@lists.freedesktop.org, if your machine needs it. "
++	"It will then be included in an upcoming module version.");
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rdev->family == CHIP_RS780'
+#2262: FILE: drivers/gpu/drm/radeon/atombios_crtc.c:577:
++		if ((rdev->family == CHIP_RS780) || (rdev->family == CHIP_RS880))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rdev->family == CHIP_RS880'
+#2262: FILE: drivers/gpu/drm/radeon/atombios_crtc.c:577:
++		if ((rdev->family == CHIP_RS780) || (rdev->family == CHIP_RS880))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'dev->pdev->device == 0x5159'
+#2408: FILE: drivers/gpu/drm/radeon/radeon_combios.c:902:
++	if (((dev->pdev->device == 0x5159) &&
++	    (dev->pdev->subsystem_vendor == 0x174B) &&
++	    (dev->pdev->subsystem_device == 0x7c28)) ||
+ 	/* Radeon 9100 (R200) */
++	   ((dev->pdev->device == 0x514D) &&
+ 	    (dev->pdev->subsystem_vendor == 0x174B) &&
++	    (dev->pdev->subsystem_device == 0x7149))) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'dev->pdev->subsystem_vendor == 0x174B'
+#2408: FILE: drivers/gpu/drm/radeon/radeon_combios.c:902:
++	if (((dev->pdev->device == 0x5159) &&
++	    (dev->pdev->subsystem_vendor == 0x174B) &&
++	    (dev->pdev->subsystem_device == 0x7c28)) ||
+ 	/* Radeon 9100 (R200) */
++	   ((dev->pdev->device == 0x514D) &&
+ 	    (dev->pdev->subsystem_vendor == 0x174B) &&
++	    (dev->pdev->subsystem_device == 0x7149))) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'dev->pdev->subsystem_device == 0x7c28'
+#2408: FILE: drivers/gpu/drm/radeon/radeon_combios.c:902:
++	if (((dev->pdev->device == 0x5159) &&
++	    (dev->pdev->subsystem_vendor == 0x174B) &&
++	    (dev->pdev->subsystem_device == 0x7c28)) ||
+ 	/* Radeon 9100 (R200) */
++	   ((dev->pdev->device == 0x514D) &&
+ 	    (dev->pdev->subsystem_vendor == 0x174B) &&
++	    (dev->pdev->subsystem_device == 0x7149))) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'dev->pdev->device == 0x514D'
+#2408: FILE: drivers/gpu/drm/radeon/radeon_combios.c:902:
++	if (((dev->pdev->device == 0x5159) &&
++	    (dev->pdev->subsystem_vendor == 0x174B) &&
++	    (dev->pdev->subsystem_device == 0x7c28)) ||
+ 	/* Radeon 9100 (R200) */
++	   ((dev->pdev->device == 0x514D) &&
+ 	    (dev->pdev->subsystem_vendor == 0x174B) &&
++	    (dev->pdev->subsystem_device == 0x7149))) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'dev->pdev->subsystem_vendor == 0x174B'
+#2408: FILE: drivers/gpu/drm/radeon/radeon_combios.c:902:
++	if (((dev->pdev->device == 0x5159) &&
++	    (dev->pdev->subsystem_vendor == 0x174B) &&
++	    (dev->pdev->subsystem_device == 0x7c28)) ||
+ 	/* Radeon 9100 (R200) */
++	   ((dev->pdev->device == 0x514D) &&
+ 	    (dev->pdev->subsystem_vendor == 0x174B) &&
++	    (dev->pdev->subsystem_device == 0x7149))) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'dev->pdev->subsystem_device == 0x7149'
+#2408: FILE: drivers/gpu/drm/radeon/radeon_combios.c:902:
++	if (((dev->pdev->device == 0x5159) &&
++	    (dev->pdev->subsystem_vendor == 0x174B) &&
++	    (dev->pdev->subsystem_device == 0x7c28)) ||
+ 	/* Radeon 9100 (R200) */
++	   ((dev->pdev->device == 0x514D) &&
+ 	    (dev->pdev->subsystem_vendor == 0x174B) &&
++	    (dev->pdev->subsystem_device == 0x7149))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2409: FILE: drivers/gpu/drm/radeon/radeon_combios.c:903:
++	if (((dev->pdev->device == 0x5159) &&
++	    (dev->pdev->subsystem_vendor == 0x174B) &&
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2454: FILE: drivers/gpu/drm/radeon/radeon_combios.c:2105:
++					  radeon_get_encoder_enum(dev,
++								ATOM_DEVICE_LCD1_SUPPORT,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2466: FILE: drivers/gpu/drm/radeon/radeon_combios.c:2117:
++					  radeon_get_encoder_enum(dev,
++								ATOM_DEVICE_DFP1_SUPPORT,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2471: FILE: drivers/gpu/drm/radeon/radeon_combios.c:2122:
++					  radeon_get_encoder_enum(dev,
++								ATOM_DEVICE_CRT2_SUPPORT,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2485: FILE: drivers/gpu/drm/radeon/radeon_combios.c:2136:
++					  radeon_get_encoder_enum(dev,
++								ATOM_DEVICE_CRT1_SUPPORT,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2498: FILE: drivers/gpu/drm/radeon/radeon_combios.c:2149:
++					  radeon_get_encoder_enum(dev,
++								ATOM_DEVICE_TV1_SUPPORT,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2515: FILE: drivers/gpu/drm/radeon/radeon_combios.c:2166:
++					  radeon_get_encoder_enum(dev,
++								ATOM_DEVICE_DFP1_SUPPORT,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2520: FILE: drivers/gpu/drm/radeon/radeon_combios.c:2171:
++					  radeon_get_encoder_enum(dev,
++								ATOM_DEVICE_CRT2_SUPPORT,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2534: FILE: drivers/gpu/drm/radeon/radeon_combios.c:2185:
++					  radeon_get_encoder_enum(dev,
++								ATOM_DEVICE_CRT1_SUPPORT,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2546: FILE: drivers/gpu/drm/radeon/radeon_combios.c:2197:
++					  radeon_get_encoder_enum(dev,
++								ATOM_DEVICE_TV1_SUPPORT,
+
+WARNING:LONG_LINE: line length of 118 exceeds 100 columns
+#2634: FILE: drivers/gpu/drm/radeon/radeon_connectors.c:1762:
++			drm_connector_init(dev, &radeon_connector->base, &radeon_edp_connector_funcs, connector_type);
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!rdev->rmmio"
+#2658: FILE: drivers/gpu/drm/radeon/radeon_kms.c:42:
++	if (rdev->rmmio == NULL)
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#2772: FILE: drivers/gpu/drm/ttm/ttm_bo.c:1128:
++	uint32_t new_flags;
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#2804: FILE: drivers/gpu/drm/vmwgfx/vmwgfx_fb.c:150:
++					var->xres * var->bits_per_pixel/8,
+ 					                               ^
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#2812: FILE: drivers/gpu/drm/vmwgfx/vmwgfx_fb.c:165:
++	info->fix.line_length = info->var.xres * info->var.bits_per_pixel/8;
+ 	                                                                 ^
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*dj_report)...) over kzalloc(sizeof(struct dj_report)...)
+#2842: FILE: drivers/hid/hid-logitech-dj.c:480:
++	dj_report = kzalloc(sizeof(struct dj_report), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*dj_report)...) over kzalloc(sizeof(struct dj_report)...)
+#2868: FILE: drivers/hid/hid-logitech-dj.c:498:
++	dj_report = kzalloc(sizeof(struct dj_report), GFP_KERNEL);
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#2891: FILE: drivers/hv/ring_buffer.c:386:
++	wmb();
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#2900: FILE: drivers/hv/ring_buffer.c:488:
++	mb();
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#2913: FILE: drivers/hv/vmbus_drv.c:469:
++		mb();
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#2974: FILE: drivers/i2c/busses/i2c-piix4.c:25:
++	AMD Hudson-2, CZ
+ 	          ^
+
+CHECK:CAMELCASE: Avoid CamelCase: <Hudson>
+#2974: FILE: drivers/i2c/busses/i2c-piix4.c:25:
++	AMD Hudson-2, CZ
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#3105: FILE: drivers/md/dm-bufio.c:324:
++	unsigned noio_flag;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#3405: FILE: drivers/md/persistent-data/dm-btree-remove.c:232:
++		      struct dm_btree_value_type *vt, unsigned left_index)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#3428: FILE: drivers/md/persistent-data/dm-btree-remove.c:364:
++		      struct dm_btree_value_type *vt, unsigned left_index)
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#3520: FILE: drivers/md/raid10.c:1427:
++			this = (this+1) % conf->raid_disks;
+ 			            ^
+
+WARNING:HOTPLUG_SECTION: Using __devexit is unnecessary
+#3602: FILE: drivers/mtd/devices/m25p80.c:946:
+ static int __devexit m25p_remove(struct spi_device *spi)
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#3682: FILE: drivers/net/can/sja1000/sja1000.c:498:
+ 	while ((isrc = priv->read_reg(priv, REG_IR)) && (n < SJA1000_MAX_IRQ)) {
++
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#3790: FILE: drivers/net/ethernet/intel/e1000e/netdev.c:5013:
++	BUG_ON(size > tx_ring->count);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:SPACING: No space is necessary after a cast
+#3930: FILE: drivers/net/wimax/i2400m/usb-rx.c:280:
++			 (long) skb_end_offset(new_skb));
+
+WARNING:NETWORKING_BLOCK_COMMENT_STYLE: networking block comments don't use an empty /* line, use /* Comment...
+#4036: FILE: drivers/net/wireless/rt2x00/rt2x00mac.c:661:
++			/*
++			 * Clear beacon in the H/W for this vif. This is needed
+
+WARNING:NETWORKING_BLOCK_COMMENT_STYLE: networking block comments don't use an empty /* line, use /* Comment...
+#4054: FILE: drivers/net/wireless/rt2x00/rt2x00mac.c:680:
++			/*
++			 * Upload beacon to the H/W. This is only required on
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#4108: FILE: drivers/net/xen-netfront.c:499:
++		net_alert_ratelimited(
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#4277: FILE: drivers/pci/hotplug/shpchp_ctrl.c:507:
++		queue_delayed_work(p_slot->wq, &p_slot->work, 5*HZ);
+ 		                                               ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#4503: FILE: drivers/rtc/rtc-pl031.c:47:
++#define RTC_CR_EN	(1 << 0)	/* counter enable bit */
+
+WARNING:REPEATED_WORD: Possible repeated word: 'range'
+#4599: FILE: drivers/staging/zram/zram_drv.c:549:
++	/* out of range range */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4918: FILE: drivers/tty/n_gsm.c:2308:
++			WARN_ONCE(1, "%s: unknown flag %d\n",
+ 			       tty_name(tty, buf), flags);
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#4929: FILE: drivers/tty/serial/imx.c:134:
++#define  UFCR_DCEDTE	 (1<<6)  /* DCE/DTE mode select */
+                     	   ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#4929: FILE: drivers/tty/serial/imx.c:134:
++#define  UFCR_DCEDTE	 (1<<6)  /* DCE/DTE mode select */
+
+CHECK:CAMELCASE: Avoid CamelCase: <Size>
+#5214: FILE: drivers/usb/serial/io_ti.c:692:
++						le16_to_cpu(rom_desc->Size);
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#5446: FILE: drivers/usb/storage/unusual_devs.h:230:
++UNUSUAL_DEV(  0x0421, 0x04b9, 0x0350, 0x0350,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5447: FILE: drivers/usb/storage/unusual_devs.h:231:
++UNUSUAL_DEV(  0x0421, 0x04b9, 0x0350, 0x0350,
++		"Nokia",
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#5450: FILE: drivers/usb/storage/unusual_devs.h:234:
++		US_FL_MAX_SECTORS_64 ),
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#5453: FILE: drivers/usb/storage/unusual_devs.h:237:
++UNUSUAL_DEV(  0x0421, 0x05af, 0x0742, 0x0742,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5454: FILE: drivers/usb/storage/unusual_devs.h:238:
++UNUSUAL_DEV(  0x0421, 0x05af, 0x0742, 0x0742,
++		"Nokia",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5472: FILE: drivers/video/backlight/atmel-pwm-bl.c:215:
++		gpio_set_value(pwmbl->gpio_on,
++					0 ^ pwmbl->pdata->on_active_low);
+
+WARNING:TYPO_SPELLING: 'referece' may be misspelled - perhaps 'reference'?
+#5547: FILE: fs/cifs/cifsfs.c:92:
++ * Note that it should be only called if a referece to VFS super block is
+                                            ^^^^^^^^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#5581: FILE: fs/cifs/cifsfs.h:45:
++extern void cifs_sb_active(struct super_block *sb);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#5582: FILE: fs/cifs/cifsfs.h:46:
++extern void cifs_sb_deactive(struct super_block *sb);
+
+WARNING:CONSTANT_CONVERSION: __constant_cpu_to_le16 should be cpu_to_le16
+#5599: FILE: fs/cifs/cifssmb.c:3459:
++		cifs_acl->default_entry_count = __constant_cpu_to_le16(0xFFFF);
+
+Use of __constant_<foo> form is discouraged for the following functions::
+
+  __constant_cpu_to_be[x]
+  __constant_cpu_to_le[x]
+  __constant_be[x]_to_cpu
+  __constant_le[x]_to_cpu
+  __constant_htons
+  __constant_ntohs
+
+Using any of these outside of include/uapi/ is not preferred as using the
+function without __constant_ is identical when the argument is a
+constant.
+
+In big endian systems, the macros like __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to the same expression::
+
+  #define __constant_cpu_to_be32(x) ((__force __be32)(__u32)(x))
+  #define __cpu_to_be32(x)          ((__force __be32)(__u32)(x))
+
+In little endian systems, the macros __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to __constant_swab32 and __swab32.  __swab32
+has a __builtin_constant_p check::
+
+  #define __swab32(x)				\
+    (__builtin_constant_p((__u32)(x)) ?	\
+    ___constant_swab32(x) :			\
+    __fswab32(x))
+
+So ultimately they have a special case for constants.
+Similar is the case with all of the macros in the list.  Thus
+using the __constant_... forms are unnecessarily verbose and
+not preferred outside of include/uapi.
+
+See: https://lore.kernel.org/lkml/1400106425.12666.6.camel@joe-AO725/
+
+WARNING:CONSTANT_CONVERSION: __constant_cpu_to_le16 should be cpu_to_le16
+#5603: FILE: fs/cifs/cifssmb.c:3462:
++		cifs_acl->access_entry_count = __constant_cpu_to_le16(0xFFFF);
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#5862: FILE: fs/nfsd/nfs4proc.c:912:
++	if (filp)
+ 	    ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#5863: FILE: fs/nfsd/nfs4proc.c:913:
++		get_file(filp);
+ 		         ^^^^
+
+WARNING:TYPO_SPELLING: 'correspondance' may be misspelled - perhaps 'correspondence'?
+#5884: FILE: fs/nfsd/nfs4state.c:3485:
++	 * correspondance, and we have to delete the lockowner when we
+ 	   ^^^^^^^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#5925: FILE: fs/nfsd/vfs.c:831:
++	if (IS_ERR(*filp)) {
+ 	            ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#5928: FILE: fs/nfsd/vfs.c:833:
++		*filp = NULL;
+ 		 ^^^^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#6001: FILE: include/linux/efi.h:32:
++#define EFI_NOT_READY		( 6 | (1UL << (BITS_PER_LONG-1)))
+                      		                            ^
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#6001: FILE: include/linux/efi.h:32:
++#define EFI_NOT_READY		( 6 | (1UL << (BITS_PER_LONG-1)))
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#6002: FILE: include/linux/efi.h:33:
++#define EFI_DEVICE_ERROR	( 7 | (1UL << (BITS_PER_LONG-1)))
+                         	                            ^
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#6002: FILE: include/linux/efi.h:33:
++#define EFI_DEVICE_ERROR	( 7 | (1UL << (BITS_PER_LONG-1)))
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#6003: FILE: include/linux/efi.h:34:
++#define EFI_WRITE_PROTECTED	( 8 | (1UL << (BITS_PER_LONG-1)))
+                            	                            ^
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#6003: FILE: include/linux/efi.h:34:
++#define EFI_WRITE_PROTECTED	( 8 | (1UL << (BITS_PER_LONG-1)))
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#6004: FILE: include/linux/efi.h:35:
++#define EFI_OUT_OF_RESOURCES	( 9 | (1UL << (BITS_PER_LONG-1)))
+                             	                            ^
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#6004: FILE: include/linux/efi.h:35:
++#define EFI_OUT_OF_RESOURCES	( 9 | (1UL << (BITS_PER_LONG-1)))
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#6006: FILE: include/linux/efi.h:37:
++#define EFI_SECURITY_VIOLATION	(26 | (1UL << (BITS_PER_LONG-1)))
+                               	                            ^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#6022: FILE: include/linux/efi.h:507:
++extern efi_status_t efi_query_variable_store(u32 attributes, unsigned long size);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#6059: FILE: include/linux/ftrace.h:377:
++extern void ftrace_module_init(struct module *mod);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pos' - possible side-effects?
+#6083: FILE: include/linux/list.h:369:
++#define list_next_entry(pos, member) \
++	list_entry((pos)->member.next, typeof(*(pos)), member)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'member' - possible side-effects?
+#6083: FILE: include/linux/list.h:369:
++#define list_next_entry(pos, member) \
++	list_entry((pos)->member.next, typeof(*(pos)), member)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'member' may be better as '(member)' to avoid precedence issues
+#6083: FILE: include/linux/list.h:369:
++#define list_next_entry(pos, member) \
++	list_entry((pos)->member.next, typeof(*(pos)), member)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pos' - possible side-effects?
+#6091: FILE: include/linux/list.h:377:
++#define list_prev_entry(pos, member) \
++	list_entry((pos)->member.prev, typeof(*(pos)), member)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'member' - possible side-effects?
+#6091: FILE: include/linux/list.h:377:
++#define list_prev_entry(pos, member) \
++	list_entry((pos)->member.prev, typeof(*(pos)), member)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'member' may be better as '(member)' to avoid precedence issues
+#6091: FILE: include/linux/list.h:377:
++#define list_prev_entry(pos, member) \
++	list_entry((pos)->member.prev, typeof(*(pos)), member)
+
+WARNING:TYPO_SPELLING: 'issueing' may be misspelled - perhaps 'issuing'?
+#6161: FILE: include/linux/perf_event.h:398:
++	 * written by userspace to reflect the last read data, after issueing
+ 	                                                             ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'BA' may be misspelled - perhaps 'BY'?
+#6229: FILE: include/net/mac80211.h:1178:
++ * @IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL: On this hardware TX BA session
+                                                                 ^^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#6239: FILE: include/net/mac80211.h:1208:
++	IEEE80211_HW_TEARDOWN_AGGR_ON_BAR_FAIL		= 1<<26,
+ 	                                      		   ^
+
+WARNING:LONG_LINE: line length of 106 exceeds 100 columns
+#6252: FILE: include/trace/events/module.h:81:
++		__entry->refcnt	= __this_cpu_read(mod->refptr->incs) - __this_cpu_read(mod->refptr->decs);
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#6338: FILE: kernel/events/ring_buffer.c:170:
++		smp_mb();
+
+WARNING:REPEATED_WORD: Possible repeated word: 'came'
+#6372: FILE: kernel/futex.c:613:
++ *	came came here due to a stale FUTEX_WAITERS/FUTEX_OWNER_DIED bit.
+
+WARNING:INDENTED_LABEL: labels should not be indented
+#6489: FILE: kernel/futex.c:723:
++		out_state:
+
+ERROR:INITIALISED_STATIC: do not initialise statics to 0
+#6820: FILE: kernel/sched/core.c:5436:
++static int min_load_idx = 0;
+
+Static variables should not be initialized explicitly to zero.
+Your compiler (or rather your loader) automatically does
+it for you.
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#6821: FILE: kernel/sched/core.c:5437:
++static int max_load_idx = CPU_LOAD_IDX_MAX-1;
+                                           ^
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 20)
+#6957: FILE: kernel/trace/ftrace.c:2129:
++		if (ops_references_rec(ops, rec))
++		    cnt++;
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#7122: FILE: mm/memory-failure.c:1069:
++				if ((hwpoison_filter(p) && TestClearPageHWPoison(p))
++				    || (p != hpage && TestSetPageHWPoison(hpage))) {
+
+CHECK:BRACES: Unbalanced braces around else statement
+#7546: FILE: net/sched/act_mirred.c:208:
++	} else
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000156559.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 10 errors, 44 warnings, 84 checks, 6471 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000156559.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

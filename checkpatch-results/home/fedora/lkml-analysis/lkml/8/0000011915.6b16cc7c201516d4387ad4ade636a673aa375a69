@@ -1,0 +1,42 @@
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'lower_name' may be better as '(lower_name)' to avoid precedence issues
+#94: FILE: drivers/misc/dlb2/dlb2_ioctl.c:18:
++#define DLB2_DOMAIN_IOCTL_CALLBACK_TEMPLATE(lower_name)			   \
++static int dlb2_domain_ioctl_##lower_name(struct dlb2_dev *dev,		   \
++					  struct dlb2_domain *domain,	   \
++					  unsigned long user_arg)	   \
++{									   \
++	struct dlb2_cmd_response response = {0};			   \
++	struct dlb2_##lower_name##_args arg;				   \
++	int ret;							   \
++									   \
++	if (copy_from_user(&arg, (void __user *)user_arg, sizeof(arg)))	   \
++		return -EFAULT;						   \
++									   \
++	mutex_lock(&dev->resource_mutex);				   \
++									   \
++	ret = dev->ops->lower_name(&dev->hw,				   \
++				   domain->id,				   \
++				   &arg,				   \
++				   &response);				   \
++									   \
++	mutex_unlock(&dev->resource_mutex);				   \
++									   \
++	BUILD_BUG_ON(offsetof(typeof(arg), response) != 0);		   \
++									   \
++	if (copy_to_user((void __user *)user_arg,			   \
++			 &response,					   \
++			 sizeof(response)))				   \
++		return -EFAULT;						   \
++									   \
++	return ret;							   \
++}
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000011915.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 0 warnings, 1 checks, 1225 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000011915.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

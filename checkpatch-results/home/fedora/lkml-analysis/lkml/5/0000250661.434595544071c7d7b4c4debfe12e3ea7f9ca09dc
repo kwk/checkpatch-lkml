@@ -1,0 +1,190 @@
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#64: FILE: net/9p/trans_xen.c:30:
++	spinlock_t lock;
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#82: FILE: net/9p/trans_xen.c:48:
++};
++static LIST_HEAD(xen_9pfs_devs);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#98: FILE: net/9p/trans_xen.c:76:
++	struct xen_9pfs_dataring *ring = r;
++	BUG_ON(!ring || !ring->priv->client);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#98: FILE: net/9p/trans_xen.c:76:
++	BUG_ON(!ring || !ring->priv->client);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!priv->rings[i].intf"
+#120: FILE: net/9p/trans_xen.c:107:
++		if (priv->rings[i].intf == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "priv->rings[i].bytes"
+#124: FILE: net/9p/trans_xen.c:111:
++		if (priv->rings[i].bytes != NULL) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#128: FILE: net/9p/trans_xen.c:115:
++			free_pages((unsigned long)priv->rings[i].bytes,
++					XEN_9PFS_RING_ORDER - (PAGE_SHIFT - XEN_PAGE_SHIFT));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#150: FILE: net/9p/trans_xen.c:137:
++static int xen_9pfs_front_alloc_dataring(struct xenbus_device *dev,
++		struct xen_9pfs_dataring *ring)
+
+CHECK:SPACING: No space is necessary after a cast
+#159: FILE: net/9p/trans_xen.c:146:
++	ring->intf = (struct xen_9pfs_data_intf *) get_zeroed_page(GFP_KERNEL | __GFP_ZERO);
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#163: FILE: net/9p/trans_xen.c:150:
++	ring->bytes = (void*)__get_free_pages(GFP_KERNEL | __GFP_ZERO,
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!ring->bytes"
+#165: FILE: net/9p/trans_xen.c:152:
++	if (ring->bytes == NULL)
+
+WARNING:LONG_LINE: line length of 116 exceeds 100 columns
+#168: FILE: net/9p/trans_xen.c:155:
++		ring->intf->ref[i] = gnttab_grant_foreign_access(dev->otherend_id, virt_to_gfn(ring->bytes) + i, 0);
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#176: FILE: net/9p/trans_xen.c:163:
++	ring->irq = bind_evtchn_to_irqhandler(ring->evtchn, xen_9pfs_front_event_handler,
++					0, "xen_9pfs-frontend", ring);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "ring->bytes"
+#185: FILE: net/9p/trans_xen.c:172:
++	if (ring->bytes != NULL) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#189: FILE: net/9p/trans_xen.c:176:
++		free_pages((unsigned long)ring->bytes,
++				XEN_9PFS_RING_ORDER - (PAGE_SHIFT - XEN_PAGE_SHIFT));
+
+ERROR:SPACING: spaces required around that '||' (ctx:VxW)
+#213: FILE: net/9p/trans_xen.c:200:
++	if (ret < 0|| max_ring_order < XEN_9PFS_RING_ORDER)
+ 	           ^
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#216: FILE: net/9p/trans_xen.c:203:
++
++
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*priv)...) over kzalloc(sizeof(struct xen_9pfs_front_priv)...)
+#217: FILE: net/9p/trans_xen.c:204:
++	priv = kzalloc(sizeof(struct xen_9pfs_front_priv), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*priv->rings)...) over kzalloc(sizeof(struct xen_9pfs_dataring)...)
+#223: FILE: net/9p/trans_xen.c:210:
++	priv->rings = kzalloc(sizeof(struct xen_9pfs_dataring) * priv->num_rings,
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#223: FILE: net/9p/trans_xen.c:210:
++	priv->rings = kzalloc(sizeof(struct xen_9pfs_dataring) * priv->num_rings,
++						GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#224: FILE: net/9p/trans_xen.c:211:
++	priv->rings = kzalloc(sizeof(struct xen_9pfs_dataring) * priv->num_rings,
++						GFP_KERNEL);
+
+CHECK:CAMELCASE: Avoid CamelCase: <XenbusStateInitialised>
+#275: FILE: net/9p/trans_xen.c:262:
++	xenbus_switch_state(dev, XenbusStateInitialised);
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+WARNING:TYPO_SPELLING: 'suspsend' may be misspelled - perhaps 'suspend'?
+#290: FILE: net/9p/trans_xen.c:277:
++	dev_warn(&dev->dev, "suspsend/resume unsupported\n");
+ 	                     ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:CAMELCASE: Avoid CamelCase: <XenbusStateConnected>
+#309: FILE: net/9p/trans_xen.c:296:
++		xenbus_switch_state(dev, XenbusStateConnected);
+
+CHECK:CAMELCASE: Avoid CamelCase: <XenbusStateClosed>
+#313: FILE: net/9p/trans_xen.c:300:
++		if (dev->state == XenbusStateClosed)
+
+WARNING:PREFER_FALLTHROUGH: Prefer 'fallthrough;' over fallthrough comment
+#315: FILE: net/9p/trans_xen.c:302:
++		/* Missed the backend's CLOSING state -- fallthrough */
+
+Use the `fallthrough;` pseudo keyword instead of
+`/* fallthrough */` like comments.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000250661.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 2 errors, 6 warnings, 18 checks, 270 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000250661.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

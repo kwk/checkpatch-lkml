@@ -1,0 +1,265 @@
+WARNING:BAD_SIGN_OFF: Do not use whitespace before Signed-off-by:
+#75: 
+	Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+
+The signed-off-by line does not fall in line with the standards
+specified by the community.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#148: FILE: arch/x86/entry/syscall_64.c:13:
++#define __SYSCALL_64(nr, sym, qual) extern asmlinkage long sym(struct pt_regs *);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:LONG_LINE: line length of 128 exceeds 100 columns
+#150: FILE: arch/x86/entry/syscall_64.c:15:
++extern asmlinkage long sys_ni_syscall(unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long);
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#150: FILE: arch/x86/entry/syscall_64.c:15:
++extern asmlinkage long sys_ni_syscall(unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#212: FILE: arch/x86/include/asm/syscall.h:24:
++typedef asmlinkage long (*sys_call_ptr_t)(struct pt_regs *);
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#222: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+CHECK:CAMELCASE: Avoid CamelCase: <__SYSCALL_DEFINEx>
+#266: FILE: arch/x86/include/asm/syscall_wrapper.h:40:
++#define __SYSCALL_DEFINEx(x, name, ...)					\
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#266: FILE: arch/x86/include/asm/syscall_wrapper.h:40:
++#define __SYSCALL_DEFINEx(x, name, ...)					\
++	asmlinkage long sys##name(struct pt_regs *regs);		\
++	ALLOW_ERROR_INJECTION(sys##name, ERRNO);			\
++	static long SyS##name(__MAP(x,__SC_LONG,__VA_ARGS__));		\
++	static inline long SYSC##name(__MAP(x,__SC_DECL,__VA_ARGS__));	\
++	asmlinkage long sys##name(struct pt_regs *regs)			\
++	{								\
++		return SyS##name(__MAP(x,__SC_ARGS			\
++			,,regs->di,,regs->si,,regs->dx			\
++			,,regs->r10,,regs->r8,,regs->r9));		\
++	}								\
++	static long SyS##name(__MAP(x,__SC_LONG,__VA_ARGS__))		\
++	{								\
++		long ret = SYSC##name(__MAP(x,__SC_CAST,__VA_ARGS__));	\
++		__MAP(x,__SC_TEST,__VA_ARGS__);				\
++		__PROTECT(x, ret,__MAP(x,__SC_ARGS,__VA_ARGS__));	\
++		return ret;						\
++	}								\
++	static inline long SYSC##name(__MAP(x,__SC_DECL,__VA_ARGS__))
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#269: FILE: arch/x86/include/asm/syscall_wrapper.h:43:
++	static long SyS##name(__MAP(x,__SC_LONG,__VA_ARGS__));		\
+ 	                             ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#269: FILE: arch/x86/include/asm/syscall_wrapper.h:43:
++	static long SyS##name(__MAP(x,__SC_LONG,__VA_ARGS__));		\
+ 	                                       ^
+
+CHECK:CAMELCASE: Avoid CamelCase: <SyS##name>
+#269: FILE: arch/x86/include/asm/syscall_wrapper.h:43:
++	static long SyS##name(__MAP(x,__SC_LONG,__VA_ARGS__));		\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#270: FILE: arch/x86/include/asm/syscall_wrapper.h:44:
++	static inline long SYSC##name(__MAP(x,__SC_DECL,__VA_ARGS__));	\
+ 	                                     ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#270: FILE: arch/x86/include/asm/syscall_wrapper.h:44:
++	static inline long SYSC##name(__MAP(x,__SC_DECL,__VA_ARGS__));	\
+ 	                                               ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#273: FILE: arch/x86/include/asm/syscall_wrapper.h:47:
++		return SyS##name(__MAP(x,__SC_ARGS			\
+ 		                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxV)
+#274: FILE: arch/x86/include/asm/syscall_wrapper.h:48:
++			,,regs->di,,regs->si,,regs->dx			\
+ 			 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#274: FILE: arch/x86/include/asm/syscall_wrapper.h:48:
++			,,regs->di,,regs->si,,regs->dx			\
+ 			          ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxV)
+#274: FILE: arch/x86/include/asm/syscall_wrapper.h:48:
++			,,regs->di,,regs->si,,regs->dx			\
+ 			           ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#274: FILE: arch/x86/include/asm/syscall_wrapper.h:48:
++			,,regs->di,,regs->si,,regs->dx			\
+ 			                    ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxV)
+#274: FILE: arch/x86/include/asm/syscall_wrapper.h:48:
++			,,regs->di,,regs->si,,regs->dx			\
+ 			                     ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxV)
+#275: FILE: arch/x86/include/asm/syscall_wrapper.h:49:
++			,,regs->r10,,regs->r8,,regs->r9));		\
+ 			 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#275: FILE: arch/x86/include/asm/syscall_wrapper.h:49:
++			,,regs->r10,,regs->r8,,regs->r9));		\
+ 			           ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxV)
+#275: FILE: arch/x86/include/asm/syscall_wrapper.h:49:
++			,,regs->r10,,regs->r8,,regs->r9));		\
+ 			            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#275: FILE: arch/x86/include/asm/syscall_wrapper.h:49:
++			,,regs->r10,,regs->r8,,regs->r9));		\
+ 			                     ^
+
+ERROR:SPACING: space required after that ',' (ctx:OxV)
+#275: FILE: arch/x86/include/asm/syscall_wrapper.h:49:
++			,,regs->r10,,regs->r8,,regs->r9));		\
+ 			                      ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#277: FILE: arch/x86/include/asm/syscall_wrapper.h:51:
++	static long SyS##name(__MAP(x,__SC_LONG,__VA_ARGS__))		\
+ 	                             ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#277: FILE: arch/x86/include/asm/syscall_wrapper.h:51:
++	static long SyS##name(__MAP(x,__SC_LONG,__VA_ARGS__))		\
+ 	                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#279: FILE: arch/x86/include/asm/syscall_wrapper.h:53:
++		long ret = SYSC##name(__MAP(x,__SC_CAST,__VA_ARGS__));	\
+ 		                             ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#279: FILE: arch/x86/include/asm/syscall_wrapper.h:53:
++		long ret = SYSC##name(__MAP(x,__SC_CAST,__VA_ARGS__));	\
+ 		                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#280: FILE: arch/x86/include/asm/syscall_wrapper.h:54:
++		__MAP(x,__SC_TEST,__VA_ARGS__);				\
+ 		       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#280: FILE: arch/x86/include/asm/syscall_wrapper.h:54:
++		__MAP(x,__SC_TEST,__VA_ARGS__);				\
+ 		                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#281: FILE: arch/x86/include/asm/syscall_wrapper.h:55:
++		__PROTECT(x, ret,__MAP(x,__SC_ARGS,__VA_ARGS__));	\
+ 		                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#281: FILE: arch/x86/include/asm/syscall_wrapper.h:55:
++		__PROTECT(x, ret,__MAP(x,__SC_ARGS,__VA_ARGS__));	\
+ 		                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#281: FILE: arch/x86/include/asm/syscall_wrapper.h:55:
++		__PROTECT(x, ret,__MAP(x,__SC_ARGS,__VA_ARGS__));	\
+ 		                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#284: FILE: arch/x86/include/asm/syscall_wrapper.h:58:
++	static inline long SYSC##name(__MAP(x,__SC_DECL,__VA_ARGS__))
+ 	                                     ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#284: FILE: arch/x86/include/asm/syscall_wrapper.h:58:
++	static inline long SYSC##name(__MAP(x,__SC_DECL,__VA_ARGS__))
+ 	                                               ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#328: FILE: include/linux/syscalls.h:105:
++#define __MAP1(m,t,a,...) m(t,a)
+                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#328: FILE: include/linux/syscalls.h:105:
++#define __MAP1(m,t,a,...) m(t,a)
+                   ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#328: FILE: include/linux/syscalls.h:105:
++#define __MAP1(m,t,a,...) m(t,a)
+                     ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#328: FILE: include/linux/syscalls.h:105:
++#define __MAP1(m,t,a,...) m(t,a)
+                              ^
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000290729.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 30 errors, 6 warnings, 3 checks, 184 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000290729.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

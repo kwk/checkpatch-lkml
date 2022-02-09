@@ -1,0 +1,129 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#44: 
+> > > > And idem for all others. This is 1) shorter to write; and 2) makes it
+
+WARNING:COMMIT_COMMENT_SYMBOL: Commit log lines starting with '#' are dropped by git as comments
+#65: 
+# define __this_cpu_read(pcp)   __pcpu_size_call_return(__this_cpu_read_, (pcp))
+
+Commit log lines starting with a '#' are ignored by git as
+comments.  To solve this problem addition of a single space
+infront of the log line is enough.
+
+WARNING:COMMIT_COMMENT_SYMBOL: Commit log lines starting with '#' are dropped by git as comments
+#69: 
+# git grep "#[[:space:]]*define[[:space:]]*__this_cpu"  | grep -v "__this_cpu[[:alpha:]_]*[0-9]"
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp' - possible side-effects?
+#160: FILE: arch/x86/include/asm/percpu.h:364:
++#define raw_cpu_read_1(pcp)		percpu_from_op("mov", (pcp), "m"(pcp))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp' - possible side-effects?
+#161: FILE: arch/x86/include/asm/percpu.h:365:
++#define raw_cpu_read_2(pcp)		percpu_from_op("mov", (pcp), "m"(pcp))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp' - possible side-effects?
+#162: FILE: arch/x86/include/asm/percpu.h:366:
++#define raw_cpu_read_4(pcp)		percpu_from_op("mov", (pcp), "m"(pcp))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp' - possible side-effects?
+#226: FILE: arch/x86/include/asm/percpu.h:444:
++#define raw_cpu_read_8(pcp)		percpu_from_op("mov", (pcp), "m"(pcp))
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#381: FILE: include/linux/percpu.h:551:
++#define raw_cpu_generic_to_op(pcp, val, op)				\
+ do {									\
++	*raw_cpu_ptr(&(pcp)) op val;					\
+ } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp' - possible side-effects?
+#536: FILE: include/linux/percpu.h:648:
++#define raw_cpu_generic_add_return(pcp, val)				\
+ ({									\
++	raw_cpu_add(pcp, val);					\
++	raw_cpu_read(pcp);						\
+ })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp' - possible side-effects?
+#580: FILE: include/linux/percpu.h:675:
++#define raw_cpu_generic_xchg(pcp, nval)				\
+ ({	typeof(pcp) ret__;						\
++	ret__ = raw_cpu_read(pcp);					\
++	raw_cpu_write(pcp, nval);					\
+ 	ret__;								\
+ })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp' - possible side-effects?
+#618: FILE: include/linux/percpu.h:699:
++#define raw_cpu_generic_cmpxchg(pcp, oval, nval)			\
+ ({									\
+ 	typeof(pcp) ret__;						\
++	ret__ = raw_cpu_read(pcp);					\
+ 	if (ret__ == (oval))						\
++		raw_cpu_write(pcp, nval);				\
+ 	ret__;								\
+ })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp1' - possible side-effects?
+#658: FILE: include/linux/percpu.h:725:
++#define raw_cpu_generic_cmpxchg_double(pcp1, pcp2, oval1, oval2, nval1, nval2)	\
+ ({									\
+ 	int __ret = 0;							\
++	if (raw_cpu_read(pcp1) == (oval1) &&				\
++			 raw_cpu_read(pcp2)  == (oval2)) {		\
++		raw_cpu_write(pcp1, (nval1));			\
++		raw_cpu_write(pcp2, (nval2));			\
+ 		__ret = 1;						\
+ 	}								\
+ 	(__ret);							\
+ })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp2' - possible side-effects?
+#658: FILE: include/linux/percpu.h:725:
++#define raw_cpu_generic_cmpxchg_double(pcp1, pcp2, oval1, oval2, nval1, nval2)	\
+ ({									\
+ 	int __ret = 0;							\
++	if (raw_cpu_read(pcp1) == (oval1) &&				\
++			 raw_cpu_read(pcp2)  == (oval2)) {		\
++		raw_cpu_write(pcp1, (nval1));			\
++		raw_cpu_write(pcp2, (nval2));			\
+ 		__ret = 1;						\
+ 	}								\
+ 	(__ret);							\
+ })
+
+WARNING:LONG_LINE: line length of 115 exceeds 100 columns
+#707: FILE: include/linux/percpu.h:755:
++	__pcpu_double_call_return_bool(raw_cpu_cmpxchg_double_, (pcp1), (pcp2), (oval1), (oval2), (nval1), (nval2))
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000295105.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 5 warnings, 9 checks, 563 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000295105.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,68 @@
+WARNING:SPLIT_STRING: quoted string split across lines
+#113: FILE: drivers/firmware/efi/efi.c:341:
++		pr_err("Failed to create efi_rts_workqueue, EFI runtime services "
++		       "disabled.\n");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#182: FILE: drivers/firmware/efi/runtime-wrappers.c:74:
++#define efi_queue_work(_rts, _arg1, _arg2, _arg3, _arg4, _arg5)		\
++({									\
++	struct efi_runtime_work efi_rts_work;				\
++									\
++	INIT_WORK_ONSTACK(&efi_rts_work.work, efi_call_rts);		\
++	efi_rts_work.func = _rts;					\
++	efi_rts_work.arg1 = _arg1;					\
++	efi_rts_work.arg2 = _arg2;					\
++	efi_rts_work.arg3 = _arg3;					\
++	efi_rts_work.arg4 = _arg4;					\
++	efi_rts_work.arg5 = _arg5;					\
++	/*								\
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#196: FILE: drivers/firmware/efi/runtime-wrappers.c:88:
++	 */								\
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#200: FILE: drivers/firmware/efi/runtime-wrappers.c:92:
++		BUG();							\
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000306329.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 0 errors, 4 warnings, 0 checks, 130 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000306329.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

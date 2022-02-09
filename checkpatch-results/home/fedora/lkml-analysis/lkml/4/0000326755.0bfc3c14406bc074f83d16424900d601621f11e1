@@ -1,0 +1,167 @@
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#174: FILE: include/linux/module.h:83:
++#define module_init(x)	__initcall(x);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#186: FILE: include/linux/module.h:95:
++#define module_exit(x)	__exitcall(x);
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#217: FILE: include/linux/module.h:126:
++#define module_init(initfn)					\
++	static inline initcall_t __inittest(void)		\
++	{ return initfn; }					\
++	int init_module(void) __attribute__((alias(#initfn)));
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#217: FILE: include/linux/module.h:126:
++#define module_init(initfn)					\
++	static inline initcall_t __inittest(void)		\
++	{ return initfn; }					\
++	int init_module(void) __attribute__((alias(#initfn)));
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __alias(#initfn) over __attribute__((alias(#initfn)))
+#220: FILE: include/linux/module.h:129:
++	int init_module(void) __attribute__((alias(#initfn)));
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void' should also have an identifier name
+#220: FILE: include/linux/module.h:129:
++	int init_module(void) __attribute__((alias(#initfn)));
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#223: FILE: include/linux/module.h:132:
++#define module_exit(exitfn)					\
++	static inline exitcall_t __exittest(void)		\
++	{ return exitfn; }					\
++	void cleanup_module(void) __attribute__((alias(#exitfn)));
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#223: FILE: include/linux/module.h:132:
++#define module_exit(exitfn)					\
++	static inline exitcall_t __exittest(void)		\
++	{ return exitfn; }					\
++	void cleanup_module(void) __attribute__((alias(#exitfn)));
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __alias(#exitfn) over __attribute__((alias(#exitfn)))
+#226: FILE: include/linux/module.h:135:
++	void cleanup_module(void) __attribute__((alias(#exitfn)));
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void' should also have an identifier name
+#226: FILE: include/linux/module.h:135:
++	void cleanup_module(void) __attribute__((alias(#exitfn)));
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#231: FILE: include/linux/module.h:140:
++/* This means "can be init if no module support, otherwise module load
++   may call it." */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#231: FILE: include/linux/module.h:140:
++   may call it." */
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#236: FILE: include/linux/module.h:145:
++#define __INIT_OR_MODULE	.text
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#237: FILE: include/linux/module.h:146:
++#define __INITDATA_OR_MODULE	.data
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#238: FILE: include/linux/module.h:147:
++#define __INITRODATA_OR_MODULE	.section ".rodata","a",%progbits
+                               	                  ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#238: FILE: include/linux/module.h:147:
++#define __INITRODATA_OR_MODULE	.section ".rodata","a",%progbits
+                               	                      ^
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:OxV)
+#238: FILE: include/linux/module.h:147:
++#define __INITRODATA_OR_MODULE	.section ".rodata","a",%progbits
+                               	                       ^
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#238: FILE: include/linux/module.h:147:
++#define __INITRODATA_OR_MODULE	.section ".rodata","a",%progbits
+
+ERROR:INIT_ATTRIBUTE: Use of __initconst requires a separate use of const
+#242: FILE: include/linux/module.h:151:
++#define __initconst_or_module __initconst
+
+Const init definitions should use __initconst instead of
+__initdata.
+
+Similarly init definitions without const require a separate
+use of const.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000326755.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 6 errors, 12 warnings, 1 checks, 188 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000326755.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

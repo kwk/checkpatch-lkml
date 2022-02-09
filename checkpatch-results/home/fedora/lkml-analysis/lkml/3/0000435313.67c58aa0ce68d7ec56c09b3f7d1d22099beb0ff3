@@ -1,0 +1,486 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:TYPO_SPELLING: 'EXTRAVERSION' may be misspelled - perhaps 'EXTROVERSION'?
+#33: FILE: Makefile:4:
++EXTRAVERSION = .5
+ ^^^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:MISPLACED_INIT: __initconst should be placed after snb_ids[]
+#279: FILE: arch/x86/kernel/setup.c:621:
++	static const __initconst u16 snb_ids[] = {
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+WARNING:MISPLACED_INIT: __initconst should be placed after bad_pages[]
+#296: FILE: arch/x86/kernel/setup.c:654:
++	static const __initconst unsigned long bad_pages[] = {
+
+WARNING:TYPO_SPELLING: 'archtectures' may be misspelled - perhaps 'architectures'?
+#357: FILE: arch/x86/kernel/setup.c:1136:
++	 * mismatched firmware/kernel archtectures since there is no
+ 	                              ^^^^^^^^^^^^
+
+CHECK:BRACES: Unbalanced braces around else statement
+#494: FILE: arch/x86/platform/efi/efi.c:735:
++	else {
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kmalloc_array over kmalloc with multiply
+#557: FILE: arch/x86/platform/efi/efi_64.c:71:
++	save_pgd = kmalloc(n_pgds * sizeof(pgd_t), GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#573: FILE: arch/x86/platform/efi/efi_64.c:87:
++	int n_pgds = DIV_ROUND_UP((max_pfn << PAGE_SHIFT) , PGDIR_SIZE);
+ 	                                                  ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#574: FILE: arch/x86/platform/efi/efi_64.c:88:
++	int n_pgds = DIV_ROUND_UP((max_pfn << PAGE_SHIFT) , PGDIR_SIZE);
++	for (pgd = 0; pgd < n_pgds; pgd++)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:MISPLACED_INIT: __initdata should be placed after dmi_ver
+#731: FILE: drivers/firmware/dmi_scan.c:19:
++static u16 __initdata dmi_ver;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#803: FILE: drivers/firmware/dmi_scan.c:427:
++				pr_info("SMBIOS %d.%d present.\n",
++				       dmi_ver >> 8, dmi_ver & 0xFF);
+
+CHECK:BRACES: Unbalanced braces around else statement
+#804: FILE: drivers/firmware/dmi_scan.c:428:
++			else {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#808: FILE: drivers/firmware/dmi_scan.c:432:
++				pr_info("Legacy DMI %d.%d present.\n",
++				       dmi_ver >> 8, dmi_ver & 0xFF);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'buf[5] < 32'
+#824: FILE: drivers/firmware/dmi_scan.c:448:
++	if ((buf[5] < 32) && dmi_checksum(buf, buf[5])) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#832: FILE: drivers/firmware/dmi_scan.c:456:
++			pr_debug("SMBIOS version fixup(2.%d->2.%d)\n",
++			       dmi_ver & 0xFF, 3);
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#980: FILE: drivers/gpu/drm/i915/i915_reg.h:504:
++#define  _3D_CHICKEN_HIZ_PLANE_DISABLE_MSAA_4X_SNB	(1 << 10)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#988: FILE: drivers/gpu/drm/i915/i915_reg.h:517:
++# define ASYNC_FLIP_PERF_DISABLE			(1 << 14)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'boot_cpu_data.x86 != 0x15'
+#1157: FILE: drivers/iommu/amd_iommu_init.c:1014:
++	if ((boot_cpu_data.x86 != 0x15) ||
++	    (boot_cpu_data.x86_model < 0x10) ||
++	    (boot_cpu_data.x86_model > 0x1f))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'boot_cpu_data.x86_model < 0x10'
+#1157: FILE: drivers/iommu/amd_iommu_init.c:1014:
++	if ((boot_cpu_data.x86 != 0x15) ||
++	    (boot_cpu_data.x86_model < 0x10) ||
++	    (boot_cpu_data.x86_model > 0x1f))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'boot_cpu_data.x86_model > 0x1f'
+#1157: FILE: drivers/iommu/amd_iommu_init.c:1014:
++	if ((boot_cpu_data.x86 != 0x15) ||
++	    (boot_cpu_data.x86_model < 0x10) ||
++	    (boot_cpu_data.x86_model > 0x1f))
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_info([subsystem]dev, ... then dev_info(dev, ... then pr_info(...  to printk(KERN_INFO ...
+#1203: FILE: drivers/iommu/intel-iommu.c:4197:
++	printk(KERN_INFO "DMAR: Disabling IOMMU for graphics on this chipset\n");
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1215: FILE: drivers/iommu/intel-iommu.c:4209:
+ static void __devinit quirk_iommu_rwbf(struct pci_dev *dev)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'tx == 0x7'
+#1351: FILE: drivers/net/wireless/ath/ath9k/ar9003_phy.c:544:
++	if (((ah->caps.hw_caps & ATH9K_HW_CAP_APM) && (tx == 0x7)) ||
++	    AR_SREV_9462(ah))
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1875: FILE: drivers/pci/hotplug/pciehp_ctrl.c:380:
++		queue_delayed_work(p_slot->wq, &p_slot->work, 5*HZ);
+ 		                                               ^
+
+CHECK:CAMELCASE: Avoid CamelCase: <SCmdRequest>
+#2039: FILE: drivers/staging/vt6656/iocmd.h:103:
++} __packed SCmdRequest, *PSCmdRequest;
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:CAMELCASE: Avoid CamelCase: <PSCmdRequest>
+#2039: FILE: drivers/staging/vt6656/iocmd.h:103:
++} __packed SCmdRequest, *PSCmdRequest;
+
+CHECK:CAMELCASE: Avoid CamelCase: <SCmdScan>
+#2048: FILE: drivers/staging/vt6656/iocmd.h:113:
++} __packed SCmdScan, *PSCmdScan;
+
+CHECK:CAMELCASE: Avoid CamelCase: <PSCmdScan>
+#2048: FILE: drivers/staging/vt6656/iocmd.h:113:
++} __packed SCmdScan, *PSCmdScan;
+
+CHECK:CAMELCASE: Avoid CamelCase: <SCmdBSSJoin>
+#2057: FILE: drivers/staging/vt6656/iocmd.h:128:
++} __packed SCmdBSSJoin, *PSCmdBSSJoin;
+
+CHECK:CAMELCASE: Avoid CamelCase: <PSCmdBSSJoin>
+#2057: FILE: drivers/staging/vt6656/iocmd.h:128:
++} __packed SCmdBSSJoin, *PSCmdBSSJoin;
+
+CHECK:CAMELCASE: Avoid CamelCase: <SCmdZoneTypeSet>
+#2066: FILE: drivers/staging/vt6656/iocmd.h:139:
++} __packed SCmdZoneTypeSet, *PSCmdZoneTypeSet;
+
+CHECK:CAMELCASE: Avoid CamelCase: <PSCmdZoneTypeSet>
+#2066: FILE: drivers/staging/vt6656/iocmd.h:139:
++} __packed SCmdZoneTypeSet, *PSCmdZoneTypeSet;
+
+CHECK:CAMELCASE: Avoid CamelCase: <SWPAResult>
+#2075: FILE: drivers/staging/vt6656/iocmd.h:147:
++} __packed SWPAResult, *PSWPAResult;
+
+CHECK:CAMELCASE: Avoid CamelCase: <PSWPAResult>
+#2075: FILE: drivers/staging/vt6656/iocmd.h:147:
++} __packed SWPAResult, *PSWPAResult;
+
+CHECK:CAMELCASE: Avoid CamelCase: <SCmdStartAP>
+#2084: FILE: drivers/staging/vt6656/iocmd.h:159:
++} __packed SCmdStartAP, *PSCmdStartAP;
+
+CHECK:CAMELCASE: Avoid CamelCase: <PSCmdStartAP>
+#2084: FILE: drivers/staging/vt6656/iocmd.h:159:
++} __packed SCmdStartAP, *PSCmdStartAP;
+
+CHECK:CAMELCASE: Avoid CamelCase: <SCmdSetWEP>
+#2093: FILE: drivers/staging/vt6656/iocmd.h:169:
++} __packed SCmdSetWEP, *PSCmdSetWEP;
+
+CHECK:CAMELCASE: Avoid CamelCase: <PSCmdSetWEP>
+#2093: FILE: drivers/staging/vt6656/iocmd.h:169:
++} __packed SCmdSetWEP, *PSCmdSetWEP;
+
+CHECK:CAMELCASE: Avoid CamelCase: <SBSSIDItem>
+#2102: FILE: drivers/staging/vt6656/iocmd.h:182:
++} __packed SBSSIDItem;
+
+CHECK:CAMELCASE: Avoid CamelCase: <SBSSIDList>
+#2110: FILE: drivers/staging/vt6656/iocmd.h:189:
++} __packed SBSSIDList, *PSBSSIDList;
+
+CHECK:CAMELCASE: Avoid CamelCase: <PSBSSIDList>
+#2110: FILE: drivers/staging/vt6656/iocmd.h:189:
++} __packed SBSSIDList, *PSBSSIDList;
+
+CHECK:CAMELCASE: Avoid CamelCase: <SNodeItem>
+#2119: FILE: drivers/staging/vt6656/iocmd.h:210:
++} __packed SNodeItem;
+
+CHECK:CAMELCASE: Avoid CamelCase: <SNodeList>
+#2128: FILE: drivers/staging/vt6656/iocmd.h:218:
++} __packed SNodeList, *PSNodeList;
+
+CHECK:CAMELCASE: Avoid CamelCase: <PSNodeList>
+#2128: FILE: drivers/staging/vt6656/iocmd.h:218:
++} __packed SNodeList, *PSNodeList;
+
+CHECK:CAMELCASE: Avoid CamelCase: <SCmdLinkStatus>
+#2137: FILE: drivers/staging/vt6656/iocmd.h:231:
++} __packed SCmdLinkStatus, *PSCmdLinkStatus;
+
+CHECK:CAMELCASE: Avoid CamelCase: <PSCmdLinkStatus>
+#2137: FILE: drivers/staging/vt6656/iocmd.h:231:
++} __packed SCmdLinkStatus, *PSCmdLinkStatus;
+
+CHECK:CAMELCASE: Avoid CamelCase: <SDot11MIBCount>
+#2146: FILE: drivers/staging/vt6656/iocmd.h:249:
++} __packed SDot11MIBCount, *PSDot11MIBCount;
+
+CHECK:CAMELCASE: Avoid CamelCase: <PSDot11MIBCount>
+#2146: FILE: drivers/staging/vt6656/iocmd.h:249:
++} __packed SDot11MIBCount, *PSDot11MIBCount;
+
+CHECK:CAMELCASE: Avoid CamelCase: <SStatMIBCount>
+#2155: FILE: drivers/staging/vt6656/iocmd.h:357:
++} __packed SStatMIBCount, *PSStatMIBCount;
+
+CHECK:CAMELCASE: Avoid CamelCase: <PSStatMIBCount>
+#2155: FILE: drivers/staging/vt6656/iocmd.h:357:
++} __packed SStatMIBCount, *PSStatMIBCount;
+
+CHECK:CAMELCASE: Avoid CamelCase: <SCmdValue>
+#2162: FILE: drivers/staging/vt6656/iocmd.h:363:
++} __packed SCmdValue,  *PSCmdValue;
+
+CHECK:CAMELCASE: Avoid CamelCase: <PSCmdValue>
+#2162: FILE: drivers/staging/vt6656/iocmd.h:363:
++} __packed SCmdValue,  *PSCmdValue;
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#2263: FILE: drivers/tty/serial/8250/8250.h:76:
++#define UART_CAP_HFIFO	(1 << 14)	/* UART has a "hidden" FIFO */
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2503: FILE: drivers/xen/grant-table.c:766:
++	BUG_ON(grefs_per_grant_frame == 0);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2538: FILE: drivers/xen/grant-table.c:906:
++	BUG_ON(grefs_per_grant_frame == 0);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2588: FILE: drivers/xen/grant-table.c:1128:
++	BUG_ON(grefs_per_grant_frame == 0);
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#2592: FILE: drivers/xen/grant-table.c:1130:
++	extra = ((req_entries + (grefs_per_grant_frame-1)) /
+ 	                                              ^
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2608: FILE: drivers/xen/grant-table.c:1156:
++	BUG_ON(grefs_per_grant_frame == 0);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2736: FILE: fs/nfs/super.c:2555:
++		mntroot = nfs_fs_mount_common(fs_type, server, flags,
++				dev_name, mount_info);
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'nfs_xdev_mount_common', this function's name, in a string
+#2741: FILE: fs/nfs/super.c:2557:
++	dprintk("<-- nfs_xdev_mount_common() = %ld\n",
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2742: FILE: fs/nfs/super.c:2558:
++	dprintk("<-- nfs_xdev_mount_common() = %ld\n",
++			IS_ERR(mntroot) ? PTR_ERR(mntroot) : 0L);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2805: FILE: include/linux/efi.h:554:
++extern int efi_enabled(int facility);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2852: FILE: include/linux/sched.h:2677:
++extern void signal_wake_up_state(struct task_struct *t, unsigned int state);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#2858: FILE: include/linux/sched.h:2683:
++}
++static inline void ptrace_signal_wake_up(struct task_struct *t, bool resume)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2984: FILE: kernel/module.c:148:
++	BUG_ON(mod && mod->state == MODULE_STATE_UNFORMED);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#3038: FILE: kernel/module.c:1026:
++		BUG();
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3073: FILE: kernel/module.c:2902:
++	ret = !mod || mod->state == MODULE_STATE_LIVE
++		|| mod->state == MODULE_STATE_GOING;
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#3103: FILE: kernel/module.c:2941:
++	if ((old = find_module_all(mod->name, true)) != NULL) {
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3105: FILE: kernel/module.c:2943:
++		if (old->state == MODULE_STATE_COMING
++		    || old->state == MODULE_STATE_UNFORMED) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3109: FILE: kernel/module.c:2947:
++			err = wait_event_interruptible(module_wq,
++					       finished_loading(mod->name));
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3165: FILE: kernel/module.c:3009:
++	 * but kallsyms etc. can see us. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#3310: FILE: kernel/module.c:3390:
++	BUG_ON(mod->state == MODULE_STATE_UNFORMED);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3591: FILE: kernel/smp.c:61:
++		if (!zalloc_cpumask_var_node(&cfd->cpumask_ipi, GFP_KERNEL,
++				cpu_to_node(cpu)))
+
+WARNING:NETWORKING_BLOCK_COMMENT_STYLE: networking block comments don't use an empty /* line, use /* Comment...
+#3687: FILE: net/mac80211/cfg.c:155:
++		/*
++		 * The ASSOC test makes sure the driver is ready to
+
+WARNING:TYPO_SPELLING: 'assocation' may be misspelled - perhaps 'association'?
+#3691: FILE: net/mac80211/cfg.c:159:
++		 * so it will set the key again after assocation.
+ 		                                      ^^^^^^^^^^
+
+CHECK:CAMELCASE: Avoid CamelCase: <bLength>
+#4031: FILE: sound/usb/mixer.c:1262:
++		if (hdr->bLength < 7 + csize) {
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#4033: FILE: sound/usb/mixer.c:1264:
++			snd_printk(KERN_ERR "usbaudio: unit %u: "
++				   "invalid UAC_FEATURE_UNIT descriptor\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#4049: FILE: sound/usb/mixer.c:1275:
++			snd_printk(KERN_ERR "usbaudio: unit %u: "
++				   "invalid UAC_FEATURE_UNIT descriptor\n",
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000435313.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 2 errors, 23 warnings, 53 checks, 3316 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000435313.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,120 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#29: 
+of the conditional variable as the key value. If jump labels are not enabled
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#86: FILE: arch/x86/include/asm/jump_label.h:12:
++# define JUMP_LABEL(key, label)					\
+ 	do {							\
+ 		asm goto("1:"					\
+ 			JUMP_LABEL_INITIAL_NOP			\
+ 			".pushsection __jump_table,  \"a\" \n\t"\
+ 			_ASM_PTR "1b, %l[" #label "], %c0 \n\t" \
+ 			".popsection \n\t"			\
++			: : "i" (key) :  : label);\
+ 	} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#86: FILE: arch/x86/include/asm/jump_label.h:12:
++# define JUMP_LABEL(key, label)					\
+ 	do {							\
+ 		asm goto("1:"					\
+ 			JUMP_LABEL_INITIAL_NOP			\
+ 			".pushsection __jump_table,  \"a\" \n\t"\
+ 			_ASM_PTR "1b, %l[" #label "], %c0 \n\t" \
+ 			".popsection \n\t"			\
++			: : "i" (key) :  : label);\
+ 	} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#117: FILE: include/linux/jump_label.h:27:
++extern void jump_label_update(jump_label_t key, enum jump_label_type type);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#124: FILE: include/linux/jump_label.h:32:
++#define enable_jump_label(key) \
++	jump_label_update(key, JUMP_LABEL_ENABLE);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#129: FILE: include/linux/jump_label.h:35:
++#define disable_jump_label(key) \
++	jump_label_update(key, JUMP_LABEL_DISABLE);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'key' may be better as '(key)' to avoid precedence issues
+#137: FILE: include/linux/jump_label.h:40:
++#define JUMP_LABEL(key, label)			\
+ do {						\
++	if (unlikely(*key))			\
+ 		goto label;			\
+ } while (0)
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#137: FILE: include/linux/jump_label.h:40:
++#define JUMP_LABEL(key, label)			\
+ do {						\
++	if (unlikely(*key))			\
+ 		goto label;			\
+ } while (0)
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#227: FILE: kernel/jump_label.c:84:
++static struct jump_label_entry *add_jump_label_entry(jump_label_t key, int nr_entries, struct jump_entry *table)
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#270: FILE: kernel/jump_label.c:127:
++			entry = add_jump_label_entry(iter_begin->key,
+ 							count, iter_begin);
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000429308.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 7 warnings, 3 checks, 299 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000429308.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

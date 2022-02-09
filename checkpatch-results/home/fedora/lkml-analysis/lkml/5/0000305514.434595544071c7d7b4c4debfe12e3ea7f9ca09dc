@@ -1,0 +1,130 @@
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#91: FILE: lib/siphash.c:28:
++#define PREAMBLE(len) \
++	u64 v0 = 0x736f6d6570736575ULL; \
++	u64 v1 = 0x646f72616e646f6dULL; \
++	u64 v2 = 0x6c7967656e657261ULL; \
++	u64 v3 = 0x7465646279746573ULL; \
++	u64 b = ((u64)len) << 56; \
++	v3 ^= key[1]; \
++	v2 ^= key[0]; \
++	v1 ^= key[1]; \
++	v0 ^= key[0];
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#102: FILE: lib/siphash.c:39:
++#define POSTAMBLE \
++	v3 ^= b; \
++	SIPROUND; \
++	SIPROUND; \
++	v0 ^= b; \
++	v2 ^= 0xff; \
++	SIPROUND; \
++	SIPROUND; \
++	SIPROUND; \
++	SIPROUND; \
++	return (v0 ^ v1) ^ (v2 ^ v3);
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#102: FILE: lib/siphash.c:39:
++#define POSTAMBLE \
++	v3 ^= b; \
++	SIPROUND; \
++	SIPROUND; \
++	v0 ^= b; \
++	v2 ^= 0xff; \
++	SIPROUND; \
++	SIPROUND; \
++	SIPROUND; \
++	SIPROUND; \
++	return (v0 ^ v1) ^ (v2 ^ v3);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#102: FILE: lib/siphash.c:39:
++#define POSTAMBLE \
++	v3 ^= b; \
++	SIPROUND; \
++	SIPROUND; \
++	v0 ^= b; \
++	v2 ^= 0xff; \
++	SIPROUND; \
++	SIPROUND; \
++	SIPROUND; \
++	SIPROUND; \
++	return (v0 ^ v1) ^ (v2 ^ v3);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#134: FILE: lib/siphash.c:62:
++	u64 m;
++	PREAMBLE(len)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#173: FILE: lib/siphash.c:101:
++	u64 m;
++	PREAMBLE(len)
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#299: FILE: lib/test_siphash.c:74:
++	if (siphash_2u64(0x0706050403020100ULL, 0x0f0e0d0c0b0a0908ULL, test_key) != test_vectors[16]) {
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#309: FILE: lib/test_siphash.c:84:
++			 0x1716151413121110ULL, 0x1f1e1d1c1b1a1918ULL, test_key) != test_vectors[32]) {
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000305514.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 1 errors, 7 warnings, 0 checks, 256 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000305514.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

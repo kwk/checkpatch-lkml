@@ -1,0 +1,308 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#52: 
+> #define write_reg(par, ...)                                              \
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'func' - possible side-effects?
+#134: FILE: drivers/staging/fbtft/fbtft-bus.c:16:
++#define define_fbtft_write_reg(func, type, modifier)			\
++void func(struct fbtft_par *par, int len, const int *regs)		\
++{									\
++	int i, ret;							\
++	int offset = 0;							\
++	type *buf = (type *)par->buf;					\
++									\
++	if (unlikely(par->debug & DEBUG_WRITE_REGISTER)) {		\
++		for (i = 0; i < len; i++)				\
++			buf[i] = (type)regs[i];				\
++		fbtft_par_dbg_hex(DEBUG_WRITE_REGISTER, par,		\
++				  par->info->device, type, buf, len,	\
++				  "%s: ", __func__);			\
++	}								\
++									\
++	if (par->startbyte) {						\
++		*(u8 *)par->buf = par->startbyte;			\
++		buf = (type *)(par->buf + 1);				\
++		offset = 1;						\
++	}								\
++									\
++	*buf = modifier((type)regs[0]);					\
++	if (par->gpio.dc != -1)						\
++		gpio_set_value(par->gpio.dc, 0);			\
++	ret = par->fbtftops.write(par, par->buf, sizeof(type)+offset);	\
++	if (ret < 0) {							\
++		dev_err(par->info->device,				\
++			"%s: write() failed and returned %d\n",		\
++			__func__, ret);					\
++		return;							\
++	}								\
++	len--;								\
++									\
++	if (par->startbyte)						\
++		*(u8 *)par->buf = par->startbyte | 0x2;			\
++									\
++	if (len) {							\
++		i = len;						\
++		while (i--) {						\
++			*buf++ = modifier((type)regs[len - i]);		\
++		}							\
++		if (par->gpio.dc != -1)					\
++			gpio_set_value(par->gpio.dc, 1);		\
++		ret = par->fbtftops.write(par, par->buf,		\
++					  len * (sizeof(type)+offset)); \
++		if (ret < 0) {						\
++			dev_err(par->info->device,			\
++				"%s: write() failed and returned %d\n",	\
++				__func__, ret);				\
++			return;						\
++		}							\
++	}								\
++}									\
+ EXPORT_SYMBOL(func);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'modifier' - possible side-effects?
+#134: FILE: drivers/staging/fbtft/fbtft-bus.c:16:
++#define define_fbtft_write_reg(func, type, modifier)			\
++void func(struct fbtft_par *par, int len, const int *regs)		\
++{									\
++	int i, ret;							\
++	int offset = 0;							\
++	type *buf = (type *)par->buf;					\
++									\
++	if (unlikely(par->debug & DEBUG_WRITE_REGISTER)) {		\
++		for (i = 0; i < len; i++)				\
++			buf[i] = (type)regs[i];				\
++		fbtft_par_dbg_hex(DEBUG_WRITE_REGISTER, par,		\
++				  par->info->device, type, buf, len,	\
++				  "%s: ", __func__);			\
++	}								\
++									\
++	if (par->startbyte) {						\
++		*(u8 *)par->buf = par->startbyte;			\
++		buf = (type *)(par->buf + 1);				\
++		offset = 1;						\
++	}								\
++									\
++	*buf = modifier((type)regs[0]);					\
++	if (par->gpio.dc != -1)						\
++		gpio_set_value(par->gpio.dc, 0);			\
++	ret = par->fbtftops.write(par, par->buf, sizeof(type)+offset);	\
++	if (ret < 0) {							\
++		dev_err(par->info->device,				\
++			"%s: write() failed and returned %d\n",		\
++			__func__, ret);					\
++		return;							\
++	}								\
++	len--;								\
++									\
++	if (par->startbyte)						\
++		*(u8 *)par->buf = par->startbyte | 0x2;			\
++									\
++	if (len) {							\
++		i = len;						\
++		while (i--) {						\
++			*buf++ = modifier((type)regs[len - i]);		\
++		}							\
++		if (par->gpio.dc != -1)					\
++			gpio_set_value(par->gpio.dc, 1);		\
++		ret = par->fbtftops.write(par, par->buf,		\
++					  len * (sizeof(type)+offset)); \
++		if (ret < 0) {						\
++			dev_err(par->info->device,			\
++				"%s: write() failed and returned %d\n",	\
++				__func__, ret);				\
++			return;						\
++		}							\
++	}								\
++}									\
+ EXPORT_SYMBOL(func);
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#134: FILE: drivers/staging/fbtft/fbtft-bus.c:16:
++#define define_fbtft_write_reg(func, type, modifier)			\
++void func(struct fbtft_par *par, int len, const int *regs)		\
++{									\
++	int i, ret;							\
++	int offset = 0;							\
++	type *buf = (type *)par->buf;					\
++									\
++	if (unlikely(par->debug & DEBUG_WRITE_REGISTER)) {		\
++		for (i = 0; i < len; i++)				\
++			buf[i] = (type)regs[i];				\
++		fbtft_par_dbg_hex(DEBUG_WRITE_REGISTER, par,		\
++				  par->info->device, type, buf, len,	\
++				  "%s: ", __func__);			\
++	}								\
++									\
++	if (par->startbyte) {						\
++		*(u8 *)par->buf = par->startbyte;			\
++		buf = (type *)(par->buf + 1);				\
++		offset = 1;						\
++	}								\
++									\
++	*buf = modifier((type)regs[0]);					\
++	if (par->gpio.dc != -1)						\
++		gpio_set_value(par->gpio.dc, 0);			\
++	ret = par->fbtftops.write(par, par->buf, sizeof(type)+offset);	\
++	if (ret < 0) {							\
++		dev_err(par->info->device,				\
++			"%s: write() failed and returned %d\n",		\
++			__func__, ret);					\
++		return;							\
++	}								\
++	len--;								\
++									\
++	if (par->startbyte)						\
++		*(u8 *)par->buf = par->startbyte | 0x2;			\
++									\
++	if (len) {							\
++		i = len;						\
++		while (i--) {						\
++			*buf++ = modifier((type)regs[len - i]);		\
++		}							\
++		if (par->gpio.dc != -1)					\
++			gpio_set_value(par->gpio.dc, 1);		\
++		ret = par->fbtftops.write(par, par->buf,		\
++					  len * (sizeof(type)+offset)); \
++		if (ret < 0) {						\
++			dev_err(par->info->device,			\
++				"%s: write() failed and returned %d\n",	\
++				__func__, ret);				\
++			return;						\
++		}							\
++	}								\
++}									\
+ EXPORT_SYMBOL(func);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#134: FILE: drivers/staging/fbtft/fbtft-bus.c:16:
++#define define_fbtft_write_reg(func, type, modifier)			\
++void func(struct fbtft_par *par, int len, const int *regs)		\
++{									\
++	int i, ret;							\
++	int offset = 0;							\
++	type *buf = (type *)par->buf;					\
++									\
++	if (unlikely(par->debug & DEBUG_WRITE_REGISTER)) {		\
++		for (i = 0; i < len; i++)				\
++			buf[i] = (type)regs[i];				\
++		fbtft_par_dbg_hex(DEBUG_WRITE_REGISTER, par,		\
++				  par->info->device, type, buf, len,	\
++				  "%s: ", __func__);			\
++	}								\
++									\
++	if (par->startbyte) {						\
++		*(u8 *)par->buf = par->startbyte;			\
++		buf = (type *)(par->buf + 1);				\
++		offset = 1;						\
++	}								\
++									\
++	*buf = modifier((type)regs[0]);					\
++	if (par->gpio.dc != -1)						\
++		gpio_set_value(par->gpio.dc, 0);			\
++	ret = par->fbtftops.write(par, par->buf, sizeof(type)+offset);	\
++	if (ret < 0) {							\
++		dev_err(par->info->device,				\
++			"%s: write() failed and returned %d\n",		\
++			__func__, ret);					\
++		return;							\
++	}								\
++	len--;								\
++									\
++	if (par->startbyte)						\
++		*(u8 *)par->buf = par->startbyte | 0x2;			\
++									\
++	if (len) {							\
++		i = len;						\
++		while (i--) {						\
++			*buf++ = modifier((type)regs[len - i]);		\
++		}							\
++		if (par->gpio.dc != -1)					\
++			gpio_set_value(par->gpio.dc, 1);		\
++		ret = par->fbtftops.write(par, par->buf,		\
++					  len * (sizeof(type)+offset)); \
++		if (ret < 0) {						\
++			dev_err(par->info->device,			\
++				"%s: write() failed and returned %d\n",	\
++				__func__, ret);				\
++			return;						\
++		}							\
++	}								\
++}									\
+ EXPORT_SYMBOL(func);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#158: FILE: drivers/staging/fbtft/fbtft-bus.c:40:
++	ret = par->fbtftops.write(par, par->buf, sizeof(type)+offset);	\
+ 	                                                     ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#178: FILE: drivers/staging/fbtft/fbtft-bus.c:60:
++					  len * (sizeof(type)+offset)); \
+ 					                     ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'par' - possible side-effects?
+#300: FILE: drivers/staging/fbtft/fbtft.h:261:
++#define write_reg(par, ...)						\
++	par->fbtftops.write_register(par,				\
++				     NUMARGS(__VA_ARGS__),		\
++				     ((int[]){__VA_ARGS__}))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'par' may be better as '(par)' to avoid precedence issues
+#300: FILE: drivers/staging/fbtft/fbtft.h:261:
++#define write_reg(par, ...)						\
++	par->fbtftops.write_register(par,				\
++				     NUMARGS(__VA_ARGS__),		\
++				     ((int[]){__VA_ARGS__}))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#315: FILE: drivers/staging/fbtft/fbtft.h:296:
++extern void fbtft_write_reg8_bus8(struct fbtft_par *par, int len, const int *regs);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#316: FILE: drivers/staging/fbtft/fbtft.h:297:
++extern void fbtft_write_reg8_bus9(struct fbtft_par *par, int len, const int *regs);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#317: FILE: drivers/staging/fbtft/fbtft.h:298:
++extern void fbtft_write_reg16_bus8(struct fbtft_par *par, int len, const int *regs);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#318: FILE: drivers/staging/fbtft/fbtft.h:299:
++extern void fbtft_write_reg16_bus16(struct fbtft_par *par, int len, const int *regs);
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000322948.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 3 warnings, 10 checks, 232 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000322948.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

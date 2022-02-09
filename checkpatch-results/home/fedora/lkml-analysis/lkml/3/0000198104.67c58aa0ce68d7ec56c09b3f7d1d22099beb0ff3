@@ -1,0 +1,150 @@
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#47: FILE: arch/x86/kernel/uprobes.c:469:
++#define X86_COND_OPCODES			\
++	CASE(70, 71, XF(OF))			\
++	CASE(72, 73, XF(CF))			\
++	CASE(74, 75, XF(ZF))			\
++	CASE(78, 79, XF(SF))			\
++	CASE(7a, 7b, XF(PF))			\
++	CASE(76, 77, XF(CF) || XF(ZF))		\
++	CASE(7c, 7d, XF(SF) != XF(OF))		\
++	CASE(7e, 7f, XF(ZF) || XF(SF) != XF(OF))
+
+ERROR:SWITCH_CASE_INDENT_LEVEL: switch and case should be at the same indent
+#62: FILE: arch/x86/kernel/uprobes.c:484:
++	switch (auprobe->ttt.opc1) {
+[...]
++		case 0x ## op_y: ret = (cond) != 0; break;	\
++		case 0x ## op_n: ret = (cond) == 0; break;
+
+switch should be at the same indent as case.
+Example::
+
+  switch (suffix) {
+  case 'G':
+  case 'g':
+          mem <<= 30;
+          break;
+  case 'M':
+  case 'm':
+          mem <<= 20;
+          break;
+  case 'K':
+  case 'k':
+          mem <<= 10;
+          fallthrough;
+  default:
+          break;
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#67: FILE: arch/x86/kernel/uprobes.c:489:
++	#define CASE(op_y, op_n, cond)	\
++		case 0x ## op_y: ret = (cond) != 0; break;	\
++		case 0x ## op_n: ret = (cond) == 0; break;
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cond' - possible side-effects?
+#67: FILE: arch/x86/kernel/uprobes.c:489:
++	#define CASE(op_y, op_n, cond)	\
++		case 0x ## op_y: ret = (cond) != 0; break;	\
++		case 0x ## op_n: ret = (cond) == 0; break;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#67: FILE: arch/x86/kernel/uprobes.c:489:
++	#define CASE(op_y, op_n, cond)	\
++		case 0x ## op_y: ret = (cond) != 0; break;	\
++		case 0x ## op_n: ret = (cond) == 0; break;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#68: FILE: arch/x86/kernel/uprobes.c:490:
++		case 0x ## op_y: ret = (cond) != 0; break;	\
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#69: FILE: arch/x86/kernel/uprobes.c:491:
++		case 0x ## op_n: ret = (cond) == 0; break;
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxE)
+#75: FILE: arch/x86/kernel/uprobes.c:497:
++	default:
+ 	       ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#76: FILE: arch/x86/kernel/uprobes.c:498:
++		BUG();
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:PREFER_FALLTHROUGH: Prefer 'fallthrough;' over fallthrough comment
+#105: FILE: arch/x86/kernel/uprobes.c:575:
++		/* fall through */
+
+Use the `fallthrough;` pseudo keyword instead of
+`/* fallthrough */` like comments.
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#106: FILE: arch/x86/kernel/uprobes.c:576:
++	#define CASE(op_y, op_n, cond)	\
++			case 0x ## op_y: case 0x ## op_n:
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000198104.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 7 errors, 3 warnings, 1 checks, 71 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000198104.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

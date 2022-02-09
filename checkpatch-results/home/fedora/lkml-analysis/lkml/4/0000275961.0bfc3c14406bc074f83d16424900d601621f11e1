@@ -1,0 +1,2799 @@
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#154: FILE: arch/powerpc/platforms/85xx/p1023_rdb.c:110:
++ * platform setup to let them parse their CCSR nodes early on. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#194: FILE: drivers/soc/fsl/qbman/Kconfig:31:
++config FSL_QMAN
++	bool "QMan device management"
++	default n
++	help
++		FSL DPAA QMan driver
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#202: FILE: drivers/soc/fsl/qbman/Kconfig:39:
++config FSL_QMAN_CONFIG
++	bool "QMan device management"
++	default y
++	help
++	  If this linux image is running natively, you need this option. If this
++	  linux image is running as a guest OS under the hypervisor, only one
++	  guest OS ("the control plane") needs this option.
++
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#210: FILE: drivers/soc/fsl/qbman/Kconfig:47:
++config FSL_QMAN_TEST
++	tristate "QMan self-tests"
++	default n
++	help
++		Compile self-test code for QMan.
++
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#216: FILE: drivers/soc/fsl/qbman/Kconfig:53:
++config FSL_QMAN_TEST_API
++	bool "QMan high-level self-test"
++	depends on FSL_QMAN_TEST
++	default y
++	help
++	  This requires the presence of cpu-affine portals, and performs
++	  high-level API testing with them (whichever portal(s) are affine to
++	  the cpu(s) the test executes on).
++
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#225: FILE: drivers/soc/fsl/qbman/Kconfig:62:
++config FSL_QMAN_TEST_STASH
++	bool "QMan 'hot potato' data-stashing self-test"
++	depends on FSL_QMAN_TEST
++	default y
++	help
++	  This performs a "hot potato" style test enqueuing/dequeuing a frame
++	  across a series of FQs scheduled to different portals (and cpus), with
++	  DQRR, data and context stashing always on.
++
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#234: FILE: drivers/soc/fsl/qbman/Kconfig:71:
++config FSL_QMAN_DEBUGFS
++	tristate "QMan debugfs support"
++	depends on DEBUG_FS
++	default n
++	help
++		QMan debugfs support
++
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#288: FILE: drivers/soc/fsl/qbman/bman_api.c:68:
+ 
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#292: FILE: drivers/soc/fsl/qbman/bman_api.c:72:
++ * (no fiddly QMan-specific bits.) */
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#315: FILE: drivers/soc/fsl/qbman/dpaa_resource.c:32:
++    defined(CONFIG_FSL_BMAN_PORTAL_MODULE) ||^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#316: FILE: drivers/soc/fsl/qbman/dpaa_resource.c:33:
++    defined(CONFIG_FSL_QMAN_PORTAL) ||^I^I\$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#317: FILE: drivers/soc/fsl/qbman/dpaa_resource.c:34:
++    defined(CONFIG_FSL_QMAN_PORTAL_MODULE)$
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#341: FILE: drivers/soc/fsl/qbman/dpaa_sys.h:166:
++ * data type held by the tree is u32. */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#346: FILE: drivers/soc/fsl/qbman/dpaa_sys.h:171:
++};
++#define DPA_RBTREE { .root = RB_ROOT }
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'node_field' - possible side-effects?
+#353: FILE: drivers/soc/fsl/qbman/dpaa_sys.h:178:
++#define IMPLEMENT_DPA_RBTREE(name, type, node_field, val_field) \
++static inline int name##_push(struct dpa_rbtree *tree, type *obj) \
++{ \
++	struct rb_node *parent = NULL, **p = &tree->root.rb_node; \
++	while (*p) { \
++		u32 item; \
++		parent = *p; \
++		item = rb_entry(parent, type, node_field)->val_field; \
++		if (obj->val_field < item) \
++			p = &parent->rb_left; \
++		else if (obj->val_field > item) \
++			p = &parent->rb_right; \
++		else \
++			return -EBUSY; \
++	} \
++	rb_link_node(&obj->node_field, parent, p); \
++	rb_insert_color(&obj->node_field, &tree->root); \
++	return 0; \
++} \
++static inline void name##_del(struct dpa_rbtree *tree, type *obj) \
++{ \
++	rb_erase(&obj->node_field, &tree->root); \
++} \
++static inline type *name##_find(struct dpa_rbtree *tree, u32 val) \
++{ \
++	type *ret; \
++	struct rb_node *p = tree->root.rb_node; \
++	while (p) { \
++		ret = rb_entry(p, type, node_field); \
++		if (val < ret->val_field) \
++			p = p->rb_left; \
++		else if (val > ret->val_field) \
++			p = p->rb_right; \
++		else \
++			return ret; \
++	} \
++	return NULL; \
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'val_field' - possible side-effects?
+#353: FILE: drivers/soc/fsl/qbman/dpaa_sys.h:178:
++#define IMPLEMENT_DPA_RBTREE(name, type, node_field, val_field) \
++static inline int name##_push(struct dpa_rbtree *tree, type *obj) \
++{ \
++	struct rb_node *parent = NULL, **p = &tree->root.rb_node; \
++	while (*p) { \
++		u32 item; \
++		parent = *p; \
++		item = rb_entry(parent, type, node_field)->val_field; \
++		if (obj->val_field < item) \
++			p = &parent->rb_left; \
++		else if (obj->val_field > item) \
++			p = &parent->rb_right; \
++		else \
++			return -EBUSY; \
++	} \
++	rb_link_node(&obj->node_field, parent, p); \
++	rb_insert_color(&obj->node_field, &tree->root); \
++	return 0; \
++} \
++static inline void name##_del(struct dpa_rbtree *tree, type *obj) \
++{ \
++	rb_erase(&obj->node_field, &tree->root); \
++} \
++static inline type *name##_find(struct dpa_rbtree *tree, u32 val) \
++{ \
++	type *ret; \
++	struct rb_node *p = tree->root.rb_node; \
++	while (p) { \
++		ret = rb_entry(p, type, node_field); \
++		if (val < ret->val_field) \
++			p = p->rb_left; \
++		else if (val > ret->val_field) \
++			p = p->rb_right; \
++		else \
++			return ret; \
++	} \
++	return NULL; \
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'val_field' may be better as '(val_field)' to avoid precedence issues
+#353: FILE: drivers/soc/fsl/qbman/dpaa_sys.h:178:
++#define IMPLEMENT_DPA_RBTREE(name, type, node_field, val_field) \
++static inline int name##_push(struct dpa_rbtree *tree, type *obj) \
++{ \
++	struct rb_node *parent = NULL, **p = &tree->root.rb_node; \
++	while (*p) { \
++		u32 item; \
++		parent = *p; \
++		item = rb_entry(parent, type, node_field)->val_field; \
++		if (obj->val_field < item) \
++			p = &parent->rb_left; \
++		else if (obj->val_field > item) \
++			p = &parent->rb_right; \
++		else \
++			return -EBUSY; \
++	} \
++	rb_link_node(&obj->node_field, parent, p); \
++	rb_insert_color(&obj->node_field, &tree->root); \
++	return 0; \
++} \
++static inline void name##_del(struct dpa_rbtree *tree, type *obj) \
++{ \
++	rb_erase(&obj->node_field, &tree->root); \
++} \
++static inline type *name##_find(struct dpa_rbtree *tree, u32 val) \
++{ \
++	type *ret; \
++	struct rb_node *p = tree->root.rb_node; \
++	while (p) { \
++		ret = rb_entry(p, type, node_field); \
++		if (val < ret->val_field) \
++			p = p->rb_left; \
++		else if (val > ret->val_field) \
++			p = p->rb_right; \
++		else \
++			return ret; \
++	} \
++	return NULL; \
++}
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#354: FILE: drivers/soc/fsl/qbman/dpaa_sys.h:179:
++static inline int name##_push(struct dpa_rbtree *tree, type *obj) \
+                                                             ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#402: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#407: FILE: drivers/soc/fsl/qbman/qman.c:1:
++/* Copyright 2008 - 2015 Freescale Semiconductor, Inc.
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:INCLUDE_LINUX: Use #include <linux/cacheflush.h> instead of <asm/cacheflush.h>
+#439: FILE: drivers/soc/fsl/qbman/qman.c:33:
++#include <asm/cacheflush.h>
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#496: FILE: drivers/soc/fsl/qbman/qman.c:90:
++#define MCR_get_rslt(v)		(u8)((v) >> 24)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#503: FILE: drivers/soc/fsl/qbman/qman.c:97:
++/* Corenet initiator settings. Stash request queues are 4-deep to match cores
++   ability to snarf. Stash priority is 3, other priorities are 2. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#503: FILE: drivers/soc/fsl/qbman/qman.c:97:
++   ability to snarf. Stash priority is 3, other priorities are 2. */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#619: FILE: drivers/soc/fsl/qbman/qman.c:213:
++};
++#define QMAN_HWE_COUNT (sizeof(qman_hwerr_txts)/sizeof(struct qman_hwerr_txt))
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#619: FILE: drivers/soc/fsl/qbman/qman.c:213:
++#define QMAN_HWE_COUNT (sizeof(qman_hwerr_txts)/sizeof(struct qman_hwerr_txt))
+                                                ^
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#640: FILE: drivers/soc/fsl/qbman/qman.c:234:
++};
++#define QMAN_ERR_MDATA_COUNT \
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#641: FILE: drivers/soc/fsl/qbman/qman.c:235:
++	(sizeof(error_mdata)/sizeof(struct qman_error_info_mdata))
+ 	                    ^
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#692: FILE: drivers/soc/fsl/qbman/qman.c:286:
++}
++static inline void __qm_out(struct qman *qm, u32 offset, u32 val)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#696: FILE: drivers/soc/fsl/qbman/qman.c:290:
++}
++#define qm_in(reg)		__qm_in(qm, REG_##reg)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#710: FILE: drivers/soc/fsl/qbman/qman.c:304:
++static void qm_set_dc(struct qman *qm, enum qm_dc_portal portal,
++			int ed, u8 sernd)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#713: FILE: drivers/soc/fsl/qbman/qman.c:307:
++	DPA_ASSERT(!ed || (portal == qm_dc_portal_fman0) ||
++			(portal == qm_dc_portal_fman1));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#721: FILE: drivers/soc/fsl/qbman/qman.c:315:
++static void qm_set_wq_scheduling(struct qman *qm, enum qm_wq_class wq_class,
++			u8 cs_elev, u8 csw2, u8 csw3, u8 csw4, u8 csw5,
+
+WARNING:TYPO_SPELLING: 'ba' may be misspelled - perhaps 'by'?
+#753: FILE: drivers/soc/fsl/qbman/qman.c:347:
++static void qm_set_memory(struct qman *qm, enum qm_memory memory, u64 ba,
+                                                                       ^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#754: FILE: drivers/soc/fsl/qbman/qman.c:348:
++static void qm_set_memory(struct qman *qm, enum qm_memory memory, u64 ba,
++			int enable, int prio, int stash, u32 size)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#760: FILE: drivers/soc/fsl/qbman/qman.c:354:
++	DPA_ASSERT((size >= 4096) && (size <= 1073741824) &&
++			is_power_of_2(size));
+
+WARNING:TYPO_SPELLING: 'ba' may be misspelled - perhaps 'by'?
+#762: FILE: drivers/soc/fsl/qbman/qman.c:356:
++	DPA_ASSERT(!(ba & (size - 1)));
+ 	             ^^
+
+WARNING:TYPO_SPELLING: 'ba' may be misspelled - perhaps 'by'?
+#763: FILE: drivers/soc/fsl/qbman/qman.c:357:
++	__qm_out(qm, offset, upper_32_bits(ba));
+ 	                                   ^^
+
+WARNING:TYPO_SPELLING: 'ba' may be misspelled - perhaps 'by'?
+#764: FILE: drivers/soc/fsl/qbman/qman.c:358:
++	__qm_out(qm, offset + REG_offset_BAR, lower_32_bits(ba));
+ 	                                                    ^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#766: FILE: drivers/soc/fsl/qbman/qman.c:360:
++	__qm_out(qm, offset + REG_offset_AR,
++		(enable ? 0x80000000 : 0) |
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#796: FILE: drivers/soc/fsl/qbman/qman.c:390:
++	 * everyone has upgraded. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#823: FILE: drivers/soc/fsl/qbman/qman.c:417:
++ * during qman_init_ccsr(). */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#836: FILE: drivers/soc/fsl/qbman/qman.c:430:
++}
++RESERVEDMEM_OF_DECLARE(qman_fqd, "fsl,qman-fqd", qman_fqd);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#852: FILE: drivers/soc/fsl/qbman/qman.c:446:
++}
++RESERVEDMEM_OF_DECLARE(qman_fbpr, "fsl,qman-pfdr", qman_pfdr);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#907: FILE: drivers/soc/fsl/qbman/qman.c:501:
++		BUG_ON(ret);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#909: FILE: drivers/soc/fsl/qbman/qman.c:503:
++		BUG_ON(ret);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'major == 1'
+#918: FILE: drivers/soc/fsl/qbman/qman.c:512:
++		if ((major == 1) && (minor == 0)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'minor == 0'
+#918: FILE: drivers/soc/fsl/qbman/qman.c:512:
++		if ((major == 1) && (minor == 0)) {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#918: FILE: drivers/soc/fsl/qbman/qman.c:512:
++		if ((major == 1) && (minor == 0)) {
+[...]
++		} else if ((major == 1) && (minor == 1))
+[...]
++		else if	((major == 1) && (minor == 2))
+[...]
++		else if ((major == 2) && (minor == 0))
+[...]
++		else if ((major == 3) && (minor == 0))
+[...]
++		else if ((major == 3) && (minor == 1))
+[...]
++		else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#932: FILE: drivers/soc/fsl/qbman/qman.c:526:
++		else {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#958: FILE: drivers/soc/fsl/qbman/qman.c:552:
++			pr_err("%s: only one 'fsl,qman' allowed\n",
++				dn->full_name);
+
+CHECK:BRACES: Unbalanced braces around else statement
+#959: FILE: drivers/soc/fsl/qbman/qman.c:553:
++		else {
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#964: FILE: drivers/soc/fsl/qbman/qman.c:558:
++			BUG_ON(ret);
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#974: FILE: drivers/soc/fsl/qbman/qman.c:568:
++	i = bit_count/32;
+ 	             ^
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:VxV)
+#975: FILE: drivers/soc/fsl/qbman/qman.c:569:
++	if (bit_count%32) {
+ 	             ^
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:VxV)
+#977: FILE: drivers/soc/fsl/qbman/qman.c:571:
++		mask = ~(mask << bit_count%32);
+ 		                          ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#979: FILE: drivers/soc/fsl/qbman/qman.c:573:
++	j = 16-i;
+ 	      ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#1005: FILE: drivers/soc/fsl/qbman/qman.c:599:
++		if (ecsr_val & (QM_EIRQ_SBEI|QM_EIRQ_MBEI)) {
+ 		                            ^
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1011: FILE: drivers/soc/fsl/qbman/qman.c:605:
++			log_edata_bits(
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#1023: FILE: drivers/soc/fsl/qbman/qman.c:617:
++		if (ecsr_val & (QM_EIRQ_SBEI|QM_EIRQ_MBEI)) {
+ 		                            ^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1083: FILE: drivers/soc/fsl/qbman/qman.c:677:
++	 * to resource allocation during driver init). */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1206: FILE: drivers/soc/fsl/qbman/qman.c:800:
++static ssize_t show_pfdr_fpc(struct device *dev,
++	struct device_attribute *dev_attr, char *buf)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1212: FILE: drivers/soc/fsl/qbman/qman.c:806:
++static ssize_t show_dlm_avg(struct device *dev,
++	struct device_attribute *dev_attr, char *buf)
+
+CHECK:SPACING: spaces preferred around that '>>' (ctx:VxV)
+#1220: FILE: drivers/soc/fsl/qbman/qman.c:814:
++	return snprintf(buf, PAGE_SIZE, "%d.%08d\n", data>>8,
+ 	                                                 ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1221: FILE: drivers/soc/fsl/qbman/qman.c:815:
++			(data & 0x000000ff)*390625);
+ 			                   ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1225: FILE: drivers/soc/fsl/qbman/qman.c:819:
++static ssize_t set_dlm_avg(struct device *dev,
++	struct device_attribute *dev_attr, const char *buf, size_t count)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1241: FILE: drivers/soc/fsl/qbman/qman.c:835:
++static ssize_t show_pfdr_cfg(struct device *dev,
++	struct device_attribute *dev_attr, char *buf)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1247: FILE: drivers/soc/fsl/qbman/qman.c:841:
++static ssize_t set_pfdr_cfg(struct device *dev,
++	struct device_attribute *dev_attr, const char *buf, size_t count)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1260: FILE: drivers/soc/fsl/qbman/qman.c:854:
++static ssize_t show_sfdr_in_use(struct device *dev,
++	struct device_attribute *dev_attr, char *buf)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1266: FILE: drivers/soc/fsl/qbman/qman.c:860:
++static ssize_t show_idle_stat(struct device *dev,
++	struct device_attribute *dev_attr, char *buf)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1272: FILE: drivers/soc/fsl/qbman/qman.c:866:
++static ssize_t show_ci_rlm_avg(struct device *dev,
++	struct device_attribute *dev_attr, char *buf)
+
+CHECK:SPACING: spaces preferred around that '>>' (ctx:VxV)
+#1276: FILE: drivers/soc/fsl/qbman/qman.c:870:
++	return snprintf(buf, PAGE_SIZE, "%d.%08d\n", data>>8,
+ 	                                                 ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1277: FILE: drivers/soc/fsl/qbman/qman.c:871:
++			(data & 0x000000ff)*390625);
+ 			                   ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1281: FILE: drivers/soc/fsl/qbman/qman.c:875:
++static ssize_t set_ci_rlm_avg(struct device *dev,
++	struct device_attribute *dev_attr, const char *buf, size_t count)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1294: FILE: drivers/soc/fsl/qbman/qman.c:888:
++static ssize_t show_err_isr(struct device *dev,
++	struct device_attribute *dev_attr, char *buf)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1299: FILE: drivers/soc/fsl/qbman/qman.c:893:
++
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1301: FILE: drivers/soc/fsl/qbman/qman.c:895:
++static ssize_t show_sbec(struct device *dev,
++	struct device_attribute *dev_attr, char *buf)
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1310: FILE: drivers/soc/fsl/qbman/qman.c:904:
++static DEVICE_ATTR(pfdr_fpc, S_IRUSR, show_pfdr_fpc, NULL);
+
+The permissions used in DEVICE_ATTR are unusual.
+Typically only three permissions are used - 0644 (RW), 0444 (RO)
+and 0200 (WO).
+
+See: https://www.kernel.org/doc/html/latest/filesystems/sysfs.html#attributes
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1310: FILE: drivers/soc/fsl/qbman/qman.c:904:
++static DEVICE_ATTR(pfdr_fpc, S_IRUSR, show_pfdr_fpc, NULL);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1311: FILE: drivers/soc/fsl/qbman/qman.c:905:
++static DEVICE_ATTR(pfdr_cfg, S_IRUSR, show_pfdr_cfg, set_pfdr_cfg);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1311: FILE: drivers/soc/fsl/qbman/qman.c:905:
++static DEVICE_ATTR(pfdr_cfg, S_IRUSR, show_pfdr_cfg, set_pfdr_cfg);
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1312: FILE: drivers/soc/fsl/qbman/qman.c:906:
++static DEVICE_ATTR(idle_stat, S_IRUSR, show_idle_stat, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1312: FILE: drivers/soc/fsl/qbman/qman.c:906:
++static DEVICE_ATTR(idle_stat, S_IRUSR, show_idle_stat, NULL);
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#1313: FILE: drivers/soc/fsl/qbman/qman.c:907:
++static DEVICE_ATTR(ci_rlm_avg, (S_IRUSR|S_IWUSR),
+                                        ^
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR|S_IWUSR' used
+#1313: FILE: drivers/soc/fsl/qbman/qman.c:907:
++static DEVICE_ATTR(ci_rlm_avg, (S_IRUSR|S_IWUSR),
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR|S_IWUSR' are not preferred. Consider using octal permissions '0600'.
+#1313: FILE: drivers/soc/fsl/qbman/qman.c:907:
++static DEVICE_ATTR(ci_rlm_avg, (S_IRUSR|S_IWUSR),
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1315: FILE: drivers/soc/fsl/qbman/qman.c:909:
++static DEVICE_ATTR(err_isr, S_IRUSR, show_err_isr, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1315: FILE: drivers/soc/fsl/qbman/qman.c:909:
++static DEVICE_ATTR(err_isr, S_IRUSR, show_err_isr, NULL);
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1316: FILE: drivers/soc/fsl/qbman/qman.c:910:
++static DEVICE_ATTR(sfdr_in_use, S_IRUSR, show_sfdr_in_use, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1316: FILE: drivers/soc/fsl/qbman/qman.c:910:
++static DEVICE_ATTR(sfdr_in_use, S_IRUSR, show_sfdr_in_use, NULL);
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#1318: FILE: drivers/soc/fsl/qbman/qman.c:912:
++static DEVICE_ATTR(dcp0_dlm_avg, (S_IRUSR|S_IWUSR), show_dlm_avg, set_dlm_avg);
+                                          ^
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR|S_IWUSR' used
+#1318: FILE: drivers/soc/fsl/qbman/qman.c:912:
++static DEVICE_ATTR(dcp0_dlm_avg, (S_IRUSR|S_IWUSR), show_dlm_avg, set_dlm_avg);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR|S_IWUSR' are not preferred. Consider using octal permissions '0600'.
+#1318: FILE: drivers/soc/fsl/qbman/qman.c:912:
++static DEVICE_ATTR(dcp0_dlm_avg, (S_IRUSR|S_IWUSR), show_dlm_avg, set_dlm_avg);
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#1319: FILE: drivers/soc/fsl/qbman/qman.c:913:
++static DEVICE_ATTR(dcp1_dlm_avg, (S_IRUSR|S_IWUSR), show_dlm_avg, set_dlm_avg);
+                                          ^
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR|S_IWUSR' used
+#1319: FILE: drivers/soc/fsl/qbman/qman.c:913:
++static DEVICE_ATTR(dcp1_dlm_avg, (S_IRUSR|S_IWUSR), show_dlm_avg, set_dlm_avg);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR|S_IWUSR' are not preferred. Consider using octal permissions '0600'.
+#1319: FILE: drivers/soc/fsl/qbman/qman.c:913:
++static DEVICE_ATTR(dcp1_dlm_avg, (S_IRUSR|S_IWUSR), show_dlm_avg, set_dlm_avg);
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#1320: FILE: drivers/soc/fsl/qbman/qman.c:914:
++static DEVICE_ATTR(dcp2_dlm_avg, (S_IRUSR|S_IWUSR), show_dlm_avg, set_dlm_avg);
+                                          ^
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR|S_IWUSR' used
+#1320: FILE: drivers/soc/fsl/qbman/qman.c:914:
++static DEVICE_ATTR(dcp2_dlm_avg, (S_IRUSR|S_IWUSR), show_dlm_avg, set_dlm_avg);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR|S_IWUSR' are not preferred. Consider using octal permissions '0600'.
+#1320: FILE: drivers/soc/fsl/qbman/qman.c:914:
++static DEVICE_ATTR(dcp2_dlm_avg, (S_IRUSR|S_IWUSR), show_dlm_avg, set_dlm_avg);
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#1321: FILE: drivers/soc/fsl/qbman/qman.c:915:
++static DEVICE_ATTR(dcp3_dlm_avg, (S_IRUSR|S_IWUSR), show_dlm_avg, set_dlm_avg);
+                                          ^
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR|S_IWUSR' used
+#1321: FILE: drivers/soc/fsl/qbman/qman.c:915:
++static DEVICE_ATTR(dcp3_dlm_avg, (S_IRUSR|S_IWUSR), show_dlm_avg, set_dlm_avg);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR|S_IWUSR' are not preferred. Consider using octal permissions '0600'.
+#1321: FILE: drivers/soc/fsl/qbman/qman.c:915:
++static DEVICE_ATTR(dcp3_dlm_avg, (S_IRUSR|S_IWUSR), show_dlm_avg, set_dlm_avg);
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1323: FILE: drivers/soc/fsl/qbman/qman.c:917:
++static DEVICE_ATTR(sbec_0, S_IRUSR, show_sbec, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1323: FILE: drivers/soc/fsl/qbman/qman.c:917:
++static DEVICE_ATTR(sbec_0, S_IRUSR, show_sbec, NULL);
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1324: FILE: drivers/soc/fsl/qbman/qman.c:918:
++static DEVICE_ATTR(sbec_1, S_IRUSR, show_sbec, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1324: FILE: drivers/soc/fsl/qbman/qman.c:918:
++static DEVICE_ATTR(sbec_1, S_IRUSR, show_sbec, NULL);
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1325: FILE: drivers/soc/fsl/qbman/qman.c:919:
++static DEVICE_ATTR(sbec_2, S_IRUSR, show_sbec, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1325: FILE: drivers/soc/fsl/qbman/qman.c:919:
++static DEVICE_ATTR(sbec_2, S_IRUSR, show_sbec, NULL);
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1326: FILE: drivers/soc/fsl/qbman/qman.c:920:
++static DEVICE_ATTR(sbec_3, S_IRUSR, show_sbec, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1326: FILE: drivers/soc/fsl/qbman/qman.c:920:
++static DEVICE_ATTR(sbec_3, S_IRUSR, show_sbec, NULL);
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1327: FILE: drivers/soc/fsl/qbman/qman.c:921:
++static DEVICE_ATTR(sbec_4, S_IRUSR, show_sbec, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1327: FILE: drivers/soc/fsl/qbman/qman.c:921:
++static DEVICE_ATTR(sbec_4, S_IRUSR, show_sbec, NULL);
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1328: FILE: drivers/soc/fsl/qbman/qman.c:922:
++static DEVICE_ATTR(sbec_5, S_IRUSR, show_sbec, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1328: FILE: drivers/soc/fsl/qbman/qman.c:922:
++static DEVICE_ATTR(sbec_5, S_IRUSR, show_sbec, NULL);
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1329: FILE: drivers/soc/fsl/qbman/qman.c:923:
++static DEVICE_ATTR(sbec_6, S_IRUSR, show_sbec, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1329: FILE: drivers/soc/fsl/qbman/qman.c:923:
++static DEVICE_ATTR(sbec_6, S_IRUSR, show_sbec, NULL);
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1330: FILE: drivers/soc/fsl/qbman/qman.c:924:
++static DEVICE_ATTR(sbec_7, S_IRUSR, show_sbec, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1330: FILE: drivers/soc/fsl/qbman/qman.c:924:
++static DEVICE_ATTR(sbec_7, S_IRUSR, show_sbec, NULL);
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1331: FILE: drivers/soc/fsl/qbman/qman.c:925:
++static DEVICE_ATTR(sbec_8, S_IRUSR, show_sbec, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1331: FILE: drivers/soc/fsl/qbman/qman.c:925:
++static DEVICE_ATTR(sbec_8, S_IRUSR, show_sbec, NULL);
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1332: FILE: drivers/soc/fsl/qbman/qman.c:926:
++static DEVICE_ATTR(sbec_9, S_IRUSR, show_sbec, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1332: FILE: drivers/soc/fsl/qbman/qman.c:926:
++static DEVICE_ATTR(sbec_9, S_IRUSR, show_sbec, NULL);
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1333: FILE: drivers/soc/fsl/qbman/qman.c:927:
++static DEVICE_ATTR(sbec_10, S_IRUSR, show_sbec, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1333: FILE: drivers/soc/fsl/qbman/qman.c:927:
++static DEVICE_ATTR(sbec_10, S_IRUSR, show_sbec, NULL);
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1334: FILE: drivers/soc/fsl/qbman/qman.c:928:
++static DEVICE_ATTR(sbec_11, S_IRUSR, show_sbec, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1334: FILE: drivers/soc/fsl/qbman/qman.c:928:
++static DEVICE_ATTR(sbec_11, S_IRUSR, show_sbec, NULL);
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1335: FILE: drivers/soc/fsl/qbman/qman.c:929:
++static DEVICE_ATTR(sbec_12, S_IRUSR, show_sbec, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1335: FILE: drivers/soc/fsl/qbman/qman.c:929:
++static DEVICE_ATTR(sbec_12, S_IRUSR, show_sbec, NULL);
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1336: FILE: drivers/soc/fsl/qbman/qman.c:930:
++static DEVICE_ATTR(sbec_13, S_IRUSR, show_sbec, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1336: FILE: drivers/soc/fsl/qbman/qman.c:930:
++static DEVICE_ATTR(sbec_13, S_IRUSR, show_sbec, NULL);
+
+WARNING:DEVICE_ATTR_PERMS: DEVICE_ATTR unusual permissions 'S_IRUSR' used
+#1337: FILE: drivers/soc/fsl/qbman/qman.c:931:
++static DEVICE_ATTR(sbec_14, S_IRUSR, show_sbec, NULL);
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1337: FILE: drivers/soc/fsl/qbman/qman.c:931:
++static DEVICE_ATTR(sbec_14, S_IRUSR, show_sbec, NULL);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1377: FILE: drivers/soc/fsl/qbman/qman.c:971:
++};
++static const struct attribute_group qman_dev_ecr_grp = {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1397: FILE: drivers/soc/fsl/qbman/qman.c:991:
++	ret = sysfs_add_file_to_group(&dev->kobj,
++		&dev_attr_sfdr_in_use.attr, qman_dev_attr_grp.name);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1439: FILE: drivers/soc/fsl/qbman/qman.h:1:
++/* Copyright 2008 - 2015 Freescale Semiconductor, Inc.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1511: FILE: drivers/soc/fsl/qbman/qman.h:73:
++ * non-coherent). */
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'base' may be better as '(base)' to avoid precedence issues
+#1538: FILE: drivers/soc/fsl/qbman/qman.h:100:
++#define qm_cl(base, idx)	((void *)base + ((idx) << 6))
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1542: FILE: drivers/soc/fsl/qbman/qman.h:104:
++ * cyclic issues. */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1569: FILE: drivers/soc/fsl/qbman/qman.h:131:
++};
++enum qm_dqrr_dmode {		/* matches QCSP_CFG::DP */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1573: FILE: drivers/soc/fsl/qbman/qman.h:135:
++};
++enum qm_dqrr_pmode {		/* s/w-only */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1578: FILE: drivers/soc/fsl/qbman/qman.h:140:
++};
++enum qm_dqrr_cmode {		/* matches QCSP_CFG::DCM */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1583: FILE: drivers/soc/fsl/qbman/qman.h:145:
++};
++enum qm_mr_pmode {		/* s/w-only */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1588: FILE: drivers/soc/fsl/qbman/qman.h:150:
++};
++enum qm_mr_cmode {		/* matches QCSP_CFG::MM */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1654: FILE: drivers/soc/fsl/qbman/qman.h:216:
++	 * rearrange this structure on a whim, there be dragons ... */
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#1665: FILE: drivers/soc/fsl/qbman/qman.h:227:
++#define EQCR_CARRYCLEAR(p) \
++	(void *)((unsigned long)(p) & (~(unsigned long)(QM_EQCR_SIZE << 6)))
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1679: FILE: drivers/soc/fsl/qbman/qman.h:241:
++	 * next EQCR pointer and handle overflow and 'vbit'. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1688: FILE: drivers/soc/fsl/qbman/qman.h:250:
++static inline int qm_eqcr_init(struct qm_portal *portal,
++				enum qm_eqcr_pmode pmode,
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1694: FILE: drivers/soc/fsl/qbman/qman.h:256:
++	 * otherwise the case. */
+
+WARNING:TYPO_SPELLING: 'uncommited' may be misspelled - perhaps 'uncommitted'?
+#1734: FILE: drivers/soc/fsl/qbman/qman.h:296:
++		pr_crit("losing uncommited EQCR entries\n");
+ 		                ^^^^^^^^^^
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1750: FILE: drivers/soc/fsl/qbman/qman.h:312:
++
++
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1790: FILE: drivers/soc/fsl/qbman/qman.h:352:
++static inline struct qm_eqcr_entry *qm_eqcr_pend_and_next(
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'eqcr' - possible side-effects?
+#1807: FILE: drivers/soc/fsl/qbman/qman.h:369:
++#define EQCR_COMMIT_CHECKS(eqcr) \
++do { \
++	DPA_ASSERT(eqcr->busy); \
++	DPA_ASSERT(eqcr->cursor->orp == (eqcr->cursor->orp & 0x00ffffff)); \
++	DPA_ASSERT(eqcr->cursor->fqid == (eqcr->cursor->fqid & 0x00ffffff)); \
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'eqcr' may be better as '(eqcr)' to avoid precedence issues
+#1807: FILE: drivers/soc/fsl/qbman/qman.h:369:
++#define EQCR_COMMIT_CHECKS(eqcr) \
++do { \
++	DPA_ASSERT(eqcr->busy); \
++	DPA_ASSERT(eqcr->cursor->orp == (eqcr->cursor->orp & 0x00ffffff)); \
++	DPA_ASSERT(eqcr->cursor->fqid == (eqcr->cursor->fqid & 0x00ffffff)); \
++} while (0)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#1942: FILE: drivers/soc/fsl/qbman/qman.h:504:
++#define DQRR_CARRYCLEAR(p) \
++	(void *)((unsigned long)(p) & (~(unsigned long)(QM_DQRR_SIZE << 6)))
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1950: FILE: drivers/soc/fsl/qbman/qman.h:512:
++static inline const struct qm_dqrr_entry *DQRR_INC(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1963: FILE: drivers/soc/fsl/qbman/qman.h:525:
++static inline int qm_dqrr_init(struct qm_portal *portal,
++				const struct qm_portal_config *config,
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'dqrr->cmode != qm_dqrr_cdc'
+#2007: FILE: drivers/soc/fsl/qbman/qman.h:569:
++	if ((dqrr->cmode != qm_dqrr_cdc) &&
++			(dqrr->ci != DQRR_PTR2IDX(dqrr->cursor)))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'dqrr->ci != DQRR_PTR2IDX(dqrr->cursor)'
+#2007: FILE: drivers/soc/fsl/qbman/qman.h:569:
++	if ((dqrr->cmode != qm_dqrr_cdc) &&
++			(dqrr->ci != DQRR_PTR2IDX(dqrr->cursor)))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2008: FILE: drivers/soc/fsl/qbman/qman.h:570:
++	if ((dqrr->cmode != qm_dqrr_cdc) &&
++			(dqrr->ci != DQRR_PTR2IDX(dqrr->cursor)))
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#2013: FILE: drivers/soc/fsl/qbman/qman.h:575:
++static inline const struct qm_dqrr_entry *qm_dqrr_current(
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2079: FILE: drivers/soc/fsl/qbman/qman.h:641:
++	 * inlining doesn't try to optimise out "excess reads". */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2134: FILE: drivers/soc/fsl/qbman/qman.h:696:
++static inline void qm_dqrr_cdc_consume_1(struct qm_portal *portal, u8 idx,
++					int park)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2146: FILE: drivers/soc/fsl/qbman/qman.h:708:
++static inline void qm_dqrr_cdc_consume_1ptr(struct qm_portal *portal,
++					const struct qm_dqrr_entry *dq,
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#2271: FILE: drivers/soc/fsl/qbman/qman.h:833:
++#define MR_CARRYCLEAR(p) \
++	(void *)((unsigned long)(p) & (~(unsigned long)(QM_MR_SIZE << 6)))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2285: FILE: drivers/soc/fsl/qbman/qman.h:847:
++static inline int qm_mr_init(struct qm_portal *portal, enum qm_mr_pmode pmode,
++		enum qm_mr_cmode cmode)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2380: FILE: drivers/soc/fsl/qbman/qman.h:942:
++	 * inlining doesn't try to optimise out "excess reads". */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2528: FILE: drivers/soc/fsl/qbman/qman.h:1090:
++	 * in case you were wondering... */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2563: FILE: drivers/soc/fsl/qbman/qman.h:1125:
++static inline void __qm_isr_write(struct qm_portal *portal, enum qm_isr_reg n,
++					u32 val)
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2573: FILE: drivers/soc/fsl/qbman/qman_api.c:1:
++/* Copyright 2008 - 2015 Freescale Semiconductor, Inc.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2620: FILE: drivers/soc/fsl/qbman/qman_api.c:48:
++ * in "some_value++" as a parameter to the macro! */
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#2621: FILE: drivers/soc/fsl/qbman/qman_api.c:49:
++#define ROUNDING(n, d, r) \
++	(((r) < 0) ? div64_u64((n), (d)) : \
++	(((r) > 0) ? div64_u64(((n) + (d) - 1), (d)) : \
++	div64_u64(((n) + ((d) / 2)), (d))))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'd' - possible side-effects?
+#2621: FILE: drivers/soc/fsl/qbman/qman_api.c:49:
++#define ROUNDING(n, d, r) \
++	(((r) < 0) ? div64_u64((n), (d)) : \
++	(((r) > 0) ? div64_u64(((n) + (d) - 1), (d)) : \
++	div64_u64(((n) + ((d) / 2)), (d))))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'r' - possible side-effects?
+#2621: FILE: drivers/soc/fsl/qbman/qman_api.c:49:
++#define ROUNDING(n, d, r) \
++	(((r) < 0) ? div64_u64((n), (d)) : \
++	(((r) > 0) ? div64_u64(((n) + (d) - 1), (d)) : \
++	div64_u64(((n) + ((d) / 2)), (d))))
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2630: FILE: drivers/soc/fsl/qbman/qman_api.c:58:
++ * the "irq en/disable" machinery isn't recursive...). */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#2648: FILE: drivers/soc/fsl/qbman/qman_api.c:76:
++}
++static inline void fq_clear(struct qman_fq *fq, u32 mask)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#2652: FILE: drivers/soc/fsl/qbman/qman_api.c:80:
++}
++static inline int fq_isset(struct qman_fq *fq, u32 mask)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#2656: FILE: drivers/soc/fsl/qbman/qman_api.c:84:
++}
++static inline int fq_isclear(struct qman_fq *fq, u32 mask)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2679: FILE: drivers/soc/fsl/qbman/qman_api.c:107:
++	 * handler is called instead. */
+
+WARNING:TYPO_SPELLING: 'alloced' may be misspelled - perhaps 'allocated'?
+#2694: FILE: drivers/soc/fsl/qbman/qman_api.c:122:
++	u8 alloced;
+ 	   ^^^^^^^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#2698: FILE: drivers/soc/fsl/qbman/qman_api.c:126:
++#define PORTAL_IRQ_LOCK(p, irqflags) \
++	do { \
++		if ((p)->is_shared) \
++			raw_spin_lock_irqsave(&(p)->sharing_lock, irqflags); \
++		else \
++			local_irq_save(irqflags); \
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'irqflags' - possible side-effects?
+#2698: FILE: drivers/soc/fsl/qbman/qman_api.c:126:
++#define PORTAL_IRQ_LOCK(p, irqflags) \
++	do { \
++		if ((p)->is_shared) \
++			raw_spin_lock_irqsave(&(p)->sharing_lock, irqflags); \
++		else \
++			local_irq_save(irqflags); \
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'p' - possible side-effects?
+#2705: FILE: drivers/soc/fsl/qbman/qman_api.c:133:
++#define PORTAL_IRQ_UNLOCK(p, irqflags) \
++	do { \
++		if ((p)->is_shared) \
++			raw_spin_unlock_irqrestore(&(p)->sharing_lock, \
++						   irqflags); \
++		else \
++			local_irq_restore(irqflags); \
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'irqflags' - possible side-effects?
+#2705: FILE: drivers/soc/fsl/qbman/qman_api.c:133:
++#define PORTAL_IRQ_UNLOCK(p, irqflags) \
++	do { \
++		if ((p)->is_shared) \
++			raw_spin_unlock_irqrestore(&(p)->sharing_lock, \
++						   irqflags); \
++		else \
++			local_irq_restore(irqflags); \
++	} while (0)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2719: FILE: drivers/soc/fsl/qbman/qman_api.c:147:
++ * not have a portal-specific handler. */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#2733: FILE: drivers/soc/fsl/qbman/qman_api.c:161:
++}
++/* For ops that can redirect, this obtains the portal to use */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#2751: FILE: drivers/soc/fsl/qbman/qman_api.c:179:
++}
++/* Exception: poll functions assume the caller is cpu-affine and in no risk of
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2756: FILE: drivers/soc/fsl/qbman/qman_api.c:184:
++ * this case to not disable pre-emption. */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#2761: FILE: drivers/soc/fsl/qbman/qman_api.c:189:
++}
++#define put_poll_portal()
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2770: FILE: drivers/soc/fsl/qbman/qman_api.c:198:
++ * they complete, which also massively reduces the size of this table. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2774: FILE: drivers/soc/fsl/qbman/qman_api.c:202:
++ * to the one whose affine portal it is waiting on. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2822: FILE: drivers/soc/fsl/qbman/qman_api.c:250:
++	 * in context_b field. */
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!qman_fq_lookup_table[i]"
+#2824: FILE: drivers/soc/fsl/qbman/qman_api.c:252:
++		if (qman_fq_lookup_table[i] == NULL) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2838: FILE: drivers/soc/fsl/qbman/qman_api.c:266:
++	BUG_ON(entry >= qman_fq_lookup_table_size);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2845: FILE: drivers/soc/fsl/qbman/qman_api.c:273:
++	BUG_ON(entry >= qman_fq_lookup_table_size);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2856: FILE: drivers/soc/fsl/qbman/qman_api.c:284:
++ * work to do. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2861: FILE: drivers/soc/fsl/qbman/qman_api.c:289:
++static inline unsigned int __poll_portal_fast(struct qman_portal *p,
++					unsigned int poll_limit);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2885: FILE: drivers/soc/fsl/qbman/qman_api.c:313:
++ * as by the exported qman_stop_dequeues(). */
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#2889: FILE: drivers/soc/fsl/qbman/qman_api.c:317:
++	unsigned long irqflags __maybe_unused;
++	PORTAL_IRQ_LOCK(p, irqflags);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2912: FILE: drivers/soc/fsl/qbman/qman_api.c:340:
++		 * we're being *really* paranoid here. */
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#2932: FILE: drivers/soc/fsl/qbman/qman_api.c:360:
++struct qman_portal *qman_create_portal(
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#2942: FILE: drivers/soc/fsl/qbman/qman_api.c:370:
++	if (!portal) {
+[...]
++	} else
+[...]
+
+WARNING:TYPO_SPELLING: 'alloced' may be misspelled - perhaps 'allocated'?
+#2946: FILE: drivers/soc/fsl/qbman/qman_api.c:374:
++		portal->alloced = 1;
+ 		        ^^^^^^^
+
+CHECK:BRACES: Unbalanced braces around else statement
+#2947: FILE: drivers/soc/fsl/qbman/qman_api.c:375:
++	} else
+
+WARNING:TYPO_SPELLING: 'alloced' may be misspelled - perhaps 'allocated'?
+#2948: FILE: drivers/soc/fsl/qbman/qman_api.c:376:
++		portal->alloced = 0;
+ 		        ^^^^^^^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2957: FILE: drivers/soc/fsl/qbman/qman_api.c:385:
++	 * for (de)reference... */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2965: FILE: drivers/soc/fsl/qbman/qman_api.c:393:
++	if (qm_eqcr_init(__p, qm_eqcr_pvb,
++			portal->use_eqcr_ci_stashing ? 3 : 0, 1)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2970: FILE: drivers/soc/fsl/qbman/qman_api.c:398:
++	if (qm_dqrr_init(__p, config, qm_dqrr_dpush, qm_dqrr_pvb,
++			qm_dqrr_cdc, DQRR_MAXFILL)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3034: FILE: drivers/soc/fsl/qbman/qman_api.c:462:
++	if (request_irq(config->public_cfg.irq, portal_isr, 0, portal->irqname,
++				portal)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3039: FILE: drivers/soc/fsl/qbman/qman_api.c:467:
++	if ((config->public_cfg.cpu != -1) &&
++			irq_can_set_affinity(config->public_cfg.irq) &&
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3041: FILE: drivers/soc/fsl/qbman/qman_api.c:469:
++			irq_set_affinity(config->public_cfg.irq,
++				cpumask_of(config->public_cfg.cpu))) {
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "qm_dqrr_current"
+#3056: FILE: drivers/soc/fsl/qbman/qman_api.c:484:
++	if (qm_dqrr_current(__p) != NULL) {
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "qm_mr_current"
+#3060: FILE: drivers/soc/fsl/qbman/qman_api.c:488:
++	if (qm_mr_current(__p) != NULL) {
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#3101: FILE: drivers/soc/fsl/qbman/qman_api.c:529:
++struct qman_portal *qman_create_affine_portal(
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3122: FILE: drivers/soc/fsl/qbman/qman_api.c:550:
++ * these cases. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3124: FILE: drivers/soc/fsl/qbman/qman_api.c:552:
++struct qman_portal *qman_create_affine_slave(struct qman_portal *redirect,
++								int cpu)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#3130: FILE: drivers/soc/fsl/qbman/qman_api.c:558:
++	BUG_ON(p->config);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#3132: FILE: drivers/soc/fsl/qbman/qman_api.c:560:
++	BUG_ON(p->is_shared);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#3134: FILE: drivers/soc/fsl/qbman/qman_api.c:562:
++	BUG_ON(!redirect->config->public_cfg.is_shared);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#3141: FILE: drivers/soc/fsl/qbman/qman_api.c:569:
++	BUG();
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3159: FILE: drivers/soc/fsl/qbman/qman_api.c:587:
++	 * began. */
+
+WARNING:TYPO_SPELLING: 'alloced' may be misspelled - perhaps 'allocated'?
+#3177: FILE: drivers/soc/fsl/qbman/qman_api.c:605:
++	if (qm->alloced)
+ 	        ^^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3226: FILE: drivers/soc/fsl/qbman/qman_api.c:654:
++static inline void fq_state_change(struct qman_portal *p, struct qman_fq *fq,
++				const struct qm_mr_entry *msg, u8 verb)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3237: FILE: drivers/soc/fsl/qbman/qman_api.c:665:
++		DPA_ASSERT((fq->state == qman_fq_state_parked) ||
++			(fq->state == qman_fq_state_sched));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#3332: FILE: drivers/soc/fsl/qbman/qman_api.c:760:
++				BUG_ON(!fq);
+
+CHECK:CAMELCASE: Avoid CamelCase: <contextB>
+#3340: FILE: drivers/soc/fsl/qbman/qman_api.c:768:
++				fq = get_fq_table_entry(msg->fq.contextB);
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3384: FILE: drivers/soc/fsl/qbman/qman_api.c:812:
++ * inlined. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3422: FILE: drivers/soc/fsl/qbman/qman_api.c:850:
++static inline unsigned int __poll_portal_fast(struct qman_portal *p,
++					unsigned int poll_limit)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3437: FILE: drivers/soc/fsl/qbman/qman_api.c:865:
++		 * post-retirement. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3441: FILE: drivers/soc/fsl/qbman/qman_api.c:869:
++		 * one less thing to check in the critical path (SDQCR). */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3446: FILE: drivers/soc/fsl/qbman/qman_api.c:874:
++		 * multiple if()s in the critical path (SDQCR). */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3463: FILE: drivers/soc/fsl/qbman/qman_api.c:891:
++		 * entry nor advancing; */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3470: FILE: drivers/soc/fsl/qbman/qman_api.c:898:
++	 * check for HELDACTIVE to cover both. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3472: FILE: drivers/soc/fsl/qbman/qman_api.c:900:
++	DPA_ASSERT((dq->stat & QM_DQRR_STAT_FQ_HELDACTIVE) ||
++		(res != qman_cb_dqrr_park));
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3481: FILE: drivers/soc/fsl/qbman/qman_api.c:909:
++	 * conditions is met. */
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'res != qman_cb_dqrr_consume_stop'
+#3482: FILE: drivers/soc/fsl/qbman/qman_api.c:910:
++	if ((++limit < poll_limit) && (res != qman_cb_dqrr_consume_stop))
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3492: FILE: drivers/soc/fsl/qbman/qman_api.c:920:
++	 * portal. That's why we use the "raw" interface. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3546: FILE: drivers/soc/fsl/qbman/qman_api.c:974:
++	 * IER won't allow them to reassert. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3553: FILE: drivers/soc/fsl/qbman/qman_api.c:981:
++	 * data-dependency, ie. to protect against re-ordering. */
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#3583: FILE: drivers/soc/fsl/qbman/qman_api.c:1011:
++		BUG_ON(portal->sharing_redirect);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#3588: FILE: drivers/soc/fsl/qbman/qman_api.c:1016:
++	BUG_ON(!cpumask_test_cpu(cpu, &affine_mask));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#3609: FILE: drivers/soc/fsl/qbman/qman_api.c:1037:
++		BUG_ON(p->irq_sources & QM_PIRQ_DQRI);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around '~p->irq_sources'
+#3664: FILE: drivers/soc/fsl/qbman/qman_api.c:1092:
++	if ((~p->irq_sources) & QM_PIRQ_SLOW) {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#3669: FILE: drivers/soc/fsl/qbman/qman_api.c:1097:
++			if (active) {
+[...]
++			} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#3672: FILE: drivers/soc/fsl/qbman/qman_api.c:1100:
++			} else
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around '~p->irq_sources'
+#3676: FILE: drivers/soc/fsl/qbman/qman_api.c:1104:
++	if ((~p->irq_sources) & QM_PIRQ_DQRI)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3785: FILE: drivers/soc/fsl/qbman/qman_api.c:1213:
++void qman_p_dca(struct qman_portal *p, struct qm_dqrr_entry *dq,
++						int park_request)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3877: FILE: drivers/soc/fsl/qbman/qman_api.c:1305:
++	 * the FQ object from those. */
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#3916: FILE: drivers/soc/fsl/qbman/qman_api.c:1344:
++{
++
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3918: FILE: drivers/soc/fsl/qbman/qman_api.c:1346:
++	 * quiesced. Instead, run some checks. */
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state != qman_fq_state_oos'
+#3960: FILE: drivers/soc/fsl/qbman/qman_api.c:1388:
++	if ((fq->state != qman_fq_state_oos) &&
++			(fq->state != qman_fq_state_parked))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state != qman_fq_state_parked'
+#3960: FILE: drivers/soc/fsl/qbman/qman_api.c:1388:
++	if ((fq->state != qman_fq_state_oos) &&
++			(fq->state != qman_fq_state_parked))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3961: FILE: drivers/soc/fsl/qbman/qman_api.c:1389:
++	if ((fq->state != qman_fq_state_oos) &&
++			(fq->state != qman_fq_state_parked))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state != qman_fq_state_oos'
+#3976: FILE: drivers/soc/fsl/qbman/qman_api.c:1404:
++	if (unlikely((fq_isset(fq, QMAN_FQ_STATE_CHANGING)) ||
++			((fq->state != qman_fq_state_oos) &&
++				(fq->state != qman_fq_state_parked)))) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state != qman_fq_state_parked'
+#3976: FILE: drivers/soc/fsl/qbman/qman_api.c:1404:
++	if (unlikely((fq_isset(fq, QMAN_FQ_STATE_CHANGING)) ||
++			((fq->state != qman_fq_state_oos) &&
++				(fq->state != qman_fq_state_parked)))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3977: FILE: drivers/soc/fsl/qbman/qman_api.c:1405:
++	if (unlikely((fq_isset(fq, QMAN_FQ_STATE_CHANGING)) ||
++			((fq->state != qman_fq_state_oos) &&
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3991: FILE: drivers/soc/fsl/qbman/qman_api.c:1419:
++	 * stand, don't overwrite it. */
+
+WARNING:TYPO_SPELLING: 'CONTEXTA' may be misspelled - perhaps 'CONTEXT'?
+#4002: FILE: drivers/soc/fsl/qbman/qman_api.c:1430:
++		 * set CONTEXTA, clear the stashing settings. */
+ 		       ^^^^^^^^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#4002: FILE: drivers/soc/fsl/qbman/qman_api.c:1430:
++		 * set CONTEXTA, clear the stashing settings. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4006: FILE: drivers/soc/fsl/qbman/qman_api.c:1434:
++			memset(&mcc->initfq.fqd.context_a, 0,
++				sizeof(mcc->initfq.fqd.context_a));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4009: FILE: drivers/soc/fsl/qbman/qman_api.c:1437:
++			phys_fq = dma_map_single(&p->pdev->dev, fq, sizeof(*fq),
++						DMA_TO_DEVICE);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state != qman_fq_state_parked'
+#4069: FILE: drivers/soc/fsl/qbman/qman_api.c:1497:
++	if (unlikely((fq_isset(fq, QMAN_FQ_STATE_CHANGING)) ||
++			(fq->state != qman_fq_state_parked))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4070: FILE: drivers/soc/fsl/qbman/qman_api.c:1498:
++	if (unlikely((fq_isset(fq, QMAN_FQ_STATE_CHANGING)) ||
++			(fq->state != qman_fq_state_parked))) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state != qman_fq_state_parked'
+#4103: FILE: drivers/soc/fsl/qbman/qman_api.c:1531:
++	if ((fq->state != qman_fq_state_parked) &&
++			(fq->state != qman_fq_state_sched))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state != qman_fq_state_sched'
+#4103: FILE: drivers/soc/fsl/qbman/qman_api.c:1531:
++	if ((fq->state != qman_fq_state_parked) &&
++			(fq->state != qman_fq_state_sched))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4104: FILE: drivers/soc/fsl/qbman/qman_api.c:1532:
++	if ((fq->state != qman_fq_state_parked) &&
++			(fq->state != qman_fq_state_sched))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state == qman_fq_state_retired'
+#4113: FILE: drivers/soc/fsl/qbman/qman_api.c:1541:
++	if (unlikely((fq_isset(fq, QMAN_FQ_STATE_CHANGING)) ||
++			(fq->state == qman_fq_state_retired) ||
++				(fq->state == qman_fq_state_oos))) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state == qman_fq_state_oos'
+#4113: FILE: drivers/soc/fsl/qbman/qman_api.c:1541:
++	if (unlikely((fq_isset(fq, QMAN_FQ_STATE_CHANGING)) ||
++			(fq->state == qman_fq_state_retired) ||
++				(fq->state == qman_fq_state_oos))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4114: FILE: drivers/soc/fsl/qbman/qman_api.c:1542:
++	if (unlikely((fq_isset(fq, QMAN_FQ_STATE_CHANGING)) ||
++			(fq->state == qman_fq_state_retired) ||
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#4135: FILE: drivers/soc/fsl/qbman/qman_api.c:1563:
++	 * fq_state_change(). */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#4155: FILE: drivers/soc/fsl/qbman/qman_api.c:1583:
++			 * look like an FQRNI... */
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state != qman_fq_state_retired'
+#4201: FILE: drivers/soc/fsl/qbman/qman_api.c:1629:
++	if (unlikely((fq_isset(fq, QMAN_FQ_STATE_BLOCKOOS)) ||
++			(fq->state != qman_fq_state_retired))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4202: FILE: drivers/soc/fsl/qbman/qman_api.c:1630:
++	if (unlikely((fq_isset(fq, QMAN_FQ_STATE_BLOCKOOS)) ||
++			(fq->state != qman_fq_state_retired))) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state == qman_fq_state_oos'
+#4236: FILE: drivers/soc/fsl/qbman/qman_api.c:1664:
++	if ((fq->state == qman_fq_state_oos) ||
++		(fq->state == qman_fq_state_retired) ||
++		(fq->state == qman_fq_state_parked))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state == qman_fq_state_retired'
+#4236: FILE: drivers/soc/fsl/qbman/qman_api.c:1664:
++	if ((fq->state == qman_fq_state_oos) ||
++		(fq->state == qman_fq_state_retired) ||
++		(fq->state == qman_fq_state_parked))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state == qman_fq_state_parked'
+#4236: FILE: drivers/soc/fsl/qbman/qman_api.c:1664:
++	if ((fq->state == qman_fq_state_oos) ||
++		(fq->state == qman_fq_state_retired) ||
++		(fq->state == qman_fq_state_parked))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4237: FILE: drivers/soc/fsl/qbman/qman_api.c:1665:
++	if ((fq->state == qman_fq_state_oos) ||
++		(fq->state == qman_fq_state_retired) ||
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state == qman_fq_state_parked'
+#4249: FILE: drivers/soc/fsl/qbman/qman_api.c:1677:
++	if (unlikely((fq_isset(fq, QMAN_FQ_STATE_CHANGING)) ||
++			(fq->state == qman_fq_state_parked) ||
++			(fq->state == qman_fq_state_oos) ||
++			(fq->state == qman_fq_state_retired))) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state == qman_fq_state_oos'
+#4249: FILE: drivers/soc/fsl/qbman/qman_api.c:1677:
++	if (unlikely((fq_isset(fq, QMAN_FQ_STATE_CHANGING)) ||
++			(fq->state == qman_fq_state_parked) ||
++			(fq->state == qman_fq_state_oos) ||
++			(fq->state == qman_fq_state_retired))) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state == qman_fq_state_retired'
+#4249: FILE: drivers/soc/fsl/qbman/qman_api.c:1677:
++	if (unlikely((fq_isset(fq, QMAN_FQ_STATE_CHANGING)) ||
++			(fq->state == qman_fq_state_parked) ||
++			(fq->state == qman_fq_state_oos) ||
++			(fq->state == qman_fq_state_retired))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4250: FILE: drivers/soc/fsl/qbman/qman_api.c:1678:
++	if (unlikely((fq_isset(fq, QMAN_FQ_STATE_CHANGING)) ||
++			(fq->state == qman_fq_state_parked) ||
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4426: FILE: drivers/soc/fsl/qbman/qman_api.c:1854:
++static int wait_p_vdqcr_start(struct qman_portal *p, struct qman_fq *fq,
++				u32 vdqcr, u32 flags)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4432: FILE: drivers/soc/fsl/qbman/qman_api.c:1860:
++		ret = wait_event_interruptible(affine_queue,
++				!(ret = set_p_vdqcr(p, fq, vdqcr)));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4439: FILE: drivers/soc/fsl/qbman/qman_api.c:1867:
++static int wait_vdqcr_start(struct qman_portal **p, struct qman_fq *fq,
++				u32 vdqcr, u32 flags)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4445: FILE: drivers/soc/fsl/qbman/qman_api.c:1873:
++		ret = wait_event_interruptible(affine_queue,
++				!(ret = set_vdqcr(p, fq, vdqcr)));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4453: FILE: drivers/soc/fsl/qbman/qman_api.c:1881:
++int qman_p_volatile_dequeue(struct qman_portal *p, struct qman_fq *fq,
++					u32 flags __maybe_unused, u32 vdqcr)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state != qman_fq_state_parked'
+#4457: FILE: drivers/soc/fsl/qbman/qman_api.c:1885:
++	if ((fq->state != qman_fq_state_parked) &&
++			(fq->state != qman_fq_state_retired))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state != qman_fq_state_retired'
+#4457: FILE: drivers/soc/fsl/qbman/qman_api.c:1885:
++	if ((fq->state != qman_fq_state_parked) &&
++			(fq->state != qman_fq_state_retired))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4458: FILE: drivers/soc/fsl/qbman/qman_api.c:1886:
++	if ((fq->state != qman_fq_state_parked) &&
++			(fq->state != qman_fq_state_retired))
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#4480: FILE: drivers/soc/fsl/qbman/qman_api.c:1908:
++			 * can check signal_pending() if that's an issue. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4482: FILE: drivers/soc/fsl/qbman/qman_api.c:1910:
++			wait_event_interruptible(affine_queue,
++				!fq_isset(fq, QMAN_FQ_STATE_VDQCR));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4485: FILE: drivers/soc/fsl/qbman/qman_api.c:1913:
++			wait_event(affine_queue,
++				!fq_isset(fq, QMAN_FQ_STATE_VDQCR));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4493: FILE: drivers/soc/fsl/qbman/qman_api.c:1921:
++int qman_volatile_dequeue(struct qman_fq *fq, u32 flags __maybe_unused,
++				u32 vdqcr)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state != qman_fq_state_parked'
+#4498: FILE: drivers/soc/fsl/qbman/qman_api.c:1926:
++	if ((fq->state != qman_fq_state_parked) &&
++			(fq->state != qman_fq_state_retired))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fq->state != qman_fq_state_retired'
+#4498: FILE: drivers/soc/fsl/qbman/qman_api.c:1926:
++	if ((fq->state != qman_fq_state_parked) &&
++			(fq->state != qman_fq_state_retired))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4499: FILE: drivers/soc/fsl/qbman/qman_api.c:1927:
++	if ((fq->state != qman_fq_state_parked) &&
++			(fq->state != qman_fq_state_retired))
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#4521: FILE: drivers/soc/fsl/qbman/qman_api.c:1949:
++			 * can check signal_pending() if that's an issue. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4523: FILE: drivers/soc/fsl/qbman/qman_api.c:1951:
++			wait_event_interruptible(affine_queue,
++				!fq_isset(fq, QMAN_FQ_STATE_VDQCR));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4526: FILE: drivers/soc/fsl/qbman/qman_api.c:1954:
++			wait_event(affine_queue,
++				!fq_isset(fq, QMAN_FQ_STATE_VDQCR));
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#4558: FILE: drivers/soc/fsl/qbman/qman_api.c:1986:
++	if (affine) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#4566: FILE: drivers/soc/fsl/qbman/qman_api.c:1994:
++	} else
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4572: FILE: drivers/soc/fsl/qbman/qman_api.c:2000:
++static inline struct qm_eqcr_entry *try_p_eq_start(struct qman_portal *p,
++					unsigned long *irqflags __maybe_unused,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4583: FILE: drivers/soc/fsl/qbman/qman_api.c:2011:
++	if (unlikely((flags & QMAN_ENQUEUE_FLAG_WAIT) &&
++			(flags & QMAN_ENQUEUE_FLAG_WAIT_SYNC))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4611: FILE: drivers/soc/fsl/qbman/qman_api.c:2039:
++		if (unlikely((flags & QMAN_ENQUEUE_FLAG_WAIT) &&
++				(flags & QMAN_ENQUEUE_FLAG_WAIT_SYNC)))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4633: FILE: drivers/soc/fsl/qbman/qman_api.c:2061:
++static inline struct qm_eqcr_entry *try_eq_start(struct qman_portal **p,
++					unsigned long *irqflags __maybe_unused,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4649: FILE: drivers/soc/fsl/qbman/qman_api.c:2077:
++static noinline struct qm_eqcr_entry *__wait_eq_start(struct qman_portal **p,
++					unsigned long *irqflags __maybe_unused,
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4660: FILE: drivers/soc/fsl/qbman/qman_api.c:2088:
++}
++static noinline struct qm_eqcr_entry *wait_eq_start(struct qman_portal **p,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4661: FILE: drivers/soc/fsl/qbman/qman_api.c:2089:
++static noinline struct qm_eqcr_entry *wait_eq_start(struct qman_portal **p,
++					unsigned long *irqflags __maybe_unused,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4670: FILE: drivers/soc/fsl/qbman/qman_api.c:2098:
++		wait_event_interruptible(affine_queue,
++			(eq = __wait_eq_start(p, irqflags, fq, fd, flags)));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4673: FILE: drivers/soc/fsl/qbman/qman_api.c:2101:
++		wait_event(affine_queue,
++			(eq = __wait_eq_start(p, irqflags, fq, fd, flags)));
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4676: FILE: drivers/soc/fsl/qbman/qman_api.c:2104:
++}
++static noinline struct qm_eqcr_entry *__wait_p_eq_start(struct qman_portal *p,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4677: FILE: drivers/soc/fsl/qbman/qman_api.c:2105:
++static noinline struct qm_eqcr_entry *__wait_p_eq_start(struct qman_portal *p,
++					unsigned long *irqflags __maybe_unused,
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4688: FILE: drivers/soc/fsl/qbman/qman_api.c:2116:
++}
++static noinline struct qm_eqcr_entry *wait_p_eq_start(struct qman_portal *p,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4689: FILE: drivers/soc/fsl/qbman/qman_api.c:2117:
++static noinline struct qm_eqcr_entry *wait_p_eq_start(struct qman_portal *p,
++					unsigned long *irqflags __maybe_unused,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4698: FILE: drivers/soc/fsl/qbman/qman_api.c:2126:
++		wait_event_interruptible(affine_queue,
++			(eq = __wait_p_eq_start(p, irqflags, fq, fd, flags)));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4701: FILE: drivers/soc/fsl/qbman/qman_api.c:2129:
++		wait_event(affine_queue,
++			(eq = __wait_p_eq_start(p, irqflags, fq, fd, flags)));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4707: FILE: drivers/soc/fsl/qbman/qman_api.c:2135:
++int qman_p_enqueue(struct qman_portal *p, struct qman_fq *fq,
++				const struct qm_fd *fd, u32 flags)
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 8)
+#4715: FILE: drivers/soc/fsl/qbman/qman_api.c:2143:
++	else
+[...]
++	eq = try_p_eq_start(p, &irqflags, fq, fd, flags);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4727: FILE: drivers/soc/fsl/qbman/qman_api.c:2155:
++	if (unlikely((flags & QMAN_ENQUEUE_FLAG_WAIT) &&
++			(flags & QMAN_ENQUEUE_FLAG_WAIT_SYNC))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4730: FILE: drivers/soc/fsl/qbman/qman_api.c:2158:
++			wait_event_interruptible(affine_queue,
++					(p->eqci_owned != fq));
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 8)
+#4748: FILE: drivers/soc/fsl/qbman/qman_api.c:2176:
++	else
+[...]
++	eq = try_eq_start(&p, &irqflags, fq, fd, flags);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4761: FILE: drivers/soc/fsl/qbman/qman_api.c:2189:
++	if (unlikely((flags & QMAN_ENQUEUE_FLAG_WAIT) &&
++			(flags & QMAN_ENQUEUE_FLAG_WAIT_SYNC))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4764: FILE: drivers/soc/fsl/qbman/qman_api.c:2192:
++			wait_event_interruptible(affine_queue,
++					(p->eqci_owned != fq));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4774: FILE: drivers/soc/fsl/qbman/qman_api.c:2202:
++int qman_p_enqueue_orp(struct qman_portal *p, struct qman_fq *fq,
++				const struct qm_fd *fd, u32 flags,
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 8)
+#4783: FILE: drivers/soc/fsl/qbman/qman_api.c:2211:
++	else
+[...]
++	eq = try_p_eq_start(p, &irqflags, fq, fd, flags);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#4789: FILE: drivers/soc/fsl/qbman/qman_api.c:2217:
++	if (flags & QMAN_ENQUEUE_FLAG_NLIS)
+[...]
++	else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#4791: FILE: drivers/soc/fsl/qbman/qman_api.c:2219:
++	else {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4809: FILE: drivers/soc/fsl/qbman/qman_api.c:2237:
++	if (unlikely((flags & QMAN_ENQUEUE_FLAG_WAIT) &&
++			(flags & QMAN_ENQUEUE_FLAG_WAIT_SYNC))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4812: FILE: drivers/soc/fsl/qbman/qman_api.c:2240:
++			wait_event_interruptible(affine_queue,
++					(p->eqci_owned != fq));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4822: FILE: drivers/soc/fsl/qbman/qman_api.c:2250:
++int qman_enqueue_orp(struct qman_fq *fq, const struct qm_fd *fd, u32 flags,
++			struct qman_fq *orp, u16 orp_seqnum)
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 8)
+#4831: FILE: drivers/soc/fsl/qbman/qman_api.c:2259:
++	else
+[...]
++	eq = try_eq_start(&p, &irqflags, fq, fd, flags);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#4837: FILE: drivers/soc/fsl/qbman/qman_api.c:2265:
++	if (flags & QMAN_ENQUEUE_FLAG_NLIS)
+[...]
++	else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#4839: FILE: drivers/soc/fsl/qbman/qman_api.c:2267:
++	else {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4858: FILE: drivers/soc/fsl/qbman/qman_api.c:2286:
++	if (unlikely((flags & QMAN_ENQUEUE_FLAG_WAIT) &&
++			(flags & QMAN_ENQUEUE_FLAG_WAIT_SYNC))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4861: FILE: drivers/soc/fsl/qbman/qman_api.c:2289:
++			wait_event_interruptible(affine_queue,
++					(p->eqci_owned != fq));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4871: FILE: drivers/soc/fsl/qbman/qman_api.c:2299:
++int qman_p_enqueue_precommit(struct qman_portal *p, struct qman_fq *fq,
++				const struct qm_fd *fd, u32 flags,
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 8)
+#4880: FILE: drivers/soc/fsl/qbman/qman_api.c:2308:
++	else
+[...]
++	eq = try_p_eq_start(p, &irqflags, fq, fd, flags);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4897: FILE: drivers/soc/fsl/qbman/qman_api.c:2325:
++	if (unlikely((flags & QMAN_ENQUEUE_FLAG_WAIT) &&
++			(flags & QMAN_ENQUEUE_FLAG_WAIT_SYNC))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4900: FILE: drivers/soc/fsl/qbman/qman_api.c:2328:
++			wait_event_interruptible(affine_queue,
++					(p->eqci_owned != fq));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4910: FILE: drivers/soc/fsl/qbman/qman_api.c:2338:
++int qman_enqueue_precommit(struct qman_fq *fq, const struct qm_fd *fd,
++		u32 flags, qman_cb_precommit cb, void *cb_arg)
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 8)
+#4919: FILE: drivers/soc/fsl/qbman/qman_api.c:2347:
++	else
+[...]
++	eq = try_eq_start(&p, &irqflags, fq, fd, flags);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4938: FILE: drivers/soc/fsl/qbman/qman_api.c:2366:
++	if (unlikely((flags & QMAN_ENQUEUE_FLAG_WAIT) &&
++			(flags & QMAN_ENQUEUE_FLAG_WAIT_SYNC))) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4941: FILE: drivers/soc/fsl/qbman/qman_api.c:2369:
++			wait_event_interruptible(affine_queue,
++					(p->eqci_owned != fq));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4951: FILE: drivers/soc/fsl/qbman/qman_api.c:2379:
++int qman_modify_cgr(struct qman_cgr *cgr, u32 flags,
++			struct qm_mcc_initcgr *opts)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'n' may be better as '(n)' to avoid precedence issues
+#4978: FILE: drivers/soc/fsl/qbman/qman_api.c:2406:
++#define TARG_MASK(n) (0x80000000 >> (n->config->public_cfg.channel - \
++					QM_CHANNEL_SWPORTAL0))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'n' may be better as '(n)' to avoid precedence issues
+#4980: FILE: drivers/soc/fsl/qbman/qman_api.c:2408:
++#define PORTAL_IDX(n) (n->config->public_cfg.channel - QM_CHANNEL_SWPORTAL0)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4983: FILE: drivers/soc/fsl/qbman/qman_api.c:2411:
++int qman_create_cgr(struct qman_cgr *cgr, u32 flags,
++			struct qm_mcc_initcgr *opts)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#4994: FILE: drivers/soc/fsl/qbman/qman_api.c:2422:
++	 * the SoC. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#5036: FILE: drivers/soc/fsl/qbman/qman_api.c:2464:
++		 * and wail to the log file */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5042: FILE: drivers/soc/fsl/qbman/qman_api.c:2470:
++	if (cgr->cb && cgr_state.cgr.cscn_en && qman_cgrs_get(&p->cgrs[1],
++							cgr->cgrid))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5052: FILE: drivers/soc/fsl/qbman/qman_api.c:2480:
++int qman_create_cgr_to_dcp(struct qman_cgr *cgr, u32 flags, u16 dcp_portal,
++					struct qm_mcc_initcgr *opts)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5081: FILE: drivers/soc/fsl/qbman/qman_api.c:2509:
++		ret = qman_modify_cgr(cgr, QMAN_CGR_FLAG_USE_INIT,
++							&local_opts);
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#5100: FILE: drivers/soc/fsl/qbman/qman_api.c:2528:
++		pr_crit("Attempting to delete cgr from different portal "
++			"than it was create: create 0x%x, delete 0x%x\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'i->cgrid == cgr->cgrid'
+#5113: FILE: drivers/soc/fsl/qbman/qman_api.c:2541:
++		if ((i->cgrid == cgr->cgrid) && i->cb)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#5152: FILE: drivers/soc/fsl/qbman/qman_api.c:2580:
++
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5155: FILE: drivers/soc/fsl/qbman/qman_api.c:2583:
++static int qm_shutdown_fq(struct qm_portal **portal, int portal_count,
++				 u32 fqid)
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#5157: FILE: drivers/soc/fsl/qbman/qman_api.c:2585:
++{
++
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#5205: FILE: drivers/soc/fsl/qbman/qman_api.c:2633:
++			/* Need to wait for the FQRN in the message ring, which
++			   will only occur once the FQ has been drained.  In
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#5207: FILE: drivers/soc/fsl/qbman/qman_api.c:2635:
++			   to dequeue from the channel the FQ is scheduled on */
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#5220: FILE: drivers/soc/fsl/qbman/qman_api.c:2648:
++					      qm_channel_pool1 + 1)<<4 | wq;
+ 					                           ^
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#5226: FILE: drivers/soc/fsl/qbman/qman_api.c:2654:
++				pr_info("Cannot recover FQ 0x%x, it is "
++					"scheduled on channel 0x%x",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5234: FILE: drivers/soc/fsl/qbman/qman_api.c:2662:
++					qm_dqrr_sdqcr_set(portal[i],
++						  QM_SDQCR_TYPE_ACTIVE |
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#5238: FILE: drivers/soc/fsl/qbman/qman_api.c:2666:
++					qm_dqrr_sdqcr_set(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#5249: FILE: drivers/soc/fsl/qbman/qman_api.c:2677:
++						qm_dqrr_cdc_consume_1ptr(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#5253: FILE: drivers/soc/fsl/qbman/qman_api.c:2681:
++						dqrr = qm_dqrr_current(
+
+WARNING:DEEP_INDENTATION: Too many leading tabs - consider code refactoring
+#5260: FILE: drivers/soc/fsl/qbman/qman_api.c:2688:
++						if ((msg->verb &
+
+Indentation with 6 or more tabs usually indicate overly indented
+code.
+
+It is suggested to refactor excessive indentation of
+if/else/for/do/while/switch statements.
+
+See: https://lore.kernel.org/lkml/1328311239.21255.24.camel@joe2Laptop/
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#5265: FILE: drivers/soc/fsl/qbman/qman_api.c:2693:
++						qm_mr_cci_consume_to_current(
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#5283: FILE: drivers/soc/fsl/qbman/qman_api.c:2711:
++			/* ORL had no entries, no need to wait until the
++			   ERNs come in */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#5283: FILE: drivers/soc/fsl/qbman/qman_api.c:2711:
++			   ERNs come in */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#5287: FILE: drivers/soc/fsl/qbman/qman_api.c:2715:
++		/* Retirement succeeded, check to see if FQ needs
++		   to be drained */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#5287: FILE: drivers/soc/fsl/qbman/qman_api.c:2715:
++		   to be drained */
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#5294: FILE: drivers/soc/fsl/qbman/qman_api.c:2722:
++				u32 vdqcr = fqid | QM_VDQCR_NUMFRAMES_SET(3);
++				qm_dqrr_vdqcr_set(portal[0], vdqcr);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!dqrr"
+#5297: FILE: drivers/soc/fsl/qbman/qman_api.c:2725:
++				while (dqrr == NULL) {
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#5304: FILE: drivers/soc/fsl/qbman/qman_api.c:2732:
++				/* Process the dequeues, making sure to
++				   empty the ring completely */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#5304: FILE: drivers/soc/fsl/qbman/qman_api.c:2732:
++				   empty the ring completely */
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#5387: FILE: drivers/soc/fsl/qbman/qman_api.c:2815:
++const struct qm_portal_config *qman_get_qm_portal_config(
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#5398: FILE: drivers/soc/fsl/qbman/qman_driver.c:1:
++/* Copyright 2013 - 2015 Freescale Semiconductor, Inc.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#5487: FILE: drivers/soc/fsl/qbman/qman_portal.c:1:
++/* Copyright 2008 - 2015 Freescale Semiconductor, Inc.
+
+WARNING:TYPO_SPELLING: 'interupts' may be misspelled - perhaps 'interrupts'?
+#5519: FILE: drivers/soc/fsl/qbman/qman_portal.c:33:
++/* Enable portal interupts (as opposed to polling mode) */
+                  ^^^^^^^^^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#5524: FILE: drivers/soc/fsl/qbman/qman_portal.c:38:
++ * where CCSR isn't available) */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#5539: FILE: drivers/soc/fsl/qbman/qman_portal.c:53:
++ * comments in bman_driver.c apply here so won't be repeated. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5638: FILE: drivers/soc/fsl/qbman/qman_portal.c:152:
++		pr_err("Warning: %d error%s while initialising CGRs %d:%d\n",
++			errors, (errors > 1) ? "s" : "", range[0], range[1]);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5650: FILE: drivers/soc/fsl/qbman/qman_portal.c:164:
++		if (of_device_is_compatible(dn, "fsl,qman-portal-1.0") ||
++			of_device_is_compatible(dn, "fsl,qman-portal-1.0.0")) {
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#5652: FILE: drivers/soc/fsl/qbman/qman_portal.c:166:
++			BUG_ON(1);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#5712: FILE: drivers/soc/fsl/qbman/qman_portal.c:226:
++ * used. */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5738: FILE: drivers/soc/fsl/qbman/qman_portal.c:252:
++	ret = of_address_to_resource(node, DPA_PORTAL_CE,
++				&pcfg->addr_phys[DPA_PORTAL_CE]);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5744: FILE: drivers/soc/fsl/qbman/qman_portal.c:258:
++	ret = of_address_to_resource(node, DPA_PORTAL_CI,
++				&pcfg->addr_phys[DPA_PORTAL_CI]);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'ret != 4'
+#5751: FILE: drivers/soc/fsl/qbman/qman_portal.c:265:
++	if (!channel || (ret != 4)) {
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#5769: FILE: drivers/soc/fsl/qbman/qman_portal.c:283:
++	pcfg->addr_virt[DPA_PORTAL_CE] = ioremap_prot(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#5773: FILE: drivers/soc/fsl/qbman/qman_portal.c:287:
++	pcfg->addr_virt[DPA_PORTAL_CI] = ioremap_prot(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5831: FILE: drivers/soc/fsl/qbman/qman_portal.c:345:
++		pr_err("%s(): iommu_domain_set_attr() = %d",
++			   __func__, ret);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5838: FILE: drivers/soc/fsl/qbman/qman_portal.c:352:
++		pr_err("%s(): iommu_domain_window_enable() = %d",
++			   __func__, ret);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5844: FILE: drivers/soc/fsl/qbman/qman_portal.c:358:
++		pr_err("%s(): iommu_device_attach() = %d",
++			   __func__, ret);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5852: FILE: drivers/soc/fsl/qbman/qman_portal.c:366:
++		pr_err("%s(): iommu_domain_set_attr() = %d",
++			   __func__, ret);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#5881: FILE: drivers/soc/fsl/qbman/qman_portal.c:395:
++	if (p) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#5895: FILE: drivers/soc/fsl/qbman/qman_portal.c:409:
++	} else
+
+CHECK:UNDOCUMENTED_SETUP: __setup appears un-documented -- check Documentation/admin-guide/kernel-parameters.txt
+#5924: FILE: drivers/soc/fsl/qbman/qman_portal.c:438:
++__setup("qportals=", parse_qportals);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5927: FILE: drivers/soc/fsl/qbman/qman_portal.c:441:
++static void qman_portal_update_sdest(const struct qm_portal_config *pcfg,
++							unsigned int cpu)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5936: FILE: drivers/soc/fsl/qbman/qman_portal.c:450:
++		ret = iommu_domain_set_attr(pcfg->iommu_domain,
++				DOMAIN_ATTR_FSL_PAMU_STASH, &stash_attr);
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#5985: FILE: drivers/soc/fsl/qbman/qman_portal.c:499:
++	ret = qman_setup_fq_lookup_table(qman_fqd_size()/64);
+ 	                                                ^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#5999: FILE: drivers/soc/fsl/qbman/qman_portal.c:513:
++	 * are initialised.) */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#6107: FILE: drivers/soc/fsl/qbman/qman_portal.c:621:
++	 * are initialised.) */
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#6122: FILE: drivers/soc/fsl/qbman/qman_priv.h:1:
++/* Copyright 2008 - 2015 Freescale Semiconductor, Inc.
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6170: FILE: drivers/soc/fsl/qbman/qman_priv.h:49:
++};
++static inline void qman_cgrs_init(struct qman_cgrs *c)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6174: FILE: drivers/soc/fsl/qbman/qman_priv.h:53:
++}
++static inline void qman_cgrs_fill(struct qman_cgrs *c)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6178: FILE: drivers/soc/fsl/qbman/qman_priv.h:57:
++}
++static inline int qman_cgrs_get(struct qman_cgrs *c, int num)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6182: FILE: drivers/soc/fsl/qbman/qman_priv.h:61:
++}
++static inline void qman_cgrs_set(struct qman_cgrs *c, int num)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6186: FILE: drivers/soc/fsl/qbman/qman_priv.h:65:
++}
++static inline void qman_cgrs_unset(struct qman_cgrs *c, int num)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6190: FILE: drivers/soc/fsl/qbman/qman_priv.h:69:
++}
++static inline int qman_cgrs_next(struct qman_cgrs *c, int num)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6196: FILE: drivers/soc/fsl/qbman/qman_priv.h:75:
++}
++static inline void qman_cgrs_cp(struct qman_cgrs *dest,
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6201: FILE: drivers/soc/fsl/qbman/qman_priv.h:80:
++}
++static inline void qman_cgrs_and(struct qman_cgrs *dest,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6202: FILE: drivers/soc/fsl/qbman/qman_priv.h:81:
++static inline void qman_cgrs_and(struct qman_cgrs *dest,
++			const struct qman_cgrs *a, const struct qman_cgrs *b)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6212: FILE: drivers/soc/fsl/qbman/qman_priv.h:91:
++}
++static inline void qman_cgrs_xor(struct qman_cgrs *dest,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6213: FILE: drivers/soc/fsl/qbman/qman_priv.h:92:
++static inline void qman_cgrs_xor(struct qman_cgrs *dest,
++			const struct qman_cgrs *a, const struct qman_cgrs *b)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#6234: FILE: drivers/soc/fsl/qbman/qman_priv.h:113:
++	 * [0]==cache-enabled, [1]==cache-inhibited. */
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#6267: FILE: drivers/soc/fsl/qbman/qman_priv.h:146:
++struct qman_portal *qman_create_portal(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#6272: FILE: drivers/soc/fsl/qbman/qman_priv.h:151:
++struct qman_portal *qman_create_affine_portal(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6276: FILE: drivers/soc/fsl/qbman/qman_priv.h:155:
++struct qman_portal *qman_create_affine_slave(struct qman_portal *redirect,
++								int cpu);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#6282: FILE: drivers/soc/fsl/qbman/qman_priv.h:161:
++ * than a lookup table is required. */
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#6286: FILE: drivers/soc/fsl/qbman/qman_priv.h:165:
++
++
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#6293: FILE: drivers/soc/fsl/qbman/qman_priv.h:172:
++ * driver. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#6378: FILE: drivers/soc/fsl/qbman/qman_priv.h:257:
++ * the disable register" rather than "disable the ability to write". */
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#6399: FILE: drivers/soc/fsl/qbman/qman_priv.h:278:
++const struct qm_portal_config *qman_get_qm_portal_config(
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#6407: FILE: drivers/soc/fsl/qbman/qman_utils.c:1:
++/* Copyright 2008 - 2015 Freescale Semiconductor, Inc.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#6449: FILE: drivers/soc/fsl/qbman/qman_utils.c:43:
++	 * will be set when the next deallocation occurs. */
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#6469: FILE: drivers/soc/fsl/qbman/qman_utils.c:63:
++	BUG_ON(!num);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#6483: FILE: drivers/soc/fsl/qbman/qman_utils.c:77:
++	 * make them look allocated (permanently). */
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#6508: FILE: drivers/soc/fsl/qbman/qman_utils.c:102:
++	BUG_ON(ret);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#6514: FILE: drivers/soc/fsl/qbman/qman_utils.c:108:
++	BUG_ON(pool->next >= pool->total);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#6525: FILE: drivers/soc/fsl/qbman/qman_utils.c:119:
++	BUG_ON(!ret);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6561: FILE: drivers/soc/fsl/qbman/qman_utils.c:155:
++		pr_err("FQID range [%d..%d] (%d) had %d leaks\n",
++			fqid, fqid + count - 1, count, total_invalid);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#6590: FILE: drivers/soc/fsl/qbman/qman_utils.c:184:
++	 * When a non-OOS FQD is found we attempt to clean it up */
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#6607: FILE: drivers/soc/fsl/qbman/qman_utils.c:201:
++			BUG_ON(err);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#6612: FILE: drivers/soc/fsl/qbman/qman_utils.c:206:
++					/* Couldn't shut down the FQ
++					   so the pool must be leaked */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#6612: FILE: drivers/soc/fsl/qbman/qman_utils.c:206:
++					   so the pool must be leaked */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6630: FILE: drivers/soc/fsl/qbman/qman_utils.c:224:
++			pr_err("Pool channel 0x%x had %d leaks\n",
++				qp, total_invalid);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6633: FILE: drivers/soc/fsl/qbman/qman_utils.c:227:
++			pr_err("Pool channels [%d..%d] (%d) had %d leaks\n",
++				qp, qp + count - 1, count, total_invalid);
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#6642: FILE: drivers/soc/fsl/qbman/qman_utils.c:236:
++
++}
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#6651: FILE: drivers/soc/fsl/qbman/qman_utils.c:245:
++
++
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#6682: FILE: drivers/soc/fsl/qbman/qman_utils.c:276:
++			BUG_ON(err);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'fqd.cgid == cgrid'
+#6683: FILE: drivers/soc/fsl/qbman/qman_utils.c:277:
++			if ((fqd.fq_ctrl & QM_FQCTRL_CGE) &&
++			    (fqd.cgid == cgrid)) {
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#6686: FILE: drivers/soc/fsl/qbman/qman_utils.c:280:
++				pr_err("CRGID 0x%x is being used by FQID 0x%x,"
++				       " CGR will be leaked\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6702: FILE: drivers/soc/fsl/qbman/qman_utils.c:296:
++		pr_err("CGRID range [%d..%d] (%d) had %d leaks\n",
++			cgrid, cgrid + count - 1, count, total_invalid);
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#6710: FILE: drivers/soc/fsl/qbman/qman_utils.c:304:
++
++}
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#6718: FILE: include/soc/fsl/qman.h:1:
++/* Copyright 2008 - 2015 Freescale Semiconductor, Inc.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#6795: FILE: include/soc/fsl/qman.h:78:
++ * ie. that if present should trigger slow-path processing. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#6810: FILE: include/soc/fsl/qman.h:93:
++ * possible. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#6826: FILE: include/soc/fsl/qman.h:109:
++ * FQID(n) to fill in the frame queue ID. */
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#6835: FILE: include/soc/fsl/qman.h:118:
++
++
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#6857: FILE: include/soc/fsl/qman.h:140:
++	 * weight". */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#6895: FILE: include/soc/fsl/qman.h:178:
++	 * with one of the macros. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#6898: FILE: include/soc/fsl/qman.h:181:
++		 * DQRR entry to an EQCR entry) copy 'opaque' */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6933: FILE: include/soc/fsl/qman.h:216:
++}
++/* Macro, so we compile better if 'v' isn't always 64-bit */
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#6948: FILE: include/soc/fsl/qman.h:231:
++	{ (((fmt)&0x7) << 29) | (((off)&0x1ff) << 20) | ((len)&0xfffff) }, \
+ 	         ^
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#6948: FILE: include/soc/fsl/qman.h:231:
++	{ (((fmt)&0x7) << 29) | (((off)&0x1ff) << 20) | ((len)&0xfffff) }, \
+ 	                               ^
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#6948: FILE: include/soc/fsl/qman.h:231:
++	{ (((fmt)&0x7) << 29) | (((off)&0x1ff) << 20) | ((len)&0xfffff) }, \
+ 	                                                      ^
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#6952: FILE: include/soc/fsl/qman.h:235:
++	{ (((fmt)&0x7) << 29) | ((len)&0x1fffffff) }, \
+ 	         ^
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#6952: FILE: include/soc/fsl/qman.h:235:
++	{ (((fmt)&0x7) << 29) | ((len)&0x1fffffff) }, \
+ 	                              ^
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6980: FILE: include/soc/fsl/qman.h:263:
++}
++static inline dma_addr_t qm_sg_addr(const struct qm_sg_entry *sg)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6984: FILE: include/soc/fsl/qman.h:267:
++}
++/* Macro, so we compile better if 'v' isn't always 64-bit */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#7032: FILE: include/soc/fsl/qman.h:315:
++};
++#define QM_DQRR_VERB_VBIT		0x80
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7081: FILE: include/soc/fsl/qman.h:364:
++ * the other MR types by noting if the 0x20 bit is unset. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7108: FILE: include/soc/fsl/qman.h:391:
++ * representation. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7154: FILE: include/soc/fsl/qman.h:437:
++	 * the Overhead ACcounting values. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7172: FILE: include/soc/fsl/qman.h:455:
++			 * stash, must be cacheline-aligned */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#7185: FILE: include/soc/fsl/qman.h:468:
++}
++static inline dma_addr_t qm_fqd_stashing_addr(const struct qm_fqd *fqd)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#7189: FILE: include/soc/fsl/qman.h:472:
++}
++static inline u64 qm_fqd_context_a_get64(const struct qm_fqd *fqd)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#7194: FILE: include/soc/fsl/qman.h:477:
++}
++/* Macro, so we compile better when 'v' isn't necessarily 64-bit */
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'v' - possible side-effects?
+#7195: FILE: include/soc/fsl/qman.h:478:
++#define qm_fqd_stashing_set64(fqd, v) \
++	do { \
++		struct qm_fqd *__fqd931 = (fqd); \
++		__fqd931->context_a.context_hi = upper_32_bits(v); \
++		__fqd931->context_a.context_lo = lower_32_bits(v); \
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'v' - possible side-effects?
+#7201: FILE: include/soc/fsl/qman.h:484:
++#define qm_fqd_context_a_set64(fqd, v) \
++	do { \
++		struct qm_fqd *__fqd931 = (fqd); \
++		__fqd931->context_a.hi = upper_32_bits(v); \
++		__fqd931->context_a.lo = lower_32_bits(v); \
++	} while (0)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7209: FILE: include/soc/fsl/qman.h:492:
++static inline int qm_fqd_taildrop_set(struct qm_fqd_taildrop *td, u32 val,
++					int roundup)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#7227: FILE: include/soc/fsl/qman.h:510:
++}
++/* and the other direction */
+
+CHECK:CAMELCASE: Avoid CamelCase: <Mn>
+#7271: FILE: include/soc/fsl/qman.h:554:
++			u32 Mn:5;
+
+CHECK:CAMELCASE: Avoid CamelCase: <Sn>
+#7273: FILE: include/soc/fsl/qman.h:556:
++			u32 Sn:6;
+
+CHECK:CAMELCASE: Avoid CamelCase: <Pn>
+#7274: FILE: include/soc/fsl/qman.h:557:
++			u32 Pn:6;
+
+CHECK:CAMELCASE: Avoid CamelCase: <Tn>
+#7287: FILE: include/soc/fsl/qman.h:570:
++	u16 Tn:5;
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7291: FILE: include/soc/fsl/qman.h:574:
++ * struct. */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#7323: FILE: include/soc/fsl/qman.h:606:
++}
++static inline int qm_cgr_cs_thres_set64(struct qm_cgr_cs_thres *th, u64 val,
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#7565: FILE: include/soc/fsl/qman.h:848:
++}
++static inline u64 qm_mcr_querycgr_a_get64(const struct qm_mcr_querycgr *q)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#7569: FILE: include/soc/fsl/qman.h:852:
++}
++static inline u64 qm_mcr_cgrtestwrite_i_get64(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#7569: FILE: include/soc/fsl/qman.h:852:
++static inline u64 qm_mcr_cgrtestwrite_i_get64(
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#7574: FILE: include/soc/fsl/qman.h:857:
++}
++static inline u64 qm_mcr_cgrtestwrite_a_get64(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#7574: FILE: include/soc/fsl/qman.h:857:
++static inline u64 qm_mcr_cgrtestwrite_a_get64(
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#7579: FILE: include/soc/fsl/qman.h:862:
++}
++/* Macro, so we compile better if 'v' isn't always 64-bit */
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'v' - possible side-effects?
+#7580: FILE: include/soc/fsl/qman.h:863:
++#define qm_mcr_querycgr_i_set64(q, v) \
++	do { \
++		struct qm_mcr_querycgr *__q931 = (fd); \
++		__q931->i_bcnt_hi = upper_32_bits(v); \
++		__q931->i_bcnt_lo = lower_32_bits(v); \
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'v' - possible side-effects?
+#7586: FILE: include/soc/fsl/qman.h:869:
++#define qm_mcr_querycgr_a_set64(q, v) \
++	do { \
++		struct qm_mcr_querycgr *__q931 = (fd); \
++		__q931->a_bcnt_hi = upper_32_bits(v); \
++		__q931->a_bcnt_lo = lower_32_bits(v); \
++	} while (0)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#7595: FILE: include/soc/fsl/qman.h:878:
++};
++struct qm_mcr_querycongestion {
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'num' may be better as '(num)' to avoid precedence issues
+#7671: FILE: include/soc/fsl/qman.h:954:
++#define __CGR_WORD(num)		(num >> 5)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'num' may be better as '(num)' to avoid precedence issues
+#7672: FILE: include/soc/fsl/qman.h:955:
++#define __CGR_SHIFT(num)	(num & 0x1f)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7675: FILE: include/soc/fsl/qman.h:958:
++static inline int QM_MCR_QUERYCONGESTION(struct __qm_mcr_querycongestion *p,
++					u8 cgr)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#7680: FILE: include/soc/fsl/qman.h:963:
++
++
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7686: FILE: include/soc/fsl/qman.h:969:
++ * spinlock them yourself if needed. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7691: FILE: include/soc/fsl/qman.h:974:
++ * allocations. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7710: FILE: include/soc/fsl/qman.h:993:
++ * defined further down. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7714: FILE: include/soc/fsl/qman.h:997:
++ * down. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7723: FILE: include/soc/fsl/qman.h:1006:
++	 * affinity configured. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7728: FILE: include/soc/fsl/qman.h:1011:
++	 * processing on behalf of other CPUs.) */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7731: FILE: include/soc/fsl/qman.h:1014:
++	 * frame queues to target this portal when scheduled. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7734: FILE: include/soc/fsl/qman.h:1017:
++	 * (using QM_SDQCR_CHANNELS_POOL(n) for the bitmask) */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7741: FILE: include/soc/fsl/qman.h:1024:
++ * NULL), the return value *MUST* be qman_cb_dqrr_consume. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7749: FILE: include/soc/fsl/qman.h:1032:
++	 * DCA via EQCR entries. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7755: FILE: include/soc/fsl/qman.h:1038:
++	 * otherwise the interrupt will reassert immediately. */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#7760: FILE: include/soc/fsl/qman.h:1043:
++};
++typedef enum qman_cb_dqrr_result (*qman_cb_dqrr)(struct qman_portal *qm,
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7765: FILE: include/soc/fsl/qman.h:1048:
++ * are always consumed after the callback returns. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7782: FILE: include/soc/fsl/qman.h:1065:
++ * "parked". */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7827: FILE: include/soc/fsl/qman.h:1110:
++	 * sizeof(qman_fq) being a constant). */
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#7830: FILE: include/soc/fsl/qman.h:1113:
++	volatile unsigned long flags;
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7840: FILE: include/soc/fsl/qman.h:1123:
++ * 'congested' is non-zero on congestion-entry, and zero on congestion-exit. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7885: FILE: include/soc/fsl/qman.h:1168:
++ * any change here should be audited in PME.) */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7904: FILE: include/soc/fsl/qman.h:1187:
++ *   of a frame. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7907: FILE: include/soc/fsl/qman.h:1190:
++ *   would otherwise block it (eg. if a frame has been dropped). */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#7910: FILE: include/soc/fsl/qman.h:1193:
++ *   number. */
+
+WARNING:TYPO_SPELLING: 'WQs' may be misspelled - perhaps 'Was'?
+#8272: FILE: include/soc/fsl/qman.h:1555:
++ * @query_dedicated: If non-zero, query length of WQs in the channel dedicated
+                                                   ^^^
+
+WARNING:TYPO_SPELLING: 'WQs' may be misspelled - perhaps 'Was'?
+#8273: FILE: include/soc/fsl/qman.h:1556:
++ *		to this software portal. Otherwise, query length of WQs in a
+   		                                                    ^^^
+
+WARNING:TYPO_SPELLING: 'WQs' may be misspelled - perhaps 'Was'?
+#8275: FILE: include/soc/fsl/qman.h:1558:
++ * @wq: storage for the queried WQs lengths. Also specified the channel to
+                                 ^^^
+
+WARNING:REPEATED_WORD: Possible repeated word: 'to'
+#8276: FILE: include/soc/fsl/qman.h:1559:
++ * @wq: storage for the queried WQs lengths. Also specified the channel to
++ *	to query if query_dedicated is zero.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8350: FILE: include/soc/fsl/qman.h:1633:
++int qman_enqueue_precommit(struct qman_fq *fq, const struct qm_fd *fd,
++		u32 flags, qman_cb_precommit cb, void *cb_arg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8389: FILE: include/soc/fsl/qman.h:1672:
++int qman_enqueue_orp(struct qman_fq *fq, const struct qm_fd *fd, u32 flags,
++			struct qman_fq *orp, u16 orp_seqnum);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#8427: FILE: include/soc/fsl/qman.h:1710:
++
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8503: FILE: include/soc/fsl/qman.h:1786:
++int qman_create_cgr(struct qman_cgr *cgr, u32 flags,
++			struct qm_mcc_initcgr *opts);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8514: FILE: include/soc/fsl/qman.h:1797:
++int qman_create_cgr_to_dcp(struct qman_cgr *cgr, u32 flags, u16 dcp_portal,
++				struct qm_mcc_initcgr *opts);
+
+WARNING:TYPO_SPELLING: 'excuted' may be misspelled - perhaps 'executed'?
+#8521: FILE: include/soc/fsl/qman.h:1804:
++ * is executed. This must be excuted on the same affine portal on which it was
+                              ^^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8549: FILE: include/soc/fsl/qman.h:1832:
++int qman_modify_cgr(struct qman_cgr *cgr, u32 flags,
++			struct qm_mcc_initcgr *opts);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments should align the * on each line
+#8552: FILE: include/soc/fsl/qman.h:1835:
++/**
++* qman_query_cgr - Queries CGR fields
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#8608: FILE: include/soc/fsl/qman.h:1891:
++
++
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments should align the * on each line
+#8665: FILE: include/soc/fsl/qman.h:1948:
++ * @qman_portal specifies which portal the APIs will use.
++*/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8679: FILE: include/soc/fsl/qman.h:1962:
++void qman_p_dca(struct qman_portal *p, struct qm_dqrr_entry *dq,
++						int park_request);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8681: FILE: include/soc/fsl/qman.h:1964:
++int qman_p_volatile_dequeue(struct qman_portal *p, struct qman_fq *fq,
++				u32 flags __maybe_unused, u32 vdqcr);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8683: FILE: include/soc/fsl/qman.h:1966:
++int qman_p_enqueue(struct qman_portal *p, struct qman_fq *fq,
++					const struct qm_fd *fd, u32 flags);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8685: FILE: include/soc/fsl/qman.h:1968:
++int qman_p_enqueue_orp(struct qman_portal *p, struct qman_fq *fq,
++				const struct qm_fd *fd, u32 flags,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8688: FILE: include/soc/fsl/qman.h:1971:
++int qman_p_enqueue_precommit(struct qman_portal *p, struct qman_fq *fq,
++				const struct qm_fd *fd, u32 flags,
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000275961.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 4 errors, 222 warnings, 304 checks, 8494 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000275961.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

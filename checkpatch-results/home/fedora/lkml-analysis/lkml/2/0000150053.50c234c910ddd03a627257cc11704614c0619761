@@ -1,0 +1,75 @@
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#81: FILE: include/linux/cgroup.h:282:
++#define CFTYPE_ONLY_ON_ROOT	(1U << 0)	/* only create on root cg */
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#82: FILE: include/linux/cgroup.h:283:
++#define CFTYPE_NOT_ON_ROOT	(1U << 1)	/* don't create onp root cg */
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ss' may be better as '(ss)' to avoid precedence issues
+#113: FILE: include/linux/cgroup.h:392:
++#define CGROUP_SUBSYS_CFTYPES_COND(ss, cfts, cond)			\
++	static int __init __cgroup_cfts_init_##ss_##cfts(void)		\
++	{								\
++		if ((cond))						\
++			WARN_ON(cgroup_add_cftypes(&ss, cfts));		\
++		return 0;						\
++	}								\
++	fs_initcall(__cgroup_cfts_init_##ss_##cfts);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#113: FILE: include/linux/cgroup.h:392:
++#define CGROUP_SUBSYS_CFTYPES_COND(ss, cfts, cond)			\
++	static int __init __cgroup_cfts_init_##ss_##cfts(void)		\
++	{								\
++		if ((cond))						\
++			WARN_ON(cgroup_add_cftypes(&ss, cfts));		\
++		return 0;						\
++	}								\
++	fs_initcall(__cgroup_cfts_init_##ss_##cfts);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'cgroup_populate_dir', this function's name, in a string
+#302: FILE: kernel/cgroup.c:3787:
++					pr_warning("cgroup_populate_dir: failed to create %s, err=%d\n",
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000150053.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 2 warnings, 3 checks, 246 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000150053.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

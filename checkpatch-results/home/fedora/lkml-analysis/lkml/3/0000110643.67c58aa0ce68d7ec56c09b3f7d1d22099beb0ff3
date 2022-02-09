@@ -1,0 +1,84 @@
+WARNING:UNKNOWN_COMMIT_ID: Unknown commit id '786235ee', maybe rebased or not pulled?
+#42: 
+Tetsuo bisected and found that commit 786235ee "kthread: make
+
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#68: 
+[2] http://lists.freedesktop.org/archives/systemd-devel/2014-March/018006.html
+
+WARNING:BAD_SIGN_OFF: Duplicate signature
+#84: 
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+The signed-off-by line does not fall in line with the standards
+specified by the community.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#130: FILE: include/linux/kthread.h:134:
++#define module_long_probe_init(x)      __initcall(x);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#131: FILE: include/linux/kthread.h:135:
++#define module_long_probe_exit(x)      __exitcall(x);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#135: FILE: include/linux/kthread.h:139:
++#define module_long_probe_init(initfn)				\
++	static struct task_struct *__init_thread;		\
++	static int _long_probe_##initfn(void *arg)		\
++	{							\
++		return initfn();				\
++	}							\
++	static inline __init int __long_probe_##initfn(void)	\
++	{							\
++		__init_thread = kthread_run(_long_probe_##initfn,\
++					    NULL,		\
++					    #initfn);		\
++		if (IS_ERR(__init_thread))			\
++			return PTR_ERR(__init_thread);		\
++		return 0;					\
++	}							\
++	module_init(__long_probe_##initfn);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#152: FILE: include/linux/kthread.h:156:
++#define module_long_probe_exit(exitfn)				\
++	static inline void __long_probe_##exitfn(void)		\
++	{							\
++		exitfn();					\
++		if (__init_thread)				\
++			kthread_stop(__init_thread);		\
++	}							\
++	module_exit(__long_probe_##exitfn);
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000110643.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 7 warnings, 0 checks, 45 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000110643.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

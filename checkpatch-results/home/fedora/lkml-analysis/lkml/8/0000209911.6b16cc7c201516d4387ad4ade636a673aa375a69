@@ -1,0 +1,170 @@
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'reg_offset >= 0'
+#131: FILE: drivers/hwtracing/coresight/coresight-cti-sysfs.c:137:
++	if ((reg_offset >= 0) && cti_active(config)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'reg_offset >= 0'
+#165: FILE: drivers/hwtracing/coresight/coresight-cti-sysfs.c:171:
++	if ((reg_offset >= 0) && cti_active(config))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cfgname' - possible side-effects?
+#172: FILE: drivers/hwtracing/coresight/coresight-cti-sysfs.c:178:
++#define cti_config_reg32_rw(name, cfgname, offset)			\
++static ssize_t name##_show(struct device *dev,				\
++			   struct device_attribute *attr,		\
++			   char *buf)					\
++{									\
++	struct cti_drvdata *drvdata = dev_get_drvdata(dev->parent);	\
++	return cti_reg32_show(dev, buf,					\
++			      &drvdata->config.cfgname, offset);	\
++}									\
++									\
++static ssize_t name##_store(struct device *dev,				\
++			    struct device_attribute *attr,		\
++			    const char *buf, size_t size)		\
++{									\
++	struct cti_drvdata *drvdata = dev_get_drvdata(dev->parent);	\
++	return cti_reg32_store(dev, buf, size,				\
++			       &drvdata->config.cfgname, offset);	\
++}									\
++static DEVICE_ATTR_RW(name)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'offset' - possible side-effects?
+#172: FILE: drivers/hwtracing/coresight/coresight-cti-sysfs.c:178:
++#define cti_config_reg32_rw(name, cfgname, offset)			\
++static ssize_t name##_show(struct device *dev,				\
++			   struct device_attribute *attr,		\
++			   char *buf)					\
++{									\
++	struct cti_drvdata *drvdata = dev_get_drvdata(dev->parent);	\
++	return cti_reg32_show(dev, buf,					\
++			      &drvdata->config.cfgname, offset);	\
++}									\
++									\
++static ssize_t name##_store(struct device *dev,				\
++			    struct device_attribute *attr,		\
++			    const char *buf, size_t size)		\
++{									\
++	struct cti_drvdata *drvdata = dev_get_drvdata(dev->parent);	\
++	return cti_reg32_store(dev, buf, size,				\
++			       &drvdata->config.cfgname, offset);	\
++}									\
++static DEVICE_ATTR_RW(name)
+
+WARNING:TYPO_SPELLING: 'intack' may be misspelled - perhaps 'intact'?
+#312: FILE: drivers/hwtracing/coresight/coresight-cti-sysfs.c:318:
++static DEVICE_ATTR_WO(intack);
+                       ^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'offset' - possible side-effects?
+#376: FILE: drivers/hwtracing/coresight/coresight-cti-sysfs.c:382:
++#define coresight_cti_reg_rw(name, offset)				\
++static ssize_t name##_show(struct device *dev,				\
++			   struct device_attribute *attr, char *buf)	\
++{									\
++	struct cti_drvdata *drvdata = dev_get_drvdata(dev->parent);	\
++	u32 val = 0;							\
++	pm_runtime_get_sync(dev->parent);				\
++	spin_lock(&drvdata->spinlock);					\
++	if (drvdata->config.hw_powered)					\
++		val = readl_relaxed(drvdata->base + offset);		\
++	spin_unlock(&drvdata->spinlock);				\
++	pm_runtime_put_sync(dev->parent);				\
++	return sprintf(buf, "0x%x\n", val);				\
++}									\
++									\
++static ssize_t name##_store(struct device *dev,				\
++			    struct device_attribute *attr,		\
++			    const char *buf, size_t size)		\
++{									\
++	struct cti_drvdata *drvdata = dev_get_drvdata(dev->parent);	\
++	unsigned long val = 0;						\
++	if (kstrtoul(buf, 0, &val))					\
++		return -EINVAL;						\
++									\
++	pm_runtime_get_sync(dev->parent);				\
++	spin_lock(&drvdata->spinlock);					\
++	if (drvdata->config.hw_powered)					\
++		cti_write_single_reg(drvdata, offset, val);		\
++	spin_unlock(&drvdata->spinlock);				\
++	pm_runtime_put_sync(dev->parent);				\
++	return size;							\
++}									\
++static DEVICE_ATTR_RW(name)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'offset' may be better as '(offset)' to avoid precedence issues
+#376: FILE: drivers/hwtracing/coresight/coresight-cti-sysfs.c:382:
++#define coresight_cti_reg_rw(name, offset)				\
++static ssize_t name##_show(struct device *dev,				\
++			   struct device_attribute *attr, char *buf)	\
++{									\
++	struct cti_drvdata *drvdata = dev_get_drvdata(dev->parent);	\
++	u32 val = 0;							\
++	pm_runtime_get_sync(dev->parent);				\
++	spin_lock(&drvdata->spinlock);					\
++	if (drvdata->config.hw_powered)					\
++		val = readl_relaxed(drvdata->base + offset);		\
++	spin_unlock(&drvdata->spinlock);				\
++	pm_runtime_put_sync(dev->parent);				\
++	return sprintf(buf, "0x%x\n", val);				\
++}									\
++									\
++static ssize_t name##_store(struct device *dev,				\
++			    struct device_attribute *attr,		\
++			    const char *buf, size_t size)		\
++{									\
++	struct cti_drvdata *drvdata = dev_get_drvdata(dev->parent);	\
++	unsigned long val = 0;						\
++	if (kstrtoul(buf, 0, &val))					\
++		return -EINVAL;						\
++									\
++	pm_runtime_get_sync(dev->parent);				\
++	spin_lock(&drvdata->spinlock);					\
++	if (drvdata->config.hw_powered)					\
++		cti_write_single_reg(drvdata, offset, val);		\
++	spin_unlock(&drvdata->spinlock);				\
++	pm_runtime_put_sync(dev->parent);				\
++	return size;							\
++}									\
++static DEVICE_ATTR_RW(name)
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000209911.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 1 warnings, 6 checks, 428 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000209911.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,68 @@
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'lockname' may be better as '(lockname)' to avoid precedence issues
+#1355: FILE: include/linux/mutex.h:85:
++#define __DEBUG_MUTEX_INITIALIZER(lockname)				\
++	, .magic = &lockname
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1358: FILE: include/linux/mutex.h:88:
++extern void mutex_destroy(struct mutex *lock);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "__mutex_owner"
+#1408: FILE: include/linux/mutex.h:144:
++	return __mutex_owner(lock) != NULL;
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:TRAILING_SEMICOLON: trailing semicolon indicates no statements, indent implies otherwise
+#1661: FILE: kernel/locking/mutex.c:449:
++	if (owner & 0x03);
++		__mutex_unlock_slowpath(lock);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#1661: FILE: kernel/locking/mutex.c:449:
++	if (owner & 0x03);
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000004083.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 1 errors, 1 warnings, 3 checks, 716 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000004083.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

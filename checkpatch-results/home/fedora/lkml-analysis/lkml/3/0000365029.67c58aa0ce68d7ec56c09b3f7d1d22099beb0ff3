@@ -1,0 +1,100 @@
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#47: FILE: drivers/staging/silicom/bpctl_mod.c:46:
++#define lock_bpctl()					\
+ if (down_interruptible(&bpctl_sema)) {			\
+ 	return -ERESTARTSYS;				\
+ }							\
+ 
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#47: FILE: drivers/staging/silicom/bpctl_mod.c:46:
++#define lock_bpctl()					\
+ if (down_interruptible(&bpctl_sema)) {			\
+ 	return -ERESTARTSYS;				\
+ }							\
+ 
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#53: FILE: drivers/staging/silicom/bpctl_mod.c:51:
++#define unlock_bpctl()					\
+ 	up(&bpctl_sema);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'pbpctl_dev->wdt_status == WDT_STATUS_EN'
+#63: FILE: drivers/staging/silicom/bpctl_mod.c:1424:
++	if ((pbpctl_dev->wdt_status == WDT_STATUS_EN))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+WARNING:UNNECESSARY_PARENTHESES: Unnecessary parentheses - maybe == should be = ?
+#63: FILE: drivers/staging/silicom/bpctl_mod.c:1424:
++	if ((pbpctl_dev->wdt_status == WDT_STATUS_EN))
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000365029.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 1 errors, 3 warnings, 1 checks, 59 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000365029.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

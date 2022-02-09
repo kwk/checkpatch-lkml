@@ -1,0 +1,176 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#24: 
+We send packets using a copy-free mechanism (this is the Guest to Host transport
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#131: FILE: drivers/net/hyperv/netvsc.c:175:
++			netdev_err(ndev, "unable to send "
++				   "revoke send buffer to netvsp\n");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#173: FILE: drivers/net/hyperv/netvsc.c:307:
++		(void *)__get_free_pages(GFP_KERNEL|__GFP_ZERO,
+ 		                                   ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#177: FILE: drivers/net/hyperv/netvsc.c:311:
++		netdev_err(ndev, "unable to allocate send "
++			   "buffer of size %d\n", net_device->send_buf_size);
+
+WARNING:REPEATED_WORD: Possible repeated word: 'send'
+#211: FILE: drivers/net/hyperv/netvsc.c:345:
++			   "unable to send send buffer's gpadl to netvsp\n");
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#215: FILE: drivers/net/hyperv/netvsc.c:349:
++	t = wait_for_completion_timeout(&net_device->channel_init_wait, 5*HZ);
+ 	                                                                 ^
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#216: FILE: drivers/net/hyperv/netvsc.c:350:
++	BUG_ON(t == 0);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'init_packet->msg.v1_msg.send_send_buf_complete.status'
+#220: FILE: drivers/net/hyperv/netvsc.c:354:
++	if (init_packet->msg.v1_msg.
++	    send_send_buf_complete.status != NVSP_STAT_SUCCESS) {
+
+A single dereferencing identifier spanned on multiple lines like::
+
+  struct_identifier->member[index].
+  member = <foo>;
+
+is generally hard to follow. It can easily lead to typos and so makes
+the code vulnerable to bugs.
+
+If fixing the multiple line dereferencing leads to an 80 column
+violation, then either rewrite the code in a more simple way or if the
+starting part of the dereferencing identifier is the same and used at
+multiple places then store it in a temporary variable, and use that
+temporary variable only at all the places. For example, if there are
+two dereferencing identifiers::
+
+  member1->member2->member3.foo1;
+  member1->member2->member3.foo2;
+
+then store the member1->member2->member3 part in a temporary variable.
+It not only helps to avoid the 80 column violation but also reduces
+the program size by removing the unnecessary dereferences.
+
+But if none of the above methods work then ignore the 80 column
+violation because it is much easier to read a dereferencing identifier
+on a single line.
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#222: FILE: drivers/net/hyperv/netvsc.c:356:
++		netdev_err(ndev, "Unable to complete send buffer "
++			   "initialization with NetVsp - status %d\n",
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'init_packet->msg.v1_msg.send_recv_buf_complete.status'
+#224: FILE: drivers/net/hyperv/netvsc.c:358:
++			   init_packet->msg.v1_msg.
++			   send_recv_buf_complete.status);
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'init_packet->msg.v1_msg.send_send_buf_complete.section_size'
+#231: FILE: drivers/net/hyperv/netvsc.c:365:
++	net_device->send_section_size = init_packet->msg.
++				v1_msg.send_send_buf_complete.section_size;
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#236: FILE: drivers/net/hyperv/netvsc.c:370:
++		net_device->send_buf_size/net_device->send_section_size;
+ 		                         ^
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#245: FILE: drivers/net/hyperv/netvsc.c:379:
++	net_device->send_section_map =
++		kzalloc(net_device->map_words * sizeof(ulong), GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!net_device->send_section_map"
+#247: FILE: drivers/net/hyperv/netvsc.c:381:
++	if (net_device->send_section_map == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#394: FILE: drivers/net/hyperv/netvsc.c:741:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:CAMELCASE: Avoid CamelCase: <sendMessage>
+#399: FILE: drivers/net/hyperv/netvsc.c:744:
++	sendMessage.msg.v1_msg.send_rndis_pkt.send_buf_section_size = msg_size;
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'index == NETVSC_INVALID_INDEX'
+#416: FILE: drivers/net/hyperv/netvsc_drv.c:243:
++	if (skb && (index == NETVSC_INVALID_INDEX))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000188681.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 10 warnings, 7 checks, 350 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000188681.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

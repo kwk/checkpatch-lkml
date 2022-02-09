@@ -1,0 +1,236 @@
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#120: FILE: arch/powerpc/include/asm/cache.h:25:
++#define L1_CACHE_BYTES_MAX (1 << L1_CACHE_SHIFT_MAX)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#146: FILE: arch/powerpc/include/asm/cache.h:50:
++#define L1_CACHE_BYTES_MIN (1 << L1_CACHE_SHIFT_MIN)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'LINE' - possible side-effects?
+#182: FILE: arch/powerpc/include/asm/cache.h:73:
++#define FOR_EACH_CACHELINE(LINE, START, STOP, CACHE)			\
++	for (u32 linesize__ = powerpc_caches.CACHE##_block_bytes,	\
++			(LINE) = (START) & ~(linesize__ - 1);		\
++			(LINE) < (STOP); (LINE) += linesize__)
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'dcbst', this function's name, in a string
+#190: FILE: arch/powerpc/include/asm/cache.h:81:
++	asm volatile("dcbst %y0" :: "Z"(addr) : "memory");
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'dcbi', this function's name, in a string
+#198: FILE: arch/powerpc/include/asm/cache.h:87:
++	asm volatile("dcbi %y0" :: "Z"(addr) : "memory");
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'dcbf', this function's name, in a string
+#204: FILE: arch/powerpc/include/asm/cache.h:93:
++	asm volatile("dcbf %y0" :: "Z"(addr) : "memory");
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'dcbz', this function's name, in a string
+#210: FILE: arch/powerpc/include/asm/cache.h:99:
++	asm volatile("dcbz %y0" :: "Z"(addr) : "memory");
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'icbi', this function's name, in a string
+#216: FILE: arch/powerpc/include/asm/cache.h:105:
++	asm volatile("icbi %y0" :: "Z"(addr) : "memory");
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#248: FILE: arch/powerpc/include/asm/cache.h:137:
++};
++extern struct powerpc_caches powerpc_caches;
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#283: FILE: arch/powerpc/include/asm/page.h:289:
++extern void clear_pages(void *page, int order);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#910: FILE: arch/powerpc/kernel/setup-common.c:404:
++	u32 shift = __ilog2(bytes);
++	powerpc_caches.dcache_block_bytes = bytes;
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#914: FILE: arch/powerpc/kernel/setup-common.c:408:
++}
++static void __init set_icache_block_data(u32 bytes)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#917: FILE: arch/powerpc/kernel/setup-common.c:411:
++	u32 shift = __ilog2(bytes);
++	powerpc_caches.icache_block_bytes = bytes;
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#948: FILE: arch/powerpc/kernel/setup-common.c:442:
++	if (	!of_property_read_u32(np, "d-cache-block-size", &value) ||
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#949: FILE: arch/powerpc/kernel/setup-common.c:443:
++	if (	!of_property_read_u32(np, "d-cache-block-size", &value) ||
++		!of_property_read_u32(np, "d-cache-line-size", &value))
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#952: FILE: arch/powerpc/kernel/setup-common.c:446:
++	if (	!of_property_read_u32(np, "i-cache-block-size", &value) ||
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#953: FILE: arch/powerpc/kernel/setup-common.c:447:
++	if (	!of_property_read_u32(np, "i-cache-block-size", &value) ||
++		!of_property_read_u32(np, "i-cache-line-size", &value))
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#1145: FILE: arch/powerpc/kernel/setup_64.c:329:
++		printk("dcache_block_bytes = 0x%x\n", powerpc_caches.dcache_block_bytes);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#1147: FILE: arch/powerpc/kernel/setup_64.c:331:
++		printk("icache_block_bytes = 0x%x\n", powerpc_caches.icache_block_bytes);
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#1260: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1265: FILE: arch/powerpc/mm/cache.c:1:
++#include <linux/kprobes.h>
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/cache.h> instead of <asm/cache.h>
+#1271: FILE: arch/powerpc/mm/cache.c:7:
++#include <asm/cache.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1283: FILE: arch/powerpc/mm/cache.c:19:
++	unsigned long addr;
++	FOR_EACH_CACHELINE(addr, start, stop, dcache)
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#1285: FILE: arch/powerpc/mm/cache.c:21:
++	mb();
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1295: FILE: arch/powerpc/mm/cache.c:31:
++	unsigned long addr;
++	FOR_EACH_CACHELINE(addr, start, stop, dcache)
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#1297: FILE: arch/powerpc/mm/cache.c:33:
++	mb();
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1311: FILE: arch/powerpc/mm/cache.c:47:
++	unsigned long addr;
++	FOR_EACH_CACHELINE(addr, start, stop, dcache)
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#1313: FILE: arch/powerpc/mm/cache.c:49:
++	mb();
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#1335: FILE: arch/powerpc/mm/cache.c:71:
++	mb();
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#1347: FILE: arch/powerpc/mm/cache.c:83:
++	mb();
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#1362: FILE: arch/powerpc/mm/cache.c:98:
++	unsigned long base = ((unsigned long)page) & ~(PAGE_SIZE-1);
+ 	                                                        ^
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#1387: FILE: arch/powerpc/mm/cache.c:123:
++	mb();
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1400: FILE: arch/powerpc/mm/cache.c:136:
++	unsigned long addr, base = (unsigned long)page;
++	FOR_EACH_CACHELINE(addr, base, base + (PAGE_SIZE << order), dcache)
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#1426: FILE: arch/powerpc/mm/cache.c:162:
++	d_phys_page = i_phys_page = phys_page & ~(PAGE_SIZE - 1);
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1436: FILE: arch/powerpc/mm/cache.c:172:
++	asm volatile(
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#1486: FILE: arch/powerpc/mm/cache.c:222:
++ * it as uncacheable memory $
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#1509: FILE: arch/powerpc/mm/cache.c:245:
++	asm volatile(
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/cache.h> instead of <asm/cache.h>
+#1608: FILE: arch/powerpc/xmon/xmon.c:29:
++#include <asm/cache.h>
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#1698: FILE: drivers/macintosh/smu.c:140:
++	mb();
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#1709: FILE: drivers/macintosh/smu.c:204:
++		mb();
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000202887.commit.50c234c910ddd03a627257cc11704614c0619761 total: 3 errors, 23 warnings, 14 checks, 1493 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000202887.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

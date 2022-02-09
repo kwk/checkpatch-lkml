@@ -1,0 +1,123 @@
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#50: FILE: fs/nfsd/netns.h:29:
++#define CLIENT_HASH_SIZE                (1 << CLIENT_HASH_BITS)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#210: FILE: fs/nfsd/nfs4recover.c:481:
+ 
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*nn->reclaim_str_hashtbl)...) over kmalloc(sizeof(struct list_head)...)
+#217: FILE: fs/nfsd/nfs4recover.c:488:
++	nn->reclaim_str_hashtbl = kmalloc(sizeof(struct list_head) *
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#248: FILE: fs/nfsd/nfs4recover.c:519:
++		printk(KERN_ERR "NFSD: Failure reading reboot recovery data\n");
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#420: FILE: fs/nfsd/nfs4state.c:4549:
++			crp = list_entry(nn->reclaim_str_hashtbl[i].next,
+ 			                struct nfs4_client_reclaim, cr_strhash);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#426: FILE: fs/nfsd/nfs4state.c:4553:
++	BUG_ON(nn->reclaim_str_hashtbl_size);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nfs4_client_reclaim *' should also have an identifier name
+#473: FILE: fs/nfsd/state.h:469:
++void nfs4_remove_reclaim_record(struct nfs4_client_reclaim *, struct nfsd_net *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nfsd_net *' should also have an identifier name
+#473: FILE: fs/nfsd/state.h:469:
++void nfs4_remove_reclaim_record(struct nfs4_client_reclaim *, struct nfsd_net *);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#474: FILE: fs/nfsd/state.h:470:
++extern void nfs4_release_reclaim(struct nfsd_net *);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nfsd_net *' should also have an identifier name
+#474: FILE: fs/nfsd/state.h:470:
++extern void nfs4_release_reclaim(struct nfsd_net *);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#475: FILE: fs/nfsd/state.h:471:
++extern struct nfs4_client_reclaim *nfsd4_find_reclaim_client(const char *recdir,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#476: FILE: fs/nfsd/state.h:472:
++extern struct nfs4_client_reclaim *nfsd4_find_reclaim_client(const char *recdir,
++							struct nfsd_net *nn);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#486: FILE: fs/nfsd/state.h:486:
++extern struct nfs4_client_reclaim *nfs4_client_to_reclaim(const char *name,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#487: FILE: fs/nfsd/state.h:487:
++extern struct nfs4_client_reclaim *nfs4_client_to_reclaim(const char *name,
++							struct nfsd_net *nn);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#488: FILE: fs/nfsd/state.h:488:
++extern bool nfs4_has_reclaimed_state(const char *name, struct nfsd_net *nn);
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000026084.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 5 warnings, 10 checks, 406 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000026084.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

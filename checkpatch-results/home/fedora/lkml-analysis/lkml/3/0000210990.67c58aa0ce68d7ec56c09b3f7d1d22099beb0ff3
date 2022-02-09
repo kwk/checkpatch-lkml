@@ -1,0 +1,80 @@
+ERROR:INLINE_LOCATION: inline keyword should sit between storage class and type
+#124: FILE: kernel/locking/qspinlock.c:140:
++static int __always_inline
+
+The inline keyword should sit between storage class and type.
+
+For example, the following segment::
+
+  inline static int example_function(void)
+  {
+          ...
+  }
+
+should be::
+
+  static inline int example_function(void)
+  {
+          ...
+  }
+
+WARNING:CONSTANT_CONVERSION: __constant_le16_to_cpu should be le16_to_cpu
+#129: FILE: kernel/locking/qspinlock.c:145:
++	ACCESS_ONCE(l->locked_pending) = __constant_le16_to_cpu(_Q_LOCKED_VAL);
+
+Use of __constant_<foo> form is discouraged for the following functions::
+
+  __constant_cpu_to_be[x]
+  __constant_cpu_to_le[x]
+  __constant_be[x]_to_cpu
+  __constant_le[x]_to_cpu
+  __constant_htons
+  __constant_ntohs
+
+Using any of these outside of include/uapi/ is not preferred as using the
+function without __constant_ is identical when the argument is a
+constant.
+
+In big endian systems, the macros like __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to the same expression::
+
+  #define __constant_cpu_to_be32(x) ((__force __be32)(__u32)(x))
+  #define __cpu_to_be32(x)          ((__force __be32)(__u32)(x))
+
+In little endian systems, the macros __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to __constant_swab32 and __swab32.  __swab32
+has a __builtin_constant_p check::
+
+  #define __swab32(x)				\
+    (__builtin_constant_p((__u32)(x)) ?	\
+    ___constant_swab32(x) :			\
+    __fswab32(x))
+
+So ultimately they have a special case for constants.
+Similar is the case with all of the macros in the list.  Thus
+using the __constant_... forms are unnecessarily verbose and
+not preferred outside of include/uapi.
+
+See: https://lore.kernel.org/lkml/1400106425.12666.6.camel@joe-AO725/
+
+ERROR:INLINE_LOCATION: inline keyword should sit between storage class and type
+#139: FILE: kernel/locking/qspinlock.c:155:
++static u32 __always_inline
+
+ERROR:INLINE_LOCATION: inline keyword should sit between storage class and type
+#154: FILE: kernel/locking/qspinlock.c:170:
++static int __always_inline
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#199: FILE: kernel/locking/qspinlock.c:285:
++	while ((val = smp_load_acquire(&lock->val.counter)) & _Q_LOCKED_MASK)
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000210990.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 3 errors, 2 warnings, 0 checks, 147 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000210990.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

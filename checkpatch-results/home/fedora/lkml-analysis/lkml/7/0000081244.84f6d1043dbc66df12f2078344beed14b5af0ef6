@@ -1,0 +1,162 @@
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#167: FILE: include/kunit/test.h:97:
++#define KUNIT_VAR_SYMBOL(symbol, type)					\
++	type * kunit_##symbol;						\
++	type symbol
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#171: FILE: include/kunit/test.h:101:
++#define KUNIT_VAR_SYMBOL(symbol, type)					\
++	type * kunit_##symbol
+
+WARNING:TYPO_SPELLING: 'assing' may be misspelled - perhaps 'assign'?
+#184: FILE: include/kunit/test.h:114:
++ * case we simply assing kunit_<symbol_name> to &<symbol_name> ; this will
+                   ^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'test' - possible side-effects?
+#189: FILE: include/kunit/test.h:119:
++#define KUNIT_INIT_VAR_SYMBOL(test, symbol)				\
++	do {								\
++		if (!(kunit_##symbol)) {				\
++			kunit_##symbol = kunit_find_symbol(#symbol);	\
++			if (!IS_ERR((kunit_##symbol)))			\
++				symbol = *(kunit_##symbol);		\
++		}							\
++		if (test)						\
++			KUNIT_ASSERT_NOT_ERR_OR_NULL(test,		\
++						     kunit_##symbol);	\
++	} while (0)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'kunit_##symbol'
+#193: FILE: include/kunit/test.h:123:
++			if (!IS_ERR((kunit_##symbol)))			\
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#201: FILE: include/kunit/test.h:131:
++#define KUNIT_INIT_VAR_SYMBOL(test, symbol)				\
++	kunit_##symbol = &(symbol)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'test' - possible side-effects?
+#220: FILE: include/kunit/test.h:150:
++#define KUNIT_INIT_FN_SYMBOL(test, symbol, name)			\
++	do {								\
++		if (!name)						\
++			name = kunit_find_symbol(#symbol);		\
++		if (test)                                               \
++			KUNIT_ASSERT_NOT_ERR_OR_NULL(test, name);	\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#220: FILE: include/kunit/test.h:150:
++#define KUNIT_INIT_FN_SYMBOL(test, symbol, name)			\
++	do {								\
++		if (!name)						\
++			name = kunit_find_symbol(#symbol);		\
++		if (test)                                               \
++			KUNIT_ASSERT_NOT_ERR_OR_NULL(test, name);	\
++	} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'name' may be better as '(name)' to avoid precedence issues
+#220: FILE: include/kunit/test.h:150:
++#define KUNIT_INIT_FN_SYMBOL(test, symbol, name)			\
++	do {								\
++		if (!name)						\
++			name = kunit_find_symbol(#symbol);		\
++		if (test)                                               \
++			KUNIT_ASSERT_NOT_ERR_OR_NULL(test, name);	\
++	} while (0)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#228: FILE: include/kunit/test.h:158:
++#define KUNIT_INIT_FN_SYMBOL(test, symbol, name)			\
++	name = symbol
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#273: FILE: include/kunit/test.h:305:
++#define kunit_test_suites(...)						\
++	static struct kunit_suite *suites[] = { __VA_ARGS__, NULL};	\
++	static int kunit_test_suites_init(void)				\
++	{								\
++		unsigned int i;						\
++		for (i = 0; suites[i] != NULL; i++)			\
++			kunit_run_tests(suites[i]);			\
++		return 0;						\
++	}								\
++	late_initcall(kunit_test_suites_init);				\
++	static void __exit kunit_test_suites_exit(void)			\
++	{								\
++		return;							\
++	}								\
++	module_exit(kunit_test_suites_exit)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "suites[i]"
+#278: FILE: include/kunit/test.h:310:
++		for (i = 0; suites[i] != NULL; i++)			\
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#491: FILE: lib/kunit/string-stream-test.c:72:
+ };
++kunit_test_suites(&string_stream_test_suite);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000081244.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 total: 4 errors, 2 warnings, 7 checks, 457 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000081244.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

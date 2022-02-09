@@ -1,0 +1,487 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#23: 
+  implements READ and WRITE bytes per second throttling logic. IOPS throttling
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#46: FILE: block/Kconfig:80:
++config BLK_DEV_THROTTLING
++	bool "Block layer bio throttling support"
++	depends on BLK_CGROUP=y && EXPERIMENTAL
++	default n
++	---help---
++	Block layer bio throttling support. It can be used to limit
++	the IO rate to a device. IO rate policies are per cgroup and
++	one needs to mount and use blkio cgroup controller for creating
++	cgroups and specifying per device IO rate policies.
++
++	See Documentation/cgroups/blkio-controller.txt for more information.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#127: FILE: block/blk-core.c:2600:
++int kblockd_schedule_delayed_work(struct request_queue *q,
++			struct delayed_work *dwork, unsigned long delay)
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#137: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#142: FILE: block/blk-throttle.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#162: FILE: block/blk-throttle.c:21:
++static unsigned long throtl_slice = HZ/10;	/* 100 ms */
+                                       ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#171: FILE: block/blk-throttle.c:30:
++#define THROTL_RB_ROOT	(struct throtl_rb_root) { .rb = RB_ROOT, .left = NULL, \
++			.count = 0, .min_disptime = 0}
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#201: FILE: block/blk-throttle.c:60:
++	uint64_t bps[2];
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#204: FILE: block/blk-throttle.c:63:
++	uint64_t bytes_disp[2];
+
+ERROR:OPEN_BRACE: open brace '{' following struct go on the same line
+#212: FILE: block/blk-throttle.c:71:
++struct throtl_data
++{
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#254: FILE: block/blk-throttle.c:113:
++#define throtl_log_tg(td, tg, fmt, args...)				\
++	blk_add_trace_msg((td)->queue, "throtl %s " fmt,		\
++				blkg_path(&(tg)->blkg), ##args);      	\
++
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#256: FILE: block/blk-throttle.c:115:
++^I^I^I^Iblkg_path(&(tg)->blkg), ##args);      ^I\$
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#282: FILE: block/blk-throttle.c:141:
++	BUG_ON(atomic_read(&tg->ref) <= 0);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#288: FILE: block/blk-throttle.c:147:
++static struct throtl_grp * throtl_find_alloc_tg(struct throtl_data *td,
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#289: FILE: block/blk-throttle.c:148:
++static struct throtl_grp * throtl_find_alloc_tg(struct throtl_data *td,
++			struct cgroup *cgroup)
+
+WARNING:NAKED_SSCANF: unchecked sscanf return value
+#306: FILE: block/blk-throttle.c:165:
++		sscanf(dev_name(bdi->dev), "%u:%u", &major, &minor);
+
+WARNING:NAKED_SSCANF: unchecked sscanf return value
+#332: FILE: block/blk-throttle.c:191:
++	sscanf(dev_name(bdi->dev), "%u:%u", &major, &minor);
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#345: FILE: block/blk-throttle.c:204:
++static struct throtl_grp * throtl_get_tg(struct throtl_data *td)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "node"
+#408: FILE: block/blk-throttle.c:267:
++	while (*node != NULL) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#412: FILE: block/blk-throttle.c:271:
++		if (time_before(key, __tg->disptime))
+[...]
++		else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#414: FILE: block/blk-throttle.c:273:
++		else {
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#464: FILE: block/blk-throttle.c:323:
++	BUG_ON(!st->count);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#472: FILE: block/blk-throttle.c:331:
++		throtl_schedule_delayed_work(td->queue,
++				(st->min_disptime - jiffies));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#482: FILE: block/blk-throttle.c:341:
++	throtl_log_tg(td, tg, "[%c] new slice start=%lu end=%lu jiffies=%lu",
++			rw == READ ? 'R' : 'W', tg->slice_start[rw],
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#487: FILE: block/blk-throttle.c:346:
++static inline void throtl_extend_slice(struct throtl_data *td,
++		struct throtl_grp *tg, bool rw, unsigned long jiffy_end)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#491: FILE: block/blk-throttle.c:350:
++	throtl_log_tg(td, tg, "[%c] extend slice start=%lu end=%lu jiffies=%lu",
++			rw == READ ? 'R' : 'W', tg->slice_start[rw],
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#511: FILE: block/blk-throttle.c:370:
++	BUG_ON(time_before(tg->slice_end[rw], tg->slice_start[rw]));
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#528: FILE: block/blk-throttle.c:387:
++	bytes_trim = (tg->bps[rw] * throtl_slice * nr_slices)/HZ;
+ 	                                                     ^
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#541: FILE: block/blk-throttle.c:400:
++	throtl_log_tg(td, tg, "[%c] trim slice nr=%lu bytes=%lu"
++			" start=%lu end=%lu jiffies=%lu",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#551: FILE: block/blk-throttle.c:410:
++static bool tg_may_dispatch(struct throtl_data *td, struct throtl_grp *tg,
++				struct bio *bio, unsigned long *wait)
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#558: FILE: block/blk-throttle.c:417:
++ ^I * Currently whole state machine of group depends on first bio$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#558: FILE: block/blk-throttle.c:417:
++ ^I * Currently whole state machine of group depends on first bio$
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#563: FILE: block/blk-throttle.c:422:
++	BUG_ON(tg->nr_queued[rw] && bio != bio_list_peek(&tg->bio_lists[rw]));
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#577: FILE: block/blk-throttle.c:436:
++	if (throtl_slice_used(td, tg, rw))
+[...]
++	else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#579: FILE: block/blk-throttle.c:438:
++	else {
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#584: FILE: block/blk-throttle.c:443:
++	jiffy_elapsed = jiffy_elapsed_rnd = jiffies - tg->slice_start[rw];
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#637: FILE: block/blk-throttle.c:496:
++
++}
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#640: FILE: block/blk-throttle.c:499:
++static void throtl_add_bio_tg(struct throtl_data *td, struct throtl_grp *tg,
++			struct bio *bio)
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#657: FILE: block/blk-throttle.c:516:
++	if ((bio = bio_list_peek(&tg->bio_lists[READ])))
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#660: FILE: block/blk-throttle.c:519:
++	if ((bio = bio_list_peek(&tg->bio_lists[WRITE])))
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#691: FILE: block/blk-throttle.c:550:
++	BUG_ON(td->nr_queued[rw] <= 0);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#702: FILE: block/blk-throttle.c:561:
++static int throtl_dispatch_tg(struct throtl_data *td, struct throtl_grp *tg,
++				struct bio_list *bl)
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#705: FILE: block/blk-throttle.c:564:
++	unsigned int max_nr_reads = throtl_grp_quantum*3/4;
+ 	                                              ^
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#705: FILE: block/blk-throttle.c:564:
++	unsigned int max_nr_reads = throtl_grp_quantum*3/4;
+ 	                                                ^
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#712: FILE: block/blk-throttle.c:571:
++	while ((bio = bio_list_peek(&tg->bio_lists[READ]))
++		&& tg_may_dispatch(td, tg, bio, NULL)) {
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#713: FILE: block/blk-throttle.c:572:
++		&& tg_may_dispatch(td, tg, bio, NULL)) {
++
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#722: FILE: block/blk-throttle.c:581:
++	while ((bio = bio_list_peek(&tg->bio_lists[WRITE]))
++		&& tg_may_dispatch(td, tg, bio, NULL)) {
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#723: FILE: block/blk-throttle.c:582:
++		&& tg_may_dispatch(td, tg, bio, NULL)) {
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#781: FILE: block/blk-throttle.c:640:
++	throtl_log(td, "dispatch nr_queued=%lu read=%u write=%u",
++			total_nr_queued(td), td->nr_queued[READ],
+
+ERROR:SPACING: space required before the open parenthesis '('
+#798: FILE: block/blk-throttle.c:657:
++		while((bio = bio_list_pop(&bio_list_on_stack)))
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#817: FILE: block/blk-throttle.c:676:
++{
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#829: FILE: block/blk-throttle.c:688:
++		throtl_log(td, "schedule work. delay=%lu jiffies=%lu",
++				delay, jiffies);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#838: FILE: block/blk-throttle.c:697:
++	BUG_ON(hlist_unhashed(&tg->tg_node));
+
+WARNING:TYPO_SPELLING: 'deltion' may be misspelled - perhaps 'deletion'?
+#882: FILE: block/blk-throttle.c:741:
++ * it should not be NULL as even if queue was going away, cgroup deltion
+                                                                  ^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#895: FILE: block/blk-throttle.c:754:
++static void throtl_update_blkio_group_read_bps (struct blkio_group *blkg,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#896: FILE: block/blk-throttle.c:755:
++static void throtl_update_blkio_group_read_bps (struct blkio_group *blkg,
++			u64 read_bps)
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#901: FILE: block/blk-throttle.c:760:
++static void throtl_update_blkio_group_write_bps (struct blkio_group *blkg,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#902: FILE: block/blk-throttle.c:761:
++static void throtl_update_blkio_group_write_bps (struct blkio_group *blkg,
++			u64 write_bps)
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#956: FILE: block/blk-throttle.c:815:
++	throtl_log_tg(td, tg, "[%c] bio. disp=%u sz=%u bps=%llu"
++			" queued=%d/%d", rw == READ ? 'R' : 'W',
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#993: FILE: block/blk-throttle.c:852:
++	tg->bps[0] = tg->bps[1] = -1;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1000: FILE: block/blk-throttle.c:859:
++	blkiocg_add_blkio_group(&blkio_root_cgroup, &tg->blkg, (void *)td,
++					0, BLKIO_POLICY_THROTL);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1014: FILE: block/blk-throttle.c:873:
++	BUG_ON(!td);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1060: FILE: include/linux/blk_types.h:134:
++				 * throttling rules. Don't do it again. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#1068: FILE: include/linux/blk_types.h:177:
++#define REQ_THROTTLED		(1 << __REQ_THROTTLED)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+WARNING:LONG_LINE: line length of 108 exceeds 100 columns
+#1092: FILE: include/linux/blkdev.h:1135:
++int kblockd_schedule_delayed_work(struct request_queue *q, struct delayed_work *dwork, unsigned long delay);
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1101: FILE: include/linux/blkdev.h:1180:
++extern int blk_throtl_init(struct request_queue *q);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1102: FILE: include/linux/blkdev.h:1181:
++extern void blk_throtl_exit(struct request_queue *q);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1103: FILE: include/linux/blkdev.h:1182:
++extern int blk_throtl_bio(struct request_queue *q, struct bio **bio);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1104: FILE: include/linux/blkdev.h:1183:
++extern void throtl_schedule_delayed_work(struct request_queue *q, unsigned long delay);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1105: FILE: include/linux/blkdev.h:1184:
++extern void throtl_shutdown_timer_wq(struct request_queue *q);
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000380784.commit.50c234c910ddd03a627257cc11704614c0619761 total: 8 errors, 23 warnings, 39 checks, 1062 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000380784.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

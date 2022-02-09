@@ -1,0 +1,107 @@
+ERROR:CORRUPTED_PATCH: patch seems to be corrupt (line wrapped?)
+#70: FILE: arch/parisc/include/asm/bug.h:44:
+=20
+
+The patch seems to be corrupted or lines are wrapped.
+Please regenerate the patch file before sending it to the maintainer.
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#82: FILE: arch/parisc/include/asm/bug.h:57:
++^I^I^I     "i" (BUGFLAG_TAINT(taint)), ^I^I\$
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#110: FILE: arch/powerpc/include/asm/bug.h:87:
++#define __WARN_TAINT(taint) do {				\
+ 	__asm__ __volatile__(					\
+ 		"1:	twi 31,0,0\n"				\
+ 		_EMIT_BUG_ENTRY					\
+ 		: : "i" (__FILE__), "i" (__LINE__),		\
++		  "i" (BUGFLAG_TAINT(taint)),			\
+ 		  "i" (sizeof(struct bug_entry)));		\
+ } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#139: FILE: arch/s390/include/asm/bug.h:48:
++#define __WARN_TAINT(taint) do {			\
++	__EMIT_BUG(BUGFLAG_TAINT(taint));		\
+ } while (0)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#187: FILE: include/asm-generic/bug.h:27:
++#define BUGFLAG_WARNING		(1 << 0)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#203: FILE: include/asm-generic/bug.h:66:
++extern void warn_slowpath_fmt_taint(const char *file, const int line,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#204: FILE: include/asm-generic/bug.h:67:
++				    unsigned taint, const char *fmt, ...)
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __printf(4, 5) over __attribute__((format(printf, 4, 5)))
+#205: FILE: include/asm-generic/bug.h:68:
++	__attribute__((format(printf, 4, 5)));
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#217: FILE: include/asm-generic/bug.h:80:
++	do { printk(arg); __WARN_TAINT(taint); } while (0)
+
+ERROR:SPACING: spaces required around that '=' (ctx:WxV)
+#227: FILE: include/asm-generic/bug.h:101:
++	int __ret_warn_on =3D !!(condition);				\
+ 	                  ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: spaces required around that '=' (ctx:WxV)
+#253: FILE: include/asm-generic/bug.h:157:
++	int __ret_warn_once =3D !!(condition);			\
+ 	                    ^
+
+ERROR:SPACING: spaces required around that '=' (ctx:WxV)
+#257: FILE: include/asm-generic/bug.h:161:
++			__warned =3D true;			\
+ 			         ^
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#275: FILE: kernel/panic.c:369:
++				 unsigned taint, struct slowpath_args *args)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#302: FILE: kernel/panic.c:399:
++			     unsigned taint, const char *fmt, ...)
+
+ERROR:SPACING: spaces required around that '=' (ctx:WxV)
+#306: FILE: kernel/panic.c:403:
++	args.fmt =3D fmt;
+ 	         ^
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000453048.commit.50c234c910ddd03a627257cc11704614c0619761 total: 5 errors, 8 warnings, 2 checks, 238 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000453048.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

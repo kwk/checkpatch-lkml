@@ -1,0 +1,56 @@
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#68: FILE: arch/sparc/include/asm/mmu_context_64.h:68:
++#define load_secondary_context_0(__mm) \
+ 	__asm__ __volatile__( \
+ 	"\n661:	stxa		%0, [%1] %2\n" \
+ 	"	.section	.sun4v_1insn_patch, \"ax\"\n" \
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#80: FILE: arch/sparc/include/asm/mmu_context_64.h:84:
++#define load_secondary_context_1(__mm) \
++	__asm__ __volatile__( \
++	"\n661: stxa		%0, [%1] %2\n" \
++	"	.section	.sun4v_1insn_patch, \"ax\"\n" \
++	"	.word		661b\n" \
++	"	stxa		%0, [%1] %3\n" \
++	"	.previous\n" \
++	"	flush		%%g6\n" \
++	: /* No outputs */ \
++	: "r" (SHARED_CTX_HWBITS((__mm)->context)), \
++	  "r" (SECONDARY_CONTEXT_R1), "i" (ASI_DMMU), "i" (ASI_MMU))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__mm' - possible side-effects?
+#93: FILE: arch/sparc/include/asm/mmu_context_64.h:97:
++#define load_secondary_context(__mm) \
++	do { \
++		load_secondary_context_0(__mm); \
++		if ((__mm)->context.shared_ctx) \
++			load_secondary_context_1(__mm); \
++	} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#100: FILE: arch/sparc/include/asm/mmu_context_64.h:104:
++#define load_secondary_context(__mm) \
++	do { \
++		load_secondary_context_0(__mm); \
++	} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000304844.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 2 errors, 1 warnings, 1 checks, 232 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000304844.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

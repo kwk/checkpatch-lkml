@@ -1,0 +1,60 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#49: FILE: lib/rbtree_test.c:8:
++#define __param(type, name, init, msg)		\
++	static type name = init;		\
++	module_param(name, type, 0444);		\
++	MODULE_PARM_DESC(name, msg);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#49: FILE: lib/rbtree_test.c:8:
++#define __param(type, name, init, msg)		\
++	static type name = init;		\
++	module_param(name, type, 0444);		\
++	MODULE_PARM_DESC(name, msg);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:INITIALISED_STATIC: do not initialise statics to NULL
+#65: FILE: lib/rbtree_test.c:27:
++static struct test_node *nodes = NULL;
+
+Static variables should not be initialized explicitly to zero.
+Your compiler (or rather your loader) automatically does
+it for you.
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kmalloc_array over kmalloc with multiply
+#82: FILE: lib/rbtree_test.c:187:
++	nodes = kmalloc(nnodes * sizeof(*nodes), GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000151162.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 1 errors, 2 warnings, 1 checks, 124 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000151162.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

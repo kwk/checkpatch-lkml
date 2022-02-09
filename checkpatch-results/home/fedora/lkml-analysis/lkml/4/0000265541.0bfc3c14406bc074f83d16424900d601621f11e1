@@ -1,0 +1,805 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#31: 
+   git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git x86-asm-for-linus
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#315: FILE: arch/um/include/shared/kern_util.h:26:
++extern void do_signal(struct pt_regs *regs);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#410: FILE: arch/x86/Kconfig:1005:
++config X86_LEGACY_VM86
++	bool "Legacy VM86 support (obsolete)"
++	default n
+ 	depends on X86_32
+ 	---help---
++	  This option allows user programs to put the CPU into V8086
++	  This option allows user programs to put the CPU into V8086
++	  This option allows user programs to put the CPU into V8086
++	  This option allows user programs to put the CPU into V8086
++	  This option allows user programs to put the CPU into V8086
++	  mode, which is an 80286-era approximation of 16-bit real mode.
++
++	  Some very old versions of X and/or vbetool require this option
++	  for user mode setting.  Similarly, DOSEMU will use it if
++	  available to accelerate real mode DOS programs.  However, any
++	  recent version of DOSEMU, X, or vbetool should be fully
++	  functional even without kernel VM86 support, as they will all
++	  fall back to (pretty well performing) software emulation.
++
++	  Anything that works on a 64-bit kernel is unlikely to need
++	  this option, as 64-bit kernels don't, and can't, support V8086
++	  mode.  This option is also unrelated to 16-bit protected mode
++	  and is not needed to run most 16-bit programs under Wine.
++
++	  Enabling this option adds considerable attack surface to the
++	  kernel and slows down system calls and exception handling.
++
++	  Unless you use very old userspace or need the last drop of
++	  performance in your real mode DOS games and can't use KVM,
++	  say N here.
++
++config VM86
++       bool
++       default X86_LEGACY_VM86
+ 
+ config X86_16BIT
+ 	bool "Enable support for 16-bit segments" if EXPERT
+ 	default y
++	depends on MODIFY_LDT_SYSCALL
+ 	---help---
+ 	  This option is required by programs like Wine to run 16-bit
+ 	  protected mode legacy code on x86 processors.  Disabling
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#464: FILE: arch/x86/Kconfig:2079:
++config MODIFY_LDT_SYSCALL
++	bool "Enable the LDT (local descriptor table)" if EXPERT
++	default y
++	---help---
++	  Linux can allow user programs to install a per-process x86
++	  Local Descriptor Table (LDT) using the modify_ldt(2) system
++	  call.  This is required to run 16-bit or segmented code such as
++	  DOSEMU or some Wine programs.  It is also used by some very old
++	  threading libraries.
++
++	  Enabling this feature adds a small amount of overhead to
++	  context switches and increases the low-level kernel attack
++	  surface.  Disabling it removes the modify_ldt(2) system call.
++
++	  Saying 'N' here may make sense for embedded or server kernels.
++
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#593: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#598: FILE: arch/x86/entry/common.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:BRACES: Unbalanced braces around else statement
+#643: FILE: arch/x86/entry/common.c:46:
++	} else
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#669: FILE: arch/x86/entry/common.c:72:
++	BUG_ON(regs != task_pt_regs(current));
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:BRACES: Unbalanced braces around else statement
+#705: FILE: arch/x86/entry/common.c:108:
++		} else
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#758: FILE: arch/x86/entry/common.c:161:
++	BUG_ON(regs != task_pt_regs(current));
+
+WARNING:TYPO_SPELLING: 'preemptable' may be misspelled - perhaps 'preemptible'?
+#824: FILE: arch/x86/entry/common.c:227:
++	 * can be set at any time on preemptable kernels if we have IRQs on,
+ 	                             ^^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#898: FILE: arch/x86/entry/common.c:301:
++		step = unlikely(
+
+WARNING:LONG_LINE: line length of 106 exceeds 100 columns
+#1464: FILE: arch/x86/entry/entry_64_compat.S:215:
++	testl	$(_TIF_ALLWORK_MASK & ~_TIF_SYSCALL_AUDIT), ASM_THREAD_INFO(TI_flags, %rsp, SIZEOF_PTREGS)
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1817: FILE: arch/x86/include/asm/cpufeature.h:179:
++#define X86_FEATURE_MWAITX	( 6*32+29) /* MWAIT extension (MONITORX/MWAITX) */
+                           	   ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1817: FILE: arch/x86/include/asm/cpufeature.h:179:
++#define X86_FEATURE_MWAITX	( 6*32+29) /* MWAIT extension (MONITORX/MWAITX) */
+                           	      ^
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#1817: FILE: arch/x86/include/asm/cpufeature.h:179:
++#define X86_FEATURE_MWAITX	( 6*32+29) /* MWAIT extension (MONITORX/MWAITX) */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1979: FILE: arch/x86/include/asm/mmu_context.h:63:
++}
++static inline void destroy_context(struct mm_struct *mm) {}
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2096: FILE: arch/x86/include/asm/msr.h:151:
++	alternative_2("", "mfence", X86_FEATURE_MFENCE_RDTSC,
++			  "lfence", X86_FEATURE_LFENCE_RDTSC);
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#2101: FILE: arch/x86/include/asm/msr.h:156:
++#define rdtscll(now)	do { (now) = rdtsc_ordered(); } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2112: FILE: arch/x86/include/asm/msr.h:191:
++static inline void wrmsrl(unsigned msr, u64 val)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2227: FILE: arch/x86/include/asm/paravirt.h:156:
++static inline void wrmsrl(unsigned msr, u64 val)
+
+CHECK:SPACING: spaces preferred around that '>>' (ctx:VxV)
+#2229: FILE: arch/x86/include/asm/paravirt.h:158:
++	wrmsr(msr, (u32)val, (u32)(val>>32));
+ 	                              ^
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#2395: FILE: arch/x86/include/asm/sigframe.h:75:
++^Iunsigned int ^I  uc_link;$
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2414: FILE: arch/x86/include/asm/signal.h:33:
++extern void do_signal(struct pt_regs *regs);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2507: FILE: arch/x86/include/asm/traps.h:115:
++extern void ist_enter(struct pt_regs *regs);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2508: FILE: arch/x86/include/asm/traps.h:116:
++extern void ist_exit(struct pt_regs *regs);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct kernel_vm86_regs *' should also have an identifier name
+#2604: FILE: arch/x86/include/asm/vm86.h:49:
++void save_v86_state(struct kernel_vm86_regs *, int);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#2604: FILE: arch/x86/include/asm/vm86.h:49:
++void save_v86_state(struct kernel_vm86_regs *, int);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "__t->vm86"
+#2610: FILE: arch/x86/include/asm/vm86.h:55:
++	if (__t->vm86 != NULL) {			\
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+ERROR:SPACING: space required before the open parenthesis '('
+#2637: FILE: arch/x86/include/asm/vm86.h:87:
++#define free_vm86(t) do { } while(0)
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/delay.h> instead of <asm/delay.h>
+#2757: FILE: arch/x86/kernel/cpu/amd.c:14:
++#include <asm/delay.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#3213: FILE: arch/x86/kernel/ptrace.c:1163:
++		return copy_regset_from_user(
+
+CHECK:SPACING: No space is necessary after a cast
+#3554: FILE: arch/x86/kernel/signal.c:636:
++		save_v86_state((struct kernel_vm86_regs *) regs, VM86_SIGNAL);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#3607: FILE: arch/x86/kernel/signal_compat.c:1:
++#include <linux/compat.h>
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#3620: FILE: arch/x86/kernel/signal_compat.c:14:
++		/* If you change siginfo_t structure, please make sure that
++		   this code is fixed accordingly.
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3623: FILE: arch/x86/kernel/signal_compat.c:17:
++		   3 ints plus the relevant union member.  */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3638: FILE: arch/x86/kernel/signal_compat.c:32:
++			put_user_ex(from->_sifields._pad[0],
++					  &to->_sifields._pad[0]);
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#3651: FILE: arch/x86/kernel/signal_compat.c:45:
++					put_user_ex(from->si_utime, &to->_sifields._sigchld_x32._utime);
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#3652: FILE: arch/x86/kernel/signal_compat.c:46:
++					put_user_ex(from->si_stime, &to->_sifields._sigchld_x32._stime);
+
+WARNING:PREFER_FALLTHROUGH: Prefer 'fallthrough;' over fallthrough comment
+#3655: FILE: arch/x86/kernel/signal_compat.c:49:
++				/* FALL THROUGH */
+
+Use the `fallthrough;` pseudo keyword instead of
+`/* fallthrough */` like comments.
+
+WARNING:TYPO_SPELLING: 'IST' may be misspelled - perhaps 'IS'?
+#3779: FILE: arch/x86/kernel/traps.c:127:
++	 * We are atomic because we're on the IST stack; or we're on
+ 	                                      ^^^
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around current->thread.vm86->veflags
+#4172: FILE: arch/x86/kernel/vm86_32.c:83:
++#define VFLAGS	(*(unsigned short *)&(current->thread.vm86->veflags))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:SPACING: No space is necessary after a cast
+#4332: FILE: arch/x86/kernel/vm86_32.c:199:
++	return do_sys_vm86((struct vm86plus_struct __user *) user_vm86, false);
+
+CHECK:SPACING: No space is necessary after a cast
+#4368: FILE: arch/x86/kernel/vm86_32.c:222:
++	return do_sys_vm86((struct vm86plus_struct __user *) arg, true);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#4392: FILE: arch/x86/kernel/vm86_32.c:236:
++		if (!(vm86 = kzalloc(sizeof(*vm86), GFP_KERNEL)))
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4407: FILE: arch/x86/kernel/vm86_32.c:251:
++		unsigned short seg;
++		get_user_ex(vm86regs.pt.bx, &user_vm86->regs.ebx);
+
+CHECK:BRACES: Unbalanced braces around else statement
+#4446: FILE: arch/x86/kernel/vm86_32.c:290:
++	} else
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#4485: FILE: arch/x86/kernel/vm86_32.c:320:
++		vm86->veflags_mask = X86_EFLAGS_ID | X86_EFLAGS_AC | X86_EFLAGS_NT | X86_EFLAGS_IOPL;
+
+CHECK:CAMELCASE: Avoid CamelCase: <VM86_INTx>
+#4603: FILE: arch/x86/kernel/vm86_32.c:528:
++	save_v86_state(regs, VM86_INTx + (i << 8));
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:CAMELCASE: Avoid CamelCase: <vm86dbg_TFpendig>
+#4630: FILE: arch/x86/kernel/vm86_32.c:561:
++	if (vmpi->vm86dbg_active && vmpi->vm86dbg_TFpendig) \
+
+WARNING:TYPO_SPELLING: 'seldomly' may be misspelled - perhaps 'seldom'?
+#4928: FILE: arch/x86/lib/delay.c:102:
++		 * Use cpu_tss as a cacheline-aligned, seldomly
+ 		                                       ^^^^^^^^
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#5096: FILE: drivers/input/joystick/analog.c:146:
++#define GET_TIME(x)	do { if (cpu_has_tsc) x = (unsigned int)rdtsc(); else x = get_time_pit(); } while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#5096: FILE: drivers/input/joystick/analog.c:146:
++#define GET_TIME(x)	do { if (cpu_has_tsc) x = (unsigned int)rdtsc(); else x = get_time_pit(); } while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#5105: FILE: drivers/input/joystick/analog.c:163:
++#define GET_TIME(x)	do { x = (unsigned int)rdtsc(); } while (0)
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#5164: FILE: drivers/staging/media/lirc/lirc_serial.c:356:
+ 	dprintk("in init_timing_params, freq=%d, duty_cycle=%d, "
++		"clk/jiffy=%ld, pulse=%ld, space=%ld\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#5275: FILE: include/linux/context_tracking.h:52:
+ 
++
+
+WARNING:USE_LOCKDEP: Where possible, use lockdep_assert_held instead of assertions based on spin_is_locked
+#5405: FILE: include/linux/spinlock.h:395:
++static __always_inline int spin_is_locked(spinlock_t *lock)
+
+lockdep_assert_held() annotations should be preferred over
+assertions based on spin_is_locked()
+
+See: https://www.kernel.org/doc/html/latest/locking/lockdep-design.html#annotations
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'notify_die', this function's name, in a string
+#5430: FILE: kernel/notifier.c:548:
++			   "notify_die called but RCU thinks we're quiescent");
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#5491: FILE: tools/testing/selftests/x86/entry_from_vm86.c:35:
++	struct sigaction sa;
++	memset(&sa, 0, sizeof(sa));
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#5502: FILE: tools/testing/selftests/x86/entry_from_vm86.c:46:
++	struct sigaction sa;
++	memset(&sa, 0, sizeof(sa));
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#5513: FILE: tools/testing/selftests/x86/entry_from_vm86.c:57:
++	ucontext_t *ctx = (ucontext_t*)ctx_void;
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#5522: FILE: tools/testing/selftests/x86/entry_from_vm86.c:66:
++	const char *signame;
++	if (sig == SIGSEGV)
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#5559: FILE: tools/testing/selftests/x86/entry_from_vm86.c:105:
++extern unsigned char vmcode_bound[], vmcode_sysenter[], vmcode_syscall[],
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#5675: FILE: tools/testing/selftests/x86/ldt_gdt.c:1:
++/*
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#5699: FILE: tools/testing/selftests/x86/ldt_gdt.c:25:
++#define AR_ACCESSED		(1<<8)
+                    		  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#5699: FILE: tools/testing/selftests/x86/ldt_gdt.c:25:
++#define AR_ACCESSED		(1<<8)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#5701: FILE: tools/testing/selftests/x86/ldt_gdt.c:27:
++#define AR_TYPE_RODATA		(0 * (1<<9))
+                       		       ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#5702: FILE: tools/testing/selftests/x86/ldt_gdt.c:28:
++#define AR_TYPE_RWDATA		(1 * (1<<9))
+                       		       ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#5703: FILE: tools/testing/selftests/x86/ldt_gdt.c:29:
++#define AR_TYPE_RODATA_EXPDOWN	(2 * (1<<9))
+                               	       ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#5704: FILE: tools/testing/selftests/x86/ldt_gdt.c:30:
++#define AR_TYPE_RWDATA_EXPDOWN	(3 * (1<<9))
+                               	       ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#5705: FILE: tools/testing/selftests/x86/ldt_gdt.c:31:
++#define AR_TYPE_XOCODE		(4 * (1<<9))
+                       		       ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#5706: FILE: tools/testing/selftests/x86/ldt_gdt.c:32:
++#define AR_TYPE_XRCODE		(5 * (1<<9))
+                       		       ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#5707: FILE: tools/testing/selftests/x86/ldt_gdt.c:33:
++#define AR_TYPE_XOCODE_CONF	(6 * (1<<9))
+                            	       ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#5708: FILE: tools/testing/selftests/x86/ldt_gdt.c:34:
++#define AR_TYPE_XRCODE_CONF	(7 * (1<<9))
+                            	       ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#5710: FILE: tools/testing/selftests/x86/ldt_gdt.c:36:
++#define AR_DPL3			(3 * (1<<13))
+                			       ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#5712: FILE: tools/testing/selftests/x86/ldt_gdt.c:38:
++#define AR_S			(1 << 12)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#5713: FILE: tools/testing/selftests/x86/ldt_gdt.c:39:
++#define AR_P			(1 << 15)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#5714: FILE: tools/testing/selftests/x86/ldt_gdt.c:40:
++#define AR_AVL			(1 << 20)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#5715: FILE: tools/testing/selftests/x86/ldt_gdt.c:41:
++#define AR_L			(1 << 21)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#5716: FILE: tools/testing/selftests/x86/ldt_gdt.c:42:
++#define AR_DB			(1 << 22)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#5717: FILE: tools/testing/selftests/x86/ldt_gdt.c:43:
++#define AR_G			(1 << 23)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#5799: FILE: tools/testing/selftests/x86/ldt_gdt.c:125:
++		uint32_t limit = desc->limit;
++		if (desc->limit_in_pages)
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#5803: FILE: tools/testing/selftests/x86/ldt_gdt.c:129:
++	} else if (errno == ENOSYS) {
+
+ENOSYS means that a nonexistent system call was called.
+Earlier, it was wrongly used for things like invalid operations on
+otherwise valid syscalls.  This should be avoided in new code.
+
+See: https://lore.kernel.org/lkml/5eb299021dec23c1a48fa7d9f2c8b794e967766d.1408730669.git.luto@amacapital.net/
+
+WARNING:UNNECESSARY_ELSE: else is not generally useful after a break or return
+#5806: FILE: tools/testing/selftests/x86/ldt_gdt.c:132:
++		return false;
++	} else {
+
+WARNING:UNNECESSARY_ELSE: else is not generally useful after a break or return
+#5812: FILE: tools/testing/selftests/x86/ldt_gdt.c:138:
++			return false;
++		} else {
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#5832: FILE: tools/testing/selftests/x86/ldt_gdt.c:158:
++	} else if (errno == ENOSYS) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#5849: FILE: tools/testing/selftests/x86/ldt_gdt.c:175:
++	int ret = syscall(SYS_modify_ldt, 0x11, ptr, bytecount);
++	if (ret < -1)
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#5859: FILE: tools/testing/selftests/x86/ldt_gdt.c:185:
++	} else if (errno == ENOSYS) {
+
+WARNING:TYPO_SPELLING: 'useable' may be misspelled - perhaps 'usable'?
+#5877: FILE: tools/testing/selftests/x86/ldt_gdt.c:203:
++		.useable         = 0
+ 		 ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'useable' may be misspelled - perhaps 'usable'?
+#5897: FILE: tools/testing/selftests/x86/ldt_gdt.c:223:
++	desc.useable = 1;
+ 	     ^^^^^^^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#5955: FILE: tools/testing/selftests/x86/ldt_gdt.c:281:
++		pid_t child = fork();
++		if (child == 0) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#5965: FILE: tools/testing/selftests/x86/ldt_gdt.c:291:
++			int status;
++			if (waitpid(child, &status, 0) != child ||
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#5979: FILE: tools/testing/selftests/x86/ldt_gdt.c:305:
++		int i;
++		for (i = 0; i < 8192; i++) {
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#6040: FILE: tools/testing/selftests/x86/ldt_gdt.c:366:
++static volatile unsigned int ftx;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#6045: FILE: tools/testing/selftests/x86/ldt_gdt.c:371:
++	cpu_set_t cpuset;
++	CPU_ZERO(&cpuset);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#6059: FILE: tools/testing/selftests/x86/ldt_gdt.c:385:
++		const struct user_desc desc = {};
++		if (syscall(SYS_modify_ldt, 1, &desc, sizeof(desc)) != 0)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#6064: FILE: tools/testing/selftests/x86/ldt_gdt.c:390:
++		unsigned int x = -2;
++		asm volatile ("lock xaddl %[x], %[ftx]" :
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#6075: FILE: tools/testing/selftests/x86/ldt_gdt.c:401:
++	struct sigaction sa;
++	memset(&sa, 0, sizeof(sa));
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#6082: FILE: tools/testing/selftests/x86/ldt_gdt.c:408:
++
++}
+
+CHECK:ARCH_DEFINES: architecture specific defines should be avoided
+#6113: FILE: tools/testing/selftests/x86/ldt_gdt.c:439:
++#ifdef __i386__
+
+Architecture specific defines should be avoided wherever
+possible.
+
+WARNING:TYPO_SPELLING: 'useable' may be misspelled - perhaps 'usable'?
+#6142: FILE: tools/testing/selftests/x86/ldt_gdt.c:468:
++			.useable         = 0
+ 			 ^^^^^^^
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#6146: FILE: tools/testing/selftests/x86/ldt_gdt.c:472:
++			if (errno != ENOSYS)
+
+WARNING:TYPO_SPELLING: 'useable' may be misspelled - perhaps 'usable'?
+#6214: FILE: tools/testing/selftests/x86/ldt_gdt.c:540:
++		.useable         = 0
+ 		 ^^^^^^^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#6219: FILE: tools/testing/selftests/x86/ldt_gdt.c:545:
++	pid_t child = fork();
++	if (child == 0) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#6225: FILE: tools/testing/selftests/x86/ldt_gdt.c:551:
++		int status;
++		if (waitpid(child, &status, 0) != child ||
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#6257: FILE: tools/testing/selftests/x86/syscall_arg_fault.c:1:
++/*
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#6289: FILE: tools/testing/selftests/x86/syscall_arg_fault.c:33:
++	struct sigaction sa;
++	memset(&sa, 0, sizeof(sa));
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#6297: FILE: tools/testing/selftests/x86/syscall_arg_fault.c:41:
++static volatile sig_atomic_t sig_traps;
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#6300: FILE: tools/testing/selftests/x86/syscall_arg_fault.c:44:
++static volatile sig_atomic_t n_errs;
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#6304: FILE: tools/testing/selftests/x86/syscall_arg_fault.c:48:
++	ucontext_t *ctx = (ucontext_t*)ctx_void;
+
+ERROR:FUNCTION_WITHOUT_ARGS: Bad function definition - int main() should probably be int main(void)
+#6323: FILE: tools/testing/selftests/x86/syscall_arg_fault.c:67:
++int main()
+
+Function declarations without arguments like::
+
+  int foo()
+
+should be::
+
+  int foo(void)
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#6356: FILE: tools/testing/selftests/x86/syscall_arg_fault.c:100:
++		asm volatile (
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#6371: FILE: tools/testing/selftests/x86/syscall_arg_fault.c:115:
++		asm volatile (
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#6393: FILE: tools/testing/selftests/x86/syscall_nt.c:1:
++/*
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#6424: FILE: tools/testing/selftests/x86/syscall_nt.c:32:
++	unsigned long eflags;
++	asm volatile ("pushf" WIDTH "\n\tpop" WIDTH " %0" : "=rm" (eflags));
+
+ERROR:FUNCTION_WITHOUT_ARGS: Bad function definition - int main() should probably be int main(void)
+#6434: FILE: tools/testing/selftests/x86/syscall_nt.c:42:
++int main()
+
+WARNING:TYPO_SPELLING: 'tThe' may be misspelled - perhaps 'the'?
+#6440: FILE: tools/testing/selftests/x86/syscall_nt.c:48:
++		printf("[OK]\tThe syscall worked and NT is still set\n");
+ 		             ^^^^
+
+WARNING:UNNECESSARY_ELSE: else is not generally useful after a break or return
+#6442: FILE: tools/testing/selftests/x86/syscall_nt.c:50:
++		return 0;
++	} else {
+
+WARNING:TYPO_SPELLING: 'tThe' may be misspelled - perhaps 'the'?
+#6443: FILE: tools/testing/selftests/x86/syscall_nt.c:51:
++		printf("[FAIL]\tThe syscall worked but NT was cleared\n");
+ 		               ^^^^
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000265541.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 7 errors, 66 warnings, 46 checks, 5268 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000265541.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

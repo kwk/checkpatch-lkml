@@ -1,0 +1,116 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp' - possible side-effects?
+#95: FILE: arch/x86/include/asm/percpu.h:444:
++#define __raw_cpu_read(qual, pcp)					\
++({									\
++	*(qual __my_cpu_type(pcp) *)__my_cpu_ptr(&(pcp));		\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp' - possible side-effects?
+#100: FILE: arch/x86/include/asm/percpu.h:449:
++#define __raw_cpu_write(qual, pcp, val)					\
++	do {								\
++		*(qual __my_cpu_type(pcp) *)__my_cpu_ptr(&(pcp)) = (val); \
++	} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#100: FILE: arch/x86/include/asm/percpu.h:449:
++#define __raw_cpu_write(qual, pcp, val)					\
++	do {								\
++		*(qual __my_cpu_type(pcp) *)__my_cpu_ptr(&(pcp)) = (val); \
++	} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#113: FILE: arch/x86/include/asm/percpu.h:462:
++#define __raw_cpu_add(pcp, val)		do { __my_cpu_var(pcp) += (val); } while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#114: FILE: arch/x86/include/asm/percpu.h:463:
++#define __raw_cpu_and(pcp, val)		do { __my_cpu_var(pcp) &= (val); } while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#115: FILE: arch/x86/include/asm/percpu.h:464:
++#define __raw_cpu_or(pcp, val)		do { __my_cpu_var(pcp) |= (val); } while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp' - possible side-effects?
+#118: FILE: arch/x86/include/asm/percpu.h:467:
++#define __raw_cpu_xchg(pcp, val)					\
++({									\
++	typeof(pcp) pxo_ret__ = __my_cpu_var(pcp);			\
++									\
++	__my_cpu_var(pcp) = (val);					\
++	pxo_ret__;							\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp' - possible side-effects?
+#126: FILE: arch/x86/include/asm/percpu.h:475:
++#define __raw_cpu_cmpxchg(pcp, oval, nval)				\
++({									\
++	__my_cpu_type(pcp) *__p = __my_cpu_ptr(&(pcp));			\
++									\
++	typeof(pcp) __ret = *__p;					\
++									\
++	if (__ret == (oval))						\
++		*__p = nval;						\
++	__ret;								\
++})
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#128: FILE: arch/x86/include/asm/percpu.h:477:
++	__my_cpu_type(pcp) *__p = __my_cpu_ptr(&(pcp));			\
+ 	                   ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#163: FILE: arch/x86/include/asm/percpu.h:512:
++#define this_cpu_read_1(pcp)		__raw_cpu_read(volatile, pcp)
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#164: FILE: arch/x86/include/asm/percpu.h:513:
++#define this_cpu_read_2(pcp)		__raw_cpu_read(volatile, pcp)
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#165: FILE: arch/x86/include/asm/percpu.h:514:
++#define this_cpu_read_4(pcp)		__raw_cpu_read(volatile, pcp)
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#166: FILE: arch/x86/include/asm/percpu.h:515:
++#define this_cpu_write_1(pcp, val)	__raw_cpu_write(volatile, pcp, val)
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#167: FILE: arch/x86/include/asm/percpu.h:516:
++#define this_cpu_write_2(pcp, val)	__raw_cpu_write(volatile, pcp, val)
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#168: FILE: arch/x86/include/asm/percpu.h:517:
++#define this_cpu_write_4(pcp, val)	__raw_cpu_write(volatile, pcp, val)
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#225: FILE: arch/x86/include/asm/percpu.h:617:
++#define this_cpu_read_8(pcp)			__raw_cpu_read(volatile, pcp)
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#226: FILE: arch/x86/include/asm/percpu.h:618:
++#define this_cpu_write_8(pcp, val)		__raw_cpu_write(volatile, pcp, val)
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000133885.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 total: 0 errors, 12 warnings, 5 checks, 149 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000133885.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

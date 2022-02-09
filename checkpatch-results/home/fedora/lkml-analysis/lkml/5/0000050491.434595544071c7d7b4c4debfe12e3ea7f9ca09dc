@@ -1,0 +1,175 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#39: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#97: FILE: drivers/leds/trigger/Kconfig:129:
++config LEDS_TRIGGER_NETDEV
++	tristate "LED Netdev Trigger"
++	depends on NET && LEDS_TRIGGERS
++	help
++	  This allows LEDs to be controlled by network device activity.
++	  If unsure, say Y.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#120: FILE: drivers/leds/trigger/ledtrig-netdev.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#167: FILE: drivers/leds/trigger/ledtrig-netdev.c:48:
++	spinlock_t lock;
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#188: FILE: drivers/leds/trigger/ledtrig-netdev.c:69:
++	if (!test_bit(LED_MODE_LINKUP, &trigger_data->mode))
+[...]
++	else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#190: FILE: drivers/leds/trigger/ledtrig-netdev.c:71:
++	else {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#197: FILE: drivers/leds/trigger/ledtrig-netdev.c:78:
++			schedule_delayed_work(&trigger_data->work,
++				atomic_read(&trigger_data->interval));
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "trigger_data->net_dev"
+#243: FILE: drivers/leds/trigger/ledtrig-netdev.c:124:
++	if (trigger_data->net_dev != NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#257: FILE: drivers/leds/trigger/ledtrig-netdev.c:138:
++#define led_mode_flags_attr(field)					\
++static ssize_t field##_show(struct device *dev,				\
++	struct device_attribute *attr, char *buf)			\
++{									\
++	struct led_classdev *led_cdev = dev_get_drvdata(dev);		\
++	struct led_netdev_data *trigger_data = led_cdev->trigger_data;	\
++									\
++	return sprintf(buf, "%u\n", test_bit(LED_BLINK_##field,		\
++					&trigger_data->mode));		\
++}									\
++static ssize_t field##_store(struct device *dev,			\
++	struct device_attribute *attr, const char *buf, size_t size)	\
++{									\
++	struct led_classdev *led_cdev = dev_get_drvdata(dev);		\
++	struct led_netdev_data *trigger_data = led_cdev->trigger_data;	\
++	unsigned long state;						\
++	int ret;							\
++									\
++	ret = kstrtoul(buf, 0, &state);					\
++	if (ret)							\
++		return ret;						\
++									\
++	cancel_delayed_work_sync(&trigger_data->work);			\
++									\
++	if (state)							\
++		set_bit(LED_BLINK_##field, &trigger_data->mode);	\
++	else								\
++		clear_bit(LED_BLINK_##field, &trigger_data->mode);	\
++									\
++	set_baseline_state(trigger_data);				\
++									\
++	return size;							\
++}									\
++static DEVICE_ATTR_RW(field);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#343: FILE: drivers/leds/trigger/ledtrig-netdev.c:224:
++	if (evt != NETDEV_UP && evt != NETDEV_DOWN && evt != NETDEV_CHANGE
++	    && evt != NETDEV_REGISTER && evt != NETDEV_UNREGISTER
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#344: FILE: drivers/leds/trigger/ledtrig-netdev.c:225:
++	    && evt != NETDEV_REGISTER && evt != NETDEV_UNREGISTER
++	    && evt != NETDEV_CHANGENAME)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#402: FILE: drivers/leds/trigger/ledtrig-netdev.c:283:
++				    (LED_BLINK_link, &trigger_data->mode)
++				    && test_bit(LED_MODE_LINKUP,
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*trigger_data)...) over kzalloc(sizeof(struct led_netdev_data)...)
+#447: FILE: drivers/leds/trigger/ledtrig-netdev.c:328:
++	trigger_data = kzalloc(sizeof(struct led_netdev_data), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000050491.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 4 warnings, 9 checks, 488 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000050491.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

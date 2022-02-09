@@ -1,0 +1,208 @@
+WARNING:TYPO_SPELLING: 'successfull' may be misspelled - perhaps 'successful'?
+#29: 
+The adaptation keeps track whether the elision is successfull.
+                                                  ^^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#78: FILE: arch/x86/include/asm/elide.h:28:
++#define TUNE_ELISION_CONFIG(prefix, name)				\
++	module_param_named(prefix ## _internal_abort_skip,		\
++			   name.internal_abort_skip, short, 0644);	\
++	module_param_named(prefix ## _lock_busy_skip,			\
++			   name.lock_busy_skip, short, 0644);		\
++	module_param_named(prefix ## _other_abort_skip,			\
++			   name.other_abort_skip, short, 0644);		\
++	module_param_named(prefix ## _conflict_abort_skip,		\
++			   name.conflict_abort_skip, short, 0644);	\
++	module_param_named(prefix ## _conflict_retry,			\
++			   name.conflict_retry, int, 0644);		\
++	module_param_named(prefix ## _retry_timeout,			\
++			   name.retry_timeout, int, 0644);		\
++	module_param_named(prefix ## _lock_busy_retry,			\
++			   name.lock_busy_retry, int, 0644)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#94: FILE: arch/x86/include/asm/elide.h:44:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#101: FILE: arch/x86/include/asm/elide.h:51:
++extern int __elide_lock_adapt(short *adapt, struct elision_config *config,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'l' - possible side-effects?
+#126: FILE: arch/x86/include/asm/elide.h:92:
++#define elide_lock_adapt(f, l, a, config) ({			\
++	int flag = 0;						\
++	if (static_key_true(&(f))) {				\
++		int retry = (config)->conflict_retry;		\
++		int timeout = (config)->retry_timeout;		\
++		int status;					\
++		again:						\
++		status = __elide_lock_adapt(a, config, &retry); \
++		/* Retries wait until the lock is free. */	\
++		if (unlikely(status == ELIDE_RETRY)) {		\
++			while (!(l) && --timeout > 0)		\
++				cpu_relax();			\
++			if (timeout > 0)			\
++				goto again;			\
++		}						\
++		if (likely(status != ELIDE_STOP)) {		\
++			/* in transaction. check now if the lock is free. */ \
++			if (likely(l))				\
++				flag = 1;			\
++			else					\
++				_xabort(0xff);			\
++		}						\
++	}							\
++	flag;							\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'config' - possible side-effects?
+#126: FILE: arch/x86/include/asm/elide.h:92:
++#define elide_lock_adapt(f, l, a, config) ({			\
++	int flag = 0;						\
++	if (static_key_true(&(f))) {				\
++		int retry = (config)->conflict_retry;		\
++		int timeout = (config)->retry_timeout;		\
++		int status;					\
++		again:						\
++		status = __elide_lock_adapt(a, config, &retry); \
++		/* Retries wait until the lock is free. */	\
++		if (unlikely(status == ELIDE_RETRY)) {		\
++			while (!(l) && --timeout > 0)		\
++				cpu_relax();			\
++			if (timeout > 0)			\
++				goto again;			\
++		}						\
++		if (likely(status != ELIDE_STOP)) {		\
++			/* in transaction. check now if the lock is free. */ \
++			if (likely(l))				\
++				flag = 1;			\
++			else					\
++				_xabort(0xff);			\
++		}						\
++	}							\
++	flag;							\
++})
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#126: FILE: arch/x86/include/asm/elide.h:92:
++#define elide_lock_adapt(f, l, a, config) ({			\
++	int flag = 0;						\
++	if (static_key_true(&(f))) {				\
++		int retry = (config)->conflict_retry;		\
++		int timeout = (config)->retry_timeout;		\
++		int status;					\
++		again:						\
++		status = __elide_lock_adapt(a, config, &retry); \
++		/* Retries wait until the lock is free. */	\
++		if (unlikely(status == ELIDE_RETRY)) {		\
++			while (!(l) && --timeout > 0)		\
++				cpu_relax();			\
++			if (timeout > 0)			\
++				goto again;			\
++		}						\
++		if (likely(status != ELIDE_STOP)) {		\
++			/* in transaction. check now if the lock is free. */ \
++			if (likely(l))				\
++				flag = 1;			\
++			else					\
++				_xabort(0xff);			\
++		}						\
++	}							\
++	flag;							\
++})
+
+WARNING:INDENTED_LABEL: labels should not be indented
+#132: FILE: arch/x86/include/asm/elide.h:98:
++		again:						\
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#152: FILE: arch/x86/include/asm/elide.h:118:
++
++
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#175: FILE: arch/x86/kernel/rtm-locks.c:272:
++static DEFINE_PER_CPU(unsigned, lock_el_skip);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#176: FILE: arch/x86/kernel/rtm-locks.c:273:
++static DEFINE_PER_CPU(unsigned, lock_el_start_skip);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#193: FILE: arch/x86/kernel/rtm-locks.c:290:
++static inline void skip_update(short *count, short skip, unsigned status)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#205: FILE: arch/x86/kernel/rtm-locks.c:302:
++			int *retry, unsigned status)
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#210: FILE: arch/x86/kernel/rtm-locks.c:307:
++		if ((status & _XABORT_EXPLICIT) &&
+[...]
++		} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#222: FILE: arch/x86/kernel/rtm-locks.c:319:
++		} else
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#245: FILE: arch/x86/kernel/rtm-locks.c:342:
++	unsigned status;
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#257: FILE: arch/x86/kernel/rtm-locks.c:354:
++	if (likely((status = _xbegin()) == _XBEGIN_STARTED)) {
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000411823.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 1 errors, 8 warnings, 8 checks, 215 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000411823.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

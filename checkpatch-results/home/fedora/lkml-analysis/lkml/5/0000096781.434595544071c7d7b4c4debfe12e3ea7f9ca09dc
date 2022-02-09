@@ -1,0 +1,89 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#185: FILE: include/linux/fs.h:2662:
++extern ssize_t generic_write_behind(struct kiocb *iocb, ssize_t count);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:DUPLICATED_SYSCTL_CONST: duplicated sysctl range checking value 'zero', consider using the shared one in include/linux/sysctl.h
+#227: FILE: kernel/sysctl.c:1354:
++		.extra1		= &zero,
+
+Commit d91bff3011cf ("proc/sysctl: add shared variables for range
+check") added some shared const variables to be used instead of a local
+copy in each source file.
+
+Consider replacing the sysctl range checking value with the shared
+one in include/linux/sysctl.h.  The following conversion scheme may
+be used::
+
+  &zero     ->  SYSCTL_ZERO
+  &one      ->  SYSCTL_ONE
+  &int_max  ->  SYSCTL_INT_MAX
+
+See:
+
+  1. https://lore.kernel.org/lkml/20190430180111.10688-1-mcroce@redhat.com/
+  2. https://lore.kernel.org/lkml/20190531131422.14970-1-mcroce@redhat.com/
+
+WARNING:DUPLICATED_SYSCTL_CONST: duplicated sysctl range checking value 'one', consider using the shared one in include/linux/sysctl.h
+#228: FILE: kernel/sysctl.c:1355:
++		.extra2		= &one,
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#269: FILE: mm/backing-dev.c:151:
++#define BDI_ATTR_KB(name, field)					\
++static ssize_t name##_store(struct device *dev,				\
++			    struct device_attribute *attr,		\
++			    const char *buf, size_t count)		\
++{									\
++	struct backing_dev_info *bdi = dev_get_drvdata(dev);		\
++	unsigned long kb;						\
++	ssize_t ret;							\
++									\
++	ret = kstrtoul(buf, 10, &kb);					\
++	if (ret < 0)							\
++		return ret;						\
++									\
++	bdi->field = kb >> (PAGE_SHIFT - 10);				\
++	return count;							\
++}									\
++BDI_SHOW(name, ((bdi->field) << (PAGE_SHIFT - 10)))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#269: FILE: mm/backing-dev.c:151:
++#define BDI_ATTR_KB(name, field)					\
++static ssize_t name##_store(struct device *dev,				\
++			    struct device_attribute *attr,		\
++			    const char *buf, size_t count)		\
++{									\
++	struct backing_dev_info *bdi = dev_get_drvdata(dev);		\
++	unsigned long kb;						\
++	ssize_t ret;							\
++									\
++	ret = kstrtoul(buf, 10, &kb);					\
++	if (ret < 0)							\
++		return ret;						\
++									\
++	bdi->field = kb >> (PAGE_SHIFT - 10);				\
++	return count;							\
++}									\
++BDI_SHOW(name, ((bdi->field) << (PAGE_SHIFT - 10)))
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#377: FILE: mm/page-writeback.c:2889:
++		file->f_write_behind = head = begin;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000096781.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 2 warnings, 4 checks, 282 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000096781.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

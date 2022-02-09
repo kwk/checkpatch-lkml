@@ -1,0 +1,323 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#30: 
+Implement cifs_rdma_write for send an upper layer data. Upper layer uses this function to do a RDMA send. This function is also used to pass SMB packets for doing a RDMA read/write via memory registration.
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#46: FILE: fs/cifs/cifsrdma.c:232:
++	if (atomic_dec_and_test(&request->info->send_pending)) {
++		wake_up(&request->info->wait_send_pending);
++	}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#138: FILE: fs/cifs/cifsrdma.c:1232:
++	int buflen=0, remaining_data_length;
+ 	          ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#149: FILE: fs/cifs/cifsrdma.c:1243:
++	iov = kzalloc(sizeof(struct kvec)*rqst->rq_nvec, GFP_KERNEL);
+ 	                                 ^
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*iov)...) over kzalloc(sizeof(struct kvec)...)
+#149: FILE: fs/cifs/cifsrdma.c:1243:
++	iov = kzalloc(sizeof(struct kvec)*rqst->rq_nvec, GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:TYPO_SPELLING: 'returing' may be misspelled - perhaps 'returning'?
+#151: FILE: fs/cifs/cifsrdma.c:1245:
++		log_cifs_write("failed to allocate iov returing -ENOMEM\n");
+ 		                                       ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#156: FILE: fs/cifs/cifsrdma.c:1250:
++	 * they are used only for TCP transport */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#157: FILE: fs/cifs/cifsrdma.c:1251:
++	iov[0].iov_base = (char*)rqst->rq_iov[0].iov_base + 4;
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#177: FILE: fs/cifs/cifsrdma.c:1271:
++		log_cifs_write("payload size %d > max size %d\n",
++			buflen, info->max_fragmented_send_size);
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#185: FILE: fs/cifs/cifsrdma.c:1279:
++	log_cifs_write("rqst->rq_nvec=%d rqst->rq_npages=%d rq_pagesz=%d "
++		"rq_tailsz=%d buflen=%d\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#189: FILE: fs/cifs/cifsrdma.c:1283:
++	start = i = iov[0].iov_len ? 0 : 1;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+ERROR:SPACING: space required before the open brace '{'
+#191: FILE: fs/cifs/cifsrdma.c:1285:
++	while (true){
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#196: FILE: fs/cifs/cifsrdma.c:1290:
++					(buflen-iov[i].iov_len);
+ 					       ^
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#198: FILE: fs/cifs/cifsrdma.c:1292:
++				log_cifs_write("sending iov[] from start=%d "
++					"i=%d nvecs=%d "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#199: FILE: fs/cifs/cifsrdma.c:1293:
++					"i=%d nvecs=%d "
++					"remaining_data_length=%d\n",
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#200: FILE: fs/cifs/cifsrdma.c:1294:
++					start, i, i-start,
+ 					           ^
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#202: FILE: fs/cifs/cifsrdma.c:1296:
++				rc = cifs_rdma_post_send_data(
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#203: FILE: fs/cifs/cifsrdma.c:1297:
++					info, &iov[start], i-start,
+ 					                    ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#209: FILE: fs/cifs/cifsrdma.c:1303:
++				nvecs = (buflen+max_iov_size-1)/max_iov_size;
+ 				               ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#209: FILE: fs/cifs/cifsrdma.c:1303:
++				nvecs = (buflen+max_iov_size-1)/max_iov_size;
+ 				                            ^
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#209: FILE: fs/cifs/cifsrdma.c:1303:
++				nvecs = (buflen+max_iov_size-1)/max_iov_size;
+ 				                               ^
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#211: FILE: fs/cifs/cifsrdma.c:1305:
++				log_cifs_write("iov[%d] iov_base=%p buflen=%d"
++					" break to %d vectors\n",
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#214: FILE: fs/cifs/cifsrdma.c:1308:
++				for (j=0; j<nvecs; j++) {
+ 				      ^
+
+ERROR:SPACING: spaces required around that '<' (ctx:VxV)
+#214: FILE: fs/cifs/cifsrdma.c:1308:
++				for (j=0; j<nvecs; j++) {
+ 				           ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#217: FILE: fs/cifs/cifsrdma.c:1311:
++						j*max_iov_size;
+ 						 ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#219: FILE: fs/cifs/cifsrdma.c:1313:
++					if (j == nvecs-1)
+ 					              ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#222: FILE: fs/cifs/cifsrdma.c:1316:
++							max_iov_size*(nvecs-1);
+ 							            ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#222: FILE: fs/cifs/cifsrdma.c:1316:
++							max_iov_size*(nvecs-1);
+ 							                   ^
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#224: FILE: fs/cifs/cifsrdma.c:1318:
++					log_cifs_write(
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#226: FILE: fs/cifs/cifsrdma.c:1320:
++						"sending vec j=%d iov_base=%p"
++						" iov_len=%lu "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#227: FILE: fs/cifs/cifsrdma.c:1321:
++						" iov_len=%lu "
++						"remaining_data_length=%d\n",
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#230: FILE: fs/cifs/cifsrdma.c:1324:
++					rc = cifs_rdma_post_send_data(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#245: FILE: fs/cifs/cifsrdma.c:1339:
++				log_cifs_write(
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#247: FILE: fs/cifs/cifsrdma.c:1341:
++					"sending iov[] from start=%d i=%d "
++					"nvecs=%d remaining_data_length=%d\n",
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#248: FILE: fs/cifs/cifsrdma.c:1342:
++					start, i, i-start,
+ 					           ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#251: FILE: fs/cifs/cifsrdma.c:1345:
++				rc = cifs_rdma_post_send_data(info, &iov[start],
++					i-start, remaining_data_length);
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#251: FILE: fs/cifs/cifsrdma.c:1345:
++					i-start, remaining_data_length);
+ 					 ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#262: FILE: fs/cifs/cifsrdma.c:1356:
++		buflen = (i == rqst->rq_npages-1) ?
+ 		                              ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#264: FILE: fs/cifs/cifsrdma.c:1358:
++		nvecs = (buflen+max_iov_size-1)/max_iov_size;
+ 		               ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#264: FILE: fs/cifs/cifsrdma.c:1358:
++		nvecs = (buflen+max_iov_size-1)/max_iov_size;
+ 		                            ^
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#264: FILE: fs/cifs/cifsrdma.c:1358:
++		nvecs = (buflen+max_iov_size-1)/max_iov_size;
+ 		                               ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#266: FILE: fs/cifs/cifsrdma.c:1360:
++		log_cifs_write("sending pages buflen=%d nvecs=%d\n",
++			buflen, nvecs);
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#267: FILE: fs/cifs/cifsrdma.c:1361:
++		for (j=0; j<nvecs; j++) {
+ 		      ^
+
+ERROR:SPACING: spaces required around that '<' (ctx:VxV)
+#267: FILE: fs/cifs/cifsrdma.c:1361:
++		for (j=0; j<nvecs; j++) {
+ 		           ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#269: FILE: fs/cifs/cifsrdma.c:1363:
++			if (j == nvecs-1)
+ 			              ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#270: FILE: fs/cifs/cifsrdma.c:1364:
++				size = buflen - j*max_iov_size;
+ 				                 ^
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#273: FILE: fs/cifs/cifsrdma.c:1367:
++			log_cifs_write("sending pages i=%d offset=%d size=%d"
++				" remaining_data_length=%d\n",
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#274: FILE: fs/cifs/cifsrdma.c:1368:
++				i, j*max_iov_size, size, remaining_data_length);
+ 				    ^
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#275: FILE: fs/cifs/cifsrdma.c:1369:
++			rc = cifs_rdma_post_send_page(
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#276: FILE: fs/cifs/cifsrdma.c:1370:
++				info, rqst->rq_pages[i], j*max_iov_size,
+ 				                          ^
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000139091.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 7 errors, 12 warnings, 31 checks, 254 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000139091.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

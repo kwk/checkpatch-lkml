@@ -1,0 +1,85 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__suites' - possible side-effects?
+#150: FILE: include/kunit/test.h:247:
++#define kunit_test_suites_for_module(__suites)				\
++	static int __init kunit_test_suites_init(void)			\
+ 	{								\
++		return __kunit_test_suites_init(__suites);		\
+ 	}								\
++	module_init(kunit_test_suites_init);				\
++									\
+ 	static void __exit kunit_test_suites_exit(void)			\
+ 	{								\
++		return __kunit_test_suites_exit(__suites);		\
+ 	}								\
+ 	module_exit(kunit_test_suites_exit)
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#150: FILE: include/kunit/test.h:247:
++#define kunit_test_suites_for_module(__suites)				\
++	static int __init kunit_test_suites_init(void)			\
+ 	{								\
++		return __kunit_test_suites_init(__suites);		\
+ 	}								\
++	module_init(kunit_test_suites_init);				\
++									\
+ 	static void __exit kunit_test_suites_exit(void)			\
+ 	{								\
++		return __kunit_test_suites_exit(__suites);		\
+ 	}								\
+ 	module_exit(kunit_test_suites_exit)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'unique_array' - possible side-effects?
+#169: FILE: include/kunit/test.h:263:
++#define __kunit_test_suites(unique_array, unique_suites, ...)		       \
++	static struct kunit_suite *unique_array[] = { __VA_ARGS__, NULL };     \
++	kunit_test_suites_for_module(unique_array);			       \
++	static struct kunit_suite **unique_suites			       \
++	__used __section(.kunit_test_suites) = unique_array
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'unique_array' may be better as '(unique_array)' to avoid precedence issues
+#169: FILE: include/kunit/test.h:263:
++#define __kunit_test_suites(unique_array, unique_suites, ...)		       \
++	static struct kunit_suite *unique_array[] = { __VA_ARGS__, NULL };     \
++	kunit_test_suites_for_module(unique_array);			       \
++	static struct kunit_suite **unique_suites			       \
++	__used __section(.kunit_test_suites) = unique_array
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'unique_suites' may be better as '(unique_suites)' to avoid precedence issues
+#169: FILE: include/kunit/test.h:263:
++#define __kunit_test_suites(unique_array, unique_suites, ...)		       \
++	static struct kunit_suite *unique_array[] = { __VA_ARGS__, NULL };     \
++	kunit_test_suites_for_module(unique_array);			       \
++	static struct kunit_suite **unique_suites			       \
++	__used __section(.kunit_test_suites) = unique_array
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#215: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#229: FILE: lib/kunit/executor.c:10:
++extern struct kunit_suite * const * const __kunit_suites_end[];
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 24)
+#237: FILE: lib/kunit/executor.c:18:
++	for (suites = __kunit_suites_start;
+[...]
++			__kunit_test_suites_init(*suites);
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000090182.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 4 warnings, 4 checks, 131 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000090182.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

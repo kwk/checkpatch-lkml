@@ -1,0 +1,153 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#36: 
+Btw., there's a small cleanup in the patch that i picked up (see below), and i also 
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#149: FILE: fs/proc/base.c:1431:
++sched_autogroup_write(struct file *file, const char __user *buf,
++	    size_t count, loff_t *offset)
+
+WARNING:CONSIDER_KSTRTO: strict_strtol is obsolete, use kstrtol instead
+#163: FILE: fs/proc/base.c:1445:
++	err = strict_strtol(strstrip(buffer), 0, &nice);
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#181: FILE: fs/proc/base.c:1463:
++static int sched_autogroup_open(struct inode *inode, struct file *filp)
+                                                                   ^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#185: FILE: fs/proc/base.c:1467:
++	ret = single_open(filp, sched_autogroup_show, NULL);
+ 	                  ^^^^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#212: FILE: fs/proc/base.c:2813:
++	REG("autogroup",  S_IRUGO|S_IWUSR, proc_pid_sched_autogroup_operations),
+ 	                         ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO|S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#212: FILE: fs/proc/base.c:2813:
++	REG("autogroup",  S_IRUGO|S_IWUSR, proc_pid_sched_autogroup_operations),
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#247: FILE: include/linux/sched.h:1937:
++extern void sched_autogroup_create_attach(struct task_struct *p);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#248: FILE: include/linux/sched.h:1938:
++extern void sched_autogroup_detach(struct task_struct *p);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#249: FILE: include/linux/sched.h:1939:
++extern void sched_autogroup_fork(struct signal_struct *sig);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#250: FILE: include/linux/sched.h:1940:
++extern void sched_autogroup_exit(struct signal_struct *sig);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#252: FILE: include/linux/sched.h:1942:
++extern void proc_sched_autogroup_show_task(struct task_struct *p, struct seq_file *m);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#253: FILE: include/linux/sched.h:1943:
++extern int proc_sched_autogroup_set_nice(struct task_struct *p, int *nice);
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#369: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#374: FILE: kernel/sched_autogroup.c:1:
++#ifdef CONFIG_SCHED_AUTOGROUP
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:TYPO_SPELLING: 'refrence' may be misspelled - perhaps 'reference'?
+#511: FILE: kernel/sched_autogroup.c:138:
++	/* drop extra refrence added by autogroup_create() */
+ 	              ^^^^^^^^
+
+CHECK:UNDOCUMENTED_SETUP: __setup appears un-documented -- check Documentation/admin-guide/kernel-parameters.txt
+#544: FILE: kernel/sched_autogroup.c:171:
++__setup("noautogroup", setup_autogroup);
+
+WARNING:ONE_SEMICOLON: Statements terminations use 1 semicolon
+#580: FILE: kernel/sched_autogroup.c:207:
++	next = HZ / 10 + jiffies;;
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#620: FILE: kernel/sched_autogroup.h:1:
++#ifdef CONFIG_SCHED_AUTOGROUP
+
+WARNING:DUPLICATED_SYSCTL_CONST: duplicated sysctl range checking value 'zero', consider using the shared one in include/linux/sysctl.h
+#728: FILE: kernel/sysctl.c:380:
++		.extra1		= &zero,
+
+Commit d91bff3011cf ("proc/sysctl: add shared variables for range
+check") added some shared const variables to be used instead of a local
+copy in each source file.
+
+Consider replacing the sysctl range checking value with the shared
+one in include/linux/sysctl.h.  The following conversion scheme may
+be used::
+
+  &zero     ->  SYSCTL_ZERO
+  &one      ->  SYSCTL_ONE
+  &int_max  ->  SYSCTL_INT_MAX
+
+See:
+
+  1. https://lore.kernel.org/lkml/20190430180111.10688-1-mcroce@redhat.com/
+  2. https://lore.kernel.org/lkml/20190531131422.14970-1-mcroce@redhat.com/
+
+WARNING:DUPLICATED_SYSCTL_CONST: duplicated sysctl range checking value 'one', consider using the shared one in include/linux/sysctl.h
+#729: FILE: kernel/sysctl.c:381:
++		.extra2		= &one,
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000351357.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 12 warnings, 9 checks, 561 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000351357.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

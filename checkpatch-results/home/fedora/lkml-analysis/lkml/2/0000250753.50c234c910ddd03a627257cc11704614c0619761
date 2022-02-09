@@ -1,0 +1,54 @@
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#40: FILE: include/linux/dynamic_debug.h:57:
++#define DYNAMIC_DEBUG_METADATA(fmt)				\
++	static struct _ddebug descriptor			\
++	__used							\
++	__attribute__((section("__verbose"), aligned(8))) =	\
++	{ KBUILD_MODNAME, __func__, __FILE__, fmt, __LINE__,	\
++		_DPRINTK_FLAGS_DEFAULT };
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__verbose") over __attribute__((section("__verbose")))
+#43: FILE: include/linux/dynamic_debug.h:60:
++	__attribute__((section("__verbose"), aligned(8))) =	\
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __aligned(8) over __attribute__((aligned(8)))
+#43: FILE: include/linux/dynamic_debug.h:60:
++	__attribute__((section("__verbose"), aligned(8))) =	\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fmt' - possible side-effects?
+#78: FILE: include/linux/dynamic_debug.h:76:
++#define dynamic_netdev_dbg(dev, fmt, ...) do {				   \
++	DYNAMIC_DEBUG_METADATA(fmt);					   \
++	if (unlikely(descriptor.enabled))				   \
+ 		__dynamic_netdev_dbg(&descriptor, dev, fmt, ##__VA_ARGS__);\
+ 	} while (0)
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000250753.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 3 warnings, 1 checks, 47 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000250753.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

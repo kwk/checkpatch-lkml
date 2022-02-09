@@ -1,0 +1,87 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#64: 
+Gitweb:        https://git.kernel.org/tip/4e23395b9e97562d12b87a330a2fca3bf10c8663
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'size' - possible side-effects?
+#118: FILE: kernel/kcsan/core.c:801:
++#define DEFINE_TSAN_VOLATILE_READ_WRITE(size)                                  \
++	void __tsan_volatile_read##size(void *ptr)                             \
++	{                                                                      \
++		const bool is_atomic = size <= sizeof(long long) &&            \
++				       IS_ALIGNED((unsigned long)ptr, size);   \
++		if (IS_ENABLED(CONFIG_KCSAN_IGNORE_ATOMICS) && is_atomic)      \
++			return;                                                \
++		check_access(ptr, size, is_atomic ? KCSAN_ACCESS_ATOMIC : 0);  \
++	}                                                                      \
++	EXPORT_SYMBOL(__tsan_volatile_read##size);                             \
++	void __tsan_unaligned_volatile_read##size(void *ptr)                   \
++		__alias(__tsan_volatile_read##size);                           \
++	EXPORT_SYMBOL(__tsan_unaligned_volatile_read##size);                   \
++	void __tsan_volatile_write##size(void *ptr)                            \
++	{                                                                      \
++		const bool is_atomic = size <= sizeof(long long) &&            \
++				       IS_ALIGNED((unsigned long)ptr, size);   \
++		if (IS_ENABLED(CONFIG_KCSAN_IGNORE_ATOMICS) && is_atomic)      \
++			return;                                                \
++		check_access(ptr, size,                                        \
++			     KCSAN_ACCESS_WRITE |                              \
++				     (is_atomic ? KCSAN_ACCESS_ATOMIC : 0));   \
++	}                                                                      \
++	EXPORT_SYMBOL(__tsan_volatile_write##size);                            \
++	void __tsan_unaligned_volatile_write##size(void *ptr)                  \
++		__alias(__tsan_volatile_write##size);                          \
++	EXPORT_SYMBOL(__tsan_unaligned_volatile_write##size)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'size' may be better as '(size)' to avoid precedence issues
+#118: FILE: kernel/kcsan/core.c:801:
++#define DEFINE_TSAN_VOLATILE_READ_WRITE(size)                                  \
++	void __tsan_volatile_read##size(void *ptr)                             \
++	{                                                                      \
++		const bool is_atomic = size <= sizeof(long long) &&            \
++				       IS_ALIGNED((unsigned long)ptr, size);   \
++		if (IS_ENABLED(CONFIG_KCSAN_IGNORE_ATOMICS) && is_atomic)      \
++			return;                                                \
++		check_access(ptr, size, is_atomic ? KCSAN_ACCESS_ATOMIC : 0);  \
++	}                                                                      \
++	EXPORT_SYMBOL(__tsan_volatile_read##size);                             \
++	void __tsan_unaligned_volatile_read##size(void *ptr)                   \
++		__alias(__tsan_volatile_read##size);                           \
++	EXPORT_SYMBOL(__tsan_unaligned_volatile_read##size);                   \
++	void __tsan_volatile_write##size(void *ptr)                            \
++	{                                                                      \
++		const bool is_atomic = size <= sizeof(long long) &&            \
++				       IS_ALIGNED((unsigned long)ptr, size);   \
++		if (IS_ENABLED(CONFIG_KCSAN_IGNORE_ATOMICS) && is_atomic)      \
++			return;                                                \
++		check_access(ptr, size,                                        \
++			     KCSAN_ACCESS_WRITE |                              \
++				     (is_atomic ? KCSAN_ACCESS_ATOMIC : 0));   \
++	}                                                                      \
++	EXPORT_SYMBOL(__tsan_volatile_write##size);                            \
++	void __tsan_unaligned_volatile_write##size(void *ptr)                  \
++		__alias(__tsan_volatile_write##size);                          \
++	EXPORT_SYMBOL(__tsan_unaligned_volatile_write##size)
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#127: FILE: kernel/kcsan/core.c:810:
++	EXPORT_SYMBOL(__tsan_volatile_read##size);                             \
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#130: FILE: kernel/kcsan/core.c:813:
++	EXPORT_SYMBOL(__tsan_unaligned_volatile_read##size);                   \
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#141: FILE: kernel/kcsan/core.c:824:
++	EXPORT_SYMBOL(__tsan_volatile_write##size);                            \
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000133150.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 4 warnings, 2 checks, 60 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000133150.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

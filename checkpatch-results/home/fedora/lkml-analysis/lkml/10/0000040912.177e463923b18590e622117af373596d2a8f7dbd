@@ -1,0 +1,379 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#116: 
+ - that you write cmpxchg inside a loop, but it isn't actually a cmpxchg-loop.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ptr' - possible side-effects?
+#169: FILE: arch/x86/include/asm/uaccess.h:344:
++#define __try_cmpxchg_user_asm(itype, _ptr, _pold, _new, label)	({	\
++	bool success;							\
++	__typeof__(_ptr) _old = (__typeof__(_ptr))(_pold);		\
++	__typeof__(*(_ptr)) __old = *_old;				\
++	__typeof__(*(_ptr)) __new = (_new);				\
++	asm_volatile_goto("\n"						\
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
++		     _ASM_EXTABLE_UA(1b, %l[label])			\
++		     : CC_OUT(z) (success),				\
++		       [ptr] "+m" (*_ptr),				\
++		       [old] "+a" (__old)				\
++		     : [new] "r" (__new)				\
++		     : "memory", "cc"					\
++		     : label);						\
++	if (unlikely(!success))						\
++		*_old = __old;						\
++	likely(success);					})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'label' - possible side-effects?
+#169: FILE: arch/x86/include/asm/uaccess.h:344:
++#define __try_cmpxchg_user_asm(itype, _ptr, _pold, _new, label)	({	\
++	bool success;							\
++	__typeof__(_ptr) _old = (__typeof__(_ptr))(_pold);		\
++	__typeof__(*(_ptr)) __old = *_old;				\
++	__typeof__(*(_ptr)) __new = (_new);				\
++	asm_volatile_goto("\n"						\
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
++		     _ASM_EXTABLE_UA(1b, %l[label])			\
++		     : CC_OUT(z) (success),				\
++		       [ptr] "+m" (*_ptr),				\
++		       [old] "+a" (__old)				\
++		     : [new] "r" (__new)				\
++		     : "memory", "cc"					\
++		     : label);						\
++	if (unlikely(!success))						\
++		*_old = __old;						\
++	likely(success);					})
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#175: FILE: arch/x86/include/asm/uaccess.h:350:
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:WxV)
+#176: FILE: arch/x86/include/asm/uaccess.h:351:
++		     _ASM_EXTABLE_UA(1b, %l[label])			\
+ 		                         ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#187: FILE: arch/x86/include/asm/uaccess.h:362:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ptr' - possible side-effects?
+#188: FILE: arch/x86/include/asm/uaccess.h:363:
++#define __xchg_user_asm(itype, _ptr, _val, label)	({		\
++	__typeof__(*(_ptr)) __ret = (_val);				\
++	asm_volatile_goto("\n"						\
++			"1: " LOCK_PREFIX "xchg"itype" %[var], %[ptr]\n"\
++			_ASM_EXTABLE_UA(1b, %l[label])			\
++			: [var] "+r" (__ret).				\
++			  [ptr] "+m" (*(_ptr))				\
++			:						\
++			: "memory", "cc"				\
++			: label);					\
++	__ret;						})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'label' - possible side-effects?
+#188: FILE: arch/x86/include/asm/uaccess.h:363:
++#define __xchg_user_asm(itype, _ptr, _val, label)	({		\
++	__typeof__(*(_ptr)) __ret = (_val);				\
++	asm_volatile_goto("\n"						\
++			"1: " LOCK_PREFIX "xchg"itype" %[var], %[ptr]\n"\
++			_ASM_EXTABLE_UA(1b, %l[label])			\
++			: [var] "+r" (__ret).				\
++			  [ptr] "+m" (*(_ptr))				\
++			:						\
++			: "memory", "cc"				\
++			: label);					\
++	__ret;						})
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#191: FILE: arch/x86/include/asm/uaccess.h:366:
++			"1: " LOCK_PREFIX "xchg"itype" %[var], %[ptr]\n"\
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:WxV)
+#192: FILE: arch/x86/include/asm/uaccess.h:367:
++			_ASM_EXTABLE_UA(1b, %l[label])			\
+ 			                    ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ptr' - possible side-effects?
+#207: FILE: arch/x86/include/asm/uaccess.h:445:
++#define __try_cmpxchg_user_asm(itype, _ptr, _pold, _new, label)	({	\
++	int __err = 0;							\
++	bool success;							\
++	__typeof__(_ptr) _old = (__typeof__(_ptr))(_pold);		\
++	__typeof__(*(_ptr)) __old = *_old;				\
++	__typeof__(*(_ptr)) __new = (_new);				\
++	asm volatile("\n"						\
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
++		     CC_SET(z)						\
++		     "2:\n"						\
++		     ".pushsection .fixup,\"ax\"\n"			\
++		     "3:	mov %[efault], %[errout]\n"		\
++		     "		jmp 2b\n"				\
++		     ".popsection\n"					\
++		     _ASM_EXTABLE_UA(1b, 3b)				\
++		     : CC_OUT(z) (success),				\
++		       [errout] "+r" (__err),				\
++		       [ptr] "+m" (*_ptr),				\
++		       [old] "+a" (__old)				\
++		     : [new] "r" (__new),				\
++		       [efault] "i" (-EFAULT)				\
++		     : "memory", "cc");					\
++	if (unlikely(__err))						\
++		goto label;						\
++	if (unlikely(!success))						\
++		*_old = __old;						\
++	likely(success);					})
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#207: FILE: arch/x86/include/asm/uaccess.h:445:
++#define __try_cmpxchg_user_asm(itype, _ptr, _pold, _new, label)	({	\
++	int __err = 0;							\
++	bool success;							\
++	__typeof__(_ptr) _old = (__typeof__(_ptr))(_pold);		\
++	__typeof__(*(_ptr)) __old = *_old;				\
++	__typeof__(*(_ptr)) __new = (_new);				\
++	asm volatile("\n"						\
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
++		     CC_SET(z)						\
++		     "2:\n"						\
++		     ".pushsection .fixup,\"ax\"\n"			\
++		     "3:	mov %[efault], %[errout]\n"		\
++		     "		jmp 2b\n"				\
++		     ".popsection\n"					\
++		     _ASM_EXTABLE_UA(1b, 3b)				\
++		     : CC_OUT(z) (success),				\
++		       [errout] "+r" (__err),				\
++		       [ptr] "+m" (*_ptr),				\
++		       [old] "+a" (__old)				\
++		     : [new] "r" (__new),				\
++		       [efault] "i" (-EFAULT)				\
++		     : "memory", "cc");					\
++	if (unlikely(__err))						\
++		goto label;						\
++	if (unlikely(!success))						\
++		*_old = __old;						\
++	likely(success);					})
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#214: FILE: arch/x86/include/asm/uaccess.h:452:
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ptr' - possible side-effects?
+#235: FILE: arch/x86/include/asm/uaccess.h:473:
++#define __xchg_user_asm(itype, _ptr, _val, label)	({		\
++	int __err = 0;							\
++	__typeof__(*(_ptr)) __ret = (_val);				\
++	asm volatile("\n"						\
++		     "1: " LOCK_PREFIX "xchg"itype" %[var], %[ptr]\n"	\
++		     "2:\n"						\
++		     ".pushsection .fixup,\"ax\"\n"			\
++		     "3:	mov %[efault], %[errout]\n"		\
++		     "		jmp 2b\n"				\
++		     ".popsection\n"					\
++		     _ASM_EXTABLE_UA(1b, 3b)				\
++		     : [ptr] "+m" (*(_ptr)),				\
++		       [var] "+r" (__ret),				\
++		       [errout] "+r" (__err)				\
++		     : [efault] "i" (-EFAULT)				\
++		     : "memory", "cc");					\
++	if (unlikely(__err))						\
++		goto label;						\
++	__ret;						})
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#235: FILE: arch/x86/include/asm/uaccess.h:473:
++#define __xchg_user_asm(itype, _ptr, _val, label)	({		\
++	int __err = 0;							\
++	__typeof__(*(_ptr)) __ret = (_val);				\
++	asm volatile("\n"						\
++		     "1: " LOCK_PREFIX "xchg"itype" %[var], %[ptr]\n"	\
++		     "2:\n"						\
++		     ".pushsection .fixup,\"ax\"\n"			\
++		     "3:	mov %[efault], %[errout]\n"		\
++		     "		jmp 2b\n"				\
++		     ".popsection\n"					\
++		     _ASM_EXTABLE_UA(1b, 3b)				\
++		     : [ptr] "+m" (*(_ptr)),				\
++		       [var] "+r" (__ret),				\
++		       [errout] "+r" (__err)				\
++		     : [efault] "i" (-EFAULT)				\
++		     : "memory", "cc");					\
++	if (unlikely(__err))						\
++		goto label;						\
++	__ret;						})
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#239: FILE: arch/x86/include/asm/uaccess.h:477:
++		     "1: " LOCK_PREFIX "xchg"itype" %[var], %[ptr]\n"	\
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#257: FILE: arch/x86/include/asm/uaccess.h:495:
++extern void __try_cmpxchg_user_wrong_size(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#258: FILE: arch/x86/include/asm/uaccess.h:496:
++extern void __xchg_user_wrong_size(void);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ptr' - possible side-effects?
+#260: FILE: arch/x86/include/asm/uaccess.h:498:
++#define __try_cmpxchg_user(_ptr, _oldp, _nval, _label) ({		\
++	__typeof__(*(_ptr)) __ret;					\
++	switch (sizeof(__ret)) {					\
++	case 4:	__ret = __try_cmpxchg_user_asm("l", (_ptr), (_oldp),	\
++					       (_nval), _label);	\
++		break;							\
++	case 8:	__ret = __try_cmpxchg_user_asm("q", (_ptr), (_oldp),	\
++					       (_nval), _label);	\
++		break;							\
++	default: __try_cmpxchg_user_wrong_size();			\
++	}								\
++	__ret;						})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_oldp' - possible side-effects?
+#260: FILE: arch/x86/include/asm/uaccess.h:498:
++#define __try_cmpxchg_user(_ptr, _oldp, _nval, _label) ({		\
++	__typeof__(*(_ptr)) __ret;					\
++	switch (sizeof(__ret)) {					\
++	case 4:	__ret = __try_cmpxchg_user_asm("l", (_ptr), (_oldp),	\
++					       (_nval), _label);	\
++		break;							\
++	case 8:	__ret = __try_cmpxchg_user_asm("q", (_ptr), (_oldp),	\
++					       (_nval), _label);	\
++		break;							\
++	default: __try_cmpxchg_user_wrong_size();			\
++	}								\
++	__ret;						})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_nval' - possible side-effects?
+#260: FILE: arch/x86/include/asm/uaccess.h:498:
++#define __try_cmpxchg_user(_ptr, _oldp, _nval, _label) ({		\
++	__typeof__(*(_ptr)) __ret;					\
++	switch (sizeof(__ret)) {					\
++	case 4:	__ret = __try_cmpxchg_user_asm("l", (_ptr), (_oldp),	\
++					       (_nval), _label);	\
++		break;							\
++	case 8:	__ret = __try_cmpxchg_user_asm("q", (_ptr), (_oldp),	\
++					       (_nval), _label);	\
++		break;							\
++	default: __try_cmpxchg_user_wrong_size();			\
++	}								\
++	__ret;						})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_label' - possible side-effects?
+#260: FILE: arch/x86/include/asm/uaccess.h:498:
++#define __try_cmpxchg_user(_ptr, _oldp, _nval, _label) ({		\
++	__typeof__(*(_ptr)) __ret;					\
++	switch (sizeof(__ret)) {					\
++	case 4:	__ret = __try_cmpxchg_user_asm("l", (_ptr), (_oldp),	\
++					       (_nval), _label);	\
++		break;							\
++	case 8:	__ret = __try_cmpxchg_user_asm("q", (_ptr), (_oldp),	\
++					       (_nval), _label);	\
++		break;							\
++	default: __try_cmpxchg_user_wrong_size();			\
++	}								\
++	__ret;						})
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#263: FILE: arch/x86/include/asm/uaccess.h:501:
++	case 4:	__ret = __try_cmpxchg_user_asm("l", (_ptr), (_oldp),	\
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#266: FILE: arch/x86/include/asm/uaccess.h:504:
++	case 8:	__ret = __try_cmpxchg_user_asm("q", (_ptr), (_oldp),	\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#269: FILE: arch/x86/include/asm/uaccess.h:507:
++	default: __try_cmpxchg_user_wrong_size();			\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ptr' - possible side-effects?
+#273: FILE: arch/x86/include/asm/uaccess.h:511:
++#define __xchg_user(_ptr, _nval, _label)		({		\
++	__typeof__(*(_ptr)) __ret;					\
++	switch (sizeof(__ret)) {					\
++	case 4: __ret = __xchg_user_asm("l", (_ptr), (_nval), _label);	\
++		break;							\
++	case 8: __ret = __xchg_user_asm("q", (_ptr), (_nval), _label);	\
++		break;							\
++	default: __xchg_user_wrong_size();				\
++	}								\
++	__ret;						})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_nval' - possible side-effects?
+#273: FILE: arch/x86/include/asm/uaccess.h:511:
++#define __xchg_user(_ptr, _nval, _label)		({		\
++	__typeof__(*(_ptr)) __ret;					\
++	switch (sizeof(__ret)) {					\
++	case 4: __ret = __xchg_user_asm("l", (_ptr), (_nval), _label);	\
++		break;							\
++	case 8: __ret = __xchg_user_asm("q", (_ptr), (_nval), _label);	\
++		break;							\
++	default: __xchg_user_wrong_size();				\
++	}								\
++	__ret;						})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_label' - possible side-effects?
+#273: FILE: arch/x86/include/asm/uaccess.h:511:
++#define __xchg_user(_ptr, _nval, _label)		({		\
++	__typeof__(*(_ptr)) __ret;					\
++	switch (sizeof(__ret)) {					\
++	case 4: __ret = __xchg_user_asm("l", (_ptr), (_nval), _label);	\
++		break;							\
++	case 8: __ret = __xchg_user_asm("q", (_ptr), (_nval), _label);	\
++		break;							\
++	default: __xchg_user_wrong_size();				\
++	}								\
++	__ret;						})
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#276: FILE: arch/x86/include/asm/uaccess.h:514:
++	case 4: __ret = __xchg_user_asm("l", (_ptr), (_nval), _label);	\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#278: FILE: arch/x86/include/asm/uaccess.h:516:
++	case 8: __ret = __xchg_user_asm("q", (_ptr), (_nval), _label);	\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#280: FILE: arch/x86/include/asm/uaccess.h:518:
++	default: __xchg_user_wrong_size();				\
+
+./tmp.3ThM2397W7//home/fedora/lkml-analysis/lkml/10/patch.offset.0000040912.commit.177e463923b18590e622117af373596d2a8f7dbd total: 6 errors, 3 warnings, 22 checks, 120 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.3ThM2397W7//home/fedora/lkml-analysis/lkml/10/patch.offset.0000040912.commit.177e463923b18590e622117af373596d2a8f7dbd has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,1412 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#45: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#50: FILE: block/bcache.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#138: FILE: block/bcache.c:89:
++#define DECLARE_FIFO(type, name)				\
++	struct {						\
++		size_t front, back, size;			\
++		type *data;					\
++	} name;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'f' - possible side-effects?
+#144: FILE: block/bcache.c:95:
++#define init_fifo(f, s, gfp) ({					\
++	(f)->data = NULL;					\
++	(f)->front = (f)->back = 0;				\
++	(f)->size = roundup_pow_of_two(s) - 1;			\
++	if ((f)->size * sizeof(*(f)->data) >= KMALLOC_MAX_SIZE)	\
++		(f)->data = vmalloc((f)->size * sizeof(*(f)->data));\
++	else if ((f)->size > 0)					\
++		(f)->data = kmalloc((f)->size * sizeof(*(f)->data), gfp);\
++	(f)->data; })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'f' - possible side-effects?
+#154: FILE: block/bcache.c:105:
++#define free_fifo(f) do {					\
++	if ((f)->size * sizeof(*(f)->data) >= KMALLOC_MAX_SIZE)	\
++		vfree((f)->data);				\
++	else if ((f)->size > 0)					\
++		kfree((f)->data);				\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'f' - possible side-effects?
+#161: FILE: block/bcache.c:112:
++#define fifo_push(f, i) ({					\
++	bool _r = false;					\
++	if ((((f)->front + 1) & (f)->size) != (f)->back) {	\
++		_r = true;					\
++		(f)->data[(f)->front++] = i;			\
++		(f)->front &= (f)->size;			\
++	} _r; })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'f' - possible side-effects?
+#169: FILE: block/bcache.c:120:
++#define fifo_pop(f, i) ({					\
++	bool _r = false;					\
++	if ((f)->front != (f)->back) {				\
++		_r = true;					\
++		i = (f)->data[(f)->back++];			\
++		(f)->back &= (f)->size;				\
++	} _r; })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'f' - possible side-effects?
+#177: FILE: block/bcache.c:128:
++#define fifo_full(f)	((((f)->front + 1) & (f)->size) == (f)->back)
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#179: FILE: block/bcache.c:130:
++#define DECLARE_HEAP(type, name)				\
++	struct {						\
++		size_t size;					\
++		type *data;					\
++	} name;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'h' - possible side-effects?
+#185: FILE: block/bcache.c:136:
++#define init_heap(h, s, gfp) ({					\
++	(h)->data = NULL;					\
++	(h)->size = 0;						\
++	if (s * sizeof(*(h)->data) >= KMALLOC_MAX_SIZE)		\
++		(h)->data = vmalloc(s * sizeof(*(h)->data));	\
++	else if (s > 0)						\
++		(h)->data = kmalloc(s * sizeof(*(h)->data), gfp);\
++	(h)->data; })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#185: FILE: block/bcache.c:136:
++#define init_heap(h, s, gfp) ({					\
++	(h)->data = NULL;					\
++	(h)->size = 0;						\
++	if (s * sizeof(*(h)->data) >= KMALLOC_MAX_SIZE)		\
++		(h)->data = vmalloc(s * sizeof(*(h)->data));	\
++	else if (s > 0)						\
++		(h)->data = kmalloc(s * sizeof(*(h)->data), gfp);\
++	(h)->data; })
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 's' may be better as '(s)' to avoid precedence issues
+#185: FILE: block/bcache.c:136:
++#define init_heap(h, s, gfp) ({					\
++	(h)->data = NULL;					\
++	(h)->size = 0;						\
++	if (s * sizeof(*(h)->data) >= KMALLOC_MAX_SIZE)		\
++		(h)->data = vmalloc(s * sizeof(*(h)->data));	\
++	else if (s > 0)						\
++		(h)->data = kmalloc(s * sizeof(*(h)->data), gfp);\
++	(h)->data; })
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#202: FILE: block/bcache.c:153:
++	uint8_t  magic[16];
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#203: FILE: block/bcache.c:154:
++	uint32_t version;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u16' over 'uint16_t'
+#204: FILE: block/bcache.c:155:
++	uint16_t block_size;		/* sectors */
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u16' over 'uint16_t'
+#205: FILE: block/bcache.c:156:
++	uint16_t bucket_size;		/* sectors */
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#206: FILE: block/bcache.c:157:
++	uint32_t journal_start;		/* buckets */
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#207: FILE: block/bcache.c:158:
++	uint32_t first_bucket;		/* start of data */
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#208: FILE: block/bcache.c:159:
++	uint64_t nbuckets;		/* device size */
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#209: FILE: block/bcache.c:160:
++	uint64_t btree_root;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u16' over 'uint16_t'
+#210: FILE: block/bcache.c:161:
++	uint16_t btree_level;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u16' over 'uint16_t'
+#216: FILE: block/bcache.c:167:
++	uint16_t	priority;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#217: FILE: block/bcache.c:168:
++	uint8_t		generation;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#218: FILE: block/bcache.c:169:
++	uint8_t		last_gc;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u16' over 'uint16_t'
+#222: FILE: block/bcache.c:173:
++	uint16_t	priority;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#223: FILE: block/bcache.c:174:
++	uint8_t		generation;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#227: FILE: block/bcache.c:178:
++	uint32_t	csum;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#228: FILE: block/bcache.c:179:
++	uint32_t	nkeys;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#229: FILE: block/bcache.c:180:
++	uint64_t	random;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#233: FILE: block/bcache.c:184:
++	uint64_t	key;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#234: FILE: block/bcache.c:185:
++	uint64_t	ptr;
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#241: FILE: block/bcache.c:192:
++	spinlock_t		sb_lock;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#261: FILE: block/bcache.c:212:
++	uint8_t			need_gc;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#262: FILE: block/bcache.c:213:
++	uint8_t			*gc_in_progress;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#302: FILE: block/bcache.c:253:
++	uint32_t csum;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#303: FILE: block/bcache.c:254:
++	uint32_t seq;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#304: FILE: block/bcache.c:255:
++	uint32_t last_open_entry;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#305: FILE: block/bcache.c:256:
++	uint32_t nr_entries;
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#347: FILE: block/bcache.c:298:
++static char			uuids[UUIDS_PER_SB*16];
+            			                  ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u16' over 'uint16_t'
+#358: FILE: block/bcache.c:309:
++static uint16_t	initial_priority = SHORT_MAX
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u16' over 'uint16_t'
+#359: FILE: block/bcache.c:310:
++static uint16_t cache_hit_priority = 100, cache_hit_seek = 100;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#367: FILE: block/bcache.c:318:
++static void __btree_write_node(struct cache_device *c, struct cached_bucket *b,
++			     int skip, int n);
+
+CHECK:SPACING: No space is necessary after a cast
+#371: FILE: block/bcache.c:322:
++#define bucket_to_sector(b)	(((sector_t) (b) + c->sb.first_bucket) * c->sb.bucket_size)
+
+CHECK:SPACING: No space is necessary after a cast
+#372: FILE: block/bcache.c:323:
++#define sector_to_bucket(s)	((long) ((s) / c->sb.bucket_size) - c->sb.first_bucket)
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#373: FILE: block/bcache.c:324:
++#define sector_to_gen(s)	({ smp_rmb(); c->buckets[sector_to_bucket(s)].generation; })
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#374: FILE: block/bcache.c:325:
++#define sector_to_priority(s)	({ smp_rmb(); c->buckets[sector_to_bucket(s)].priority; })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'b' - possible side-effects?
+#376: FILE: block/bcache.c:327:
++#define bucket_to_ptr(b)	TREE_PTR(sector_to_gen(b->offset), 0, b->offset)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'b' may be better as '(b)' to avoid precedence issues
+#376: FILE: block/bcache.c:327:
++#define bucket_to_ptr(b)	TREE_PTR(sector_to_gen(b->offset), 0, b->offset)
+
+CHECK:SPACING: No space is necessary after a cast
+#377: FILE: block/bcache.c:328:
++#define data(b)			((struct btree_key **) &(b)->pages[pages_per_btree])
+
+CHECK:SPACING: No space is necessary after a cast
+#378: FILE: block/bcache.c:329:
++#define keys(i)			(((struct btree_node_header *) *(i))->nkeys)
+
+CHECK:SPACING: No space is necessary after a cast
+#379: FILE: block/bcache.c:330:
++#define rand(i)			(((struct btree_node_header *) *(i))->random)
+
+CHECK:SPACING: No space is necessary after a cast
+#380: FILE: block/bcache.c:331:
++#define header(b)		((struct btree_node_header *) data(b)[0])
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'i' may be better as '(i)' to avoid precedence issues
+#381: FILE: block/bcache.c:332:
++#define index(i, b)		(i - data(b))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#382: FILE: block/bcache.c:333:
++#define last_key(i)		(node(i, keys(i))->key)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'b' - possible side-effects?
+#383: FILE: block/bcache.c:334:
++#define bucket_key(b)		((struct btree_key) {			\
++				 .key = node(data(b), header(b)->nkeys)->key,\
++				 .ptr = bucket_to_ptr(b) })
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#387: FILE: block/bcache.c:338:
++#define label(l, foo)	if (0) { l: foo; }
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#387: FILE: block/bcache.c:338:
++#define label(l, foo)	if (0) { l: foo; }
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#400: FILE: block/bcache.c:351:
++#define TREE_KEY(device, offset)	((offset) | ((uint64_t) device) << 56)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'p' may be better as '(p)' to avoid precedence issues
+#401: FILE: block/bcache.c:352:
++#define KEY_DEV(p)			(p >> 56)
+
+CHECK:SPACING: No space is necessary after a cast
+#402: FILE: block/bcache.c:353:
++#define KEY_OFFSET(p)			(p & ~((uint64_t) ~0 << 56))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'p' may be better as '(p)' to avoid precedence issues
+#402: FILE: block/bcache.c:353:
++#define KEY_OFFSET(p)			(p & ~((uint64_t) ~0 << 56))
+
+CHECK:SPACING: No space is necessary after a cast
+#406: FILE: block/bcache.c:357:
++#define TREE_PTR(gen, length, offset)	((gen) | (length) << 8 | (uint64_t) (offset) << 24)
+
+CHECK:SPACING: No space is necessary after a cast
+#407: FILE: block/bcache.c:358:
++#define PTR_GEN(p)			((uint8_t) ((p) & ~(~0 << 8)))
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#423: FILE: block/bcache.c:374:
++	int i;
++	for (i = 0; i < n; i++)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#424: FILE: block/bcache.c:375:
++		if (((char *) p)[i])
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#432: FILE: block/bcache.c:383:
++	int dev;
++	for (dev = 0; dev < UUIDS_PER_SB; dev++)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#437: FILE: block/bcache.c:388:
++		printk(KERN_DEBUG "bcache: unknown device %i",
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#446: FILE: block/bcache.c:397:
++	struct search_context *s = container_of(w, struct search_context, w);
++	s->end_fn(s->q, s->bio, s);
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#452: FILE: block/bcache.c:403:
++		smp_rmb();
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#457: FILE: block/bcache.c:408:
++			BUG_ON(!queue_work(delayed, &s->w));
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#461: FILE: block/bcache.c:412:
++#define return_f(s, f)						\
++	do {							\
++		if (!object_is_on_stack(s)) {			\
++			s->end_fn = f;				\
++			smp_wmb();				\
++			put_search(s);				\
++		}						\
++		return;						\
++	} while (0)
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#461: FILE: block/bcache.c:412:
++#define return_f(s, f)						\
++	do {							\
++		if (!object_is_on_stack(s)) {			\
++			s->end_fn = f;				\
++			smp_wmb();				\
++			put_search(s);				\
++		}						\
++		return;						\
++	} while (0)
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#465: FILE: block/bcache.c:416:
++			smp_wmb();				\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#471: FILE: block/bcache.c:422:
++#define add_wait_list(s, l) do {				\
++	s = alloc_search(s);					\
++	atomic_inc(&(s)->remaining);				\
++	do							\
++		(s)->next = l;					\
++	while (cmpxchg(&(l), (s)->next, s) != (s)->next);	\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'l' - possible side-effects?
+#471: FILE: block/bcache.c:422:
++#define add_wait_list(s, l) do {				\
++	s = alloc_search(s);					\
++	atomic_inc(&(s)->remaining);				\
++	do							\
++		(s)->next = l;					\
++	while (cmpxchg(&(l), (s)->next, s) != (s)->next);	\
++} while (0)
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#476: FILE: block/bcache.c:427:
++	while (cmpxchg(&(l), (s)->next, s) != (s)->next);	\
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#479: FILE: block/bcache.c:430:
++#define run_wait_list(s) do {					\
++	struct search_context *t = s;				\
++	if (!t)							\
++		break;						\
++	s = t->next;						\
++	put_search(t);						\
++} while (1)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#490: FILE: block/bcache.c:441:
++	struct search_context *r = s;
++	if (object_is_on_stack(s)) {
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#501: FILE: block/bcache.c:452:
++{
++
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#508: FILE: block/bcache.c:459:
++		uint8_t *gc_in_progress;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#544: FILE: block/bcache.c:495:
++	long i;
++	c->rescale -= sectors;
+
+CHECK:SPACING: No space is necessary after a cast
+#547: FILE: block/bcache.c:498:
++			BUG_ON(c->heap[i]->priority == (uint16_t) ~0);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#547: FILE: block/bcache.c:498:
++			BUG_ON(c->heap[i]->priority == (uint16_t) ~0);
+
+CHECK:SPACING: No space is necessary after a cast
+#549: FILE: block/bcache.c:500:
++				((long) c->heap[i]->priority * 7) / 8;
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#595: FILE: block/bcache.c:546:
++	if (c->buckets[b].heap == -1) {
+[...]
++	} else
+[...]
+
+CHECK:SPACING: No space is necessary after a cast
+#598: FILE: block/bcache.c:549:
++		BUG_ON(c->buckets[b].priority == (uint16_t) ~0);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#598: FILE: block/bcache.c:549:
++		BUG_ON(c->buckets[b].priority == (uint16_t) ~0);
+
+CHECK:BRACES: Unbalanced braces around else statement
+#611: FILE: block/bcache.c:562:
++	} else
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#632: FILE: block/bcache.c:583:
++	smp_mb();
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#652: FILE: block/bcache.c:603:
++	long r;
++	while (!fifo_full(&c->free)) {
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#705: FILE: block/bcache.c:656:
++	/*struct address_space *mapping = p[0]->mapping;
++
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#709: FILE: block/bcache.c:660:
++	spin_unlock_irq(&mapping->tree_lock);*/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#755: FILE: block/bcache.c:706:
++				b->pages[i] = find_get_page(c->bdev->bd_inode->i_mapping,
++						     (b->offset >> (PAGE_SHIFT - 9)) + i);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#756: FILE: block/bcache.c:707:
++				BUG_ON(!b->pages[i]);
+
+WARNING:LONG_LINE_COMMENT: line length of 101 exceeds 100 columns
+#767: FILE: block/bcache.c:718:
++				atomic_inc(&c->buckets[sector_to_bucket(b->offset)].pin); /* wrong */
+
+A comment starts before but extends beyond the maximum line length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:SPACING: No space is necessary after a cast
+#805: FILE: block/bcache.c:756:
++	if (sector_to_priority(offset) != (uint16_t) ~0)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#838: FILE: block/bcache.c:789:
++		BUG_ON(write /* lockdep */
+
+CHECK:SPACING: No space is necessary after a cast
+#872: FILE: block/bcache.c:823:
++	if (sector_to_priority(offset) == (uint16_t) ~0)
+
+CHECK:SPACING: No space is necessary after a cast
+#897: FILE: block/bcache.c:848:
++	if (sector_to_priority(b->offset) != (uint16_t) ~0) {
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'b' - possible side-effects?
+#904: FILE: block/bcache.c:855:
++#define upgrade_or_retry(c, b, write, s) ({		\
++	if (!write)					\
++		b = upgrade_bucket(c, b, s);		\
++	write = true;					\
++	if (!b)						\
++		goto retry;				\
++	b; })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'write' - possible side-effects?
+#904: FILE: block/bcache.c:855:
++#define upgrade_or_retry(c, b, write, s) ({		\
++	if (!write)					\
++		b = upgrade_bucket(c, b, s);		\
++	write = true;					\
++	if (!b)						\
++		goto retry;				\
++	b; })
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'write' may be better as '(write)' to avoid precedence issues
+#904: FILE: block/bcache.c:855:
++#define upgrade_or_retry(c, b, write, s) ({		\
++	if (!write)					\
++		b = upgrade_bucket(c, b, s);		\
++	write = true;					\
++	if (!b)						\
++		goto retry;				\
++	b; })
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#904: FILE: block/bcache.c:855:
++#define upgrade_or_retry(c, b, write, s) ({		\
++	if (!write)					\
++		b = upgrade_bucket(c, b, s);		\
++	write = true;					\
++	if (!b)						\
++		goto retry;				\
++	b; })
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'btree_alloc', this function's name, in a string
+#935: FILE: block/bcache.c:886:
++		err = "bcache: btree_alloc: no mem allocating bucket";
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#942: FILE: block/bcache.c:893:
++		BUG_ON(!down_write_trylock(&b->lock)); /* lockdep */
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'btree_alloc', this function's name, in a string
+#948: FILE: block/bcache.c:899:
++	err = "bcache: btree_alloc: unable to alloc bucket";
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#962: FILE: block/bcache.c:913:
++		b->pages[i] = find_or_create_page(c->bdev->bd_inode->i_mapping,
++						 (b->offset >> (PAGE_SHIFT - 9)) + i,
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'btree_alloc', this function's name, in a string
+#964: FILE: block/bcache.c:915:
++		err = "bcache: btree_alloc: error adding new pages";
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#1003: FILE: block/bcache.c:954:
++	printk(KERN_WARNING "%s", err);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1010: FILE: block/bcache.c:961:
++	long n = sector_to_bucket(b->offset);
++	BUG_ON(n < 0 || n > c->sb.nbuckets);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1010: FILE: block/bcache.c:961:
++	BUG_ON(n < 0 || n > c->sb.nbuckets);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1011: FILE: block/bcache.c:962:
++	BUG_ON(b == c->root);
+
+CHECK:SPACING: No space is necessary after a cast
+#1041: FILE: block/bcache.c:992:
++	BUG_ON(sector_to_priority(b->offset) != (uint16_t) ~0);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1041: FILE: block/bcache.c:992:
++	BUG_ON(sector_to_priority(b->offset) != (uint16_t) ~0);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1054: FILE: block/bcache.c:1005:
++	int i;
++	for (i = 0; i > bio->bi_vcnt; i++)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1061: FILE: block/bcache.c:1012:
++static void __btree_write_node(struct cache_device *c, struct cached_bucket *b,
++			     int skip, int n)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1066: FILE: block/bcache.c:1017:
++	BUG_ON(n > pages_per_btree);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1069: FILE: block/bcache.c:1020:
++		BUG_ON(!b->pages[i]);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1135: FILE: block/bcache.c:1086:
++			if (!(ret = bio_kmalloc(GFP_NOIO, 0)))
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1143: FILE: block/bcache.c:1094:
++			int vcnt = idx - bio->bi_idx + 1;
++			if (!(ret = bio_kmalloc(GFP_NOIO, vcnt)))
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1143: FILE: block/bcache.c:1094:
++			if (!(ret = bio_kmalloc(GFP_NOIO, vcnt)))
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#1151: FILE: block/bcache.c:1102:
++			ret->bi_io_vec[vcnt-1].bv_len = nbytes;
+ 			                   ^
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1159: FILE: block/bcache.c:1110:
++	if (ret) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1175: FILE: block/bcache.c:1126:
++	} else
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1194: FILE: block/bcache.c:1145:
++	struct bio *bio;
++	if (!list)
+
+CHECK:SPACING: No space is necessary after a cast
+#1202: FILE: block/bcache.c:1153:
++		BUG_ON(c->buckets[b].priority == (uint16_t) ~0);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1202: FILE: block/bcache.c:1153:
++		BUG_ON(c->buckets[b].priority == (uint16_t) ~0);
+
+CHECK:SPACING: No space is necessary after a cast
+#1203: FILE: block/bcache.c:1154:
++		c->buckets[b].priority = (long) initial_priority;
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1206: FILE: block/bcache.c:1157:
++			/ (cache_hit_seek + cache_hit_priority);*/
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1218: FILE: block/bcache.c:1169:
++		sector_t s = list->bi_sector;
++		bio = list;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1230: FILE: block/bcache.c:1181:
++	sector_t o = PTR_OFFSET(p), l = PTR_LENGTH(p);
++	if (sector_to_bucket(o) < 0 ||
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'p' may be better as '(p)' to avoid precedence issues
+#1239: FILE: block/bcache.c:1190:
++#define ptr_bad(c, p)	__ptr_bad(c, p->ptr)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'write' - possible side-effects?
+#1241: FILE: block/bcache.c:1192:
++#define run_on_root(write, f, ...) ({					\
++	int _r = -2;							\
++	do {								\
++		bool _w = (write);					\
++		rw_lock(_w, &c->root->lock, c->root->level);		\
++		if (sector_to_priority(c->root->offset) == (uint16_t) ~0\
++		    && _w == (write))					\
++			_r = f(c, c->root, __VA_ARGS__);		\
++		else {							\
++			rw_unlock(_w, &c->root->lock);			\
++			cpu_relax();					\
++		}							\
++	} while (_r == -2);						\
++	_r; })
+
+CHECK:SPACING: No space is necessary after a cast
+#1246: FILE: block/bcache.c:1197:
++		if (sector_to_priority(c->root->offset) == (uint16_t) ~0\
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1247: FILE: block/bcache.c:1198:
++		if (sector_to_priority(c->root->offset) == (uint16_t) ~0\
++		    && _w == (write))					\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#1256: FILE: block/bcache.c:1207:
++#define sorted_set_checks(i, b) ({					\
++	bool _cont = true;						\
++	if (index(i, b) >= nread)					\
++		goto again;						\
++	if (rand(i) != header(b)->random)				\
++		_cont = false;						\
++	else if (keys(i) >= (pages_per_btree - index(i, b)) * keys_per_page) {\
++		pr_debug("bad btree header: page %li h->nkeys %i",	\
++			 index(i, b), keys(i));				\
++		keys(i) = 0;						\
++		if (i != data(b))					\
++			_cont = false;					\
++	} else if (keys(i) >= (nread - index(i, b)) * keys_per_page)	\
++		goto again;						\
++	_cont; })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'b' - possible side-effects?
+#1256: FILE: block/bcache.c:1207:
++#define sorted_set_checks(i, b) ({					\
++	bool _cont = true;						\
++	if (index(i, b) >= nread)					\
++		goto again;						\
++	if (rand(i) != header(b)->random)				\
++		_cont = false;						\
++	else if (keys(i) >= (pages_per_btree - index(i, b)) * keys_per_page) {\
++		pr_debug("bad btree header: page %li h->nkeys %i",	\
++			 index(i, b), keys(i));				\
++		keys(i) = 0;						\
++		if (i != data(b))					\
++			_cont = false;					\
++	} else if (keys(i) >= (nread - index(i, b)) * keys_per_page)	\
++		goto again;						\
++	_cont; })
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#1256: FILE: block/bcache.c:1207:
++#define sorted_set_checks(i, b) ({					\
++	bool _cont = true;						\
++	if (index(i, b) >= nread)					\
++		goto again;						\
++	if (rand(i) != header(b)->random)				\
++		_cont = false;						\
++	else if (keys(i) >= (pages_per_btree - index(i, b)) * keys_per_page) {\
++		pr_debug("bad btree header: page %li h->nkeys %i",	\
++			 index(i, b), keys(i));				\
++		keys(i) = 0;						\
++		if (i != data(b))					\
++			_cont = false;					\
++	} else if (keys(i) >= (nread - index(i, b)) * keys_per_page)	\
++		goto again;						\
++	_cont; })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#1274: FILE: block/bcache.c:1225:
++#define for_each_sorted_set(i, b)					\
++	for (i = data(b), nread = atomic_read(&b->nread);		\
++	     index(i, b) < pages_per_btree && sorted_set_checks(i, b);	\
++	     i += (keys(i) / keys_per_page) + 1)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'b' - possible side-effects?
+#1274: FILE: block/bcache.c:1225:
++#define for_each_sorted_set(i, b)					\
++	for (i = data(b), nread = atomic_read(&b->nread);		\
++	     index(i, b) < pages_per_btree && sorted_set_checks(i, b);	\
++	     i += (keys(i) / keys_per_page) + 1)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#1279: FILE: block/bcache.c:1230:
++#define for_each_key(i, j, b)						\
++	for_each_sorted_set(i, b)					\
++		for (j = 1; j <= keys(i); j++)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#1279: FILE: block/bcache.c:1230:
++#define for_each_key(i, j, b)						\
++	for_each_sorted_set(i, b)					\
++		for (j = 1; j <= keys(i); j++)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'j' - possible side-effects?
+#1279: FILE: block/bcache.c:1230:
++#define for_each_key(i, j, b)						\
++	for_each_sorted_set(i, b)					\
++		for (j = 1; j <= keys(i); j++)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1293: FILE: block/bcache.c:1244:
++		int m = (l + r) >> 1;
++		if (node(data, m)->key > search)
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#1310: FILE: block/bcache.c:1261:
++	uint64_t search = TREE_KEY(device, bio->bi_sector);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1322: FILE: block/bcache.c:1273:
++			BUG_ON(node(i, j)->key <= search);
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#1334: FILE: block/bcache.c:1285:
++				recurse = get_bucket(c, TREE_PTR_OFFSET(i, j), b->level - 1, false, s);
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1337: FILE: block/bcache.c:1288:
++			} else
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1340: FILE: block/bcache.c:1291:
++					long bucket = sector_to_bucket(TREE_PTR_OFFSET(i, j));
++					atomic_inc(&c->buckets[bucket].pin);
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#1352: FILE: block/bcache.c:1303:
++					split->bi_sector = TREE_PTR_OFFSET(i, j) + (split->bi_sector -
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1355: FILE: block/bcache.c:1306:
++
++
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1356: FILE: block/bcache.c:1307:
++					if (split != bio) {
+[...]
++					} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1360: FILE: block/bcache.c:1311:
++					} else
+
+ERROR:OPEN_BRACE: open brace '{' following function definitions go on the next line
+#1376: FILE: block/bcache.c:1327:
++	void sift(size_t r, size_t n)
++	{
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1379: FILE: block/bcache.c:1330:
++		int c = r * 2;
++		for (; c <= n; r = c, c *= 2) {
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#1403: FILE: block/bcache.c:1354:
++	orig = nkeys = h->nkeys;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:SPACING: No space is necessary after a cast
+#1412: FILE: block/bcache.c:1363:
++	     i += (n / keys_per_page) + 1, h = (struct btree_node_header *) *i) {
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#1413: FILE: block/bcache.c:1364:
++	     i += (n / keys_per_page) + 1, h = (struct btree_node_header *) *i) {
++
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#1417: FILE: block/bcache.c:1368:
++			h->nkeys = h->random = 0;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#1441: FILE: block/bcache.c:1392:
++	uint64_t rand;
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1480: FILE: block/bcache.c:1431:
++				if ((recurse = get_bucket(c, TREE_PTR_OFFSET(i, j),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1481: FILE: block/bcache.c:1432:
++				if ((recurse = get_bucket(c, TREE_PTR_OFFSET(i, j),
++						    b->level - 1, false, &s))) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1483: FILE: block/bcache.c:1434:
++					struct btree_key k = *node(i, j);
++					r = btree_gc(c, recurse, write ? node(i, j) : &k, s);
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#1508: FILE: block/bcache.c:1459:
++	uint8_t *t;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1546: FILE: block/bcache.c:1497:
++	size_t m, n;
++	BUG_ON(!PageDirty(virt_to_page(*i)));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1546: FILE: block/bcache.c:1497:
++	BUG_ON(!PageDirty(virt_to_page(*i)));
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#1548: FILE: block/bcache.c:1499:
++	n = m = btree_bsearch(i, k->key);
+
+WARNING:IF_0: Consider removing the code enclosed by this #if 0 and its #endif
+#1560: FILE: block/bcache.c:1511:
++#if 0
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#1579: FILE: block/bcache.c:1530:
++			*node(i, j+1) = *node(i, j);
+ 			          ^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1603: FILE: block/bcache.c:1554:
++		bool lru = c->sb.btree_level != b->level;
++		pr_debug("not splitting: %i keys", h->nkeys);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1608: FILE: block/bcache.c:1559:
++		if (!(n1 = btree_alloc(c, b->level, data(b), h->nkeys, 0, lru)))
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1620: FILE: block/bcache.c:1571:
++	if (!(n1 = btree_alloc(c, b->level, data(b), h->nkeys >> 1, 0, true)) ||
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1637: FILE: block/bcache.c:1588:
++		if (!(n3 = btree_alloc(c, b->level + 1, NULL, 0, 0, false)))
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#1654: FILE: block/bcache.c:1605:
++	printk(KERN_WARNING "bcache: couldn't split");
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#1672: FILE: block/bcache.c:1623:
++	uint64_t biggest = 0;
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 24)
+#1731: FILE: block/bcache.c:1682:
++	if (!header(b)->random) {
+[...]
++			btree_free(c, b);
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (0, 24)
+#1732: FILE: block/bcache.c:1683:
++trashed:	if (c->sb.btree_level != b->level) {
++			btree_free(c, b);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#1737: FILE: block/bcache.c:1688:
++		printk(KERN_WARNING "bcache: btree was trashed, h->nkeys %i", header(b)->nkeys);
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#1766: FILE: block/bcache.c:1717:
++			    ((node(i, j)->key > recurse_key.key && recurse_key.key < new_keys[0].key) ||
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#1767: FILE: block/bcache.c:1718:
++			     (node(i, j)->key < recurse_key.key && node(i, j)->key > new_keys[0].key)))
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#1831: FILE: block/bcache.c:1782:
++	/*struct open_bucket *b;
++	list_for_each_entry(b, &open_buckets, list)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1838: FILE: block/bcache.c:1789:
++		}*/
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1969: FILE: block/bcache.c:1920:
++	struct search_context s;
++	memset(&s, 0, sizeof(s));
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1970: FILE: block/bcache.c:1921:
++	if (bio->bi_size) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1976: FILE: block/bcache.c:1927:
++	} else
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR' are not preferred. Consider using octal permissions '0200'.
+#1981: FILE: block/bcache.c:1932:
++	static struct attribute sysfs_##n = { .name = #n, .mode = S_IWUSR }
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#1983: FILE: block/bcache.c:1934:
++	static struct attribute sysfs_##n = { .name = #n, .mode = S_IRUSR }
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#1986: FILE: block/bcache.c:1937:
++		{ .name = #n, .mode = S_IWUSR|S_IRUSR }
+ 		                             ^
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR|S_IRUSR' are not preferred. Consider using octal permissions '0600'.
+#1986: FILE: block/bcache.c:1937:
++		{ .name = #n, .mode = S_IWUSR|S_IRUSR }
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#1988: FILE: block/bcache.c:1939:
++#define sysfs_print(file, ...)						\
++	if (attr == &sysfs_ ## file)					\
++		return snprintf(buffer, PAGE_SIZE, __VA_ARGS__)
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros starting with if should be enclosed by a do - while loop to avoid possible if/else logic defects
+#1992: FILE: block/bcache.c:1943:
++#define sysfs_atoi(file, var)						\
++	if (attr == &sysfs_ ## file) {					\
++		unsigned long _v, _r = strict_strtoul(buffer, 10, &_v);	\
++		if (_r)							\
++			return _r;					\
++		var = _v;						\
++	}
+
+WARNING:CONSIDER_KSTRTO: strict_strtoul is obsolete, use kstrtoul instead
+#1994: FILE: block/bcache.c:1945:
++		unsigned long _v, _r = strict_strtoul(buffer, 10, &_v);	\
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#2029: FILE: block/bcache.c:1980:
++	atomic_t *wait = bio->bi_private;
++	if (error)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#2030: FILE: block/bcache.c:1981:
++		printk(KERN_ERR "bcache: Error reading priorities");
+
+CHECK:SPACING: No space is necessary after a cast
+#2056: FILE: block/bcache.c:2007:
++			vmalloc_to_page((void *) c->disk_buckets
+
+CHECK:SPACING: No space is necessary after a cast
+#2075: FILE: block/bcache.c:2026:
++		if (c->buckets[i].priority != (uint16_t) ~0 &&
+
+CHECK:SPACING: No space is necessary after a cast
+#2079: FILE: block/bcache.c:2030:
++		if (c->buckets[i].priority != (uint16_t) ~0)
+
+CHECK:SPACING: No space is necessary after a cast
+#2104: FILE: block/bcache.c:2055:
++			vmalloc_to_page((void *) c->disk_buckets
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#2123: FILE: block/bcache.c:2074:
++		if (is_zero(&c->uuids->b_data[i*16], 16)) {
+ 		                               ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#2125: FILE: block/bcache.c:2076:
++			memcpy(c->uuids->b_data + i*16, &uuids[d*16], 16);
+ 			                           ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#2125: FILE: block/bcache.c:2076:
++			memcpy(c->uuids->b_data + i*16, &uuids[d*16], 16);
+ 			                                        ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#2131: FILE: block/bcache.c:2082:
++		if (!memcmp(&c->uuids->b_data[i*16], &uuids[d*16], 16)) {
+ 		                               ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#2131: FILE: block/bcache.c:2082:
++		if (!memcmp(&c->uuids->b_data[i*16], &uuids[d*16], 16)) {
+ 		                                             ^
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#2142: FILE: block/bcache.c:2093:
++		printk(KERN_DEBUG "Aiee! No room for the uuid");
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#2152: FILE: block/bcache.c:2103:
++	int i, j, x;
++	memset(uuid, 0, 16);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#2177: FILE: block/bcache.c:2128:
++/*static ssize_t store_dev(struct kobject *kobj, struct attribute *attr,
++			   const char *buffer, size_t size)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2187: FILE: block/bcache.c:2138:
++}*/
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#2200: FILE: block/bcache.c:2151:
++	/*static struct attribute *files[] = {
++		&sysfs_unregister,
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2211: FILE: block/bcache.c:2162:
++	};*/
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#2222: FILE: block/bcache.c:2173:
++	if (!(path = kmalloc(size + 1 - i, GFP_KERNEL)) ||
+
+WARNING:TYPO_SPELLING: 'Aready' may be misspelled - perhaps 'Already'?
+#2233: FILE: block/bcache.c:2184:
++	err = "Aready registered";
+ 	       ^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#2235: FILE: block/bcache.c:2186:
++	     i < UUIDS_PER_SB && !is_zero(&uuids[i*16], 16);
+ 	                                          ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#2237: FILE: block/bcache.c:2188:
++		if (!memcmp(&uuids[i*16], uuid, 16))
+ 		                    ^
+
+WARNING:IF_0: Consider removing the code enclosed by this #if 0 and its #endif
+#2244: FILE: block/bcache.c:2195:
++#if 0
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#2245: FILE: block/bcache.c:2196:
++	    blkdev_get(bdev, FMODE_READ|FMODE_WRITE))
+ 	                               ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#2255: FILE: block/bcache.c:2206:
++	memcpy(&uuids[i*16], uuid, 16);
+ 	               ^
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#2263: FILE: block/bcache.c:2214:
++	printk(KERN_DEBUG "bcache: Caching %s index %i", path, i);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#2266: FILE: block/bcache.c:2217:
++err:		printk(KERN_DEBUG "bcache: error opening %s: %s", path, err);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#2277: FILE: block/bcache.c:2228:
++	struct cache_device *c = container_of(w, struct cache_device, work);
++	list_del(&c->list);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#2286: FILE: block/bcache.c:2237:
++	struct cache_device *c = container_of(kobj, struct cache_device, kobj);
++	if (attr == &sysfs_unregister) {
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#2312: FILE: block/bcache.c:2263:
++	if (!(bh = __bread(c->bdev, 1, 4096)))
+
+CHECK:SPACING: No space is necessary after a cast
+#2316: FILE: block/bcache.c:2267:
++	s = (struct cache_sb *) bh->b_data;
+
+WARNING:TABSTOP: Statements should start on a tabstop
+#2357: FILE: block/bcache.c:2308:
++	 if (!pages_per_btree ||
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2378: FILE: block/bcache.c:2329:
++	BUG_ON(list_empty(&c->list) != (c->sb.version & CACHE_CLEAN));
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#2444: FILE: block/bcache.c:2395:
++		close_bdev_exclusive(c->bdev, FMODE_READ|FMODE_WRITE);
+ 		                                        ^
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#2481: FILE: block/bcache.c:2432:
++	if (!(path = kmalloc(size + 1, GFP_KERNEL)) ||
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#2491: FILE: block/bcache.c:2442:
++	c->bdev = open_bdev_exclusive(strim(path), FMODE_READ|FMODE_WRITE, c);
+ 	                                                     ^
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#2497: FILE: block/bcache.c:2448:
++	if ((err = read_super(c)))
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#2501: FILE: block/bcache.c:2452:
++	if (!(c->uuids = __bread(c->bdev, 2, PAGE_SIZE)))
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#2511: FILE: block/bcache.c:2462:
++	if (!(c->heap		= vmalloc(c->sb.nbuckets * sizeof(struct bucket *))) ||
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#2532: FILE: block/bcache.c:2483:
++		printk(KERN_DEBUG "bcache: Cache device %s was dirty, invalidating existing data", path);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#2532: FILE: block/bcache.c:2483:
++		printk(KERN_DEBUG "bcache: Cache device %s was dirty, invalidating existing data", path);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#2535: FILE: block/bcache.c:2486:
++	if (!c->root) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#2540: FILE: block/bcache.c:2491:
++	} else
+
+CHECK:SPACING: No space is necessary after a cast
+#2544: FILE: block/bcache.c:2495:
++	BUG_ON(sector_to_priority(c->root->offset) != (uint16_t) ~0);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2544: FILE: block/bcache.c:2495:
++	BUG_ON(sector_to_priority(c->root->offset) != (uint16_t) ~0);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#2546: FILE: block/bcache.c:2497:
++	if (!(c->gc_in_progress = kmalloc(c->sb.nbuckets, GFP_KERNEL)))
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#2556: FILE: block/bcache.c:2507:
++	for (i = 0; i < UUIDS_PER_SB && !is_zero(&uuids[i*16], 16); i++)
+ 	                                                 ^
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#2569: FILE: block/bcache.c:2520:
++	printk(KERN_DEBUG "bcache: Loaded cache device %s", path);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#2573: FILE: block/bcache.c:2524:
++err:		printk(KERN_DEBUG "bcache: error opening %s: %s", path, err);
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#2643: FILE: block/bcache.c:2594:
++	printk(KERN_DEBUG "bcache loading");
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#2665: FILE: block/bcache.c:2616:
++	/*for (i = 0; i < UUIDS_PER_SB; i++)
++		if (devices[i] && devices[i])
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2666: FILE: block/bcache.c:2617:
++			devices[i]->bd_cache_fn = NULL;*/
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000437151.commit.50c234c910ddd03a627257cc11704614c0619761 total: 19 errors, 94 warnings, 130 checks, 2629 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000437151.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,724 @@
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxW)
+#126: FILE: arch/tile/include/asm/pci.h:88:
++#define	MEM_MAP_INTR_REGION_SIZE	(1<< TRIO_MAP_MEM_LIM__ADDR_SHIFT)
+        	                        	  ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#126: FILE: arch/tile/include/asm/pci.h:88:
++#define	MEM_MAP_INTR_REGION_SIZE	(1<< TRIO_MAP_MEM_LIM__ADDR_SHIFT)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#132: FILE: arch/tile/include/asm/pci.h:94:
++struct pci_controller {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#165: FILE: arch/tile/include/asm/pci.h:127:
++extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#166: FILE: arch/tile/include/asm/pci.h:128:
++extern void pci_iounmap(struct pci_dev *dev, void __iomem *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void __iomem *' should also have an identifier name
+#166: FILE: arch/tile/include/asm/pci.h:128:
++extern void pci_iounmap(struct pci_dev *dev, void __iomem *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#175: FILE: arch/tile/include/asm/pci.h:139:
+ int __devinit tile_pci_init(void);
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#176: FILE: arch/tile/include/asm/pci.h:140:
+ int __devinit pcibios_init(void);
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#180: FILE: arch/tile/include/asm/pci.h:142:
+ void __devinit pcibios_fixup_bus(struct pci_bus *bus);
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#214: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#219: FILE: arch/tile/kernel/pci_gx.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/processor.h> instead of <asm/processor.h>
+#248: FILE: arch/tile/kernel/pci_gx.c:30:
++#include <asm/processor.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+WARNING:TYPO_SPELLING: 'containes' may be misspelled - perhaps 'contains'?
+#264: FILE: arch/tile/kernel/pci_gx.c:46:
++ * This files containes the routines to search for PCI buses,
+               ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'offset' may be better as '(offset)' to avoid precedence issues
+#282: FILE: arch/tile/kernel/pci_gx.c:64:
++#define TRACE_CFG_WR(size, val, bus, dev, func, offset) \
++	pr_info("CFG WR %d-byte VAL %#x to bus %d dev %d func %d addr %u\n", \
++		size, val, bus, dev, func, offset & 0xFFF);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#282: FILE: arch/tile/kernel/pci_gx.c:64:
++#define TRACE_CFG_WR(size, val, bus, dev, func, offset) \
++	pr_info("CFG WR %d-byte VAL %#x to bus %d dev %d func %d addr %u\n", \
++		size, val, bus, dev, func, offset & 0xFFF);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'offset' may be better as '(offset)' to avoid precedence issues
+#285: FILE: arch/tile/kernel/pci_gx.c:67:
++#define TRACE_CFG_RD(size, val, bus, dev, func, offset) \
++	pr_info("CFG RD %d-byte VAL %#x from bus %d dev %d func %d addr %u\n", \
++		size, val, bus, dev, func, offset & 0xFFF);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#285: FILE: arch/tile/kernel/pci_gx.c:67:
++#define TRACE_CFG_RD(size, val, bus, dev, func, offset) \
++	pr_info("CFG RD %d-byte VAL %#x from bus %d dev %d func %d addr %u\n", \
++		size, val, bus, dev, func, offset & 0xFFF);
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#293: FILE: arch/tile/kernel/pci_gx.c:75:
++static int __devinitdata pci_probe = 1;
+
+WARNING:MISPLACED_INIT: __devinitdata should be placed after pci_probe
+#293: FILE: arch/tile/kernel/pci_gx.c:75:
++static int __devinitdata pci_probe = 1;
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#296: FILE: arch/tile/kernel/pci_gx.c:78:
++static int __devinitdata pcie_rc[TILEGX_NUM_TRIO][TILEGX_TRIO_PCIES];
+
+WARNING:HOTPLUG_SECTION: Using __devinitdata is unnecessary
+#307: FILE: arch/tile/kernel/pci_gx.c:89:
++static int __devinitdata rc_delay[TILEGX_NUM_TRIO][TILEGX_TRIO_PCIES];
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#335: FILE: arch/tile/kernel/pci_gx.c:117:
++resource_size_t pcibios_align_resource(void *data, const struct resource *res,
++				resource_size_t size, resource_size_t align)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#341: FILE: arch/tile/kernel/pci_gx.c:123:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:TYPO_SPELLING: 'delievered' may be misspelled - perhaps 'delivered'?
+#357: FILE: arch/tile/kernel/pci_gx.c:139:
++			   " delievered to dataplane tiles\n");
+ 			     ^^^^^^^^^^
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#357: FILE: arch/tile/kernel/pci_gx.c:139:
++		pr_warning("intr_cpus_map empty, interrupts will be"
++			   " delievered to dataplane tiles\n");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#372: FILE: arch/tile/kernel/pci_gx.c:154:
++static int __devinit tile_pcie_open(int trio_index)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#390: FILE: arch/tile/kernel/pci_gx.c:172:
++		pr_err("PCI: ASID alloc failure on TRIO %d, give up\n",
++			trio_index);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#405: FILE: arch/tile/kernel/pci_gx.c:187:
++		pr_err("PCI: CFG PIO alloc failure on TRIO %d, give up\n",
++			trio_index);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#416: FILE: arch/tile/kernel/pci_gx.c:198:
++	ret = gxio_trio_init_pio_region_aux(context, context->pio_cfg_index,
++		0, 0, HV_TRIO_PIO_FLAG_CONFIG_SPACE);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#419: FILE: arch/tile/kernel/pci_gx.c:201:
++		pr_err("PCI: CFG PIO init failure on TRIO %d, give up\n",
++			trio_index);
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#474: FILE: arch/tile/kernel/pci_gx.c:256:
++	uint64_t intx = (uint64_t)irq_desc_get_chip_data(desc);
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#477: FILE: arch/tile/kernel/pci_gx.c:259:
++	uint64_t level_mask;
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#488: FILE: arch/tile/kernel/pci_gx.c:270:
++		TRIO_CFG_REGION_ADDR__INTFC_SHIFT ) |
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#500: FILE: arch/tile/kernel/pci_gx.c:282:
++static int __devinit tile_init_irqs(struct pci_controller *controller)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#509: FILE: arch/tile/kernel/pci_gx.c:291:
++
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#540: FILE: arch/tile/kernel/pci_gx.c:322:
++		irq_set_chip_and_handler(irq, &tilegx_legacy_irq_chip,
++					trio_handle_level_irq);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#604: FILE: arch/tile/kernel/pci_gx.c:386:
++		ret = hv_dev_pread(context->fd, 0,
++			(HV_VirtAddr)&pcie_ports[i][0],
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#604: FILE: arch/tile/kernel/pci_gx.c:386:
++			(HV_VirtAddr)&pcie_ports[i][0],
+ 			             ^
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#609: FILE: arch/tile/kernel/pci_gx.c:391:
++			pr_err("PCI: PCIE_GET_PORT_PROPERTY failure, error %d,"
++				" on TRIO %d\n", ret, i);
+
+ERROR:ELSE_AFTER_BRACE: else should follow close brace '}'
+#618: FILE: arch/tile/kernel/pci_gx.c:400:
++			}
++			else if (pcie_ports[i][j].allow_ep) {
+
+`else {` should follow the closing block `}` on the same line.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#662: FILE: arch/tile/kernel/pci_gx.c:444:
++
++	}
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#678: FILE: arch/tile/kernel/pci_gx.c:460:
++
++
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#679: FILE: arch/tile/kernel/pci_gx.c:461:
++static void __devinit fixup_read_and_payload_sizes(struct pci_controller *
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#700: FILE: arch/tile/kernel/pci_gx.c:482:
++			TRIO_CFG_REGION_ADDR__INTFC_SHIFT ) |
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#707: FILE: arch/tile/kernel/pci_gx.c:489:
++	__gxio_mmio_write32(trio_context->mmio_base_mac + reg_offset,
++						dev_control.word);
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#719: FILE: arch/tile/kernel/pci_gx.c:501:
++			TRIO_CFG_REGION_ADDR__INTFC_SHIFT ) |
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#726: FILE: arch/tile/kernel/pci_gx.c:508:
++	__gxio_mmio_write32(trio_context->mmio_base_mac + reg_offset,
++						rc_dev_cap.word);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#731: FILE: arch/tile/kernel/pci_gx.c:513:
++		struct pci_dev *self = child->self;
++		if (!self)
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#744: FILE: arch/tile/kernel/pci_gx.c:526:
++			TRIO_CFG_REGION_ADDR__INTFC_SHIFT ) |
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#754: FILE: arch/tile/kernel/pci_gx.c:536:
++        if (err < 0) {$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#754: FILE: arch/tile/kernel/pci_gx.c:536:
++        if (err < 0) {$
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#756: FILE: arch/tile/kernel/pci_gx.c:538:
++		pr_err("PCI: PCIE_CONFIGURE_MAC_MPS_MRS failure, "
++			"MAC %d on TRIO %d\n",
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#761: FILE: arch/tile/kernel/pci_gx.c:543:
++static int __devinit setup_pcie_rc_delay(char *str)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!str"
+#767: FILE: arch/tile/kernel/pci_gx.c:549:
++	if (str == NULL || !isdigit(*str))
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:CONSIDER_KSTRTO: simple_strtoul is obsolete, use kstrtoul instead
+#769: FILE: arch/tile/kernel/pci_gx.c:551:
++	trio_index = simple_strtoul(str, (char **)&str, 10);
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+WARNING:CONSIDER_KSTRTO: simple_strtoul is obsolete, use kstrtoul instead
+#779: FILE: arch/tile/kernel/pci_gx.c:561:
++	mac = simple_strtoul(str, (char **)&str, 10);
+
+WARNING:CONSIDER_KSTRTO: simple_strtoul is obsolete, use kstrtoul instead
+#790: FILE: arch/tile/kernel/pci_gx.c:572:
++		delay = simple_strtoul(str, (char **)&str, 10);
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#797: FILE: arch/tile/kernel/pci_gx.c:579:
++	pr_info("Delaying PCIe RC link training for %u sec"
++		" on MAC %lu on TRIO %lu\n", rc_delay[trio_index][mac],
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#801: FILE: arch/tile/kernel/pci_gx.c:583:
++}
++early_param("pcie_rc_delay", setup_pcie_rc_delay);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!context->mmio_base_mac"
+#838: FILE: arch/tile/kernel/pci_gx.c:620:
++		if (context->mmio_base_mac == NULL) {
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#885: FILE: arch/tile/kernel/pci_gx.c:667:
++				TRIO_CFG_REGION_ADDR__INTFC_SHIFT ) |
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'port_config.strap_state !=
+ 			TRIO_PCIE_INTFC_PORT_CONFIG__STRAP_STATE_VAL_AUTO_CONFIG_RC'
+#892: FILE: arch/tile/kernel/pci_gx.c:674:
++		if ((port_config.strap_state !=
++			TRIO_PCIE_INTFC_PORT_CONFIG__STRAP_STATE_VAL_AUTO_CONFIG_RC) &&
++			(port_config.strap_state !=
++			TRIO_PCIE_INTFC_PORT_CONFIG__STRAP_STATE_VAL_AUTO_CONFIG_RC_G1)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'port_config.strap_state !=
+ 			TRIO_PCIE_INTFC_PORT_CONFIG__STRAP_STATE_VAL_AUTO_CONFIG_RC_G1'
+#892: FILE: arch/tile/kernel/pci_gx.c:674:
++		if ((port_config.strap_state !=
++			TRIO_PCIE_INTFC_PORT_CONFIG__STRAP_STATE_VAL_AUTO_CONFIG_RC) &&
++			(port_config.strap_state !=
++			TRIO_PCIE_INTFC_PORT_CONFIG__STRAP_STATE_VAL_AUTO_CONFIG_RC_G1)) {
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#918: FILE: arch/tile/kernel/pci_gx.c:700:
++			pr_err("PCI: PCIE_FORCE_LINK_UP failure, "
++				"MAC %d on TRIO %d\n", mac, trio_index);
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#937: FILE: arch/tile/kernel/pci_gx.c:719:
++				TRIO_CFG_REGION_ADDR__INTFC_SHIFT ) |
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#945: FILE: arch/tile/kernel/pci_gx.c:727:
++			pr_err("PCI: link is down, MAC %d on TRIO %d\n",
++				mac, trio_index);
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#958: FILE: arch/tile/kernel/pci_gx.c:740:
++				TRIO_CFG_REGION_ADDR__INTFC_SHIFT ) |
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#976: FILE: arch/tile/kernel/pci_gx.c:758:
++				TRIO_CFG_REGION_ADDR__INTFC_SHIFT ) |
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#992: FILE: arch/tile/kernel/pci_gx.c:774:
++				TRIO_CFG_REGION_ADDR__INTFC_SHIFT ) |
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#998: FILE: arch/tile/kernel/pci_gx.c:780:
++		class_code_revision = (class_code_revision & 0xff ) |
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1021: FILE: arch/tile/kernel/pci_gx.c:803:
++			pr_err("PCI: PCI CFG PIO alloc failure for mac %d "
++				"on TRIO %d, give up\n", mac, trio_index);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1034: FILE: arch/tile/kernel/pci_gx.c:816:
++		ret = gxio_trio_init_pio_region_aux(trio_context,
++			trio_context->pio_cfg_index[mac],
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1038: FILE: arch/tile/kernel/pci_gx.c:820:
++			pr_err("PCI: PCI CFG PIO init failure for mac %d "
++				"on TRIO %d, give up\n", mac, trio_index);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1053: FILE: arch/tile/kernel/pci_gx.c:835:
++			iorpc_ioremap(trio_context->fd, offset,
++			(1 << TRIO_TILE_PIO_REGION_SETUP_CFG_ADDR__MAC_SHIFT));
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!trio_context->mmio_base_pio_cfg[mac]"
+#1054: FILE: arch/tile/kernel/pci_gx.c:836:
++		if (trio_context->mmio_base_pio_cfg[mac] == NULL) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1056: FILE: arch/tile/kernel/pci_gx.c:838:
++			pr_err("PCI: PIO map failure for mac %d on TRIO %d\n",
++				mac, trio_index);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1068: FILE: arch/tile/kernel/pci_gx.c:850:
++			pr_err("PCI: IRQs init failure for mac %d on TRIO %d\n",
++				mac, trio_index);
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#1080: FILE: arch/tile/kernel/pci_gx.c:862:
++
++	}
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#1100: FILE: arch/tile/kernel/pci_gx.c:882:
++		uint32_t bus_address_hi;
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!root_bus"
+#1109: FILE: arch/tile/kernel/pci_gx.c:891:
++		if (root_bus == NULL)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1118: FILE: arch/tile/kernel/pci_gx.c:900:
++			if ((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI &&
++				(PCI_SLOT(dev->devfn) == 0)) {
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1137: FILE: arch/tile/kernel/pci_gx.c:919:
++		else {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1140: FILE: arch/tile/kernel/pci_gx.c:922:
++			pr_err("PCI: no memory resources on TRIO %d mac %d\n",
++				controller->trio_index, controller->mac);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1147: FILE: arch/tile/kernel/pci_gx.c:929:
++		BUG_ON(bus_address_hi != 0);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1155: FILE: arch/tile/kernel/pci_gx.c:937:
++			pr_err("PCI: MEM PIO alloc failure on TRIO %d mac %d, "
++				"give up\n", controller->trio_index,
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1176: FILE: arch/tile/kernel/pci_gx.c:958:
++			pr_err("PCI: MEM PIO init failure on TRIO %d mac %d, "
++				"give up\n", controller->trio_index,
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1198: FILE: arch/tile/kernel/pci_gx.c:980:
++				pr_err("PCI: Mem-Map alloc failure on TRIO %d "
++					"mac %d for MC %d, give up\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1218: FILE: arch/tile/kernel/pci_gx.c:1000:
++			ret = gxio_trio_init_memory_map_mmu_aux(trio_context,
++				controller->mem_maps[j],
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1228: FILE: arch/tile/kernel/pci_gx.c:1010:
++				pr_err("PCI: Mem-Map init failure on TRIO %d "
++					"mac %d for MC %d, give up\n",
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#1243: FILE: arch/tile/kernel/pci_gx.c:1025:
++
++	}
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1252: FILE: arch/tile/kernel/pci_gx.c:1034:
++void __devinit pcibios_fixup_bus(struct pci_bus *bus)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1261: FILE: arch/tile/kernel/pci_gx.c:1043:
++char __devinit *pcibios_setup(char *str)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1273: FILE: arch/tile/kernel/pci_gx.c:1055:
++void __devinit pcibios_update_irq(struct pci_dev *dev, int irq)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!pci_controllers[i].root_bus"
+#1319: FILE: arch/tile/kernel/pci_gx.c:1101:
++		if (pci_controllers[i].root_bus == NULL)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'start >= bar_start'
+#1328: FILE: arch/tile/kernel/pci_gx.c:1110:
++			if ((start >= bar_start) && (end <= bar_end)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'end <= bar_end'
+#1328: FILE: arch/tile/kernel/pci_gx.c:1110:
++			if ((start >= bar_start) && (end <= bar_end)) {
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#1329: FILE: arch/tile/kernel/pci_gx.c:1111:
++			if ((start >= bar_start) && (end <= bar_end)) {
++
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!controller"
+#1337: FILE: arch/tile/kernel/pci_gx.c:1119:
++	if (controller == NULL)
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1375: FILE: arch/tile/kernel/pci_gx.c:1157:
++static int __devinit tile_cfg_read(struct pci_bus *bus,
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#1406: FILE: arch/tile/kernel/pci_gx.c:1188:
++				<< TRIO_CFG_REGION_ADDR__INTFC_SHIFT ) |
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1498: FILE: arch/tile/kernel/pci_gx.c:1280:
++
++
+
+WARNING:TYPO_SPELLING: 'relevent' may be misspelled - perhaps 'relevant'?
+#1500: FILE: arch/tile/kernel/pci_gx.c:1282:
++ * See tile_cfg_read() for relevent comments.
+                            ^^^^^^^^
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#1503: FILE: arch/tile/kernel/pci_gx.c:1285:
++static int __devinit tile_cfg_write(struct pci_bus *bus,
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#1537: FILE: arch/tile/kernel/pci_gx.c:1319:
++				<< TRIO_CFG_REGION_ADDR__INTFC_SHIFT ) |
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1611: FILE: arch/tile/kernel/pci_gx.c:1393:
++
++
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1617: FILE: arch/tile/kernel/pci_gx.c:1399:
++
++
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#1666: FILE: arch/tile/kernel/pci_gx.c:1448:
++	uint64_t mem_map_base;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#1667: FILE: arch/tile/kernel/pci_gx.c:1449:
++	uint64_t mem_map_limit;
+
+WARNING:PREFER_DEV_LEVEL: Prefer dev_info(... to dev_printk(KERN_INFO, ...
+#1685: FILE: arch/tile/kernel/pci_gx.c:1467:
++		dev_printk(KERN_INFO, &pdev->dev,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1686: FILE: arch/tile/kernel/pci_gx.c:1468:
++		dev_printk(KERN_INFO, &pdev->dev,
++			"64-bit MSI message address not supported, "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1687: FILE: arch/tile/kernel/pci_gx.c:1469:
++			"64-bit MSI message address not supported, "
++			"falling back to legacy interrupts.\n");
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1696: FILE: arch/tile/kernel/pci_gx.c:1478:
++	BUG_ON(!controller);
+
+WARNING:PREFER_DEV_LEVEL: Prefer dev_info(... to dev_printk(KERN_INFO, ...
+#1706: FILE: arch/tile/kernel/pci_gx.c:1488:
++		dev_printk(KERN_INFO, &pdev->dev,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1707: FILE: arch/tile/kernel/pci_gx.c:1489:
++		dev_printk(KERN_INFO, &pdev->dev,
++			"%s Mem-Map alloc failure. "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1708: FILE: arch/tile/kernel/pci_gx.c:1490:
++			"%s Mem-Map alloc failure. "
++			"Failed to initialize MSI interrupts. "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1709: FILE: arch/tile/kernel/pci_gx.c:1491:
++			"Failed to initialize MSI interrupts. "
++			"Falling back to legacy interrupts.\n",
+
+WARNING:PREFER_DEV_LEVEL: Prefer dev_info(... to dev_printk(KERN_INFO, ...
+#1732: FILE: arch/tile/kernel/pci_gx.c:1514:
++		dev_printk(KERN_INFO, &pdev->dev, "HV MSI config failed.\n");
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#1772: FILE: arch/tile/kernel/setup.c:1330:
++#if !defined (__tilegx__)
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#1789: FILE: arch/tile/kernel/setup.c:1368:
++#if defined(CONFIG_PCI) && defined (__tilegx__)
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000124815.commit.50c234c910ddd03a627257cc11704614c0619761 total: 14 errors, 50 warnings, 55 checks, 1745 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000124815.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

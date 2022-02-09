@@ -1,0 +1,170 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'msg' - possible side-effects?
+#543: FILE: drivers/staging/hv/rndis.h:630:
++#define MESSAGE_TO_INFO_BUFFER(msg)				\
++	(((unsigned char *)(msg)) + msg->info_buf_offset)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'msg' - possible side-effects?
+#549: FILE: drivers/staging/hv/rndis.h:634:
++#define MESSAGE_TO_STATUS_BUFFER(msg)			\
++	(((unsigned char *)(msg)) + msg->status_buf_offset)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'msg' - possible side-effects?
+#555: FILE: drivers/staging/hv/rndis.h:638:
++#define MESSAGE_TO_OOBD_BUFFER(msg)				\
++	(((unsigned char *)(msg)) + msg->oob_data_offset)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'msg' - possible side-effects?
+#561: FILE: drivers/staging/hv/rndis.h:642:
++#define MESSAGE_TO_DATA_BUFFER(msg)				\
++	(((unsigned char *)(msg)) + msg->per_pkt_info_offset)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'rndis_msg' may be better as '(rndis_msg)' to avoid precedence issues
+#567: FILE: drivers/staging/hv/rndis.h:646:
++#define RNDIS_MESSAGE_PTR_TO_MESSAGE_PTR(rndis_msg)		\
++	((void *) &rndis_msg->msg)
+
+CHECK:SPACING: No space is necessary after a cast
+#568: FILE: drivers/staging/hv/rndis.h:647:
++	((void *) &rndis_msg->msg)
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#574: FILE: drivers/staging/hv/rndis.h:651:
++	((void *) rndis_msg)
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'rndis_msg->msg.init_complete.max_pkt_per_msg'
+#655: FILE: drivers/staging/hv/rndis_filter.c:202:
++			rndis_msg->msg.init_complete.
++			   max_pkt_per_msg,
+
+A single dereferencing identifier spanned on multiple lines like::
+
+  struct_identifier->member[index].
+  member = <foo>;
+
+is generally hard to follow. It can easily lead to typos and so makes
+the code vulnerable to bugs.
+
+If fixing the multiple line dereferencing leads to an 80 column
+violation, then either rewrite the code in a more simple way or if the
+starting part of the dereferencing identifier is the same and used at
+multiple places then store it in a temporary variable, and use that
+temporary variable only at all the places. For example, if there are
+two dereferencing identifiers::
+
+  member1->member2->member3.foo1;
+  member1->member2->member3.foo2;
+
+then store the member1->member2->member3 part in a temporary variable.
+It not only helps to avoid the 80 column violation but also reduces
+the program size by removing the unnecessary dereferences.
+
+But if none of the above methods work then ignore the 80 column
+violation because it is much easier to read a dereferencing identifier
+on a single line.
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'rndis_msg->msg.init_complete.pkt_alignment_factor'
+#657: FILE: drivers/staging/hv/rndis_filter.c:204:
++			rndis_msg->msg.init_complete.
++			   pkt_alignment_factor);
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'rndis_msg->msg.query_complete.info_buflen'
+#675: FILE: drivers/staging/hv/rndis_filter.c:215:
++			rndis_msg->msg.query_complete.
++			   info_buflen,
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'rndis_msg->msg.query_complete.info_buf_offset'
+#677: FILE: drivers/staging/hv/rndis_filter.c:217:
++			rndis_msg->msg.query_complete.
++			   info_buf_offset);
+
+CHECK:CAMELCASE: Avoid CamelCase: <Length>
+#724: FILE: drivers/staging/hv/rndis_filter.c:260:
++	packet->page_buf[0].Length = req->request_msg.msg_len;
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'request->request_msg.msg.init_req.req_id'
+#744: FILE: drivers/staging/hv/rndis_filter.c:292:
++				request->request_msg.msg.
++				   init_req.req_id,
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'request->response_msg.msg.reset_complete.status'
+#773: FILE: drivers/staging/hv/rndis_filter.c:316:
++				request->response_msg.msg.reset_complete.
++					status = STATUS_BUFFER_OVERFLOW;
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'request->response_msg.msg.init_complete.status'
+#778: FILE: drivers/staging/hv/rndis_filter.c:319:
++				request->response_msg.msg.
++				init_complete.status =
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rndis_hdr->ndis_msg_type != REMOTE_NDIS_PACKET_MSG'
+#847: FILE: drivers/staging/hv/rndis_filter.c:433:
++	if ((rndis_hdr->ndis_msg_type != REMOTE_NDIS_PACKET_MSG) &&
++	    (rndis_hdr->msg_len > sizeof(struct rndis_message))) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rndis_hdr->msg_len > sizeof(struct rndis_message)'
+#847: FILE: drivers/staging/hv/rndis_filter.c:433:
++	if ((rndis_hdr->ndis_msg_type != REMOTE_NDIS_PACKET_MSG) &&
++	    (rndis_hdr->msg_len > sizeof(struct rndis_message))) {
+
+CHECK:CAMELCASE: Avoid CamelCase: <rndisMessage>
+#995: FILE: drivers/staging/hv/rndis_filter.c:878:
++	rndisMessage->ndis_msg_type = REMOTE_NDIS_PACKET_MSG;
+
+CHECK:CAMELCASE: Avoid CamelCase: <rndisPacket>
+#1002: FILE: drivers/staging/hv/rndis_filter.c:882:
++	rndisPacket = &rndisMessage->msg.pkt;
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000342342.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 8 warnings, 12 checks, 940 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000342342.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

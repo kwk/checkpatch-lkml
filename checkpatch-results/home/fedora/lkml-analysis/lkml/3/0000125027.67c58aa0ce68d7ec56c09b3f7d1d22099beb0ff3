@@ -1,0 +1,89 @@
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#87: FILE: kernel/futex.c:3006:
++#define FUTEX_SPINCNT_BIAS	(1U << FUTEX_SPINCNT_SHIFT)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:SPACING: spaces preferred around that '>>' (ctx:VxV)
+#90: FILE: kernel/futex.c:3009:
++#define FUTEX_SPINCNT(qh)	(atomic_read(&(qh)->lcnt)>>FUTEX_SPINCNT_SHIFT)
+                          	                         ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:TYPO_SPELLING: 'optimisitic' may be misspelled - perhaps 'optimistic'?
+#97: FILE: kernel/futex.c:3016:
++ * @osq:	pointer to optimisitic spinning queue
+         	           ^^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#179: FILE: kernel/futex.c:3158:
++	BUG_ON(!list_empty(&qh->waitq) || qh->osq);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:TYPO_SPELLING: 'optimisitic' may be misspelled - perhaps 'optimistic'?
+#346: FILE: kernel/futex.c:3342:
++	 * Perform optimisitic spinning if the owner is running.
+ 	           ^^^^^^^^^^^
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'qh->owner == current'
+#399: FILE: kernel/futex.c:3504:
++	if ((qh->owner == current) &&
++	    (cmpxchg(&qh->owner, current, NULL) == current))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#411: FILE: kernel/futex.c:3673:
++	futex_spincnt_max = num_possible_cpus()/2;
+ 	                                       ^
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000125027.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 3 warnings, 4 checks, 334 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000125027.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

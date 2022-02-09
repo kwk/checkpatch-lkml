@@ -1,0 +1,45 @@
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'low' may be better as '(low)' to avoid precedence issues
+#42: FILE: arch/x86/include/asm/msr.h:182:
++#define rdmsr_verysafe(msr, low, high)				\
++({								\
++	int __err;						\
++	asm volatile("2: rdmsr\n"				\
++		     "3: wrmsr ; xor %[err],%[err]\n"		\
++		     "1:\n\t"					\
++		     ".section .fixup,\"ax\"\n\t"		\
++		     "4:  mov %[fault],%[err] ; jmp 1b\n\t"	\
++		     ".previous\n\t"				\
++		     _ASM_EXTABLE(2b, 4b)			\
++		     _ASM_EXTABLE(3b, 4b)			\
++		     : [err] "=r" (__err), "=a" (*low), "=d" (*high) \
++		     : "c" (msr), [fault] "i" (-EIO));		\
++	__err;							\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'high' may be better as '(high)' to avoid precedence issues
+#42: FILE: arch/x86/include/asm/msr.h:182:
++#define rdmsr_verysafe(msr, low, high)				\
++({								\
++	int __err;						\
++	asm volatile("2: rdmsr\n"				\
++		     "3: wrmsr ; xor %[err],%[err]\n"		\
++		     "1:\n\t"					\
++		     ".section .fixup,\"ax\"\n\t"		\
++		     "4:  mov %[fault],%[err] ; jmp 1b\n\t"	\
++		     ".previous\n\t"				\
++		     _ASM_EXTABLE(2b, 4b)			\
++		     _ASM_EXTABLE(3b, 4b)			\
++		     : [err] "=r" (__err), "=a" (*low), "=d" (*high) \
++		     : "c" (msr), [fault] "i" (-EIO));		\
++	__err;							\
++})
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000346097.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 0 warnings, 2 checks, 54 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000346097.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

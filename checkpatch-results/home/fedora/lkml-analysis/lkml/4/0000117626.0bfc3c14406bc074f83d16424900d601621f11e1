@@ -1,0 +1,206 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:DT_SPLIT_BINDING_PATCH: DT binding docs and includes should be a separate patch. See: Documentation/devicetree/bindings/submitting-patches.rst
+
+Devicetree bindings should be their own patch.  This is because
+bindings are logically independent from a driver implementation,
+they have a different maintainer (even though they often
+are applied via the same tree), and it makes for a cleaner history in the
+DT only tree created with git-filter-branch.
+
+See: https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.html#i-for-patch-submitters
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'postsetup_state == _HWMOD_STATE_IDLE'
+#253: FILE: arch/arm/mach-omap2/omap_hwmod.c:2640:
++	if ((oh->flags & (HWMOD_INIT_NO_IDLE | HWMOD_NO_IDLE)) &&
+ 	    (postsetup_state == _HWMOD_STATE_IDLE)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#274: FILE: arch/arm/mach-omap2/omap_hwmod.h:546:
++#define HWMOD_NO_IDLE				(1 << 15)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#287: FILE: arch/arm64/include/asm/pgtable.h:43:
++#define VMEMMAP_SIZE		ALIGN((1UL << (VA_BITS - PAGE_SHIFT)) * sizeof(struct page), PUD_SIZE)
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#382: FILE: arch/powerpc/include/asm/opal.h:266:
++extern void opal_kmsg_init(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#438: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#443: FILE: arch/powerpc/platforms/powernv/opal-kmsg.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 's64' over 'int64_t'
+#472: FILE: arch/powerpc/platforms/powernv/opal-kmsg.c:30:
++	int64_t ret;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#488: FILE: arch/powerpc/platforms/powernv/opal-kmsg.c:46:
++		while (opal_console_flush(0) != OPAL_SUCCESS);
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_notice([subsystem]dev, ... then dev_notice(dev, ... then pr_notice(...  to printk(KERN_NOTICE ...
+#498: FILE: arch/powerpc/platforms/powernv/opal-kmsg.c:56:
++		printk(KERN_NOTICE "opal: OPAL_CONSOLE_FLUSH missing.\n");
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#499: FILE: arch/powerpc/platforms/powernv/opal-kmsg.c:57:
++		for (i = 0; i < 1024; i++) {
++			opal_poll_events(NULL);
++		}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#606: FILE: arch/s390/include/asm/pgalloc.h:114:
++	return (pgd_t *) table;
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#613: FILE: arch/s390/include/asm/pgalloc.h:121:
++	crst_table_free(mm, (unsigned long *) pgd);
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#821: FILE: drivers/dma/at_xdmac.c:1442:
++	rmb();
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#824: FILE: drivers/dma/at_xdmac.c:1445:
++		rmb();
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#831: FILE: drivers/dma/at_xdmac.c:1452:
++		rmb();
+
+CHECK:CAMELCASE: Avoid CamelCase: <amdgpuCrtc>
+#861: FILE: drivers/gpu/drm/amd/amdgpu/amdgpu_display.c:99:
++	while (amdgpuCrtc->enabled && --repcnt) {
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+WARNING:NETWORKING_BLOCK_COMMENT_STYLE: networking block comments don't use an empty /* line, use /* Comment...
+#1048: FILE: drivers/net/wireless/iwlwifi/mvm/tx.c:425:
++	/*
++	 * Increase the pending frames counter, so that later when a reply comes
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxE)
+#1281: FILE: include/linux/tracepoint.h:357:
++	__DECLARE_TRACE(name, void, ,					\
+ 	                            ^
+
+WARNING:NETWORKING_BLOCK_COMMENT_STYLE: networking block comments don't use an empty /* line, use /* Comment...
+#1508: FILE: net/wireless/wext-core.c:364:
++	/*
++	 * When a netdev changes state in any way, flush all pending messages
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000117626.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 2 errors, 12 warnings, 7 checks, 1370 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000117626.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

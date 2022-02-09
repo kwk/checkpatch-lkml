@@ -1,0 +1,331 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#54: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#59: FILE: arch/arm64/include/asm/uaccess.h:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+ERROR:OPEN_BRACE: open brace '{' following struct go on the same line
+#107: FILE: arch/arm64/include/asm/uaccess.h:49:
++struct exception_table_entry
++{
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#111: FILE: arch/arm64/include/asm/uaccess.h:53:
++extern int fixup_exception(struct pt_regs *regs);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#124: FILE: arch/arm64/include/asm/uaccess.h:66:
++#define segment_eq(a,b)	((a) == (b))
+                     ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'addr' - possible side-effects?
+#148: FILE: arch/arm64/include/asm/uaccess.h:90:
++#define __range_ok(addr, size)						\
++({									\
++	unsigned long flag, roksum;					\
++	__chk_user_ptr(addr);						\
++	asm("adds %1, %1, %3; ccmp %1, %4, #2, cc; cset %0, cc"		\
++		: "=&r" (flag), "=&r" (roksum)				\
++		: "1" (addr), "Ir" (size),				\
++		  "r" (current_thread_info()->addr_limit)		\
++		: "cc");						\
++	flag;								\
++})
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#170: FILE: arch/arm64/include/asm/uaccess.h:112:
++#define __get_user_asm(instr, reg, x, addr, err)			\
++	asm volatile(							\
++	"1:	" instr "	" reg "1, [%2]\n"			\
++	"2:\n"								\
++	"	.section .fixup, \"ax\"\n"				\
++	"	.align	2\n"						\
++	"3:	mov	%w0, %3\n"					\
++	"	mov	%1, #0\n"					\
++	"	b	2b\n"						\
++	"	.previous\n"						\
++	"	.section __ex_table,\"a\"\n"				\
++	"	.align	3\n"						\
++	"	.quad	1b, 3b\n"					\
++	"	.previous"						\
++	: "+r" (err), "=&r" (x)						\
++	: "r" (addr), "i" (-EFAULT))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#187: FILE: arch/arm64/include/asm/uaccess.h:129:
++#define __get_user_err(x, ptr, err)					\
++do {									\
++	unsigned long __gu_val;						\
++	__chk_user_ptr(ptr);						\
++	switch (sizeof(*(ptr))) {					\
++	case 1:								\
++		__get_user_asm("ldrb", "%w", __gu_val, (ptr), (err));	\
++		break;							\
++	case 2:								\
++		__get_user_asm("ldrh", "%w", __gu_val, (ptr), (err));	\
++		break;							\
++	case 4:								\
++		__get_user_asm("ldr", "%w", __gu_val, (ptr), (err));	\
++		break;							\
++	case 8:								\
++		__get_user_asm("ldr", "%",  __gu_val, (ptr), (err));	\
++		break;							\
++	default:							\
++		BUILD_BUG();						\
++	}								\
++	(x) = (__typeof__(*(ptr)))__gu_val;				\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'err' - possible side-effects?
+#187: FILE: arch/arm64/include/asm/uaccess.h:129:
++#define __get_user_err(x, ptr, err)					\
++do {									\
++	unsigned long __gu_val;						\
++	__chk_user_ptr(ptr);						\
++	switch (sizeof(*(ptr))) {					\
++	case 1:								\
++		__get_user_asm("ldrb", "%w", __gu_val, (ptr), (err));	\
++		break;							\
++	case 2:								\
++		__get_user_asm("ldrh", "%w", __gu_val, (ptr), (err));	\
++		break;							\
++	case 4:								\
++		__get_user_asm("ldr", "%w", __gu_val, (ptr), (err));	\
++		break;							\
++	case 8:								\
++		__get_user_asm("ldr", "%",  __gu_val, (ptr), (err));	\
++		break;							\
++	default:							\
++		BUILD_BUG();						\
++	}								\
++	(x) = (__typeof__(*(ptr)))__gu_val;				\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#225: FILE: arch/arm64/include/asm/uaccess.h:167:
++#define get_user(x, ptr)						\
++({									\
++	might_sleep();							\
++	access_ok(VERIFY_READ, (ptr), sizeof(*(ptr))) ?			\
++		__get_user((x), (ptr)) :				\
++		((x) = 0, -EFAULT);					\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#225: FILE: arch/arm64/include/asm/uaccess.h:167:
++#define get_user(x, ptr)						\
++({									\
++	might_sleep();							\
++	access_ok(VERIFY_READ, (ptr), sizeof(*(ptr))) ?			\
++		__get_user((x), (ptr)) :				\
++		((x) = 0, -EFAULT);					\
++})
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#233: FILE: arch/arm64/include/asm/uaccess.h:175:
++#define __put_user_asm(instr, reg, x, addr, err)			\
++	asm volatile(							\
++	"1:	" instr "	" reg "1, [%2]\n"			\
++	"2:\n"								\
++	"	.section .fixup,\"ax\"\n"				\
++	"	.align	2\n"						\
++	"3:	mov	%w0, %3\n"					\
++	"	b	2b\n"						\
++	"	.previous\n"						\
++	"	.section __ex_table,\"a\"\n"				\
++	"	.align	3\n"						\
++	"	.quad	1b, 3b\n"					\
++	"	.previous"						\
++	: "+r" (err)							\
++	: "r" (x), "r" (addr), "i" (-EFAULT))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#249: FILE: arch/arm64/include/asm/uaccess.h:191:
++#define __put_user_err(x, ptr, err)					\
++do {									\
++	__typeof__(*(ptr)) __pu_val = (x);				\
++	__chk_user_ptr(ptr);						\
++	switch (sizeof(*(ptr))) {					\
++	case 1:								\
++		__put_user_asm("strb", "%w", __pu_val, (ptr), (err));	\
++		break;							\
++	case 2:								\
++		__put_user_asm("strh", "%w", __pu_val, (ptr), (err));	\
++		break;							\
++	case 4:								\
++		__put_user_asm("str",  "%w", __pu_val, (ptr), (err));	\
++		break;							\
++	case 8:								\
++		__put_user_asm("str",  "%", __pu_val, (ptr), (err));	\
++		break;							\
++	default:							\
++		BUILD_BUG();						\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'err' - possible side-effects?
+#249: FILE: arch/arm64/include/asm/uaccess.h:191:
++#define __put_user_err(x, ptr, err)					\
++do {									\
++	__typeof__(*(ptr)) __pu_val = (x);				\
++	__chk_user_ptr(ptr);						\
++	switch (sizeof(*(ptr))) {					\
++	case 1:								\
++		__put_user_asm("strb", "%w", __pu_val, (ptr), (err));	\
++		break;							\
++	case 2:								\
++		__put_user_asm("strh", "%w", __pu_val, (ptr), (err));	\
++		break;							\
++	case 4:								\
++		__put_user_asm("str",  "%w", __pu_val, (ptr), (err));	\
++		break;							\
++	case 8:								\
++		__put_user_asm("str",  "%", __pu_val, (ptr), (err));	\
++		break;							\
++	default:							\
++		BUILD_BUG();						\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#286: FILE: arch/arm64/include/asm/uaccess.h:228:
++#define put_user(x, ptr)						\
++({									\
++	might_sleep();							\
++	access_ok(VERIFY_WRITE, (ptr), sizeof(*(ptr))) ?		\
++		__put_user((x), (ptr)) :				\
++		-EFAULT;						\
++})
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#294: FILE: arch/arm64/include/asm/uaccess.h:236:
++extern unsigned long __must_check __copy_from_user(void *to, const void __user *from, unsigned long n);
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#294: FILE: arch/arm64/include/asm/uaccess.h:236:
++extern unsigned long __must_check __copy_from_user(void *to, const void __user *from, unsigned long n);
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#295: FILE: arch/arm64/include/asm/uaccess.h:237:
++extern unsigned long __must_check __copy_to_user(void __user *to, const void *from, unsigned long n);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#295: FILE: arch/arm64/include/asm/uaccess.h:237:
++extern unsigned long __must_check __copy_to_user(void __user *to, const void *from, unsigned long n);
+
+WARNING:LONG_LINE: line length of 108 exceeds 100 columns
+#296: FILE: arch/arm64/include/asm/uaccess.h:238:
++extern unsigned long __must_check __copy_in_user(void __user *to, const void __user *from, unsigned long n);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#296: FILE: arch/arm64/include/asm/uaccess.h:238:
++extern unsigned long __must_check __copy_in_user(void __user *to, const void __user *from, unsigned long n);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#297: FILE: arch/arm64/include/asm/uaccess.h:239:
++extern unsigned long __must_check __clear_user(void __user *addr, unsigned long n);
+
+WARNING:LONG_LINE: line length of 110 exceeds 100 columns
+#299: FILE: arch/arm64/include/asm/uaccess.h:241:
++extern unsigned long __must_check __strncpy_from_user(char *to, const char __user *from, unsigned long count);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#299: FILE: arch/arm64/include/asm/uaccess.h:241:
++extern unsigned long __must_check __strncpy_from_user(char *to, const char __user *from, unsigned long count);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#300: FILE: arch/arm64/include/asm/uaccess.h:242:
++extern unsigned long __must_check __strnlen_user(const char __user *s, long n);
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#302: FILE: arch/arm64/include/asm/uaccess.h:244:
++static inline unsigned long __must_check copy_from_user(void *to, const void __user *from, unsigned long n)
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#311: FILE: arch/arm64/include/asm/uaccess.h:253:
++static inline unsigned long __must_check copy_to_user(void __user *to, const void *from, unsigned long n)
+
+WARNING:LONG_LINE: line length of 112 exceeds 100 columns
+#318: FILE: arch/arm64/include/asm/uaccess.h:260:
++static inline unsigned long __must_check copy_in_user(void __user *to, const void __user *from, unsigned long n)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#338: FILE: arch/arm64/include/asm/uaccess.h:280:
++	long res = -EFAULT;
++	if (access_ok(VERIFY_READ, src, 1))
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#362: FILE: arch/arm64/lib/clear_user.S:1:
++/*
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#426: FILE: arch/arm64/lib/copy_from_user.S:1:
++/*
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#498: FILE: arch/arm64/lib/copy_in_user.S:1:
++/*
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#567: FILE: arch/arm64/lib/copy_to_user.S:1:
++/*
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#634: FILE: arch/arm64/lib/strncpy_from_user.S:1:
++/*
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#690: FILE: arch/arm64/lib/strnlen_user.S:1:
++/*
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000064637.commit.50c234c910ddd03a627257cc11704614c0619761 total: 4 errors, 16 warnings, 15 checks, 642 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000064637.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

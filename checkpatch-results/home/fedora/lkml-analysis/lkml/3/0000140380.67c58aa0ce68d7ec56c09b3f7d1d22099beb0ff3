@@ -1,0 +1,837 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#31: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#36: FILE: include/linux/brick/lib_queue.h:1:
++/*  (c) 2011 Thomas Schoebel-Theuer / 1&1 Internet AG */
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'KEYTYPE' - possible side-effects?
+#41: FILE: include/linux/brick/lib_queue.h:6:
++#define QUEUE_ANCHOR(PREFIX, KEYTYPE, HEAPTYPE)				\
++	/* parameters */						\
++	/* readonly from outside */					\
++	atomic_t q_queued;						\
++	atomic_t q_flying;						\
++	atomic_t q_total;						\
++	/* tunables */							\
++	int q_batchlen;							\
++	int q_io_prio;							\
++	bool q_ordering;						\
++	/* private */							\
++	wait_queue_head_t *q_event;					\
++	spinlock_t q_lock;						\
++	struct list_head q_anchor;					\
++	struct pairing_heap_##HEAPTYPE *heap_high;			\
++	struct pairing_heap_##HEAPTYPE *heap_low;			\
++	long long q_last_insert; /* jiffies */				\
++	KEYTYPE heap_margin;						\
++	KEYTYPE last_pos;						\
++	/* this comment is for keeping TRAILING_SEMICOLON happy */
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#41: FILE: include/linux/brick/lib_queue.h:6:
++#define QUEUE_ANCHOR(PREFIX, KEYTYPE, HEAPTYPE)				\
++	/* parameters */						\
++	/* readonly from outside */					\
++	atomic_t q_queued;						\
++	atomic_t q_flying;						\
++	atomic_t q_total;						\
++	/* tunables */							\
++	int q_batchlen;							\
++	int q_io_prio;							\
++	bool q_ordering;						\
++	/* private */							\
++	wait_queue_head_t *q_event;					\
++	spinlock_t q_lock;						\
++	struct list_head q_anchor;					\
++	struct pairing_heap_##HEAPTYPE *heap_high;			\
++	struct pairing_heap_##HEAPTYPE *heap_low;			\
++	long long q_last_insert; /* jiffies */				\
++	KEYTYPE heap_margin;						\
++	KEYTYPE last_pos;						\
++	/* this comment is for keeping TRAILING_SEMICOLON happy */
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#53: FILE: include/linux/brick/lib_queue.h:18:
++	spinlock_t q_lock;						\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ELEM_TYPE' - possible side-effects?
+#62: FILE: include/linux/brick/lib_queue.h:27:
++#define QUEUE_FUNCTIONS(PREFIX, ELEM_TYPE, HEAD, KEYFN, KEYCMP, HEAPTYPE)\
++									\
++static inline								\
++void q_##PREFIX##_trigger(struct PREFIX##_queue *q)			\
++{									\
++	if (q->q_event) {						\
++		wake_up_interruptible(q->q_event);			\
++	}								\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_init(struct PREFIX##_queue *q)			\
++{									\
++	INIT_LIST_HEAD(&q->q_anchor);					\
++	q->heap_low = NULL;						\
++	q->heap_high = NULL;						\
++	spin_lock_init(&q->q_lock);					\
++	atomic_set(&q->q_queued, 0);					\
++	atomic_set(&q->q_flying, 0);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_insert(struct PREFIX##_queue *q, ELEM_TYPE * elem)	\
++{									\
++	spin_lock(&q->q_lock);						\
++									\
++	if (q->q_ordering) {						\
++		struct pairing_heap_##HEAPTYPE **use = &q->heap_high;	\
++		if (KEYCMP(KEYFN(elem), &q->heap_margin) <= 0) {	\
++			use = &q->heap_low;				\
++		}							\
++		ph_insert_##HEAPTYPE(use, &elem->ph);			\
++	} else {							\
++		list_add_tail(&elem->HEAD, &q->q_anchor);		\
++	}								\
++	atomic_inc(&q->q_queued);					\
++	atomic_inc(&q->q_total);					\
++	q->q_last_insert = jiffies;					\
++									\
++	spin_unlock(&q->q_lock);					\
++									\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_pushback(struct PREFIX##_queue *q, ELEM_TYPE * elem)	\
++{									\
++	if (q->q_ordering) {						\
++		atomic_dec(&q->q_total);				\
++		q_##PREFIX##_insert(q, elem);				\
++		return;							\
++	}								\
++									\
++	spin_lock(&q->q_lock);						\
++									\
++	list_add(&elem->HEAD, &q->q_anchor);				\
++	atomic_inc(&q->q_queued);					\
++									\
++	spin_unlock(&q->q_lock);					\
++}									\
++									\
++static inline								\
++ELEM_TYPE *q_##PREFIX##_fetch(struct PREFIX##_queue *q)			\
++{									\
++	ELEM_TYPE *elem = NULL;						\
++									\
++	spin_lock(&q->q_lock);						\
++									\
++	if (q->q_ordering) {						\
++		if (!q->heap_high) {					\
++			q->heap_high = q->heap_low;			\
++			q->heap_low = NULL;				\
++			q->heap_margin = 0;				\
++			q->last_pos = 0;				\
++		}							\
++		if (q->heap_high) {					\
++			elem = container_of(q->heap_high, ELEM_TYPE, ph);\
++									\
++			if (unlikely(KEYCMP(KEYFN(elem), &q->last_pos) < 0)) {\
++				XIO_ERR("backskip pos %lld -> %lld\n",	\
++					(long long)q->last_pos, (long long)KEYFN(elem));\
++			}						\
++			memcpy(&q->last_pos, KEYFN(elem), sizeof(q->last_pos));\
++									\
++			if (KEYCMP(KEYFN(elem), &q->heap_margin) > 0) { \
++				memcpy(&q->heap_margin, KEYFN(elem), sizeof(q->heap_margin));\
++			}						\
++			ph_delete_min_##HEAPTYPE(&q->heap_high);	\
++			atomic_dec(&q->q_queued);			\
++		}							\
++	} else if (!list_empty(&q->q_anchor)) {				\
++		struct list_head *next = q->q_anchor.next;		\
++		list_del_init(next);					\
++		atomic_dec(&q->q_queued);				\
++		elem = container_of(next, ELEM_TYPE, HEAD);		\
++	}								\
++									\
++	spin_unlock(&q->q_lock);					\
++									\
++	q_##PREFIX##_trigger(q);					\
++									\
++	return elem;							\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_inc_flying(struct PREFIX##_queue *q)			\
++{									\
++	atomic_inc(&q->q_flying);					\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_dec_flying(struct PREFIX##_queue *q)			\
++{									\
++	atomic_dec(&q->q_flying);					\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ELEM_TYPE' may be better as '(ELEM_TYPE)' to avoid precedence issues
+#62: FILE: include/linux/brick/lib_queue.h:27:
++#define QUEUE_FUNCTIONS(PREFIX, ELEM_TYPE, HEAD, KEYFN, KEYCMP, HEAPTYPE)\
++									\
++static inline								\
++void q_##PREFIX##_trigger(struct PREFIX##_queue *q)			\
++{									\
++	if (q->q_event) {						\
++		wake_up_interruptible(q->q_event);			\
++	}								\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_init(struct PREFIX##_queue *q)			\
++{									\
++	INIT_LIST_HEAD(&q->q_anchor);					\
++	q->heap_low = NULL;						\
++	q->heap_high = NULL;						\
++	spin_lock_init(&q->q_lock);					\
++	atomic_set(&q->q_queued, 0);					\
++	atomic_set(&q->q_flying, 0);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_insert(struct PREFIX##_queue *q, ELEM_TYPE * elem)	\
++{									\
++	spin_lock(&q->q_lock);						\
++									\
++	if (q->q_ordering) {						\
++		struct pairing_heap_##HEAPTYPE **use = &q->heap_high;	\
++		if (KEYCMP(KEYFN(elem), &q->heap_margin) <= 0) {	\
++			use = &q->heap_low;				\
++		}							\
++		ph_insert_##HEAPTYPE(use, &elem->ph);			\
++	} else {							\
++		list_add_tail(&elem->HEAD, &q->q_anchor);		\
++	}								\
++	atomic_inc(&q->q_queued);					\
++	atomic_inc(&q->q_total);					\
++	q->q_last_insert = jiffies;					\
++									\
++	spin_unlock(&q->q_lock);					\
++									\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_pushback(struct PREFIX##_queue *q, ELEM_TYPE * elem)	\
++{									\
++	if (q->q_ordering) {						\
++		atomic_dec(&q->q_total);				\
++		q_##PREFIX##_insert(q, elem);				\
++		return;							\
++	}								\
++									\
++	spin_lock(&q->q_lock);						\
++									\
++	list_add(&elem->HEAD, &q->q_anchor);				\
++	atomic_inc(&q->q_queued);					\
++									\
++	spin_unlock(&q->q_lock);					\
++}									\
++									\
++static inline								\
++ELEM_TYPE *q_##PREFIX##_fetch(struct PREFIX##_queue *q)			\
++{									\
++	ELEM_TYPE *elem = NULL;						\
++									\
++	spin_lock(&q->q_lock);						\
++									\
++	if (q->q_ordering) {						\
++		if (!q->heap_high) {					\
++			q->heap_high = q->heap_low;			\
++			q->heap_low = NULL;				\
++			q->heap_margin = 0;				\
++			q->last_pos = 0;				\
++		}							\
++		if (q->heap_high) {					\
++			elem = container_of(q->heap_high, ELEM_TYPE, ph);\
++									\
++			if (unlikely(KEYCMP(KEYFN(elem), &q->last_pos) < 0)) {\
++				XIO_ERR("backskip pos %lld -> %lld\n",	\
++					(long long)q->last_pos, (long long)KEYFN(elem));\
++			}						\
++			memcpy(&q->last_pos, KEYFN(elem), sizeof(q->last_pos));\
++									\
++			if (KEYCMP(KEYFN(elem), &q->heap_margin) > 0) { \
++				memcpy(&q->heap_margin, KEYFN(elem), sizeof(q->heap_margin));\
++			}						\
++			ph_delete_min_##HEAPTYPE(&q->heap_high);	\
++			atomic_dec(&q->q_queued);			\
++		}							\
++	} else if (!list_empty(&q->q_anchor)) {				\
++		struct list_head *next = q->q_anchor.next;		\
++		list_del_init(next);					\
++		atomic_dec(&q->q_queued);				\
++		elem = container_of(next, ELEM_TYPE, HEAD);		\
++	}								\
++									\
++	spin_unlock(&q->q_lock);					\
++									\
++	q_##PREFIX##_trigger(q);					\
++									\
++	return elem;							\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_inc_flying(struct PREFIX##_queue *q)			\
++{									\
++	atomic_inc(&q->q_flying);					\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_dec_flying(struct PREFIX##_queue *q)			\
++{									\
++	atomic_dec(&q->q_flying);					\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'HEAD' - possible side-effects?
+#62: FILE: include/linux/brick/lib_queue.h:27:
++#define QUEUE_FUNCTIONS(PREFIX, ELEM_TYPE, HEAD, KEYFN, KEYCMP, HEAPTYPE)\
++									\
++static inline								\
++void q_##PREFIX##_trigger(struct PREFIX##_queue *q)			\
++{									\
++	if (q->q_event) {						\
++		wake_up_interruptible(q->q_event);			\
++	}								\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_init(struct PREFIX##_queue *q)			\
++{									\
++	INIT_LIST_HEAD(&q->q_anchor);					\
++	q->heap_low = NULL;						\
++	q->heap_high = NULL;						\
++	spin_lock_init(&q->q_lock);					\
++	atomic_set(&q->q_queued, 0);					\
++	atomic_set(&q->q_flying, 0);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_insert(struct PREFIX##_queue *q, ELEM_TYPE * elem)	\
++{									\
++	spin_lock(&q->q_lock);						\
++									\
++	if (q->q_ordering) {						\
++		struct pairing_heap_##HEAPTYPE **use = &q->heap_high;	\
++		if (KEYCMP(KEYFN(elem), &q->heap_margin) <= 0) {	\
++			use = &q->heap_low;				\
++		}							\
++		ph_insert_##HEAPTYPE(use, &elem->ph);			\
++	} else {							\
++		list_add_tail(&elem->HEAD, &q->q_anchor);		\
++	}								\
++	atomic_inc(&q->q_queued);					\
++	atomic_inc(&q->q_total);					\
++	q->q_last_insert = jiffies;					\
++									\
++	spin_unlock(&q->q_lock);					\
++									\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_pushback(struct PREFIX##_queue *q, ELEM_TYPE * elem)	\
++{									\
++	if (q->q_ordering) {						\
++		atomic_dec(&q->q_total);				\
++		q_##PREFIX##_insert(q, elem);				\
++		return;							\
++	}								\
++									\
++	spin_lock(&q->q_lock);						\
++									\
++	list_add(&elem->HEAD, &q->q_anchor);				\
++	atomic_inc(&q->q_queued);					\
++									\
++	spin_unlock(&q->q_lock);					\
++}									\
++									\
++static inline								\
++ELEM_TYPE *q_##PREFIX##_fetch(struct PREFIX##_queue *q)			\
++{									\
++	ELEM_TYPE *elem = NULL;						\
++									\
++	spin_lock(&q->q_lock);						\
++									\
++	if (q->q_ordering) {						\
++		if (!q->heap_high) {					\
++			q->heap_high = q->heap_low;			\
++			q->heap_low = NULL;				\
++			q->heap_margin = 0;				\
++			q->last_pos = 0;				\
++		}							\
++		if (q->heap_high) {					\
++			elem = container_of(q->heap_high, ELEM_TYPE, ph);\
++									\
++			if (unlikely(KEYCMP(KEYFN(elem), &q->last_pos) < 0)) {\
++				XIO_ERR("backskip pos %lld -> %lld\n",	\
++					(long long)q->last_pos, (long long)KEYFN(elem));\
++			}						\
++			memcpy(&q->last_pos, KEYFN(elem), sizeof(q->last_pos));\
++									\
++			if (KEYCMP(KEYFN(elem), &q->heap_margin) > 0) { \
++				memcpy(&q->heap_margin, KEYFN(elem), sizeof(q->heap_margin));\
++			}						\
++			ph_delete_min_##HEAPTYPE(&q->heap_high);	\
++			atomic_dec(&q->q_queued);			\
++		}							\
++	} else if (!list_empty(&q->q_anchor)) {				\
++		struct list_head *next = q->q_anchor.next;		\
++		list_del_init(next);					\
++		atomic_dec(&q->q_queued);				\
++		elem = container_of(next, ELEM_TYPE, HEAD);		\
++	}								\
++									\
++	spin_unlock(&q->q_lock);					\
++									\
++	q_##PREFIX##_trigger(q);					\
++									\
++	return elem;							\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_inc_flying(struct PREFIX##_queue *q)			\
++{									\
++	atomic_inc(&q->q_flying);					\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_dec_flying(struct PREFIX##_queue *q)			\
++{									\
++	atomic_dec(&q->q_flying);					\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'HEAD' may be better as '(HEAD)' to avoid precedence issues
+#62: FILE: include/linux/brick/lib_queue.h:27:
++#define QUEUE_FUNCTIONS(PREFIX, ELEM_TYPE, HEAD, KEYFN, KEYCMP, HEAPTYPE)\
++									\
++static inline								\
++void q_##PREFIX##_trigger(struct PREFIX##_queue *q)			\
++{									\
++	if (q->q_event) {						\
++		wake_up_interruptible(q->q_event);			\
++	}								\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_init(struct PREFIX##_queue *q)			\
++{									\
++	INIT_LIST_HEAD(&q->q_anchor);					\
++	q->heap_low = NULL;						\
++	q->heap_high = NULL;						\
++	spin_lock_init(&q->q_lock);					\
++	atomic_set(&q->q_queued, 0);					\
++	atomic_set(&q->q_flying, 0);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_insert(struct PREFIX##_queue *q, ELEM_TYPE * elem)	\
++{									\
++	spin_lock(&q->q_lock);						\
++									\
++	if (q->q_ordering) {						\
++		struct pairing_heap_##HEAPTYPE **use = &q->heap_high;	\
++		if (KEYCMP(KEYFN(elem), &q->heap_margin) <= 0) {	\
++			use = &q->heap_low;				\
++		}							\
++		ph_insert_##HEAPTYPE(use, &elem->ph);			\
++	} else {							\
++		list_add_tail(&elem->HEAD, &q->q_anchor);		\
++	}								\
++	atomic_inc(&q->q_queued);					\
++	atomic_inc(&q->q_total);					\
++	q->q_last_insert = jiffies;					\
++									\
++	spin_unlock(&q->q_lock);					\
++									\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_pushback(struct PREFIX##_queue *q, ELEM_TYPE * elem)	\
++{									\
++	if (q->q_ordering) {						\
++		atomic_dec(&q->q_total);				\
++		q_##PREFIX##_insert(q, elem);				\
++		return;							\
++	}								\
++									\
++	spin_lock(&q->q_lock);						\
++									\
++	list_add(&elem->HEAD, &q->q_anchor);				\
++	atomic_inc(&q->q_queued);					\
++									\
++	spin_unlock(&q->q_lock);					\
++}									\
++									\
++static inline								\
++ELEM_TYPE *q_##PREFIX##_fetch(struct PREFIX##_queue *q)			\
++{									\
++	ELEM_TYPE *elem = NULL;						\
++									\
++	spin_lock(&q->q_lock);						\
++									\
++	if (q->q_ordering) {						\
++		if (!q->heap_high) {					\
++			q->heap_high = q->heap_low;			\
++			q->heap_low = NULL;				\
++			q->heap_margin = 0;				\
++			q->last_pos = 0;				\
++		}							\
++		if (q->heap_high) {					\
++			elem = container_of(q->heap_high, ELEM_TYPE, ph);\
++									\
++			if (unlikely(KEYCMP(KEYFN(elem), &q->last_pos) < 0)) {\
++				XIO_ERR("backskip pos %lld -> %lld\n",	\
++					(long long)q->last_pos, (long long)KEYFN(elem));\
++			}						\
++			memcpy(&q->last_pos, KEYFN(elem), sizeof(q->last_pos));\
++									\
++			if (KEYCMP(KEYFN(elem), &q->heap_margin) > 0) { \
++				memcpy(&q->heap_margin, KEYFN(elem), sizeof(q->heap_margin));\
++			}						\
++			ph_delete_min_##HEAPTYPE(&q->heap_high);	\
++			atomic_dec(&q->q_queued);			\
++		}							\
++	} else if (!list_empty(&q->q_anchor)) {				\
++		struct list_head *next = q->q_anchor.next;		\
++		list_del_init(next);					\
++		atomic_dec(&q->q_queued);				\
++		elem = container_of(next, ELEM_TYPE, HEAD);		\
++	}								\
++									\
++	spin_unlock(&q->q_lock);					\
++									\
++	q_##PREFIX##_trigger(q);					\
++									\
++	return elem;							\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_inc_flying(struct PREFIX##_queue *q)			\
++{									\
++	atomic_inc(&q->q_flying);					\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_dec_flying(struct PREFIX##_queue *q)			\
++{									\
++	atomic_dec(&q->q_flying);					\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'KEYFN' - possible side-effects?
+#62: FILE: include/linux/brick/lib_queue.h:27:
++#define QUEUE_FUNCTIONS(PREFIX, ELEM_TYPE, HEAD, KEYFN, KEYCMP, HEAPTYPE)\
++									\
++static inline								\
++void q_##PREFIX##_trigger(struct PREFIX##_queue *q)			\
++{									\
++	if (q->q_event) {						\
++		wake_up_interruptible(q->q_event);			\
++	}								\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_init(struct PREFIX##_queue *q)			\
++{									\
++	INIT_LIST_HEAD(&q->q_anchor);					\
++	q->heap_low = NULL;						\
++	q->heap_high = NULL;						\
++	spin_lock_init(&q->q_lock);					\
++	atomic_set(&q->q_queued, 0);					\
++	atomic_set(&q->q_flying, 0);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_insert(struct PREFIX##_queue *q, ELEM_TYPE * elem)	\
++{									\
++	spin_lock(&q->q_lock);						\
++									\
++	if (q->q_ordering) {						\
++		struct pairing_heap_##HEAPTYPE **use = &q->heap_high;	\
++		if (KEYCMP(KEYFN(elem), &q->heap_margin) <= 0) {	\
++			use = &q->heap_low;				\
++		}							\
++		ph_insert_##HEAPTYPE(use, &elem->ph);			\
++	} else {							\
++		list_add_tail(&elem->HEAD, &q->q_anchor);		\
++	}								\
++	atomic_inc(&q->q_queued);					\
++	atomic_inc(&q->q_total);					\
++	q->q_last_insert = jiffies;					\
++									\
++	spin_unlock(&q->q_lock);					\
++									\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_pushback(struct PREFIX##_queue *q, ELEM_TYPE * elem)	\
++{									\
++	if (q->q_ordering) {						\
++		atomic_dec(&q->q_total);				\
++		q_##PREFIX##_insert(q, elem);				\
++		return;							\
++	}								\
++									\
++	spin_lock(&q->q_lock);						\
++									\
++	list_add(&elem->HEAD, &q->q_anchor);				\
++	atomic_inc(&q->q_queued);					\
++									\
++	spin_unlock(&q->q_lock);					\
++}									\
++									\
++static inline								\
++ELEM_TYPE *q_##PREFIX##_fetch(struct PREFIX##_queue *q)			\
++{									\
++	ELEM_TYPE *elem = NULL;						\
++									\
++	spin_lock(&q->q_lock);						\
++									\
++	if (q->q_ordering) {						\
++		if (!q->heap_high) {					\
++			q->heap_high = q->heap_low;			\
++			q->heap_low = NULL;				\
++			q->heap_margin = 0;				\
++			q->last_pos = 0;				\
++		}							\
++		if (q->heap_high) {					\
++			elem = container_of(q->heap_high, ELEM_TYPE, ph);\
++									\
++			if (unlikely(KEYCMP(KEYFN(elem), &q->last_pos) < 0)) {\
++				XIO_ERR("backskip pos %lld -> %lld\n",	\
++					(long long)q->last_pos, (long long)KEYFN(elem));\
++			}						\
++			memcpy(&q->last_pos, KEYFN(elem), sizeof(q->last_pos));\
++									\
++			if (KEYCMP(KEYFN(elem), &q->heap_margin) > 0) { \
++				memcpy(&q->heap_margin, KEYFN(elem), sizeof(q->heap_margin));\
++			}						\
++			ph_delete_min_##HEAPTYPE(&q->heap_high);	\
++			atomic_dec(&q->q_queued);			\
++		}							\
++	} else if (!list_empty(&q->q_anchor)) {				\
++		struct list_head *next = q->q_anchor.next;		\
++		list_del_init(next);					\
++		atomic_dec(&q->q_queued);				\
++		elem = container_of(next, ELEM_TYPE, HEAD);		\
++	}								\
++									\
++	spin_unlock(&q->q_lock);					\
++									\
++	q_##PREFIX##_trigger(q);					\
++									\
++	return elem;							\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_inc_flying(struct PREFIX##_queue *q)			\
++{									\
++	atomic_inc(&q->q_flying);					\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_dec_flying(struct PREFIX##_queue *q)			\
++{									\
++	atomic_dec(&q->q_flying);					\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'KEYCMP' - possible side-effects?
+#62: FILE: include/linux/brick/lib_queue.h:27:
++#define QUEUE_FUNCTIONS(PREFIX, ELEM_TYPE, HEAD, KEYFN, KEYCMP, HEAPTYPE)\
++									\
++static inline								\
++void q_##PREFIX##_trigger(struct PREFIX##_queue *q)			\
++{									\
++	if (q->q_event) {						\
++		wake_up_interruptible(q->q_event);			\
++	}								\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_init(struct PREFIX##_queue *q)			\
++{									\
++	INIT_LIST_HEAD(&q->q_anchor);					\
++	q->heap_low = NULL;						\
++	q->heap_high = NULL;						\
++	spin_lock_init(&q->q_lock);					\
++	atomic_set(&q->q_queued, 0);					\
++	atomic_set(&q->q_flying, 0);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_insert(struct PREFIX##_queue *q, ELEM_TYPE * elem)	\
++{									\
++	spin_lock(&q->q_lock);						\
++									\
++	if (q->q_ordering) {						\
++		struct pairing_heap_##HEAPTYPE **use = &q->heap_high;	\
++		if (KEYCMP(KEYFN(elem), &q->heap_margin) <= 0) {	\
++			use = &q->heap_low;				\
++		}							\
++		ph_insert_##HEAPTYPE(use, &elem->ph);			\
++	} else {							\
++		list_add_tail(&elem->HEAD, &q->q_anchor);		\
++	}								\
++	atomic_inc(&q->q_queued);					\
++	atomic_inc(&q->q_total);					\
++	q->q_last_insert = jiffies;					\
++									\
++	spin_unlock(&q->q_lock);					\
++									\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_pushback(struct PREFIX##_queue *q, ELEM_TYPE * elem)	\
++{									\
++	if (q->q_ordering) {						\
++		atomic_dec(&q->q_total);				\
++		q_##PREFIX##_insert(q, elem);				\
++		return;							\
++	}								\
++									\
++	spin_lock(&q->q_lock);						\
++									\
++	list_add(&elem->HEAD, &q->q_anchor);				\
++	atomic_inc(&q->q_queued);					\
++									\
++	spin_unlock(&q->q_lock);					\
++}									\
++									\
++static inline								\
++ELEM_TYPE *q_##PREFIX##_fetch(struct PREFIX##_queue *q)			\
++{									\
++	ELEM_TYPE *elem = NULL;						\
++									\
++	spin_lock(&q->q_lock);						\
++									\
++	if (q->q_ordering) {						\
++		if (!q->heap_high) {					\
++			q->heap_high = q->heap_low;			\
++			q->heap_low = NULL;				\
++			q->heap_margin = 0;				\
++			q->last_pos = 0;				\
++		}							\
++		if (q->heap_high) {					\
++			elem = container_of(q->heap_high, ELEM_TYPE, ph);\
++									\
++			if (unlikely(KEYCMP(KEYFN(elem), &q->last_pos) < 0)) {\
++				XIO_ERR("backskip pos %lld -> %lld\n",	\
++					(long long)q->last_pos, (long long)KEYFN(elem));\
++			}						\
++			memcpy(&q->last_pos, KEYFN(elem), sizeof(q->last_pos));\
++									\
++			if (KEYCMP(KEYFN(elem), &q->heap_margin) > 0) { \
++				memcpy(&q->heap_margin, KEYFN(elem), sizeof(q->heap_margin));\
++			}						\
++			ph_delete_min_##HEAPTYPE(&q->heap_high);	\
++			atomic_dec(&q->q_queued);			\
++		}							\
++	} else if (!list_empty(&q->q_anchor)) {				\
++		struct list_head *next = q->q_anchor.next;		\
++		list_del_init(next);					\
++		atomic_dec(&q->q_queued);				\
++		elem = container_of(next, ELEM_TYPE, HEAD);		\
++	}								\
++									\
++	spin_unlock(&q->q_lock);					\
++									\
++	q_##PREFIX##_trigger(q);					\
++									\
++	return elem;							\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_inc_flying(struct PREFIX##_queue *q)			\
++{									\
++	atomic_inc(&q->q_flying);					\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++static inline								\
++void q_##PREFIX##_dec_flying(struct PREFIX##_queue *q)			\
++{									\
++	atomic_dec(&q->q_flying);					\
++	q_##PREFIX##_trigger(q);					\
++}									\
++									\
++
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000140380.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 4 warnings, 8 checks, 146 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000140380.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

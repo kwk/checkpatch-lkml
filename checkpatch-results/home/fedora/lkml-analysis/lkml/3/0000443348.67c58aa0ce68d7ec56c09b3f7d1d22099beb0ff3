@@ -1,0 +1,255 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#57: FILE: arch/arm64/include/asm/elf.h:30:
++#define ELF_CORE_COPY_REGS(dest, regs)	\
++	*(struct user_pt_regs *)&(dest) = (regs)->user_regs;
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#57: FILE: arch/arm64/include/asm/elf.h:30:
++#define ELF_CORE_COPY_REGS(dest, regs)	\
++	*(struct user_pt_regs *)&(dest) = (regs)->user_regs;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:MISPLACED_INIT: __initdata should be placed after dmi_ver
+#370: FILE: drivers/firmware/dmi_scan.c:19:
++static u16 __initdata dmi_ver;
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#442: FILE: drivers/firmware/dmi_scan.c:427:
++				pr_info("SMBIOS %d.%d present.\n",
++				       dmi_ver >> 8, dmi_ver & 0xFF);
+
+CHECK:BRACES: Unbalanced braces around else statement
+#443: FILE: drivers/firmware/dmi_scan.c:428:
++			else {
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#447: FILE: drivers/firmware/dmi_scan.c:432:
++				pr_info("Legacy DMI %d.%d present.\n",
++				       dmi_ver >> 8, dmi_ver & 0xFF);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'buf[5] < 32'
+#463: FILE: drivers/firmware/dmi_scan.c:448:
++	if ((buf[5] < 32) && dmi_checksum(buf, buf[5])) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#471: FILE: drivers/firmware/dmi_scan.c:456:
++			pr_debug("SMBIOS version fixup(2.%d->2.%d)\n",
++			       dmi_ver & 0xFF, 3);
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#557: FILE: drivers/gpu/drm/i915/i915_reg.h:517:
++#define  _3D_CHICKEN_HIZ_PLANE_DISABLE_MSAA_4X_SNB	(1 << 10)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#790: FILE: drivers/pci/hotplug/pciehp_ctrl.c:380:
++		queue_delayed_work(p_slot->wq, &p_slot->work, 5*HZ);
+ 		                                               ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#981: FILE: drivers/pci/hotplug/shpchp_ctrl.c:504:
++		queue_delayed_work(p_slot->wq, &p_slot->work, 5*HZ);
+ 		                                               ^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1254: FILE: include/linux/sched.h:2657:
++extern void signal_wake_up_state(struct task_struct *t, unsigned int state);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#1260: FILE: include/linux/sched.h:2663:
++}
++static inline void ptrace_signal_wake_up(struct task_struct *t, bool resume)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1382: FILE: kernel/module.c:188:
++	BUG_ON(mod && mod->state == MODULE_STATE_UNFORMED);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1436: FILE: kernel/module.c:1066:
++		BUG();
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1466: FILE: kernel/module.c:2963:
++	ret = !mod || mod->state == MODULE_STATE_LIVE
++		|| mod->state == MODULE_STATE_GOING;
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#1482: FILE: kernel/module.c:3002:
++	if ((old = find_module_all(mod->name, true)) != NULL) {
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1484: FILE: kernel/module.c:3004:
++		if (old->state == MODULE_STATE_COMING
++		    || old->state == MODULE_STATE_UNFORMED) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1488: FILE: kernel/module.c:3008:
++			err = wait_event_interruptible(module_wq,
++					       finished_loading(mod->name));
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#1558: FILE: kernel/module.c:3076:
++	 * but kallsyms etc. can see us. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1675: FILE: kernel/module.c:3457:
++	BUG_ON(mod->state == MODULE_STATE_UNFORMED);
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000443348.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 2 errors, 7 warnings, 13 checks, 1650 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000443348.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

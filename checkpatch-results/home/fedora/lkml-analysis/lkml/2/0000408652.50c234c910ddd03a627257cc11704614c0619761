@@ -1,0 +1,54 @@
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/percpu.h> instead of <asm/percpu.h>
+#830: FILE: arch/x86/include/asm/irqflags.h:8:
++#include <asm/percpu.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#843: FILE: arch/x86/include/asm/irqflags.h:64:
++extern void __raw_local_irq_enable_slow_path(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+ERROR:DEFINE_ARCH_HAS: #define of '__ARCH_HAS_HW_IRQ' is wrong - use Kconfig variables or standard guards instead
+#951: FILE: arch/x86/include/asm/irqflags.h:203:
++#define __ARCH_HAS_HW_IRQ
+
+The ARCH_HAS_xyz and ARCH_HAVE_xyz patterns are wrong.
+
+For big conceptual features use Kconfig symbols instead.  And for
+smaller things where we have compatibility fallback functions but
+want architectures able to override them with optimized ones, we
+should either use weak functions (appropriate for some cases), or
+the symbol that protects them should be the same symbol we use.
+
+See: https://lore.kernel.org/lkml/CA+55aFycQ9XJvEOsiM3txHL5bjUc8CeKWJNR_H+MiicaddB42Q@mail.gmail.com/
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#953: FILE: arch/x86/include/asm/irqflags.h:205:
++#define raw_hw_irq_save_flags(flags)				\
++	do { (flags) = __raw_hw_save_flags(); } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000408652.commit.50c234c910ddd03a627257cc11704614c0619761 total: 1 errors, 1 warnings, 2 checks, 1007 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000408652.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

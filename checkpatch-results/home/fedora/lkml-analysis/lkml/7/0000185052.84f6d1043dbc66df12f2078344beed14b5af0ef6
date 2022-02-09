@@ -1,0 +1,274 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#163: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#353: FILE: security/sara/include/utils.h:29:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'DEST' - possible side-effects?
+#374: FILE: security/sara/include/utils.h:50:
++#define SARA_CONFIG_GET(DEST, CONFIG) do {				\
++	rcu_read_lock();						\
++	do {								\
++		(DEST) = rcu_dereference(CONFIG);			\
++	} while ((DEST) && !kref_get_unless_zero(&(DEST)->refcount));	\
++	rcu_read_unlock();						\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'DATA' - possible side-effects?
+#382: FILE: security/sara/include/utils.h:58:
++#define SARA_CONFIG_PUT(DATA, FREE) do {			\
++	if (kref_put(&(DATA)->refcount, release_entry)) {	\
++		synchronize_rcu();				\
++		(FREE)(DATA);					\
++	}							\
++	(DATA) = NULL;						\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'CONFIG' - possible side-effects?
+#390: FILE: security/sara/include/utils.h:66:
++#define SARA_CONFIG_REPLACE(CONFIG, NEW, FREE, LOCK) do {	\
++	typeof(NEW) tmp;					\
++	spin_lock(LOCK);					\
++	tmp = rcu_dereference_protected(CONFIG,			\
++					lockdep_is_held(LOCK));	\
++	rcu_assign_pointer(CONFIG, NEW);			\
++	if (kref_put(&tmp->refcount, release_entry)) {		\
++		spin_unlock(LOCK);				\
++		synchronize_rcu();				\
++		FREE(tmp);					\
++	} else							\
++		spin_unlock(LOCK);				\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'LOCK' - possible side-effects?
+#390: FILE: security/sara/include/utils.h:66:
++#define SARA_CONFIG_REPLACE(CONFIG, NEW, FREE, LOCK) do {	\
++	typeof(NEW) tmp;					\
++	spin_lock(LOCK);					\
++	tmp = rcu_dereference_protected(CONFIG,			\
++					lockdep_is_held(LOCK));	\
++	rcu_assign_pointer(CONFIG, NEW);			\
++	if (kref_put(&tmp->refcount, release_entry)) {		\
++		spin_unlock(LOCK);				\
++		synchronize_rcu();				\
++		FREE(tmp);					\
++	} else							\
++		spin_unlock(LOCK);				\
++} while (0)
+
+CHECK:SPACING: No space is necessary after a cast
+#459: FILE: security/sara/main.c:49:
++	sara_config_locked = !(*(int *) kp->arg);
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:CONST_STRUCT: struct kernel_param_ops should normally be const
+#463: FILE: security/sara/main.c:53:
++static struct kernel_param_ops param_ops_senabled = {
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+CHECK:SPACING: No space is necessary after a cast
+#476: FILE: security/sara/main.c:66:
++		.data = (void *) &sara_enabled_data,
+
+CHECK:SPACING: No space is necessary after a cast
+#481: FILE: security/sara/main.c:71:
++		.data = (void *) &sara_config_locked_data,
+
+CHECK:SPACING: No space is necessary after a cast
+#486: FILE: security/sara/main.c:76:
++		.data = (int *) &sara_version,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#591: FILE: security/sara/securityfs.c:60:
++static ssize_t file_flag_write(struct file *file,
++				const char __user *ubuf,
+
+CHECK:SPACING: No space is necessary after a cast
+#596: FILE: security/sara/securityfs.c:65:
++		((struct seq_file *) file->private_data)->private;
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!kbuf"
+#685: FILE: security/sara/securityfs.c:154:
++	if (unlikely(kbuf == NULL))
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#779: FILE: security/sara/securityfs.c:248:
++static int mk_dir(struct dentry *parent,
++		const char *dir_name,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#800: FILE: security/sara/securityfs.c:269:
++	*dir_out = securityfs_create_file(file_name,
++					0600,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#812: FILE: security/sara/securityfs.c:281:
++static int mk_readonly_int(struct dentry *parent,
++			const char *file_name,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#819: FILE: security/sara/securityfs.c:288:
++	*dir_out = securityfs_create_file(file_name,
++					0400,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#831: FILE: security/sara/securityfs.c:300:
++static int mk_config_loader(struct dentry *parent,
++			const char *file_name,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#838: FILE: security/sara/securityfs.c:307:
++	*dir_out = securityfs_create_file(file_name,
++					0200,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#850: FILE: security/sara/securityfs.c:319:
++static int mk_config_dumper(struct dentry *parent,
++				const char *file_name,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#857: FILE: security/sara/securityfs.c:326:
++	*dir_out = securityfs_create_file(file_name,
++					0400,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#869: FILE: security/sara/securityfs.c:338:
++static int mk_config_hash(struct dentry *parent,
++			const char *file_name,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#876: FILE: security/sara/securityfs.c:345:
++	*dir_out = securityfs_create_file(file_name,
++					0400,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#898: FILE: security/sara/securityfs.c:367:
++int __init sara_secfs_subtree_register(const char *subtree_name,
++				const struct sara_secfs_node *nodes,
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!subtree"
+#909: FILE: security/sara/securityfs.c:378:
++	if (unlikely(subtree == NULL))
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#914: FILE: security/sara/securityfs.c:383:
++	subtree->name[sizeof(subtree->name)-1] = '\0';
+ 	                                   ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#915: FILE: security/sara/securityfs.c:384:
++	subtree->size = size+1;
+ 	                    ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#917: FILE: security/sara/securityfs.c:386:
++	subtree->nodes = kcalloc(subtree->size,
++				sizeof(*subtree->nodes),
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!subtree->nodes"
+#919: FILE: security/sara/securityfs.c:388:
++	if (unlikely(subtree->nodes == NULL))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#934: FILE: security/sara/securityfs.c:403:
++static inline int __init create_node(enum sara_secfs_node_type type,
++					struct dentry *parent,
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "subtree->nodes[i]"
+#960: FILE: security/sara/securityfs.c:429:
++		if (subtree->nodes[i] != NULL) {
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!fs_root"
+#974: FILE: security/sara/securityfs.c:443:
++	if (unlikely(fs_root == NULL))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#977: FILE: security/sara/securityfs.c:446:
++	ret = mk_dir(fs_root,
++			subtree->name,
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#978: FILE: security/sara/securityfs.c:447:
++			&subtree->nodes[subtree->size-1]);
+ 			                             ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#981: FILE: security/sara/securityfs.c:450:
++	for (i = 0; i < subtree->size-1; ++i) {
+ 	                             ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#983: FILE: security/sara/securityfs.c:452:
++				  subtree->nodes[subtree->size-1],
+ 				                              ^
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!fs_root"
+#1006: FILE: security/sara/securityfs.c:475:
++	if (unlikely(fs_root == NULL))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1011: FILE: security/sara/securityfs.c:480:
++		subtree = list_entry(position,
++					struct sara_secfs_subtree,
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!subtree->nodes[0]"
+#1013: FILE: security/sara/securityfs.c:482:
++		if (subtree->nodes[0] == NULL) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1033: FILE: security/sara/securityfs.c:502:
++		subtree = list_entry(position,
++					struct sara_secfs_subtree,
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!fs_root"
+#1047: FILE: security/sara/securityfs.c:516:
++	if (fs_root == NULL)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!fs_root"
+#1049: FILE: security/sara/securityfs.c:518:
++	if (unlikely(ret || fs_root == NULL))
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "fs_root"
+#1056: FILE: security/sara/securityfs.c:525:
++	if (likely(fs_root != NULL)) {
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!work_buf"
+#1150: FILE: security/sara/utils.c:48:
++		if (unlikely(work_buf == NULL)) {
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000185052.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 total: 0 errors, 2 warnings, 43 checks, 1022 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000185052.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

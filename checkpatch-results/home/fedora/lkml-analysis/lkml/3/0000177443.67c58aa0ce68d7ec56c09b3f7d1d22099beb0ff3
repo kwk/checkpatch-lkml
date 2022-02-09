@@ -1,0 +1,130 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'c_op' - possible side-effects?
+#66: FILE: include/asm-generic/atomic.h:35:
++#define ATOMIC_OP_RETURN(op, c_op)					\
++static inline int atomic_##op##_return(int i, atomic_t *v)		\
++{									\
++	int c, old;							\
++									\
++	c = v->counter;							\
++	while ((old = cmpxchg(&v->counter, c, c c_op i)) != c)		\
++		c = old;						\
++									\
++	return c c_op i;						\
++}
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#239: FILE: include/asm-generic/atomic.h:163:
++	int c, old;
++	c = atomic_read(v);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#259: FILE: include/asm-generic/atomic64.h:24:
++#define ATOMIC64_OP(op)							\
++extern void	 atomic64_##op(long long a, atomic64_t *v);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#260: FILE: include/asm-generic/atomic64.h:25:
++extern void	 atomic64_##op(long long a, atomic64_t *v);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#262: FILE: include/asm-generic/atomic64.h:27:
++#define ATOMIC64_OP_RETURN(op)						\
++extern long long atomic64_##op##_return(long long a, atomic64_t *v);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#263: FILE: include/asm-generic/atomic64.h:28:
++extern long long atomic64_##op##_return(long long a, atomic64_t *v);
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#265: FILE: include/asm-generic/atomic64.h:30:
++#define ATOMIC64_OPS(op)	ATOMIC64_OP(op) ATOMIC_OP_RETURN(op)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'op' - possible side-effects?
+#265: FILE: include/asm-generic/atomic64.h:30:
++#define ATOMIC64_OPS(op)	ATOMIC64_OP(op) ATOMIC_OP_RETURN(op)
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#330: FILE: lib/atomic64.c:73:
++#define ATOMIC64_OP(op, c_op)						\
++void atomic64_##op(long long a, atomic64_t *v)				\
++{									\
++	unsigned long flags;						\
++	raw_spinlock_t *lock = lock_addr(v);				\
++									\
++	raw_spin_lock_irqsave(lock, flags);				\
++	v->counter c_op a;						\
++	raw_spin_unlock_irqrestore(lock, flags);			\
++}									\
++EXPORT_SYMBOL(atomic64_##op);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#342: FILE: lib/atomic64.c:85:
++#define ATOMIC64_OP_RETURN(op, c_op)					\
++long long atomic64_##op##_return(long long a, atomic64_t *v)		\
++{									\
++	unsigned long flags;						\
++	raw_spinlock_t *lock = lock_addr(v);				\
++	long long val;							\
++									\
++	raw_spin_lock_irqsave(lock, flags);				\
++	val = (v->counter c_op a);					\
++	raw_spin_unlock_irqrestore(lock, flags);			\
++	return val;							\
++}									\
++EXPORT_SYMBOL(atomic64_##op##_return);
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#356: FILE: lib/atomic64.c:99:
++#define ATOMIC64_OPS(op, c_op)						\
++	ATOMIC64_OP(op, c_op)						\
++	ATOMIC64_OP_RETURN(op, c_op)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'op' - possible side-effects?
+#356: FILE: lib/atomic64.c:99:
++#define ATOMIC64_OPS(op, c_op)						\
++	ATOMIC64_OP(op, c_op)						\
++	ATOMIC64_OP_RETURN(op, c_op)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'c_op' - possible side-effects?
+#356: FILE: lib/atomic64.c:99:
++#define ATOMIC64_OPS(op, c_op)						\
++	ATOMIC64_OP(op, c_op)						\
++	ATOMIC64_OP_RETURN(op, c_op)
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000177443.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 2 errors, 5 warnings, 6 checks, 315 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000177443.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

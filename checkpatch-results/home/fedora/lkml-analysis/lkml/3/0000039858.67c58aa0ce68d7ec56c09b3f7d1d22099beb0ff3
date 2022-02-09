@@ -1,0 +1,301 @@
+ERROR:GERRIT_CHANGE_ID: Remove Gerrit Change-Id's before submitting upstream
+#31: 
+Change-Id: I2549b821f7bf467c1bd80d4827a1a7621e725659
+
+To be picked up by gerrit, the footer of the commit message might
+have a Change-Id like::
+
+  Change-Id: Ic8aaa0728a43936cd4c6e1ed590e01ba8f0fbf5b
+  Signed-off-by: A. U. Thor <author@example.com>
+
+The Change-Id line must be removed before submitting.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#50: FILE: drivers/clk/qcom/Kconfig:57:
++config MSM_LCC_8960
++	tristate "APQ8064/MSM8960 LPASS Clock Controller"
++	select MSM_GCC_8960
++	depends on COMMON_CLK_QCOM
++	help
++	  Support for the LPASS clock controller on apq8064/msm8960 devices.
++	  Say Y if you want to use audio devices such as i2s, pcm,
++	  SLIMBus, etc.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#75: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#80: FILE: drivers/clk/qcom/lcc-msm8960.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:STATIC_CONST_CHAR_ARRAY: static const char * array should probably be static const char * const
+#137: FILE: drivers/clk/qcom/lcc-msm8960.c:58:
++static const char *lcc_pxo_pll4[] = {
+
+WARNING:STATIC_CONST_CHAR_ARRAY: static const char * array should probably be static const char * const
+#207: FILE: drivers/clk/qcom/lcc-msm8960.c:128:
++static const char *lcc_mi2s_parents[] = {
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ns' - possible side-effects?
+#279: FILE: drivers/clk/qcom/lcc-msm8960.c:200:
++#define CLK_AIF_OSR_DIV(prefix, _ns, _md, hr)			\
++static struct clk_rcg prefix##_osr_src = {			\
++	.ns_reg = _ns,						\
++	.md_reg = _md,						\
++	.mn = {							\
++		.mnctr_en_bit = 8,				\
++		.mnctr_reset_bit = 7,				\
++		.mnctr_mode_shift = 5,				\
++		.n_val_shift = 24,				\
++		.m_val_shift = 8,				\
++		.width = 8,					\
++	},							\
++	.p = {							\
++		.pre_div_shift = 3,				\
++		.pre_div_width = 2,				\
++	},							\
++	.s = {							\
++		.src_sel_shift = 0,				\
++		.parent_map = lcc_pxo_pll4_map,			\
++	},							\
++	.freq_tbl = clk_tbl_aif_osr_393,			\
++	.clkr = {						\
++		.enable_reg = _ns,				\
++		.enable_mask = BIT(9),				\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_osr_src",		\
++			.parent_names = lcc_pxo_pll4,		\
++			.num_parents = 2,			\
++			.ops = &clk_rcg_ops,			\
++			.flags = CLK_SET_RATE_GATE,		\
++		},						\
++	},							\
++};								\
++								\
++static const char *lcc_##prefix##_parents[] = {			\
++	#prefix "_osr_src",					\
++};								\
++								\
++static struct clk_branch prefix##_osr_clk = {			\
++	.halt_reg = hr,						\
++	.halt_bit = 1,						\
++	.halt_check = BRANCH_HALT_ENABLE,			\
++	.clkr = {						\
++		.enable_reg = _ns,				\
++		.enable_mask = BIT(21),				\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_osr_clk",		\
++			.parent_names = lcc_##prefix##_parents,	\
++			.num_parents = 1,			\
++			.ops = &clk_branch_ops,			\
++			.flags = CLK_SET_RATE_PARENT,		\
++		},						\
++	},							\
++};								\
++								\
++static struct clk_regmap_div prefix##_div_clk = {		\
++	.reg = _ns,						\
++	.shift = 10,						\
++	.width = 8,						\
++	.clkr = {						\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_div_clk",		\
++			.parent_names = lcc_##prefix##_parents,	\
++			.num_parents = 1,			\
++			.ops = &clk_regmap_div_ops,		\
++		},						\
++	},							\
++};								\
++								\
++static struct clk_branch prefix##_bit_div_clk = {		\
++	.halt_reg = hr,						\
++	.halt_bit = 0,						\
++	.halt_check = BRANCH_HALT_ENABLE,			\
++	.clkr = {						\
++		.enable_reg = _ns,				\
++		.enable_mask = BIT(19),				\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_bit_div_clk",		\
++			.parent_names = (const char *[]){	\
++				#prefix "_div_clk"		\
++			}, 					\
++			.num_parents = 1,			\
++			.ops = &clk_branch_ops,			\
++			.flags = CLK_SET_RATE_PARENT,		\
++		},						\
++	},							\
++};								\
++								\
++static struct clk_regmap_mux prefix##_bit_clk = {		\
++	.reg = _ns,						\
++	.shift = 18,						\
++	.width = 1,						\
++	.clkr = {						\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_bit_clk",		\
++			.parent_names = (const char *[]){	\
++				#prefix "_bit_div_clk",		\
++				#prefix "_codec_clk",		\
++			},					\
++			.num_parents = 2,			\
++			.ops = &clk_regmap_mux_closest_ops,	\
++			.flags = CLK_SET_RATE_PARENT,		\
++		},						\
++	},							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'hr' - possible side-effects?
+#279: FILE: drivers/clk/qcom/lcc-msm8960.c:200:
++#define CLK_AIF_OSR_DIV(prefix, _ns, _md, hr)			\
++static struct clk_rcg prefix##_osr_src = {			\
++	.ns_reg = _ns,						\
++	.md_reg = _md,						\
++	.mn = {							\
++		.mnctr_en_bit = 8,				\
++		.mnctr_reset_bit = 7,				\
++		.mnctr_mode_shift = 5,				\
++		.n_val_shift = 24,				\
++		.m_val_shift = 8,				\
++		.width = 8,					\
++	},							\
++	.p = {							\
++		.pre_div_shift = 3,				\
++		.pre_div_width = 2,				\
++	},							\
++	.s = {							\
++		.src_sel_shift = 0,				\
++		.parent_map = lcc_pxo_pll4_map,			\
++	},							\
++	.freq_tbl = clk_tbl_aif_osr_393,			\
++	.clkr = {						\
++		.enable_reg = _ns,				\
++		.enable_mask = BIT(9),				\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_osr_src",		\
++			.parent_names = lcc_pxo_pll4,		\
++			.num_parents = 2,			\
++			.ops = &clk_rcg_ops,			\
++			.flags = CLK_SET_RATE_GATE,		\
++		},						\
++	},							\
++};								\
++								\
++static const char *lcc_##prefix##_parents[] = {			\
++	#prefix "_osr_src",					\
++};								\
++								\
++static struct clk_branch prefix##_osr_clk = {			\
++	.halt_reg = hr,						\
++	.halt_bit = 1,						\
++	.halt_check = BRANCH_HALT_ENABLE,			\
++	.clkr = {						\
++		.enable_reg = _ns,				\
++		.enable_mask = BIT(21),				\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_osr_clk",		\
++			.parent_names = lcc_##prefix##_parents,	\
++			.num_parents = 1,			\
++			.ops = &clk_branch_ops,			\
++			.flags = CLK_SET_RATE_PARENT,		\
++		},						\
++	},							\
++};								\
++								\
++static struct clk_regmap_div prefix##_div_clk = {		\
++	.reg = _ns,						\
++	.shift = 10,						\
++	.width = 8,						\
++	.clkr = {						\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_div_clk",		\
++			.parent_names = lcc_##prefix##_parents,	\
++			.num_parents = 1,			\
++			.ops = &clk_regmap_div_ops,		\
++		},						\
++	},							\
++};								\
++								\
++static struct clk_branch prefix##_bit_div_clk = {		\
++	.halt_reg = hr,						\
++	.halt_bit = 0,						\
++	.halt_check = BRANCH_HALT_ENABLE,			\
++	.clkr = {						\
++		.enable_reg = _ns,				\
++		.enable_mask = BIT(19),				\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_bit_div_clk",		\
++			.parent_names = (const char *[]){	\
++				#prefix "_div_clk"		\
++			}, 					\
++			.num_parents = 1,			\
++			.ops = &clk_branch_ops,			\
++			.flags = CLK_SET_RATE_PARENT,		\
++		},						\
++	},							\
++};								\
++								\
++static struct clk_regmap_mux prefix##_bit_clk = {		\
++	.reg = _ns,						\
++	.shift = 18,						\
++	.width = 1,						\
++	.clkr = {						\
++		.hw.init = &(struct clk_init_data){		\
++			.name = #prefix "_bit_clk",		\
++			.parent_names = (const char *[]){	\
++				#prefix "_bit_div_clk",		\
++				#prefix "_codec_clk",		\
++			},					\
++			.num_parents = 2,			\
++			.ops = &clk_regmap_mux_closest_ops,	\
++			.flags = CLK_SET_RATE_PARENT,		\
++		},						\
++	},							\
++}
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#359: FILE: drivers/clk/qcom/lcc-msm8960.c:280:
++^I^I^I}, ^I^I^I^I^I\$
+
+WARNING:STATIC_CONST_CHAR_ARRAY: static const char * array should probably be static const char * const
+#525: FILE: drivers/clk/qcom/lcc-msm8960.c:446:
++static const char *lcc_slimbus_parents[] = {
+
+WARNING:DT_SPLIT_BINDING_PATCH: DT binding docs and includes should be a separate patch. See: Documentation/devicetree/bindings/submitting-patches.rst
+
+Devicetree bindings should be their own patch.  This is because
+bindings are logically independent from a driver implementation,
+they have a different maintainer (even though they often
+are applied via the same tree), and it makes for a cleaner history in the
+DT only tree created with git-filter-branch.
+
+See: https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.html#i-for-patch-submitters
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#671: FILE: include/dt-bindings/clock/qcom,lcc-msm8960.h:1:
++/*
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000039858.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 1 errors, 9 warnings, 2 checks, 657 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000039858.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

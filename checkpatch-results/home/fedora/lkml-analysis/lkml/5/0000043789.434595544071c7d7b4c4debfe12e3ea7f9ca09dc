@@ -1,0 +1,197 @@
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const struct xa_node *' should also have an identifier name
+#80: FILE: include/linux/xarray.h:167:
++void xa_dump_node(const struct xa_node *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'node' - possible side-effects?
+#81: FILE: include/linux/xarray.h:168:
++#define XA_BUG_ON(node, x) do { \
++		if ((x) && (node)) \
++			xa_dump_node(node); \
++		BUG_ON(x); \
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#81: FILE: include/linux/xarray.h:168:
++#define XA_BUG_ON(node, x) do { \
++		if ((x) && (node)) \
++			xa_dump_node(node); \
++		BUG_ON(x); \
++	} while (0)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#84: FILE: include/linux/xarray.h:171:
++		BUG_ON(x); \
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#104: FILE: include/linux/xarray.h:191:
++static inline void *xa_entry(struct xarray *xa,
++				const struct xa_node *node, unsigned int offset)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#112: FILE: include/linux/xarray.h:199:
++static inline void *xa_entry_locked(struct xarray *xa,
++				const struct xa_node *node, unsigned int offset)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'errno' may be better as '(errno)' to avoid precedence issues
+#192: FILE: include/linux/xarray.h:329:
++#define XAS_ERROR(errno) ((struct xa_node *)(((unsigned long)errno << 1) | 1))
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#240: FILE: include/linux/xarray.h:377:
++	unsigned long v = (unsigned long)xas->xa_node;
++	return (v & 1) ? -(v >> 1) : 0;
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#510: FILE: lib/xarray.c:165:
++	if (xa_is_value(entry))
+[...]
++	else if (!xa_is_internal(entry))
+[...]
++	else if (xa_is_node(entry)) {
+[...]
++	} else if (xa_is_retry(entry))
+[...]
++	else if (xa_is_sibling(entry))
+[...]
++	else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#511: FILE: lib/xarray.c:166:
++		printk("%lu: value %#lx\n", index, xa_to_value(entry));
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#513: FILE: lib/xarray.c:168:
++		printk("%lu: %p\n", index, entry);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#517: FILE: lib/xarray.c:172:
++		struct xa_node *node = xa_to_node(entry);
++		printk("node %p %s %d parent %p shift %d count %d "
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#517: FILE: lib/xarray.c:172:
++		printk("node %p %s %d parent %p shift %d count %d "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#518: FILE: lib/xarray.c:173:
++		printk("node %p %s %d parent %p shift %d count %d "
++			"exceptional %d tags %lx %lx %lx indices %lu-%lu\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#527: FILE: lib/xarray.c:182:
++			xa_dump_entry(node->slots[i],
++					index + (i << node->shift));
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#529: FILE: lib/xarray.c:184:
++		printk("%lu: retry (%ld)\n", index, xa_to_internal(entry));
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#531: FILE: lib/xarray.c:186:
++		printk("%lu: sibling (%ld)\n", index, xa_to_sibling(entry));
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#533: FILE: lib/xarray.c:188:
++		printk("%lu: UNKNOWN ENTRY (%p)\n", index, entry);
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#538: FILE: lib/xarray.c:193:
++	printk("xadn: node %p %s %d parent %p shift %d count %d "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#539: FILE: lib/xarray.c:194:
++	printk("xadn: node %p %s %d parent %p shift %d count %d "
++		"exceptional %d array %p list %p %p tags %lx %lx %lx\n",
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#549: FILE: lib/xarray.c:204:
++	printk("xarray: %p %x %p\n", xa, xa->xa_flags, xa->xa_head);
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#621: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#626: FILE: tools/testing/radix-tree/xarray-test.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#654: FILE: tools/testing/radix-tree/xarray-test.c:29:
++			void *entry = xa_load(xa, j);
++			if (j < i)
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000043789.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 17 warnings, 7 checks, 578 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000043789.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

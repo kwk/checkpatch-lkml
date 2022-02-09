@@ -1,0 +1,436 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#31: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#255: FILE: arch/arm/mach-omap2/omap-secure.h:69:
++extern u32 save_secure_ram_context(u32 args_pa);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#256: FILE: arch/arm/mach-omap2/omap-secure.h:70:
++extern u32 omap3_save_secure_ram(void __iomem *save_regs, int size);
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#490: FILE: arch/arm64/include/asm/bug.h:38:
++#define __BUG_ENTRY(flags) ^I^I^I^I\$
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#506: FILE: arch/arm64/include/asm/bug.h:50:
++#define __BUG_FLAGS(flags)				\
++	asm volatile (					\
++		__BUG_ENTRY(flags)			\
++		"brk %[imm]" :: [imm] "i" (BUG_BRK_IMM)	\
++	);
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#506: FILE: arch/arm64/include/asm/bug.h:50:
++#define __BUG_FLAGS(flags)				\
++	asm volatile (					\
++		__BUG_ENTRY(flags)			\
++		"brk %[imm]" :: [imm] "i" (BUG_BRK_IMM)	\
++	);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#515: FILE: arch/arm64/include/asm/bug.h:56:
+ 
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#516: FILE: arch/arm64/include/asm/bug.h:57:
++#define BUG() do {					\
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#522: FILE: arch/arm64/include/asm/bug.h:62:
++#define __WARN_TAINT(taint) ^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#857: FILE: arch/x86/include/asm/barrier.h:29:
++ * ^Ibounds check succeeds and 0 otherwise$
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#865: FILE: arch/x86/include/asm/barrier.h:37:
++static inline unsigned long array_index_mask_nospec(unsigned long index,
++		unsigned long size)
+
+ERROR:SPACING: spaces required around that ':' (ctx:ExV)
+#870: FILE: arch/x86/include/asm/barrier.h:42:
++			:"=r" (mask)
+ 			^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: spaces required around that ':' (ctx:ExV)
+#871: FILE: arch/x86/include/asm/barrier.h:43:
++			:"r"(size),"r" (index)
+ 			^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#871: FILE: arch/x86/include/asm/barrier.h:43:
++			:"r"(size),"r" (index)
+ 			          ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:ExV)
+#872: FILE: arch/x86/include/asm/barrier.h:44:
++			:"cc");
+ 			^
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#962: FILE: arch/x86/include/asm/vmx.h:424:
++#define VMX_VPID_EXTENT_INDIVIDUAL_ADDR_BIT     (1ull << 8) /* (40 - 32) */
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT_ULL macro
+#965: FILE: arch/x86/include/asm/vmx.h:427:
++#define VMX_VPID_EXTENT_SINGLE_NON_GLOBAL_BIT   (1ull << 11) /* (43 - 32) */
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1022: FILE: arch/x86/kernel/cpu/bugs.c:97:
+ 
++
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1106: FILE: arch/x86/kernel/cpu/bugs.c:162:
++	if (cmdline_find_option_bool(boot_command_line, "nospectre_v2"))
+[...]
++	else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:UNNECESSARY_ELSE: else is not generally useful after a break or return
+#1108: FILE: arch/x86/kernel/cpu/bugs.c:164:
++		return SPECTRE_V2_CMD_NONE;
++	else {
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1108: FILE: arch/x86/kernel/cpu/bugs.c:164:
++	else {
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxW)
+#1288: FILE: arch/x86/kernel/cpu/perf_event.c:191:
++	u64 val, val_fail = -1, val_new= ~0;
+ 	                               ^
+
+CHECK:CAMELCASE: Avoid CamelCase: <nested_vmx_failValid>
+#1505: FILE: arch/x86/kvm/vmx.c:7453:
++			nested_vmx_failValid(vcpu,
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1506: FILE: arch/x86/kvm/vmx.c:7454:
++			nested_vmx_failValid(vcpu,
++				VMXERR_INVALID_OPERAND_TO_INVEPT_INVVPID);
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#1591: FILE: arch/x86/kvm/x86.c:8215:
++{
++
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2377: FILE: drivers/i2c/i2c-boardinfo.c:59:
++int i2c_register_board_info(int busnum, struct i2c_board_info const *info, unsigned len)
+
+CHECK:CAMELCASE: Avoid CamelCase: <IndParse>
+#2484: FILE: drivers/isdn/hardware/eicon/message.c:150:
++static void IndParse(PLCI *, const word *, byte **, byte);
+
+CHECK:CAMELCASE: Avoid CamelCase: <multi_CiPN_id>
+#2507: FILE: drivers/isdn/hardware/eicon/message.c:4873:
++	static const word multi_CiPN_id[]  = {1, OAD};
+
+WARNING:TYPO_SPELLING: 'parms' may be misspelled - perhaps 'params'?
+#2520: FILE: drivers/isdn/hardware/eicon/message.c:8929:
++static void IndParse(PLCI *plci, const word *parms_id, byte **parms, byte multiIEsize)
+                                                               ^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:CAMELCASE: Avoid CamelCase: <multiIEsize>
+#2520: FILE: drivers/isdn/hardware/eicon/message.c:8929:
++static void IndParse(PLCI *plci, const word *parms_id, byte **parms, byte multiIEsize)
+
+ERROR:POINTER_LOCATION: "foo* bar" should be "foo *bar"
+#2622: FILE: drivers/media/common/b2c2/flexcop-fe-tuner.c:71:
++static int __maybe_unused flexcop_sleep(struct dvb_frontend* fe)
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2763: FILE: drivers/media/i2c/tc358743.c:1274:
++	i2c_wrreg(sd, (u16)reg->reg, reg->val,
+ 			tc358743_get_reg_size(reg->reg));
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#3313: FILE: drivers/net/wireless/cw1200/pm.h:43:
++}
++static inline int cw1200_can_suspend(struct cw1200_common *priv)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3475: FILE: drivers/power/bq27xxx_battery.c:995:
++static int __maybe_unused bq27xxx_powersupply_init(struct bq27xxx_device_info *di,
+ 				    const char *name)
+
+CHECK:CAMELCASE: Avoid CamelCase: <PortAddr>
+#3540: FILE: drivers/scsi/advansys.c:6294:
++	PortAddr iop_base = asc_dvc->iop_base;
+
+CHECK:CAMELCASE: Avoid CamelCase: <AscGetSynPeriodIndex>
+#3541: FILE: drivers/scsi/advansys.c:6295:
++	uchar sdtr_period_index = AscGetSynPeriodIndex(asc_dvc, sdtr_period);
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#3607: FILE: drivers/scsi/g_NCR5380.c:541:
++		while (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_HOST_BUF_NOT_RDY)
++		{
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#4235: FILE: drivers/video/fbdev/sis/init301.c:2154:
++  unsigned short resinfo, tempbx;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#4254: FILE: drivers/video/fbdev/sis/init301.c:7271:
++   unsigned short temp, temp1;$
+
+WARNING:PREFER_DEV_LEVEL: Prefer dev_dbg(... to dev_printk(KERN_DEBUG, ...
+#4469: FILE: include/linux/device.h:1278:
++		dev_printk(KERN_DEBUG, dev, fmt, ##__VA_ARGS__);	\
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#4521: FILE: include/linux/init.h:49:
++#define __init		__section(.init.text) __cold notrace __noretpoline
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#4534: FILE: include/linux/module.h:793:
++extern bool retpoline_module_ok(bool has_retpoline);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4573: FILE: include/linux/msi.h:120:
+ }
++static inline void pci_write_msi_msg(unsigned int irq, struct msi_msg *msg)
+
+WARNING:SPDX_LICENSE_TAG: Improper SPDX comment style for 'include/linux/nospec.h', please use '/*' instead
+#4604: FILE: include/linux/nospec.h:1:
++// SPDX-License-Identifier: GPL-2.0
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#4604: FILE: include/linux/nospec.h:1:
++// SPDX-License-Identifier: GPL-2.0
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4636: FILE: include/linux/nospec.h:33:
++	if (WARN_ONCE(index > LONG_MAX || size > LONG_MAX,
++			"array_index_nospec() limited to range of [0, LONG_MAX]\n"))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#4684: FILE: include/linux/string.h:125:
++extern char *kmemdup_nul(const char *s, size_t len, gfp_t gfp);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#4694: FILE: include/net/dst_cache.h:1:
++#ifndef _NET_DST_CACHE_H
+
+WARNING:TYPO_SPELLING: 'unsed' may be misspelled - perhaps 'unused'?
+#4786: FILE: include/net/dst_cache.h:93:
++ *	is unsed.
+   	   ^^^^^
+
+CHECK:CAMELCASE: Avoid CamelCase: <Wlog>
+#5049: FILE: include/net/red.h:170:
++static inline bool red_check_params(u32 qth_min, u32 qth_max, u8 Wlog)
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#5081: FILE: include/trace/events/clk.h:137:
++		__string(        pname, parent ? parent->name : "none"     )
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#5081: FILE: include/trace/events/clk.h:137:
++		__string(        pname, parent ? parent->name : "none"     )
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#5378: FILE: net/core/dst_cache.c:1:
++/*
+
+WARNING:EMBEDDED_FILENAME: It's generally not useful to have the filename in the file
+#5379: FILE: net/core/dst_cache.c:2:
++ * net/core/dst_cache.c - dst entry cache
+
+Embedding the complete filename path inside the file isn't particularly
+useful as often the path is moved around and becomes incorrect.
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'ut[i].mode == XFRM_MODE_TRANSPORT'
+#6483: FILE: net/xfrm/xfrm_user.c:1398:
++		if ((ut[i].mode == XFRM_MODE_TRANSPORT) &&
++		    (ut[i].family != prev_family))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'ut[i].family != prev_family'
+#6483: FILE: net/xfrm/xfrm_user.c:1398:
++		if ((ut[i].mode == XFRM_MODE_TRANSPORT) &&
++		    (ut[i].family != prev_family))
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#9555: FILE: tools/perf/bench/numa.c:285:
++	BUG_ON(cpus_per_node * nr_numa_nodes() != g->p.nr_cpus);
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#9595: FILE: tools/perf/bench/numa.c:1332:
++		g->p.nr_tasks, g->p.nr_tasks == 1 ? "task" : "tasks", nr_numa_nodes(), g->p.nr_cpus);
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#9607: FILE: tools/perf/builtin-top.c:73:
++static volatile int resize;
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000342266.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 11 errors, 22 warnings, 27 checks, 8302 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000342266.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

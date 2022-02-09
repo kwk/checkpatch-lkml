@@ -1,0 +1,78 @@
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#80: FILE: arch/x86/include/asm/pgtable-2level.h:74:
++#define pte_to_pgoff(pte)						\
++	((((pte).pte_low >> (PTE_FILE_SHIFT1))				\
++	  & ((1U << PTE_FILE_BITS1) - 1)))				\
++	+ ((((pte).pte_low >> (PTE_FILE_SHIFT2))			\
++	    & ((1U << PTE_FILE_BITS2) - 1))				\
++	   << (PTE_FILE_BITS1))						\
++	+ ((((pte).pte_low >> (PTE_FILE_SHIFT3))			\
++	    & ((1U << PTE_FILE_BITS3) - 1))				\
++	   << (PTE_FILE_BITS1 + PTE_FILE_BITS2))			\
++	+ ((((pte).pte_low >> (PTE_FILE_SHIFT4)))			\
++	    << (PTE_FILE_BITS1 + PTE_FILE_BITS2 + PTE_FILE_BITS3))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pte' - possible side-effects?
+#80: FILE: arch/x86/include/asm/pgtable-2level.h:74:
++#define pte_to_pgoff(pte)						\
++	((((pte).pte_low >> (PTE_FILE_SHIFT1))				\
++	  & ((1U << PTE_FILE_BITS1) - 1)))				\
++	+ ((((pte).pte_low >> (PTE_FILE_SHIFT2))			\
++	    & ((1U << PTE_FILE_BITS2) - 1))				\
++	   << (PTE_FILE_BITS1))						\
++	+ ((((pte).pte_low >> (PTE_FILE_SHIFT3))			\
++	    & ((1U << PTE_FILE_BITS3) - 1))				\
++	   << (PTE_FILE_BITS1 + PTE_FILE_BITS2))			\
++	+ ((((pte).pte_low >> (PTE_FILE_SHIFT4)))			\
++	    << (PTE_FILE_BITS1 + PTE_FILE_BITS2 + PTE_FILE_BITS3))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'off' - possible side-effects?
+#92: FILE: arch/x86/include/asm/pgtable-2level.h:86:
++#define pgoff_to_pte(off)						\
++	((pte_t) { .pte_low =						\
++	 ((((off)) & ((1U << PTE_FILE_BITS1) - 1)) << PTE_FILE_SHIFT1)	\
++	 + ((((off) >> PTE_FILE_BITS1)					\
++	     & ((1U << PTE_FILE_BITS2) - 1))				\
++	    << PTE_FILE_SHIFT2)						\
++	 + ((((off) >> (PTE_FILE_BITS1 + PTE_FILE_BITS2))		\
++	     & ((1U << PTE_FILE_BITS3) - 1))				\
++	    << PTE_FILE_SHIFT3)						\
++	 + ((((off) >>							\
++	      (PTE_FILE_BITS1 + PTE_FILE_BITS2 + PTE_FILE_BITS3)))	\
++	    << PTE_FILE_SHIFT4)						\
++	 + _PAGE_FILE })
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#253: FILE: mm/memory.c:3418:
++		if (flags & FAULT_FLAG_WRITE) {
+ 			entry = maybe_mkwrite(pte_mkdirty(entry), vma);
++		}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000342009.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 1 errors, 1 warnings, 2 checks, 188 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000342009.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

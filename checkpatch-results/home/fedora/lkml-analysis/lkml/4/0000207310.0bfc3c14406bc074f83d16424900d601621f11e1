@@ -1,0 +1,142 @@
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#171: FILE: arch/s390/include/asm/trace/diag.h:23:
++TRACE_EVENT(s390_diagnose,
+ 	TP_PROTO(unsigned short nr),
+
+ERROR:INITIALISED_STATIC: do not initialise statics to 0
+#409: FILE: arch/s390/kernel/ipl.c:124:
++static u8 ipl_ssid __attribute__((__section__(".data"))) = 0;
+
+Static variables should not be initialized explicitly to zero.
+Your compiler (or rather your loader) automatically does
+it for you.
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section(".data") over __attribute__((__section__(".data")))
+#409: FILE: arch/s390/kernel/ipl.c:124:
++static u8 ipl_ssid __attribute__((__section__(".data"))) = 0;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ipl_blk' - possible side-effects?
+#417: FILE: arch/s390/kernel/ipl.c:201:
++#define IPL_ATTR_CCW_STORE_FN(_prefix, _name, _ipl_blk)			\
++static ssize_t sys_##_prefix##_##_name##_store(struct kobject *kobj,	\
++		struct kobj_attribute *attr,				\
++		const char *buf, size_t len)				\
++{									\
++	unsigned long long ssid, devno;					\
++									\
++	if (sscanf(buf, "0.%llx.%llx\n", &ssid, &devno) != 2)		\
++		return -EINVAL;						\
++									\
++	if (ssid > __MAX_SSID || devno > __MAX_SUBCHANNEL)		\
++		return -EINVAL;						\
++									\
++	_ipl_blk.ssid = ssid;						\
++	_ipl_blk.devno = devno;						\
++	return len;							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_prefix' - possible side-effects?
+#435: FILE: arch/s390/kernel/ipl.c:219:
++#define DEFINE_IPL_CCW_ATTR_RW(_prefix, _name, _ipl_blk)		\
++IPL_ATTR_SHOW_FN(_prefix, _name, "0.%x.%04x\n",				\
++		 _ipl_blk.ssid, _ipl_blk.devno);			\
++IPL_ATTR_CCW_STORE_FN(_prefix, _name, _ipl_blk);			\
++static struct kobj_attribute sys_##_prefix##_##_name##_attr =		\
++	__ATTR(_name, (S_IRUGO | S_IWUSR),				\
++	       sys_##_prefix##_##_name##_show,				\
++	       sys_##_prefix##_##_name##_store)				\
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_name' - possible side-effects?
+#435: FILE: arch/s390/kernel/ipl.c:219:
++#define DEFINE_IPL_CCW_ATTR_RW(_prefix, _name, _ipl_blk)		\
++IPL_ATTR_SHOW_FN(_prefix, _name, "0.%x.%04x\n",				\
++		 _ipl_blk.ssid, _ipl_blk.devno);			\
++IPL_ATTR_CCW_STORE_FN(_prefix, _name, _ipl_blk);			\
++static struct kobj_attribute sys_##_prefix##_##_name##_attr =		\
++	__ATTR(_name, (S_IRUGO | S_IWUSR),				\
++	       sys_##_prefix##_##_name##_show,				\
++	       sys_##_prefix##_##_name##_store)				\
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ipl_blk' - possible side-effects?
+#435: FILE: arch/s390/kernel/ipl.c:219:
++#define DEFINE_IPL_CCW_ATTR_RW(_prefix, _name, _ipl_blk)		\
++IPL_ATTR_SHOW_FN(_prefix, _name, "0.%x.%04x\n",				\
++		 _ipl_blk.ssid, _ipl_blk.devno);			\
++IPL_ATTR_CCW_STORE_FN(_prefix, _name, _ipl_blk);			\
++static struct kobj_attribute sys_##_prefix##_##_name##_attr =		\
++	__ATTR(_name, (S_IRUGO | S_IWUSR),				\
++	       sys_##_prefix##_##_name##_show,				\
++	       sys_##_prefix##_##_name##_store)				\
++
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO | S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#440: FILE: arch/s390/kernel/ipl.c:224:
++	__ATTR(_name, (S_IRUGO | S_IWUSR),				\
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#738: FILE: arch/s390/mm/mmap.c:108:
++	if (filp || (flags & MAP_SHARED))
+ 	    ^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#766: FILE: arch/s390/mm/mmap.c:146:
++	if (filp || (flags & MAP_SHARED))
+ 	    ^^^^
+
+ERROR:SPACING: space prohibited before that ':' (ctx:WxV)
+#1115: FILE: drivers/s390/cio/chsc.h:120:
++	u8 :4;
+ 	   ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space prohibited before that ':' (ctx:WxV)
+#1117: FILE: drivers/s390/cio/chsc.h:122:
++	u8 :8;
+ 	   ^
+
+ERROR:SPACING: space prohibited before that ':' (ctx:WxV)
+#1119: FILE: drivers/s390/cio/chsc.h:124:
++	u32 :32;
+ 	    ^
+
+ERROR:SPACING: space prohibited before that ':' (ctx:WxV)
+#1120: FILE: drivers/s390/cio/chsc.h:125:
++	u32 :32;
+ 	    ^
+
+ERROR:SPACING: space prohibited before that ':' (ctx:WxV)
+#1123: FILE: drivers/s390/cio/chsc.h:128:
++	u32 :4;
+ 	    ^
+
+ERROR:SPACING: space prohibited before that ':' (ctx:WxV)
+#1125: FILE: drivers/s390/cio/chsc.h:130:
++	u32 :24;
+ 	    ^
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000207310.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 7 errors, 4 warnings, 5 checks, 1012 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000207310.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

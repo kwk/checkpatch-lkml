@@ -1,0 +1,138 @@
+WARNING:EMAIL_SUBJECT: A patch subject line should describe the change not the tool that found it
+#17: 
+Subject: [PATCH 3/8] fs/configfs: dir.c checkpatch cleanup
+
+Naming the tool that found the issue is not very useful in the
+subject line.  A good subject line summarizes the change that
+the patch brings.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRWXU | S_IRUGO | S_IXUGO' are not preferred. Consider using octal permissions '0755'.
+#138: FILE: fs/configfs/dir.c:270:
++	umode_t mode = S_IFDIR | S_IRWXU | S_IRUGO | S_IXUGO;
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'type->ct_group_ops->disconnect_notify'
+#311: FILE: fs/configfs/dir.c:920:
++		type->ct_group_ops->
++			disconnect_notify(to_config_group(parent_item), item);
+
+A single dereferencing identifier spanned on multiple lines like::
+
+  struct_identifier->member[index].
+  member = <foo>;
+
+is generally hard to follow. It can easily lead to typos and so makes
+the code vulnerable to bugs.
+
+If fixing the multiple line dereferencing leads to an 80 column
+violation, then either rewrite the code in a more simple way or if the
+starting part of the dereferencing identifier is the same and used at
+multiple places then store it in a temporary variable, and use that
+temporary variable only at all the places. For example, if there are
+two dereferencing identifiers::
+
+  member1->member2->member3.foo1;
+  member1->member2->member3.foo2;
+
+then store the member1->member2->member3 part in a temporary variable.
+It not only helps to avoid the 80 column violation but also reduces
+the program size by removing the unnecessary dereferences.
+
+But if none of the above methods work then ignore the 80 column
+violation because it is much easier to read a dereferencing identifier
+on a single line.
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_type' may be better as '(_type)' to avoid precedence issues
+#323: FILE: fs/configfs/dir.c:953:
++#define type_print(_type)						\
++	do {								\
++		if (sd->s_type & _type)					\
++			pr_info("%*s %s\n", level, " ", #_type);	\
++	} while (0)
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'type->ct_group_ops->make_group'
+#346: FILE: fs/configfs/dir.c:1242:
++		group = type->ct_group_ops->
++			make_group(to_config_group(parent_item), name);
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'type->ct_group_ops->make_item'
+#356: FILE: fs/configfs/dir.c:1252:
++		item = type->ct_group_ops->
++			make_item(to_config_group(parent_item), name);
+
+CHECK:BRACES: Unbalanced braces around else statement
+#379: FILE: fs/configfs/dir.c:1486:
++			} else
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#410: FILE: fs/configfs/dir.c:1545:
++static int configfs_readdir(struct file *filp, void *dirent, filldir_t filldir)
+                                          ^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:PREFER_FALLTHROUGH: Prefer 'fallthrough;' over fallthrough comment
+#453: FILE: fs/configfs/dir.c:1562:
++		/* fallthrough */
+
+Use the `fallthrough;` pseudo keyword instead of
+`/* fallthrough */` like comments.
+
+WARNING:PREFER_FALLTHROUGH: Prefer 'fallthrough;' over fallthrough comment
+#460: FILE: fs/configfs/dir.c:1569:
++		/* fallthrough */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#474: FILE: fs/configfs/dir.c:1583:
++			next = list_entry(p, struct configfs_dirent,
++					   s_sibling);
+
+WARNING:TYPO_SPELLING: 'iput' may be misspelled - perhaps 'input'?
+#519: FILE: fs/configfs/dir.c:1595:
++			 * s_dentry before calling iput().
+ 			                           ^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#544: FILE: fs/configfs/dir.c:1614:
++			if (filldir(dirent, name, len, filp->f_pos, ino,
++					 dt_type(next)) < 0)
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000003825.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 9 warnings, 4 checks, 535 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000003825.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

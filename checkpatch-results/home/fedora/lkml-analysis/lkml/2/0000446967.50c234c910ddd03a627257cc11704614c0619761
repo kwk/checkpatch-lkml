@@ -1,0 +1,76 @@
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#92: FILE: arch/parisc/include/asm/bug.h:57:
++^I^I^I     "i" (BUGFLAG_TAINT(taint)), ^I^I\$
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#119: FILE: arch/powerpc/include/asm/bug.h:88:
++#define __WARN_TAINT(taint) do {				\
+ 	__asm__ __volatile__(					\
+ 		"1:	twi 31,0,0\n"				\
+ 		_EMIT_BUG_ENTRY					\
+ 		: : "i" (__FILE__), "i" (__LINE__),		\
++		  "i" (BUGFLAG_TAINT(taint)),			\
+ 		  "i" (sizeof(struct bug_entry)));		\
+ } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#148: FILE: arch/s390/include/asm/bug.h:49:
++#define __WARN_TAINT(taint) do {			\
++	__EMIT_BUG(BUGFLAG_TAINT(taint));		\
+ } while (0)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#196: FILE: include/asm-generic/bug.h:28:
++#define BUGFLAG_WARNING		(1 << 0)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#212: FILE: include/asm-generic/bug.h:66:
++extern void warn_slowpath_fmt_taint(const char *file, const int line,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#213: FILE: include/asm-generic/bug.h:67:
++				    unsigned taint, const char *fmt, ...)
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __printf(4, 5) over __attribute__((format(printf, 4, 5)))
+#214: FILE: include/asm-generic/bug.h:68:
++	__attribute__((format(printf, 4, 5)));
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#226: FILE: include/asm-generic/bug.h:80:
++	do { printk(arg); __WARN_TAINT(taint); } while (0)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#280: FILE: kernel/panic.c:369:
++				 unsigned taint, struct slowpath_args *args)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#305: FILE: kernel/panic.c:401:
++			     unsigned taint, const char *fmt, ...)
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000446967.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 8 warnings, 2 checks, 226 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000446967.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

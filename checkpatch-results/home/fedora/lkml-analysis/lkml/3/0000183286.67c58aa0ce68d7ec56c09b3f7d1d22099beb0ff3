@@ -1,0 +1,153 @@
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'pool' may be better as '(pool)' to avoid precedence issues
+#57: FILE: include/linux/percpu_ida.h:28:
++#define percpu_ida_inc(pool, ptr)		\
++do {						\
++	__this_cpu_inc(pool->stats->ptr);	\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ptr' may be better as '(ptr)' to avoid precedence issues
+#57: FILE: include/linux/percpu_ida.h:28:
++#define percpu_ida_inc(pool, ptr)		\
++do {						\
++	__this_cpu_inc(pool->stats->ptr);	\
++} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#57: FILE: include/linux/percpu_ida.h:28:
++#define percpu_ida_inc(pool, ptr)		\
++do {						\
++	__this_cpu_inc(pool->stats->ptr);	\
++} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#86: FILE: lib/Kconfig:479:
++config PERCPU_IDA_STATS
++	bool "Export percpu_ida status by sysfs"
++	default n
++	help
++	  Export percpu_ida allocation/free information so
++	  the performance can be monitored.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct percpu_ida *' should also have an identifier name
+#107: FILE: lib/percpu_ida.c:48:
++	ssize_t (*show)(struct percpu_ida *, char *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'char *' should also have an identifier name
+#107: FILE: lib/percpu_ida.c:48:
++	ssize_t (*show)(struct percpu_ida *, char *);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#110: FILE: lib/percpu_ida.c:51:
++#define pcpu_ida_show(field, fmt)					\
++static ssize_t field##_show(struct percpu_ida *pool, char *buf)		\
++{									\
++	u64 val = 0;							\
++	ssize_t rc;							\
++	unsigned cpu;							\
++									\
++	for_each_possible_cpu(cpu)					\
++		val += per_cpu_ptr(pool->stats, cpu)->field;		\
++									\
++	rc = sprintf(buf, fmt, val);					\
++	return rc;							\
++}
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#115: FILE: lib/percpu_ida.c:56:
++	unsigned cpu;							\
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#127: FILE: lib/percpu_ida.c:68:
++#define pcpu_ida_attr_ro(field, fmt)		\
++	pcpu_ida_show(field, fmt)		\
++	static PERCPU_IDA_ATTR_RO(field)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#127: FILE: lib/percpu_ida.c:68:
++#define pcpu_ida_attr_ro(field, fmt)		\
++	pcpu_ida_show(field, fmt)		\
++	static PERCPU_IDA_ATTR_RO(field)
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#147: FILE: lib/percpu_ida.c:88:
++	.attr = {.name = "percpu_max_size", .mode = S_IRUGO},
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#158: FILE: lib/percpu_ida.c:99:
++	.attr = {.name = "percpu_batch_size", .mode = S_IRUGO},
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#163: FILE: lib/percpu_ida.c:104:
++static ssize_t percpu_ida_sysfs_show(struct kobject *kobj,
++		struct attribute *attr, char *page)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#193: FILE: lib/percpu_ida.c:134:
++static ssize_t percpu_ida_sysfs_show(struct kobject *kobj,
++		struct attribute *attr, char *page)
+
+WARNING:CONST_STRUCT: struct sysfs_ops should normally be const
+#281: FILE: lib/percpu_ida.c:388:
++static struct sysfs_ops percpu_ida_sysfs_ops = {
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000183286.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 1 errors, 8 warnings, 6 checks, 245 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000183286.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

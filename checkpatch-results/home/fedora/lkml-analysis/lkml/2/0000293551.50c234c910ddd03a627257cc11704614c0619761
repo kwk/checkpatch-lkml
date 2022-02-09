@@ -1,0 +1,133 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#120: FILE: include/linux/ftrace_event.h:262:
++extern int  perf_trace_init(struct perf_event *event, int event_id);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#122: FILE: include/linux/ftrace_event.h:264:
++extern void perf_trace_destroy_id(int id);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#146: FILE: include/linux/perf_event.h:248:
++#define PERF_EVENT_IOC_ADD_TP		_IO ('$', 7)
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#146: FILE: include/linux/perf_event.h:248:
++#define PERF_EVENT_IOC_ADD_TP		_IO ('$', 7)
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#196: FILE: include/linux/sched.h:1195:
++	struct mutex	lock;
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*idr)...) over kzalloc(sizeof(struct perf_tp_idr)...)
+#411: FILE: kernel/perf_event.c:5610:
++	idr = kzalloc(sizeof(struct perf_tp_idr), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#429: FILE: kernel/perf_event.c:5628:
++	if (event->attach_state & PERF_ATTACH_TASK) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#434: FILE: kernel/perf_event.c:5633:
++	} else
+
+WARNING:DEPRECATED_API: Deprecated use of 'call_rcu_sched', prefer 'call_rcu' instead
+#470: FILE: kernel/perf_event.c:5669:
++	call_rcu_sched(&node->rcu, perf_tp_free_node);
+
+Usage of a deprecated RCU API is detected.  It is recommended to replace
+old flavourful RCU APIs by their new vanilla-RCU counterparts.
+
+The full list of available RCU APIs can be viewed from the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/RCU/whatisRCU.html#full-list-of-rcu-apis
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#483: FILE: kernel/perf_event.c:5681:
++	idr_for_each(&event->tp_idr.idr, perf_tp_remove_idr,
++			perf_event_idr(event, false));
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#520: FILE: kernel/perf_event.c:5718:
++		printk(KERN_ERR "fail: %d %d\n" , tp_id, tmp_id);
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#520: FILE: kernel/perf_event.c:5718:
++		printk(KERN_ERR "fail: %d %d\n" , tp_id, tmp_id);
+ 		                                ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#709: FILE: kernel/perf_event.c:5914:
++	ret = idr_for_each(&parent_event->tp_idr.idr,
++			perf_tp_inherit_idr,
+
+ERROR:FUNCTION_WITHOUT_ARGS: Bad function definition - void perf_tp_event_init_task() should probably be void perf_tp_event_init_task(void)
+#750: FILE: kernel/perf_event.c:5963:
++static void perf_tp_event_init_task()(struct task_struct *child)
+
+Function declarations without arguments like::
+
+  int foo()
+
+should be::
+
+  int foo(void)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#937: FILE: kernel/trace/trace_event_perf.c:113:
++	if (tp_event->class && tp_event->class->reg &&
++			try_module_get(tp_event->mod)) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#1213: FILE: kernel/trace/trace_output.c:740:
++			printk(KERN_WARNING "Need to add type to trace.h\n");
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000293551.commit.50c234c910ddd03a627257cc11704614c0619761 total: 3 errors, 4 warnings, 9 checks, 1094 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000293551.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

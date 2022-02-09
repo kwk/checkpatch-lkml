@@ -1,0 +1,1201 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:BAD_SIGN_OFF: Do not use whitespace before Signed-off-by:
+#129: FILE: Documentation/stable_kernel_rules.txt:42:
+     Signed-off-by: Ingo Molnar <mingo@elte.hu>
+
+The signed-off-by line does not fall in line with the standards
+specified by the community.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#419: FILE: arch/arm/plat-mxc/include/mach/iomux-v3.h:92:
++#define PAD_CTL_PUE			(1 << 6 | PAD_CTL_PKE)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#421: FILE: arch/arm/plat-mxc/include/mach/iomux-v3.h:94:
++#define PAD_CTL_PUS_47K_UP		(1 << 4 | PAD_CTL_PUE)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#436: FILE: arch/powerpc/include/asm/sparsemem.h:19:
++extern int create_section_mapping(unsigned long start, unsigned long end);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*vcpu)...) over kzalloc(sizeof(struct kvm_vcpu)...)
+#713: FILE: arch/s390/kvm/kvm-s390.c:323:
++	vcpu = kzalloc(sizeof(struct kvm_vcpu), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:SPACING: No space is necessary after a cast
+#779: FILE: arch/s390/mm/pgtable.c:666:
++	void *table = (void *)((unsigned long) _table & ~mask);
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#780: FILE: arch/s390/mm/pgtable.c:667:
++	unsigned type = (unsigned long) _table & mask;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#780: FILE: arch/s390/mm/pgtable.c:667:
++	unsigned type = (unsigned long) _table & mask;
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#827: FILE: arch/um/drivers/ubd_kern.c:537:
++	err = read_cow_header(file_reader, &fd, &version, &backing_file, \
+
+ERROR:SPACING: space required before the open parenthesis '('
+#831: FILE: arch/um/drivers/ubd_kern.c:541:
++	if(err == -EINVAL)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#862: FILE: arch/x86/include/asm/apic.h:498:
++extern void generic_bigsmp_probe(void);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#1164: FILE: block/blk-flush.c:323:
++	BUG_ON(rq->bio != rq->biotail); /*assumes zero or single bio rq */
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#1224: FILE: drivers/acpi/atomicio.c:79:
++	map = __acpi_find_iomap(paddr, size/8);
+ 	                                   ^
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#1309: FILE: drivers/ata/ata_piix.c:620:
++	[ich8_sata_snb] =
++	{
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1436: FILE: drivers/gpu/drm/i915/intel_dp.c:1710:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:CAMELCASE: Avoid CamelCase: <DRM_MODE_CONNECTOR_eDP>
+#1547: FILE: drivers/gpu/drm/radeon/atombios_dp.c:564:
++	else if (connector->connector_type == DRM_MODE_CONNECTOR_eDP) {
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1549: FILE: drivers/gpu/drm/radeon/atombios_dp.c:566:
++		u8 tmp = radeon_read_dpcd_reg(radeon_connector, DP_EDP_CONFIGURATION_CAP);
++		if (tmp & 1)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'connector->connector_type == DRM_MODE_CONNECTOR_eDP'
+#1557: FILE: drivers/gpu/drm/radeon/atombios_dp.c:574:
++	if ((connector->connector_type == DRM_MODE_CONNECTOR_eDP) &&
++	    (panel_mode == DP_PANEL_MODE_INTERNAL_DP2_MODE)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'panel_mode == DP_PANEL_MODE_INTERNAL_DP2_MODE'
+#1557: FILE: drivers/gpu/drm/radeon/atombios_dp.c:574:
++	if ((connector->connector_type == DRM_MODE_CONNECTOR_eDP) &&
++	    (panel_mode == DP_PANEL_MODE_INTERNAL_DP2_MODE)) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1605: FILE: drivers/gpu/drm/radeon/r600.c:770:
++			u32 tmp = DC_HPDx_CONNECTION_TIMER(0x9c4) | DC_HPDx_RX_INT_TIMER(0xfa);
++			if (ASIC_IS_DCE32(rdev))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'connector->connector_type == DRM_MODE_CONNECTOR_DVID'
+#1709: FILE: drivers/gpu/drm/radeon/radeon_connectors.c:974:
++	if ((connector->connector_type == DRM_MODE_CONNECTOR_DVID) ||
++	    (connector->connector_type == DRM_MODE_CONNECTOR_HDMIA))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'connector->connector_type == DRM_MODE_CONNECTOR_HDMIA'
+#1709: FILE: drivers/gpu/drm/radeon/radeon_connectors.c:974:
++	if ((connector->connector_type == DRM_MODE_CONNECTOR_DVID) ||
++	    (connector->connector_type == DRM_MODE_CONNECTOR_HDMIA))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rdev->pdev->device == 0x791f'
+#1781: FILE: drivers/gpu/drm/radeon/radeon_irq_kms.c:129:
++	if ((rdev->pdev->device == 0x791f) &&
++	    (rdev->pdev->subsystem_vendor == 0x103c) &&
++	    (rdev->pdev->subsystem_device == 0x30c2))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rdev->pdev->subsystem_vendor == 0x103c'
+#1781: FILE: drivers/gpu/drm/radeon/radeon_irq_kms.c:129:
++	if ((rdev->pdev->device == 0x791f) &&
++	    (rdev->pdev->subsystem_vendor == 0x103c) &&
++	    (rdev->pdev->subsystem_device == 0x30c2))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rdev->pdev->subsystem_device == 0x30c2'
+#1781: FILE: drivers/gpu/drm/radeon/radeon_irq_kms.c:129:
++	if ((rdev->pdev->device == 0x791f) &&
++	    (rdev->pdev->subsystem_vendor == 0x103c) &&
++	    (rdev->pdev->subsystem_device == 0x30c2))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rdev->pdev->device == 0x791f'
+#1787: FILE: drivers/gpu/drm/radeon/radeon_irq_kms.c:135:
++	if ((rdev->pdev->device == 0x791f) &&
++	    (rdev->pdev->subsystem_vendor == 0x1028) &&
++	    (rdev->pdev->subsystem_device == 0x01fd))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rdev->pdev->subsystem_vendor == 0x1028'
+#1787: FILE: drivers/gpu/drm/radeon/radeon_irq_kms.c:135:
++	if ((rdev->pdev->device == 0x791f) &&
++	    (rdev->pdev->subsystem_vendor == 0x1028) &&
++	    (rdev->pdev->subsystem_device == 0x01fd))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rdev->pdev->subsystem_device == 0x01fd'
+#1787: FILE: drivers/gpu/drm/radeon/radeon_irq_kms.c:135:
++	if ((rdev->pdev->device == 0x791f) &&
++	    (rdev->pdev->subsystem_vendor == 0x1028) &&
++	    (rdev->pdev->subsystem_device == 0x01fd))
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1919: FILE: drivers/hid/hid-core.c:1349:
++ ^I{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING6A_ANSI) },$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1919: FILE: drivers/hid/hid-core.c:1349:
++ ^I{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING6A_ANSI) },$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1919: FILE: drivers/hid/hid-core.c:1349:
++ ^I{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING6A_ANSI) },$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1920: FILE: drivers/hid/hid-core.c:1350:
++ ^I{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING6A_ISO) },$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1920: FILE: drivers/hid/hid-core.c:1350:
++ ^I{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING6A_ISO) },$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1920: FILE: drivers/hid/hid-core.c:1350:
++ ^I{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING6A_ISO) },$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#1921: FILE: drivers/hid/hid-core.c:1351:
++ ^I{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING6A_JIS) },$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#1921: FILE: drivers/hid/hid-core.c:1351:
++ ^I{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING6A_JIS) },$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1921: FILE: drivers/hid/hid-core.c:1351:
++ ^I{ HID_USB_DEVICE(USB_VENDOR_ID_APPLE, USB_DEVICE_ID_APPLE_WELLSPRING6A_JIS) },$
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1998: FILE: drivers/hid/hid-multitouch.c:678:
++		HID_USB_DEVICE(USB_VENDOR_ID_LG,
++			USB_DEVICE_ID_LG_MULTITOUCH) },
+
+CHECK:CAMELCASE: Avoid CamelCase: <Faulty>
+#2271: FILE: drivers/md/raid5.c:3072:
++		else if (!test_bit(Faulty, &rdev->flags)) {
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#2295: FILE: drivers/md/raid5.c:3171:
++		if (s.to_read+s.to_write+s.written)
+ 		             ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#2295: FILE: drivers/md/raid5.c:3171:
++		if (s.to_read+s.to_write+s.written)
+ 		                        ^
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#2555: FILE: drivers/media/dvb/frontends/dib0070.c:82:
++	struct mutex i2c_buffer_lock;
+
+CHECK:BRACES: Unbalanced braces around else statement
+#2579: FILE: drivers/media/dvb/frontends/dib0070.c:109:
++	} else
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#2606: FILE: drivers/media/dvb/frontends/dib0070.c:138:
++	} else
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#2638: FILE: drivers/media/dvb/frontends/dib0090.c:200:
++	struct mutex i2c_buffer_lock;
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#2646: FILE: drivers/media/dvb/frontends/dib0090.c:213:
++	struct mutex i2c_buffer_lock;
+
+CHECK:BRACES: Unbalanced braces around else statement
+#2668: FILE: drivers/media/dvb/frontends/dib0090.c:240:
++	} else
+
+CHECK:BRACES: Unbalanced braces around else statement
+#2697: FILE: drivers/media/dvb/frontends/dib0090.c:270:
++	} else
+
+CHECK:BRACES: Unbalanced braces around else statement
+#2724: FILE: drivers/media/dvb/frontends/dib0090.c:296:
++	} else
+
+CHECK:BRACES: Unbalanced braces around else statement
+#2752: FILE: drivers/media/dvb/frontends/dib0090.c:324:
++	} else
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#2792: FILE: drivers/media/dvb/frontends/dib7000m.c:59:
++	struct mutex i2c_buffer_lock;
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#2869: FILE: drivers/media/dvb/frontends/dib7000p.c:72:
++	struct mutex i2c_buffer_lock;
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2944: FILE: drivers/media/dvb/frontends/dib7000p.c:2360:
++	   more common) */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#2966: FILE: drivers/media/dvb/frontends/dib8000.c:42:
++	struct mutex *i2c_buffer_lock;
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#2974: FILE: drivers/media/dvb/frontends/dib8000.c:83:
++	struct mutex i2c_buffer_lock;
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*client.i2c_buffer_lock)...) over kzalloc(sizeof(struct mutex)...)
+#3093: FILE: drivers/media/dvb/frontends/dib8000.c:2478:
++	client.i2c_buffer_lock = kzalloc(sizeof(struct mutex), GFP_KERNEL);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'state->pid_ctrl_index < 9'
+#3163: FILE: drivers/media/dvb/frontends/dib9000.c:1762:
++	if ((state->pid_ctrl_index != -2) && (state->pid_ctrl_index < 9)) {
+
+CHECK:CAMELCASE: Avoid CamelCase: <DibAcquireLock>
+#3172: FILE: drivers/media/dvb/frontends/dib9000.c:1771:
++	DibAcquireLock(&state->demod_lock);
+
+CHECK:CAMELCASE: Avoid CamelCase: <DibReleaseLock>
+#3180: FILE: drivers/media/dvb/frontends/dib9000.c:1778:
++	DibReleaseLock(&state->demod_lock);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#3194: FILE: drivers/media/dvb/frontends/dib9000.c:1792:
++		if (state->pid_ctrl_index < 9) {
+[...]
++		} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#3200: FILE: drivers/media/dvb/frontends/dib9000.c:1798:
++		} else
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3209: FILE: drivers/media/dvb/frontends/dib9000.c:1806:
++	ret = dib9000_write_word(state, 300 + 1 + id,
++			onoff ? (1 << 13) | pid : 0);
+
+CHECK:CAMELCASE: Avoid CamelCase: <DibFreeLock>
+#3219: FILE: drivers/media/dvb/frontends/dib9000.c:1831:
++	DibFreeLock(&state->demod_lock);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3335: FILE: drivers/media/dvb/frontends/dib9000.c:2112:
++				dib9000_fw_pid_filter_ctrl(state->fe[0],
++						state->pid_ctrl[index_pid_filter_cmd].onoff);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3338: FILE: drivers/media/dvb/frontends/dib9000.c:2115:
++				dib9000_fw_pid_filter(state->fe[0],
++						state->pid_ctrl[index_pid_filter_cmd].id,
+
+CHECK:CAMELCASE: Avoid CamelCase: <DibInitLock>
+#3477: FILE: drivers/media/dvb/frontends/dib9000.c:2447:
++	DibInitLock(&st->demod_lock);
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#3663: FILE: drivers/media/dvb/frontends/dibx000_common.h:36:
++	struct mutex i2c_buffer_lock;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#3992: FILE: drivers/net/rionet.c:92:
++#define RIONET_GET_DESTID(x)	((*((u8 *)x + 4) << 8) | *((u8 *)x + 5))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'x' may be better as '(x)' to avoid precedence issues
+#3992: FILE: drivers/net/rionet.c:92:
++#define RIONET_GET_DESTID(x)	((*((u8 *)x + 4) << 8) | *((u8 *)x + 5))
+
+CHECK:CAMELCASE: Avoid CamelCase: <pCap>
+#4186: FILE: drivers/net/wireless/ath/ath9k/hw.c:2105:
++		pCap->num_gpio_pins = AR9300_NUM_GPIO;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4312: FILE: drivers/net/wireless/iwlwifi/iwl-trans-tx-pcie.c:961:
++	ret = wait_event_timeout(priv->wait_command_queue,
+ 			!test_bit(STATUS_HCMD_ACTIVE, &priv->status),
+
+WARNING:NETWORKING_BLOCK_COMMENT_STYLE: networking block comments don't use an empty /* line, use /* Comment...
+#4333: FILE: drivers/net/wireless/wl12xx/scan.c:92:
++		    /*
++		     * In passive scans, we scan all remaining
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#4421: FILE: drivers/pci/xen-pcifront.c:404:
++				dev_err(&pdev->xdev->dev, "Could not claim resource %s/%d! "
++					"Device offline. Try using e820_host=1 in the guest config.\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4565: FILE: drivers/power/ds2780_battery.c:65:
++static inline int ds2780_battery_io(struct ds2780_device_info *dev_info,
++	char *buf, int addr, size_t count, int io)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4575: FILE: drivers/power/ds2780_battery.c:74:
++static inline int ds2780_read8(struct ds2780_device_info *dev_info, u8 *val,
++	int addr)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4582: FILE: drivers/power/ds2780_battery.c:80:
++static int ds2780_read16(struct ds2780_device_info *dev_info, s16 *val,
++	int addr)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4599: FILE: drivers/power/ds2780_battery.c:95:
++static inline int ds2780_read_block(struct ds2780_device_info *dev_info,
++	u8 *val, int addr, size_t count)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4608: FILE: drivers/power/ds2780_battery.c:101:
++static inline int ds2780_write(struct ds2780_device_info *dev_info, u8 *val,
++	int addr, size_t count)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4621: FILE: drivers/power/ds2780_battery.c:138:
++	ret = ds2780_write(dev_info, &conductance,
+ 				DS2780_RSNSP_REG, sizeof(u8));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4640: FILE: drivers/power/ds2780_battery.c:160:
++	ret = ds2780_write(dev_info, raw,
++				DS2780_RSGAIN_MSB_REG, sizeof(raw));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4650: FILE: drivers/power/ds2780_battery.c:183:
++	ret = ds2780_read16(dev_info, &voltage_raw,
+ 				DS2780_VOLT_MSB_REG);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4659: FILE: drivers/power/ds2780_battery.c:212:
++	ret = ds2780_read16(dev_info, &temperature_raw,
+ 				DS2780_TEMP_MSB_REG);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4738: FILE: drivers/power/ds2780_battery.c:380:
++	ret = ds2780_write(dev_info, &control_reg,
+ 				DS2780_CONTROL_REG, sizeof(u8));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4765: FILE: drivers/power/ds2780_battery.c:627:
++	ret = ds2780_write(dev_info, &new_setting,
+ 				DS2780_SFR_REG, sizeof(u8));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4783: FILE: drivers/power/ds2780_battery.c:666:
++	ret = ds2780_write(dev_info, buf,
+ 				DS2780_EEPROM_BLOCK1_START + off, count);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4803: FILE: drivers/power/ds2780_battery.c:719:
++	ret = ds2780_write(dev_info, buf,
+ 				DS2780_EEPROM_BLOCK0_START + off, count);
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'ccwgroup_online_show' to 'online_show' 'ccwgroup_online_store' to 'online_store'
+#4853: FILE: drivers/s390/cio/ccwgroup.c:143:
++static DEVICE_ATTR(online, 0644, ccwgroup_online_show, ccwgroup_online_store);
+
+The function names used in DEVICE_ATTR is unusual.
+Typically, the store and show functions are used with <attr>_store and
+<attr>_show, where <attr> is a named attribute variable of the device.
+
+Consider the following examples::
+
+  static DEVICE_ATTR(type, 0444, type_show, NULL);
+  static DEVICE_ATTR(power, 0644, power_show, power_store);
+
+The function names should preferably follow the above pattern.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4860: FILE: drivers/s390/cio/ccwgroup.c:150:
++};
++static struct attribute_group ccwgroup_attr_group = {
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#4863: FILE: drivers/s390/cio/ccwgroup.c:153:
++};
++static const struct attribute_group *ccwgroup_attr_groups[] = {
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#5086: FILE: drivers/scsi/isci/request.c:1512:
++			word_cnt = (sg->length/4)-1;
+ 			                      ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#5086: FILE: drivers/scsi/isci/request.c:1512:
++			word_cnt = (sg->length/4)-1;
+ 			                         ^
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#5089: FILE: drivers/scsi/isci/request.c:1515:
++						 SCU_UNSOLICITED_FRAME_BUFFER_SIZE/4);
+ 						                                  ^
+
+CHECK:CAMELCASE: Avoid CamelCase: <SRpnt>
+#5272: FILE: drivers/scsi/st.c:470:
++	tmp = SRpnt->bio;
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "buf"
+#5488: FILE: drivers/target/loopback/tcm_loop.c:190:
++		if (buf != NULL) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#5510: FILE: drivers/target/target_core_alua.c:77:
++		pr_warn("REPORT TARGET PORT GROUPS allocation length %u"
++			" too small\n", cmd->data_length);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#5562: FILE: drivers/target/target_core_tmr.c:104:
++static void core_tmr_drain_tmr_list(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#5662: FILE: drivers/target/target_core_tmr.c:169:
++static void core_tmr_drain_task_list(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#5750: FILE: drivers/target/target_core_tmr.c:309:
++static void core_tmr_drain_cmd_list(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#5803: FILE: drivers/target/target_core_tmr.c:378:
++int core_tmr_lun_reset(
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#5804: FILE: drivers/target/target_core_tmr.c:379:
++        struct se_device *dev,$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#5804: FILE: drivers/target/target_core_tmr.c:379:
++        struct se_device *dev,$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#5805: FILE: drivers/target/target_core_tmr.c:380:
++        struct se_tmr_req *tmr,$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#5805: FILE: drivers/target/target_core_tmr.c:380:
++        struct se_tmr_req *tmr,$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#5806: FILE: drivers/target/target_core_tmr.c:381:
++        struct list_head *preempt_and_abort_list,$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#5806: FILE: drivers/target/target_core_tmr.c:381:
++        struct list_head *preempt_and_abort_list,$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#5807: FILE: drivers/target/target_core_tmr.c:382:
++        struct se_cmd *prout_cmd)$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#5807: FILE: drivers/target/target_core_tmr.c:382:
++        struct se_cmd *prout_cmd)$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#5812: FILE: drivers/target/target_core_tmr.c:387:
++        /*$
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#5833: FILE: drivers/target/target_core_tmr.c:408:
++			pr_debug("LUN_RESET: TMR caller fabric: %s"
++				" initiator port %s\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5839: FILE: drivers/target/target_core_tmr.c:414:
++	pr_debug("LUN_RESET: %s starting for [%s], tas: %d\n",
++		(preempt_and_abort_list) ? "Preempt" : "TMR",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5844: FILE: drivers/target/target_core_tmr.c:419:
++	core_tmr_drain_task_list(dev, prout_cmd, tmr_nacl, tas,
++				preempt_and_abort_list);
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#5988: FILE: drivers/tty/pty.c:673:
++	retval = tty_alloc_file(filp);
+ 	                        ^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#6012: FILE: drivers/tty/pty.c:698:
++	tty_add_file(tty, filp);
+ 	                  ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#6037: FILE: drivers/tty/pty.c:718:
++	tty_free_file(filp);
+ 	              ^^^^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#6193: FILE: drivers/tty/serial/jsm/jsm_tty.c:130:
++	struct jsm_channel *channel;
++	channel = container_of(port, struct jsm_channel, uart_port);
+
+WARNING:TYPO_SPELLING: 'Reciever' may be misspelled - perhaps 'Receiver'?
+#6312: FILE: drivers/tty/serial/pxa.c:108:
++		 * Disable the Reciever Time Out Interrupt via IER[RTOEI]
+ 		               ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#6417: FILE: drivers/tty/tty_io.c:1833:
++	retval = tty_alloc_file(filp);
+ 	                        ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#6428: FILE: drivers/tty/tty_io.c:1849:
++			tty_free_file(filp);
+ 			              ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#6436: FILE: drivers/tty/tty_io.c:1882:
++		tty_free_file(filp);
+ 		              ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#6444: FILE: drivers/tty/tty_io.c:1890:
++		tty_free_file(filp);
+ 		              ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#6453: FILE: drivers/tty/tty_io.c:1902:
++			tty_free_file(filp);
+ 			              ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#6461: FILE: drivers/tty/tty_io.c:1918:
++		tty_free_file(filp);
+ 		              ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#6471: FILE: drivers/tty/tty_io.c:1922:
++	tty_add_file(tty, filp);
+ 	                  ^^^^
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#6540: FILE: drivers/usb/core/devio.c:633:
++		if (alt_setting
++		 && alt_setting->desc.bInterfaceClass == USB_CLASS_PRINTER)
+
+CHECK:CAMELCASE: Avoid CamelCase: <bInterfaceClass>
+#6540: FILE: drivers/usb/core/devio.c:633:
++		 && alt_setting->desc.bInterfaceClass == USB_CLASS_PRINTER)
+
+CHECK:CAMELCASE: Avoid CamelCase: <bRequestType>
+#6552: FILE: drivers/usb/core/devio.c:789:
++	ret = check_ctrlrecip(ps, ctrl.bRequestType, ctrl.bRequest,
+
+CHECK:CAMELCASE: Avoid CamelCase: <bRequest>
+#6552: FILE: drivers/usb/core/devio.c:789:
++	ret = check_ctrlrecip(ps, ctrl.bRequestType, ctrl.bRequest,
+
+CHECK:CAMELCASE: Avoid CamelCase: <wIndex>
+#6553: FILE: drivers/usb/core/devio.c:790:
++			      ctrl.wIndex);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#6667: FILE: drivers/usb/host/ehci-hcd.c:771:
++static int __maybe_unused ehci_setup (struct usb_hcd *hcd)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#6735: FILE: drivers/usb/host/ehci-sched.c:41:
++static unsigned ehci_read_frame_index(struct ehci_hcd *ehci)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#6737: FILE: drivers/usb/host/ehci-sched.c:43:
++	unsigned uf;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#6813: FILE: drivers/usb/host/ehci.h:747:
++static unsigned ehci_read_frame_index(struct ehci_hcd *ehci);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#6817: FILE: drivers/usb/host/ehci.h:751:
++static inline unsigned ehci_read_frame_index(struct ehci_hcd *ehci)
+
+WARNING:TYPO_SPELLING: 'Semicondutor' may be misspelled - perhaps 'Semiconductor'?
+#6838: FILE: drivers/usb/host/fhci-sched.c:4:
++ * Copyright (c) Freescale Semicondutor, Inc. 2006, 2011.
+                            ^^^^^^^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6865: FILE: drivers/usb/host/fhci-sched.c:829:
++			td = fhci_td_fill(fhci, urb, urb_priv, ed, cnt++,
++				(usb_pipeout(urb->pipe) ? FHCI_TA_IN :
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 25)
+#6868: FILE: drivers/usb/host/fhci-sched.c:832:
++		else
++			 td = fhci_td_fill(fhci, urb, urb_priv, ed, cnt++,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6870: FILE: drivers/usb/host/fhci-sched.c:834:
++			 td = fhci_td_fill(fhci, urb, urb_priv, ed, cnt++,
++				FHCI_TA_IN,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6902: FILE: drivers/usb/host/xhci-hub.c:397:
++void xhci_test_and_clear_bit(struct xhci_hcd *xhci, __le32 __iomem **port_array,
++				int port_id, u32 port_bit)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6952: FILE: drivers/usb/host/xhci-mem.c:102:
++		if (xhci_link_trb_quirk(xhci) ||
++				(isoc && (xhci->quirks & XHCI_AMD_0x96_HOST)))
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#6976: FILE: drivers/usb/host/xhci-mem.c:125:
++			struct xhci_segment *next = seg->next;
++			xhci_segment_free(xhci, seg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7065: FILE: drivers/usb/host/xhci-mem.c:1195:
++		xhci_reinit_cached_ring(xhci, virt_dev->eps[ep_index].new_ring,
++			usb_endpoint_xfer_isoc(&ep->desc) ? true : false);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7084: FILE: drivers/usb/host/xhci-mem.c:2041:
++	xhci->event_ring = xhci_ring_alloc(xhci, ERST_NUM_SEGS, false, false,
++						flags);
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#7127: FILE: drivers/usb/host/xhci-ring.c:221:
++				if (!(isoc && (xhci->quirks & XHCI_AMD_0x96_HOST))
++						&& !xhci_link_trb_quirk(xhci)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7193: FILE: drivers/usb/host/xhci-ring.c:2480:
++			if (!xhci_link_trb_quirk(xhci) && !(isoc &&
++					(xhci->quirks & XHCI_AMD_0x96_HOST)))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7229: FILE: drivers/usb/host/xhci-ring.c:2850:
++		queue_trb(xhci, ep_ring, false, more_trbs_coming, false,
+ 				lower_32_bits(addr),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7247: FILE: drivers/usb/host/xhci-ring.c:3013:
++		queue_trb(xhci, ep_ring, false, more_trbs_coming, false,
+ 				lower_32_bits(addr),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7274: FILE: drivers/usb/host/xhci-ring.c:3126:
++		queue_trb(xhci, ep_ring, false, true, false,
+ 				lower_32_bits(urb->transfer_dma),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7283: FILE: drivers/usb/host/xhci-ring.c:3142:
++	queue_trb(xhci, ep_ring, false, false, false,
+ 			0,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7302: FILE: drivers/usb/host/xhci-ring.c:3362:
++			queue_trb(xhci, ep_ring, false, more_trbs_coming, true,
+ 				lower_32_bits(addr),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7330: FILE: drivers/usb/host/xhci-ring.c:3511:
++	queue_trb(xhci, xhci->cmd_ring, false, false, false, field1, field2,
++			field3,	field4 | xhci->cmd_ring->cycle_state);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7345: FILE: drivers/usb/host/xhci.c:1894:
++	if (ctrl_ctx->add_flags == cpu_to_le32(SLOT_FLAG) &&
++			ctrl_ctx->drop_flags == 0)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#7359: FILE: drivers/usb/host/xhci.h:1321:
++#define XHCI_AMD_0x96_HOST	(1 << 9)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7368: FILE: drivers/usb/host/xhci.h:1577:
++void xhci_test_and_clear_bit(struct xhci_hcd *xhci, __le32 __iomem **port_array,
++				int port_id, u32 port_bit);
+
+CHECK:SPACING: No space is necessary after a cast
+#7514: FILE: drivers/usb/serial/option.c:626:
++		.driver_info = (kernel_ulong_t) &huawei_cdc12_blacklist },
+
+CHECK:SPACING: No space is necessary after a cast
+#7516: FILE: drivers/usb/serial/option.c:628:
++		.driver_info = (kernel_ulong_t) &huawei_cdc12_blacklist },
+
+CHECK:SPACING: No space is necessary after a cast
+#7522: FILE: drivers/usb/serial/option.c:633:
++		.driver_info = (kernel_ulong_t) &huawei_cdc12_blacklist },
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#7638: FILE: drivers/usb/serial/option.c:1264:
++		if (reason == OPTION_BLACKLIST_SENDSETUP)
+[...]
++		else if (reason == OPTION_BLACKLIST_RESERVED_IF)
+[...]
++		else {
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#7642: FILE: drivers/usb/serial/option.c:1268:
++		else {
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#7643: FILE: drivers/usb/serial/option.c:1269:
++			BUG_ON(reason);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#7679: FILE: drivers/usb/serial/option.c:1302:
++	if (is_blacklisted(
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 8)
+#7679: FILE: drivers/usb/serial/option.c:1302:
++	if (is_blacklisted(
+[...]
+ 	if (serial->dev->descriptor.idVendor == SAMSUNG_VENDOR_ID &&
+
+CHECK:CAMELCASE: Avoid CamelCase: <bInterfaceNumber>
+#7680: FILE: drivers/usb/serial/option.c:1303:
++		serial->interface->cur_altsetting->desc.bInterfaceNumber,
+
+CHECK:SPACING: No space is necessary after a cast
+#7682: FILE: drivers/usb/serial/option.c:1305:
++		(const struct option_blacklist_info *) id->driver_info))
+
+CHECK:CAMELCASE: Avoid CamelCase: <ifNum>
+#7725: FILE: drivers/usb/serial/option.c:1393:
++	if (is_blacklisted(ifNum, OPTION_BLACKLIST_SENDSETUP,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7726: FILE: drivers/usb/serial/option.c:1394:
++	if (is_blacklisted(ifNum, OPTION_BLACKLIST_SENDSETUP,
++			(struct option_blacklist_info *) intfdata->private)) {
+
+CHECK:SPACING: No space is necessary after a cast
+#7726: FILE: drivers/usb/serial/option.c:1394:
++			(struct option_blacklist_info *) intfdata->private)) {
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!buf"
+#7799: FILE: drivers/usb/storage/realtek_cr.c:326:
++	if (buf == NULL)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!buf"
+#7828: FILE: drivers/usb/storage/realtek_cr.c:357:
++	if (buf == NULL)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!buf"
+#7851: FILE: drivers/usb/storage/realtek_cr.c:387:
++	if (buf == NULL)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7971: FILE: drivers/usb/storage/usb.c:850:
++		wait_event_interruptible_timeout(us->delay_wait,
+ 				test_bit(US_FLIDX_DONT_SCAN, &us->dflags),
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#8136: FILE: drivers/video/via/via_modesetting.h:31:
+ 
++
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#8137: FILE: drivers/video/via/via_modesetting.h:32:
++#define VIA_PITCH_SIZE	(1<<3)
+                       	  ^
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#8137: FILE: drivers/video/via/via_modesetting.h:32:
++#define VIA_PITCH_SIZE	(1<<3)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#8140: FILE: drivers/video/via/via_modesetting.h:35:
++
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8154: FILE: drivers/video/via/viafbdev.c:155:
++	info->fix.line_length = ALIGN(info->var.xres_virtual * bpp / 8,
++		VIA_PITCH_SIZE);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8168: FILE: drivers/video/via/viafbdev.c:246:
++	line = ALIGN(var->xres_virtual * var->bits_per_pixel / 8,
++		VIA_PITCH_SIZE);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8196: FILE: drivers/w1/slaves/w1_ds2780.c:30:
++static int w1_ds2780_do_io(struct device *dev, char *buf, int addr,
++			size_t count, int io)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8231: FILE: drivers/w1/slaves/w1_ds2780.c:55:
++int w1_ds2780_io(struct device *dev, char *buf, int addr, size_t count,
++			int io)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#8275: FILE: drivers/w1/slaves/w1_ds2780.h:127:
++extern int w1_ds2780_io_nolock(struct device *dev, char *buf, int addr,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8276: FILE: drivers/w1/slaves/w1_ds2780.h:128:
++extern int w1_ds2780_io_nolock(struct device *dev, char *buf, int addr,
++			size_t count, int io);
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#8414: FILE: fs/cifs/connect.c:2813:
++#define CIFS_MAX_RFC1002_WSIZE ((1<<17) - 1 - sizeof(WRITE_REQ) + 4)
+                                   ^
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#8700: FILE: fs/namei.c:1806:
++int user_path_at_empty(int dfd, const char __user *name, unsigned flags,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8701: FILE: fs/namei.c:1807:
++int user_path_at_empty(int dfd, const char __user *name, unsigned flags,
++		 struct path *path, int *empty)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#8713: FILE: fs/namei.c:1824:
++int user_path_at(int dfd, const char __user *name, unsigned flags,
+
+WARNING:TYPO_SPELLING: 'nd' may be misspelled - perhaps 'and'?
+#8748: FILE: fs/namei.c:2240:
++	error = complete_walk(nd);
+ 	                      ^^
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 's32' over 'int32_t'
+#8975: FILE: fs/nfs/blocklayout/blocklayout.h:153:
++	int32_t status;
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nfs_write_data *' should also have an identifier name
+#9267: FILE: fs/nfs/pnfs.h:204:
++void pnfs_ld_write_done(struct nfs_write_data *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct nfs_read_data *' should also have an identifier name
+#9268: FILE: fs/nfs/pnfs.h:205:
++void pnfs_ld_read_done(struct nfs_read_data *);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'cookie == 1'
+#9444: FILE: fs/nfsd/nfs4proc.c:696:
++	if ((cookie == 1) || (cookie == 2) ||
+ 	    (cookie == 0 && memcmp(readdir->rd_verf.data, zeroverf.data, NFS4_VERIFIER_SIZE)))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'cookie == 2'
+#9444: FILE: fs/nfsd/nfs4proc.c:696:
++	if ((cookie == 1) || (cookie == 2) ||
+ 	    (cookie == 0 && memcmp(readdir->rd_verf.data, zeroverf.data, NFS4_VERIFIER_SIZE)))
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#9485: FILE: fs/nfsd/nfs4state.c:201:
++		if (fp->fi_fds[1-oflag]
+ 		                ^
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#9486: FILE: fs/nfsd/nfs4state.c:202:
++		if (fp->fi_fds[1-oflag]
++			|| atomic_read(&fp->fi_access[1 - oflag]) == 0)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#9534: FILE: fs/nfsd/nfs4state.c:3541:
++		if (test_bit(i, &stp->st_access_bmap)
++					&& ((i & to_access) != i)) {
+
+WARNING:PREFER_SEQ_PUTS: Prefer seq_puts to seq_printf
+#9644: FILE: fs/proc/task_mmu.c:1043:
++		seq_printf(m, " huge");
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#9681: FILE: fs/statfs.c:79:
++	int error = user_path_at(AT_FDCWD, pathname, LOOKUP_FOLLOW|LOOKUP_AUTOMOUNT, &path);
+ 	                                                          ^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#9807: FILE: include/linux/jiffies.h:306:
++extern clock_t jiffies_to_clock_t(unsigned long x);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#9850: FILE: include/linux/mm.h:390:
++extern bool __get_page_tail(struct page *page);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#9947: FILE: include/linux/namei.h:70:
++extern int user_path_at_empty(int, const char __user *, unsigned, struct path *, int *empty);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#9947: FILE: include/linux/namei.h:70:
++extern int user_path_at_empty(int, const char __user *, unsigned, struct path *, int *empty);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#9947: FILE: include/linux/namei.h:70:
++extern int user_path_at_empty(int, const char __user *, unsigned, struct path *, int *empty);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const char __user *' should also have an identifier name
+#9947: FILE: include/linux/namei.h:70:
++extern int user_path_at_empty(int, const char __user *, unsigned, struct path *, int *empty);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned' should also have an identifier name
+#9947: FILE: include/linux/namei.h:70:
++extern int user_path_at_empty(int, const char __user *, unsigned, struct path *, int *empty);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct path *' should also have an identifier name
+#9947: FILE: include/linux/namei.h:70:
++extern int user_path_at_empty(int, const char __user *, unsigned, struct path *, int *empty);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#9991: FILE: include/linux/sunrpc/rpc_pipe_fs.h:47:
++extern ssize_t rpc_pipe_generic_upcall(struct file *, struct rpc_pipe_msg *,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#10005: FILE: include/linux/tty.h:476:
++extern int tty_alloc_file(struct file *file);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#10006: FILE: include/linux/tty.h:477:
++extern void tty_add_file(struct tty_struct *tty, struct file *file);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#10007: FILE: include/linux/tty.h:478:
++extern void tty_free_file(struct file *file);
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __aligned(sizeof(s64)) over __attribute__((aligned(sizeof(s64))))
+#10020: FILE: include/linux/usb/hcd.h:181:
++			__attribute__ ((aligned(sizeof(s64))));
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#10291: FILE: kernel/trace/trace_kprobe.c:2085:
++	if (WARN_ON_ONCE(tp == NULL)) {
+[...]
++	} else
+[...]
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!tp"
+#10291: FILE: kernel/trace/trace_kprobe.c:2085:
++	if (WARN_ON_ONCE(tp == NULL)) {
+
+CHECK:BRACES: Unbalanced braces around else statement
+#10294: FILE: kernel/trace/trace_kprobe.c:2088:
++	} else
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#10298: FILE: kernel/trace/trace_kprobe.c:2092:
++	if (WARN_ON_ONCE(tp == NULL)) {
+[...]
++	} else
+[...]
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!tp"
+#10298: FILE: kernel/trace/trace_kprobe.c:2092:
++	if (WARN_ON_ONCE(tp == NULL)) {
+
+CHECK:BRACES: Unbalanced braces around else statement
+#10301: FILE: kernel/trace/trace_kprobe.c:2095:
++	} else
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#10363: FILE: mm/huge_memory.c:1169:
++		BUG_ON(page_mapcount(page_tail) < 0);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#10366: FILE: mm/huge_memory.c:1172:
++		BUG_ON(tail_count < 0);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#10367: FILE: mm/huge_memory.c:1173:
++		BUG_ON(atomic_read(&page_tail->_count) != 0);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#10411: FILE: mm/huge_memory.c:1240:
++	BUG_ON(atomic_read(&page->_count) <= 0);
+
+CHECK:BRACES: Unbalanced braces around else statement
+#10459: FILE: mm/internal.h:76:
++	else {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#10616: FILE: mm/vmalloc.c:1257:
++static void setup_vmalloc_vm(struct vm_struct *vm, struct vmap_area *va,
+ 			      unsigned long flags, void *caller)
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#10908: FILE: net/mac80211/mlme.c:1473:
++		printk(KERN_DEBUG
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg([subsystem]dev, ... then dev_dbg(dev, ... then pr_debug(...  to printk(KERN_DEBUG ...
+#10916: FILE: net/mac80211/mlme.c:1481:
++		printk(KERN_DEBUG
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#11049: FILE: net/sunrpc/rpc_pipe.c:80:
++ssize_t rpc_pipe_generic_upcall(struct file *filp, struct rpc_pipe_msg *msg,
+                                              ^^^^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#11303: FILE: sound/pci/hda/patch_conexant.c:4346:
++			bool dup_found = false;
++			for (j = 0; j < i; j++) {
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000203812.commit.50c234c910ddd03a627257cc11704614c0619761 total: 10 errors, 65 warnings, 150 checks, 9878 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000203812.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,179 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#30: 
+   git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git locking-rwsem-for-linus
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#142: FILE: arch/ia64/include/asm/rwsem.h:53:
++___down_write (struct rw_semaphore *sem)
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#155: FILE: arch/ia64/include/asm/rwsem.h:66:
++__down_write (struct rw_semaphore *sem)
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#162: FILE: arch/ia64/include/asm/rwsem.h:73:
++__down_write_killable (struct rw_semaphore *sem)
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#227: 
+deleted file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sem' - possible side-effects?
+#515: FILE: arch/x86/include/asm/rwsem.h:102:
++#define ____down_write(sem, slow_path)			\
++({							\
++	long tmp;					\
++	struct rw_semaphore* ret;			\
++	asm volatile("# beginning down_write\n\t"	\
++		     LOCK_PREFIX "  xadd      %1,(%3)\n\t"	\
++		     /* adds 0xffff0001, returns the old value */ \
++		     "  test " __ASM_SEL(%w1,%k1) "," __ASM_SEL(%w1,%k1) "\n\t" \
++		     /* was the active mask 0 before? */\
++		     "  jz        1f\n"			\
++		     "  call " slow_path "\n"		\
++		     "1:\n"				\
++		     "# ending down_write"		\
++		     : "+m" (sem->count), "=d" (tmp), "=a" (ret)	\
++		     : "a" (sem), "1" (RWSEM_ACTIVE_WRITE_BIAS) \
++		     : "memory", "cc");			\
++	ret;						\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'sem' may be better as '(sem)' to avoid precedence issues
+#515: FILE: arch/x86/include/asm/rwsem.h:102:
++#define ____down_write(sem, slow_path)			\
++({							\
++	long tmp;					\
++	struct rw_semaphore* ret;			\
++	asm volatile("# beginning down_write\n\t"	\
++		     LOCK_PREFIX "  xadd      %1,(%3)\n\t"	\
++		     /* adds 0xffff0001, returns the old value */ \
++		     "  test " __ASM_SEL(%w1,%k1) "," __ASM_SEL(%w1,%k1) "\n\t" \
++		     /* was the active mask 0 before? */\
++		     "  jz        1f\n"			\
++		     "  call " slow_path "\n"		\
++		     "1:\n"				\
++		     "# ending down_write"		\
++		     : "+m" (sem->count), "=d" (tmp), "=a" (ret)	\
++		     : "a" (sem), "1" (RWSEM_ACTIVE_WRITE_BIAS) \
++		     : "memory", "cc");			\
++	ret;						\
++})
+
+ERROR:POINTER_LOCATION: "foo* bar" should be "foo *bar"
+#518: FILE: arch/x86/include/asm/rwsem.h:105:
++	struct rw_semaphore* ret;			\
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:BxV)
+#522: FILE: arch/x86/include/asm/rwsem.h:109:
++		     "  test " __ASM_SEL(%w1,%k1) "," __ASM_SEL(%w1,%k1) "\n\t" \
+ 		                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#522: FILE: arch/x86/include/asm/rwsem.h:109:
++		     "  test " __ASM_SEL(%w1,%k1) "," __ASM_SEL(%w1,%k1) "\n\t" \
+ 		                            ^
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:OxV)
+#522: FILE: arch/x86/include/asm/rwsem.h:109:
++		     "  test " __ASM_SEL(%w1,%k1) "," __ASM_SEL(%w1,%k1) "\n\t" \
+ 		                             ^
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:BxV)
+#522: FILE: arch/x86/include/asm/rwsem.h:109:
++		     "  test " __ASM_SEL(%w1,%k1) "," __ASM_SEL(%w1,%k1) "\n\t" \
+ 		                                                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#522: FILE: arch/x86/include/asm/rwsem.h:109:
++		     "  test " __ASM_SEL(%w1,%k1) "," __ASM_SEL(%w1,%k1) "\n\t" \
+ 		                                                   ^
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:OxV)
+#522: FILE: arch/x86/include/asm/rwsem.h:109:
++		     "  test " __ASM_SEL(%w1,%k1) "," __ASM_SEL(%w1,%k1) "\n\t" \
+ 		                                                    ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#770: FILE: include/asm-generic/rwsem.h:71:
++	tmp = atomic_long_add_return_acquire(RWSEM_ACTIVE_WRITE_BIAS,
++				     (atomic_long_t *)&sem->count);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_lock' - possible side-effects?
+#786: FILE: include/linux/lockdep.h:447:
++#define LOCK_CONTENDED_RETURN(_lock, try, lock)			\
++({								\
++	int ____err = 0;					\
++	if (!try(_lock)) {					\
++		lock_contended(&(_lock)->dep_map, _RET_IP_);	\
++		____err = lock(_lock);				\
++	}							\
++	if (!____err)						\
++		lock_acquired(&(_lock)->dep_map, _RET_IP_);	\
++	____err;						\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'try' may be better as '(try)' to avoid precedence issues
+#786: FILE: include/linux/lockdep.h:447:
++#define LOCK_CONTENDED_RETURN(_lock, try, lock)			\
++({								\
++	int ____err = 0;					\
++	if (!try(_lock)) {					\
++		lock_contended(&(_lock)->dep_map, _RET_IP_);	\
++		____err = lock(_lock);				\
++	}							\
++	if (!____err)						\
++		lock_acquired(&(_lock)->dep_map, _RET_IP_);	\
++	____err;						\
++})
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#820: FILE: include/linux/rwsem-spinlock.h:37:
++extern int __must_check __down_write_killable(struct rw_semaphore *sem);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#840: FILE: include/linux/rwsem.h:47:
++extern struct rw_semaphore *rwsem_down_write_failed_killable(struct rw_semaphore *sem);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#848: FILE: include/linux/rwsem.h:121:
++extern int __must_check down_write_killable(struct rw_semaphore *sem);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#1010: FILE: kernel/locking/rwsem.c:74:
++EXPORT_SYMBOL(down_write_killable);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000074029.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 3 errors, 6 warnings, 12 checks, 433 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000074029.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

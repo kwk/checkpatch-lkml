@@ -1,0 +1,164 @@
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#107: FILE: arch/powerpc/kernel/time.c:410:
++	ni->ac_stime = ni->ac_utime = 0;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#252: FILE: arch/powerpc/include/asm/cputime.h:234:
++extern void arch_vtime_task_switch(struct task_struct *tsk);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#284: FILE: arch/powerpc/include/asm/ppc_asm.h:78:
++#define ACCOUNT_CPU_USER_ENTRY(ti, ra, rb)				\
++	MFTB(ra);							\
++	lwz rb, TI_AC_LEAVE(ti);					\
++	stw ra, TI_AC_STAMP(ti);	/* AC_STAMP = NOW */		\
++	subf rb, rb, ra;		/* R = NOW - AC_LEAVE */	\
++	lwz ra, TI_AC_UTIME(ti);					\
++	add ra, rb, ra;			/* AC_UTIME += R */		\
++	stw ra, TI_AC_UTIME(ti);					\
+ 
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ti' - possible side-effects?
+#284: FILE: arch/powerpc/include/asm/ppc_asm.h:78:
++#define ACCOUNT_CPU_USER_ENTRY(ti, ra, rb)				\
++	MFTB(ra);							\
++	lwz rb, TI_AC_LEAVE(ti);					\
++	stw ra, TI_AC_STAMP(ti);	/* AC_STAMP = NOW */		\
++	subf rb, rb, ra;		/* R = NOW - AC_LEAVE */	\
++	lwz ra, TI_AC_UTIME(ti);					\
++	add ra, rb, ra;			/* AC_UTIME += R */		\
++	stw ra, TI_AC_UTIME(ti);					\
+ 
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ra' - possible side-effects?
+#284: FILE: arch/powerpc/include/asm/ppc_asm.h:78:
++#define ACCOUNT_CPU_USER_ENTRY(ti, ra, rb)				\
++	MFTB(ra);							\
++	lwz rb, TI_AC_LEAVE(ti);					\
++	stw ra, TI_AC_STAMP(ti);	/* AC_STAMP = NOW */		\
++	subf rb, rb, ra;		/* R = NOW - AC_LEAVE */	\
++	lwz ra, TI_AC_UTIME(ti);					\
++	add ra, rb, ra;			/* AC_UTIME += R */		\
++	stw ra, TI_AC_UTIME(ti);					\
+ 
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'rb' - possible side-effects?
+#284: FILE: arch/powerpc/include/asm/ppc_asm.h:78:
++#define ACCOUNT_CPU_USER_ENTRY(ti, ra, rb)				\
++	MFTB(ra);							\
++	lwz rb, TI_AC_LEAVE(ti);					\
++	stw ra, TI_AC_STAMP(ti);	/* AC_STAMP = NOW */		\
++	subf rb, rb, ra;		/* R = NOW - AC_LEAVE */	\
++	lwz ra, TI_AC_UTIME(ti);					\
++	add ra, rb, ra;			/* AC_UTIME += R */		\
++	stw ra, TI_AC_UTIME(ti);					\
+ 
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#284: FILE: arch/powerpc/include/asm/ppc_asm.h:78:
++#define ACCOUNT_CPU_USER_ENTRY(ti, ra, rb)				\
++	MFTB(ra);							\
++	lwz rb, TI_AC_LEAVE(ti);					\
++	stw ra, TI_AC_STAMP(ti);	/* AC_STAMP = NOW */		\
++	subf rb, rb, ra;		/* R = NOW - AC_LEAVE */	\
++	lwz ra, TI_AC_UTIME(ti);					\
++	add ra, rb, ra;			/* AC_UTIME += R */		\
++	stw ra, TI_AC_UTIME(ti);					\
+ 
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ti' - possible side-effects?
+#293: FILE: arch/powerpc/include/asm/ppc_asm.h:87:
++#define ACCOUNT_CPU_USER_EXIT(ti, ra, rb)				\
++	MFTB(ra);							\
++	lwz rb, TI_AC_STAMP(ti);					\
++	stw ra, TI_AC_LEAVE(ti);					\
++	subf rb, rb, ra;		/* R = NOW - AC_STAMP */	\
++	lwz ra, TI_AC_STIME(ti);					\
++	add ra, rb, ra;			/* AC_STIME += R */		\
++	stw ra, TI_AC_STIME(ti);					\
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ra' - possible side-effects?
+#293: FILE: arch/powerpc/include/asm/ppc_asm.h:87:
++#define ACCOUNT_CPU_USER_EXIT(ti, ra, rb)				\
++	MFTB(ra);							\
++	lwz rb, TI_AC_STAMP(ti);					\
++	stw ra, TI_AC_LEAVE(ti);					\
++	subf rb, rb, ra;		/* R = NOW - AC_STAMP */	\
++	lwz ra, TI_AC_STIME(ti);					\
++	add ra, rb, ra;			/* AC_STIME += R */		\
++	stw ra, TI_AC_STIME(ti);					\
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'rb' - possible side-effects?
+#293: FILE: arch/powerpc/include/asm/ppc_asm.h:87:
++#define ACCOUNT_CPU_USER_EXIT(ti, ra, rb)				\
++	MFTB(ra);							\
++	lwz rb, TI_AC_STAMP(ti);					\
++	stw ra, TI_AC_LEAVE(ti);					\
++	subf rb, rb, ra;		/* R = NOW - AC_STAMP */	\
++	lwz ra, TI_AC_STIME(ti);					\
++	add ra, rb, ra;			/* AC_STIME += R */		\
++	stw ra, TI_AC_STIME(ti);					\
++
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#293: FILE: arch/powerpc/include/asm/ppc_asm.h:87:
++#define ACCOUNT_CPU_USER_EXIT(ti, ra, rb)				\
++	MFTB(ra);							\
++	lwz rb, TI_AC_STAMP(ti);					\
++	stw ra, TI_AC_LEAVE(ti);					\
++	subf rb, rb, ra;		/* R = NOW - AC_STAMP */	\
++	lwz ra, TI_AC_STIME(ti);					\
++	add ra, rb, ra;			/* AC_STIME += R */		\
++	stw ra, TI_AC_STIME(ti);					\
++
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000206892.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 1 errors, 2 warnings, 8 checks, 235 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000206892.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

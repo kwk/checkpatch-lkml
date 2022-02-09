@@ -1,0 +1,528 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#409: FILE: arch/x86/net/bpf_jit_comp.c:616:
++				pr_err("bpb_jit_compile proglen=%u != oldproglen=%u\n", proglen, oldproglen);
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#452: FILE: arch/x86/xen/spinlock.c:124:
++# define inc_spinners(xl) \
++	asm(LOCK_PREFIX " incb %0" : "+m" ((xl)->spinners) : : "memory");
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#454: FILE: arch/x86/xen/spinlock.c:126:
++# define dec_spinners(xl) \
++	asm(LOCK_PREFIX " decb %0" : "+m" ((xl)->spinners) : : "memory");
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#458: FILE: arch/x86/xen/spinlock.c:130:
++# define inc_spinners(xl) \
++	asm(LOCK_PREFIX " incw %0" : "+m" ((xl)->spinners) : : "memory");
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#460: FILE: arch/x86/xen/spinlock.c:132:
++# define dec_spinners(xl) \
++	asm(LOCK_PREFIX " decw %0" : "+m" ((xl)->spinners) : : "memory");
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#518: FILE: crypto/sha512_generic.c:81:
++	W[I % 16] += s1(W[(I-2) % 16]) + W[(I-7) % 16] + s0(W[(I-15) % 16]);
+ 	                    ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#518: FILE: crypto/sha512_generic.c:81:
++	W[I % 16] += s1(W[(I-2) % 16]) + W[(I-7) % 16] + s0(W[(I-15) % 16]);
+ 	                                     ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#518: FILE: crypto/sha512_generic.c:81:
++	W[I % 16] += s1(W[(I-2) % 16]) + W[(I-7) % 16] + s0(W[(I-15) % 16]);
+ 	                                                        ^
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#559: FILE: crypto/sha512_generic.c:100:
++#define SHA512_0_15(i, a, b, c, d, e, f, g, h)			\
++	t1 = h + e1(e) + Ch(e, f, g) + sha512_K[i] + W[i];	\
++	t2 = e0(a) + Maj(a, b, c);				\
++	d += t1;						\
++	h = t1 + t2
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#559: FILE: crypto/sha512_generic.c:100:
++#define SHA512_0_15(i, a, b, c, d, e, f, g, h)			\
++	t1 = h + e1(e) + Ch(e, f, g) + sha512_K[i] + W[i];	\
++	t2 = e0(a) + Maj(a, b, c);				\
++	d += t1;						\
++	h = t1 + t2
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'a' - possible side-effects?
+#559: FILE: crypto/sha512_generic.c:100:
++#define SHA512_0_15(i, a, b, c, d, e, f, g, h)			\
++	t1 = h + e1(e) + Ch(e, f, g) + sha512_K[i] + W[i];	\
++	t2 = e0(a) + Maj(a, b, c);				\
++	d += t1;						\
++	h = t1 + t2
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'd' may be better as '(d)' to avoid precedence issues
+#559: FILE: crypto/sha512_generic.c:100:
++#define SHA512_0_15(i, a, b, c, d, e, f, g, h)			\
++	t1 = h + e1(e) + Ch(e, f, g) + sha512_K[i] + W[i];	\
++	t2 = e0(a) + Maj(a, b, c);				\
++	d += t1;						\
++	h = t1 + t2
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'e' - possible side-effects?
+#559: FILE: crypto/sha512_generic.c:100:
++#define SHA512_0_15(i, a, b, c, d, e, f, g, h)			\
++	t1 = h + e1(e) + Ch(e, f, g) + sha512_K[i] + W[i];	\
++	t2 = e0(a) + Maj(a, b, c);				\
++	d += t1;						\
++	h = t1 + t2
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'h' - possible side-effects?
+#559: FILE: crypto/sha512_generic.c:100:
++#define SHA512_0_15(i, a, b, c, d, e, f, g, h)			\
++	t1 = h + e1(e) + Ch(e, f, g) + sha512_K[i] + W[i];	\
++	t2 = e0(a) + Maj(a, b, c);				\
++	d += t1;						\
++	h = t1 + t2
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'h' may be better as '(h)' to avoid precedence issues
+#559: FILE: crypto/sha512_generic.c:100:
++#define SHA512_0_15(i, a, b, c, d, e, f, g, h)			\
++	t1 = h + e1(e) + Ch(e, f, g) + sha512_K[i] + W[i];	\
++	t2 = e0(a) + Maj(a, b, c);				\
++	d += t1;						\
++	h = t1 + t2
+
+CHECK:CAMELCASE: Avoid CamelCase: <Ch>
+#560: FILE: crypto/sha512_generic.c:101:
++	t1 = h + e1(e) + Ch(e, f, g) + sha512_K[i] + W[i];	\
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:CAMELCASE: Avoid CamelCase: <Maj>
+#561: FILE: crypto/sha512_generic.c:102:
++	t2 = e0(a) + Maj(a, b, c);				\
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#565: FILE: crypto/sha512_generic.c:106:
++#define SHA512_16_79(i, a, b, c, d, e, f, g, h)			\
++	BLEND_OP(i, W);						\
++	t1 = h + e1(e) + Ch(e, f, g) + sha512_K[i] + W[(i)%16];	\
++	t2 = e0(a) + Maj(a, b, c);				\
++	d += t1;						\
++	h = t1 + t2
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#565: FILE: crypto/sha512_generic.c:106:
++#define SHA512_16_79(i, a, b, c, d, e, f, g, h)			\
++	BLEND_OP(i, W);						\
++	t1 = h + e1(e) + Ch(e, f, g) + sha512_K[i] + W[(i)%16];	\
++	t2 = e0(a) + Maj(a, b, c);				\
++	d += t1;						\
++	h = t1 + t2
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'a' - possible side-effects?
+#565: FILE: crypto/sha512_generic.c:106:
++#define SHA512_16_79(i, a, b, c, d, e, f, g, h)			\
++	BLEND_OP(i, W);						\
++	t1 = h + e1(e) + Ch(e, f, g) + sha512_K[i] + W[(i)%16];	\
++	t2 = e0(a) + Maj(a, b, c);				\
++	d += t1;						\
++	h = t1 + t2
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'd' may be better as '(d)' to avoid precedence issues
+#565: FILE: crypto/sha512_generic.c:106:
++#define SHA512_16_79(i, a, b, c, d, e, f, g, h)			\
++	BLEND_OP(i, W);						\
++	t1 = h + e1(e) + Ch(e, f, g) + sha512_K[i] + W[(i)%16];	\
++	t2 = e0(a) + Maj(a, b, c);				\
++	d += t1;						\
++	h = t1 + t2
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'e' - possible side-effects?
+#565: FILE: crypto/sha512_generic.c:106:
++#define SHA512_16_79(i, a, b, c, d, e, f, g, h)			\
++	BLEND_OP(i, W);						\
++	t1 = h + e1(e) + Ch(e, f, g) + sha512_K[i] + W[(i)%16];	\
++	t2 = e0(a) + Maj(a, b, c);				\
++	d += t1;						\
++	h = t1 + t2
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'h' - possible side-effects?
+#565: FILE: crypto/sha512_generic.c:106:
++#define SHA512_16_79(i, a, b, c, d, e, f, g, h)			\
++	BLEND_OP(i, W);						\
++	t1 = h + e1(e) + Ch(e, f, g) + sha512_K[i] + W[(i)%16];	\
++	t2 = e0(a) + Maj(a, b, c);				\
++	d += t1;						\
++	h = t1 + t2
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'h' may be better as '(h)' to avoid precedence issues
+#565: FILE: crypto/sha512_generic.c:106:
++#define SHA512_16_79(i, a, b, c, d, e, f, g, h)			\
++	BLEND_OP(i, W);						\
++	t1 = h + e1(e) + Ch(e, f, g) + sha512_K[i] + W[(i)%16];	\
++	t2 = e0(a) + Maj(a, b, c);				\
++	d += t1;						\
++	h = t1 + t2
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:VxV)
+#567: FILE: crypto/sha512_generic.c:108:
++	t1 = h + e1(e) + Ch(e, f, g) + sha512_K[i] + W[(i)%16];	\
+ 	                                                  ^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#612: FILE: drivers/char/tpm/tpm_tis.c:436:
++	 * correctly on the immediately subsequent command */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#657: FILE: drivers/gpu/drm/drm_fops.c:491:
++	/* Release any auth tokens that might point to this file_priv,
++	   (do that under the drm_global_mutex) */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#657: FILE: drivers/gpu/drm/drm_fops.c:491:
++	   (do that under the drm_global_mutex) */
+
+CHECK:SPACING: No space is necessary after a cast
+#659: FILE: drivers/gpu/drm/drm_fops.c:493:
++		(void) drm_remove_magic(file_priv->master, file_priv->magic);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#700: FILE: drivers/gpu/drm/i915/intel_ringbuffer.c:640:
++	 * ACTHD) before reading the status page. */
+
+WARNING:TYPO_SPELLING: 'notifiy' may be misspelled - perhaps 'notify'?
+#715: FILE: drivers/gpu/drm/i915/intel_ringbuffer.c:812:
++	 * for an notifiy irq, otherwise irqs seem to get lost on at least the
+ 	          ^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#716: FILE: drivers/gpu/drm/i915/intel_ringbuffer.c:813:
++	 * blt/bsd rings on ivb. */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#769: FILE: drivers/gpu/drm/i915/intel_sdvo.c:1070:
++		 * struct intel_sdvo_dtd. */
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'dp_info->connector->connector_type == DRM_MODE_CONNECTOR_eDP'
+#836: FILE: drivers/gpu/drm/radeon/atombios_dp.c:730:
++	if ((dp_info->connector->connector_type == DRM_MODE_CONNECTOR_eDP) &&
++	    (dig->panel_mode == DP_PANEL_MODE_INTERNAL_DP2_MODE)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'dig->panel_mode == DP_PANEL_MODE_INTERNAL_DP2_MODE'
+#836: FILE: drivers/gpu/drm/radeon/atombios_dp.c:730:
++	if ((dp_info->connector->connector_type == DRM_MODE_CONNECTOR_eDP) &&
++	    (dig->panel_mode == DP_PANEL_MODE_INTERNAL_DP2_MODE)) {
+
+CHECK:CAMELCASE: Avoid CamelCase: <DRM_MODE_CONNECTOR_eDP>
+#836: FILE: drivers/gpu/drm/radeon/atombios_dp.c:730:
++	if ((dp_info->connector->connector_type == DRM_MODE_CONNECTOR_eDP) &&
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rdev->family == CHIP_RV710'
+#852: FILE: drivers/gpu/drm/radeon/atombios_encoders.c:1355:
++		if ((rdev->family == CHIP_RV710) || (rdev->family == CHIP_RV730) ||
++		    ASIC_IS_DCE41(rdev) || ASIC_IS_DCE5(rdev))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rdev->family == CHIP_RV730'
+#852: FILE: drivers/gpu/drm/radeon/atombios_encoders.c:1355:
++		if ((rdev->family == CHIP_RV710) || (rdev->family == CHIP_RV730) ||
++		    ASIC_IS_DCE41(rdev) || ASIC_IS_DCE5(rdev))
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#872: FILE: drivers/gpu/drm/radeon/atombios_encoders.c:1377:
++			atombios_dig_transmitter_setup(encoder, ATOM_TRANSMITTER_ACTION_DISABLE, 0, 0);
+
+WARNING:LONG_LINE: line length of 110 exceeds 100 columns
+#874: FILE: drivers/gpu/drm/radeon/atombios_encoders.c:1379:
++			atombios_dig_transmitter_setup(encoder, ATOM_TRANSMITTER_ACTION_DISABLE_OUTPUT, 0, 0);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rdev->pdev->device == 0x791f'
+#913: FILE: drivers/gpu/drm/radeon/radeon_irq_kms.c:141:
++	if ((rdev->pdev->device == 0x791f) &&
++	    (rdev->pdev->subsystem_vendor == 0x1028) &&
+ 	    (rdev->pdev->subsystem_device == 0x01fd))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rdev->pdev->subsystem_vendor == 0x1028'
+#913: FILE: drivers/gpu/drm/radeon/radeon_irq_kms.c:141:
++	if ((rdev->pdev->device == 0x791f) &&
++	    (rdev->pdev->subsystem_vendor == 0x1028) &&
+ 	    (rdev->pdev->subsystem_device == 0x01fd))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rdev->pdev->subsystem_device == 0x01fd'
+#913: FILE: drivers/gpu/drm/radeon/radeon_irq_kms.c:141:
++	if ((rdev->pdev->device == 0x791f) &&
++	    (rdev->pdev->subsystem_vendor == 0x1028) &&
+ 	    (rdev->pdev->subsystem_device == 0x01fd))
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#934: FILE: drivers/gpu/drm/radeon/radeon_mode.h:486:
++extern int radeon_dp_get_panel_mode(struct drm_encoder *encoder,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#979: FILE: drivers/hwmon/sht15.c:884:
+ static int __devinit sht15_probe(struct platform_device *pdev)
+
+CHECK:CAMELCASE: Avoid CamelCase: <OEMIdentifier>
+#1188: FILE: drivers/scsi/mpt2sas/mpt2sas_base.c:4085:
++		if (ioc->is_warpdrive && ioc->manu_pg10.OEMIdentifier
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#1321: FILE: drivers/usb/class/cdc-wdm.c:93:
++	struct mutex		wlock;
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#1322: FILE: drivers/usb/class/cdc-wdm.c:94:
++	struct mutex		rlock;
+
+CHECK:CAMELCASE: Avoid CamelCase: <wMaxCommand>
+#1428: FILE: drivers/usb/class/cdc-wdm.c:728:
++					 desc->wMaxCommand,
+
+CHECK:CAMELCASE: Avoid CamelCase: <bU2DevExitLat>
+#1600: FILE: drivers/usb/gadget/storage_common.c:601:
++	.bU2DevExitLat =	cpu_to_le16(USB_DEFAULT_U2_DEV_EXIT_LAT),
+
+CHECK:CAMELCASE: Avoid CamelCase: <wTotalLength>
+#1608: FILE: drivers/usb/gadget/storage_common.c:608:
++	.wTotalLength =		cpu_to_le16(USB_DT_BOS_SIZE
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1695: FILE: drivers/usb/serial/cp210x.c:43:
++static void cp210x_change_speed(struct tty_struct *, struct usb_serial_port *,
++							struct ktermios *);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1812: FILE: drivers/usb/serial/cp210x.c:608:
++static void cp210x_change_speed(struct tty_struct *tty,
++		struct usb_serial_port *port, struct ktermios *old_termios)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1827: FILE: drivers/usb/serial/cp210x.c:623:
++	if (cp210x_set_config(port, CP210X_SET_BAUDRATE, &baud,
++							sizeof(baud))) {
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#2048: FILE: drivers/usb/serial/qcaux.c:71:
++	{ USB_DEVICE_AND_INTERFACE_INFO(UTSTARCOM_VENDOR_ID, PANTECH_PRODUCT_UML190_VZW, 0xff, 0xff, 0xff) },
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#2049: FILE: drivers/usb/serial/qcaux.c:72:
++	{ USB_DEVICE_AND_INTERFACE_INFO(UTSTARCOM_VENDOR_ID, PANTECH_PRODUCT_UML190_VZW, 0xff, 0xfe, 0xff) },
+
+WARNING:LONG_LINE: line length of 121 exceeds 100 columns
+#2050: FILE: drivers/usb/serial/qcaux.c:73:
++	{ USB_DEVICE_AND_INTERFACE_INFO(UTSTARCOM_VENDOR_ID, PANTECH_PRODUCT_UML290_VZW, 0xff, 0xfd, 0xff) },  /* NMEA */
+
+WARNING:LONG_LINE: line length of 120 exceeds 100 columns
+#2051: FILE: drivers/usb/serial/qcaux.c:74:
++	{ USB_DEVICE_AND_INTERFACE_INFO(UTSTARCOM_VENDOR_ID, PANTECH_PRODUCT_UML290_VZW, 0xff, 0xfe, 0xff) },  /* WMC */
+
+WARNING:LONG_LINE: line length of 121 exceeds 100 columns
+#2052: FILE: drivers/usb/serial/qcaux.c:75:
++	{ USB_DEVICE_AND_INTERFACE_INFO(UTSTARCOM_VENDOR_ID, PANTECH_PRODUCT_UML290_VZW, 0xff, 0xff, 0xff) },  /* DIAG */
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#2146: FILE: fs/ecryptfs/crypto.c:1583:
+ 			printk(KERN_DEBUG "Valid eCryptfs headers not found in "
++			       "file header region or xattr region, inode %lu\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#2156: FILE: fs/ecryptfs/crypto.c:1593:
+ 			printk(KERN_DEBUG "Valid eCryptfs headers not found in "
++			       "file xattr region either, inode %lu\n",
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#2166: FILE: fs/ecryptfs/crypto.c:1605:
+ 			       "xattr support enabled. eCryptfs will not treat "
++			       "this like an encrypted file, inode %lu\n",
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2269: FILE: fs/ecryptfs/miscdev.c:421:
++	} else if (count < (1 + 4 + 1)
++		   || count > (1 + 4 + 2 + sizeof(struct ecryptfs_message) + 4
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#2271: FILE: fs/ecryptfs/miscdev.c:423:
++		printk(KERN_WARNING "%s: Acceptable packet size range is "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#2272: FILE: fs/ecryptfs/miscdev.c:424:
++		printk(KERN_WARNING "%s: Acceptable packet size range is "
++		       "[%d-%lu], but amount of data written is [%zu].",
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#2281: FILE: fs/ecryptfs/miscdev.c:433:
++		printk(KERN_WARNING "%s: Error while inspecting packet size\n",
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#2289: FILE: fs/ecryptfs/miscdev.c:441:
++		printk(KERN_WARNING "%s: Error parsing packet length; "
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#2295: FILE: fs/ecryptfs/miscdev.c:447:
++		printk(KERN_WARNING "%s: Invalid packet size [%zu]\n", __func__,
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#2357: FILE: fs/ecryptfs/read_write.c:206:
++			rc2 = ecryptfs_write_inode_size_to_metadata(
+
+WARNING:UNNECESSARY_KERN_LEVEL: Possible unnecessary KERN_ERR
+#2458: FILE: fs/sysfs/file.c:497:
++		WARN(1, KERN_ERR "sysfs: kobject %s without dirent\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2459: FILE: fs/sysfs/file.c:498:
++		WARN(1, KERN_ERR "sysfs: kobject %s without dirent\n",
++			kobject_name(kobj));
+
+WARNING:UNNECESSARY_KERN_LEVEL: Possible unnecessary KERN_WARNING
+#2476: FILE: fs/sysfs/inode.c:322:
++		WARN(1, KERN_WARNING "sysfs: can not remove '%s', no directory\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2477: FILE: fs/sysfs/inode.c:323:
++		WARN(1, KERN_WARNING "sysfs: can not remove '%s', no directory\n",
++			name);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2505: FILE: include/drm/drmP.h:1331:
++extern int drm_remove_magic(struct drm_master *master, drm_magic_t magic);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2517: FILE: include/net/netns/generic.h:44:
++	BUG_ON(!ptr);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#2921: FILE: net/ipv6/ip6_tunnel.c:221:
++	rcu_assign_pointer(t->next , rtnl_dereference(*tp));
+ 	                           ^
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000170370.commit.50c234c910ddd03a627257cc11704614c0619761 total: 3 errors, 32 warnings, 42 checks, 3035 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000170370.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

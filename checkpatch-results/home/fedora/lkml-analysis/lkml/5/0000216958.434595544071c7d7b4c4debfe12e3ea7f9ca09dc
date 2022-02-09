@@ -1,0 +1,375 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'MIPS_CPU_TIMER_IRQ == 7'
+#67: FILE: arch/mips/lantiq/irq.c:318:
++	if ((MIPS_CPU_TIMER_IRQ == 7) && (pending & CAUSEF_IP7)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'val' - possible side-effects?
+#149: FILE: arch/parisc/include/asm/uaccess.h:103:
++#define __get_user_internal(val, ptr)			\
++({							\
++	register long __gu_err __asm__ ("r8") = 0;	\
++							\
++	switch (sizeof(*(ptr))) {			\
++	case 1: __get_user_asm(val, "ldb", ptr); break;	\
++	case 2: __get_user_asm(val, "ldh", ptr); break; \
++	case 4: __get_user_asm(val, "ldw", ptr); break; \
++	case 8: LDD_USER(val, ptr); break;		\
++	default: BUILD_BUG();				\
++	}						\
++							\
++	__gu_err;					\
+ })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#149: FILE: arch/parisc/include/asm/uaccess.h:103:
++#define __get_user_internal(val, ptr)			\
++({							\
++	register long __gu_err __asm__ ("r8") = 0;	\
++							\
++	switch (sizeof(*(ptr))) {			\
++	case 1: __get_user_asm(val, "ldb", ptr); break;	\
++	case 2: __get_user_asm(val, "ldh", ptr); break; \
++	case 4: __get_user_asm(val, "ldw", ptr); break; \
++	case 8: LDD_USER(val, ptr); break;		\
++	default: BUILD_BUG();				\
++	}						\
++							\
++	__gu_err;					\
+ })
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#154: FILE: arch/parisc/include/asm/uaccess.h:108:
++	case 1: __get_user_asm(val, "ldb", ptr); break;	\
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#155: FILE: arch/parisc/include/asm/uaccess.h:109:
++	case 2: __get_user_asm(val, "ldh", ptr); break; \
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#156: FILE: arch/parisc/include/asm/uaccess.h:110:
++	case 4: __get_user_asm(val, "ldw", ptr); break; \
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#157: FILE: arch/parisc/include/asm/uaccess.h:111:
++	case 8: LDD_USER(val, ptr); break;		\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#158: FILE: arch/parisc/include/asm/uaccess.h:112:
++	default: BUILD_BUG();				\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#171: FILE: arch/parisc/include/asm/uaccess.h:124:
++#define __get_user_asm(val, ldx, ptr)			\
++{							\
++	register long __gu_val;				\
++							\
+ 	__asm__("1: " ldx " 0(%%sr2,%2),%0\n"		\
+ 		"9:\n"					\
+ 		ASM_EXCEPTIONTABLE_ENTRY_EFAULT(1b, 9b)	\
+ 		: "=r"(__gu_val), "=r"(__gu_err)        \
++		: "r"(ptr), "1"(__gu_err));		\
++							\
++	(val) = (__force __typeof__(*(ptr))) __gu_val;	\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#188: FILE: arch/parisc/include/asm/uaccess.h:139:
++#define __get_user_asm64(val, ptr)			\
++{							\
++	union {						\
++		unsigned long long	l;		\
++		__typeof__(*(ptr))	t;		\
++	} __gu_tmp;					\
++							\
+ 	__asm__("   copy %%r0,%R0\n"			\
+ 		"1: ldw 0(%%sr2,%2),%0\n"		\
+ 		"2: ldw 4(%%sr2,%2),%R0\n"		\
+ 		"9:\n"					\
+ 		ASM_EXCEPTIONTABLE_ENTRY_EFAULT(1b, 9b)	\
+ 		ASM_EXCEPTIONTABLE_ENTRY_EFAULT(2b, 9b)	\
++		: "=&r"(__gu_tmp.l), "=r"(__gu_err)	\
++		: "r"(ptr), "1"(__gu_err));		\
++							\
++	(val) = __gu_tmp.t;				\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#213: FILE: arch/parisc/include/asm/uaccess.h:161:
++#define __put_user_internal(x, ptr)				\
+ ({								\
+ 	register long __pu_err __asm__ ("r8") = 0;      	\
+         __typeof__(*(ptr)) __x = (__typeof__(*(ptr)))(x);	\
+ 								\
+ 	switch (sizeof(*(ptr))) {				\
++	case 1: __put_user_asm("stb", __x, ptr); break;		\
++	case 2: __put_user_asm("sth", __x, ptr); break;		\
++	case 4: __put_user_asm("stw", __x, ptr); break;		\
++	case 8: STD_USER(__x, ptr); break;			\
++	default: BUILD_BUG();					\
++	}							\
+ 								\
+ 	__pu_err;						\
+ })
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#226: FILE: arch/parisc/include/asm/uaccess.h:167:
++	case 1: __put_user_asm("stb", __x, ptr); break;		\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#227: FILE: arch/parisc/include/asm/uaccess.h:168:
++	case 2: __put_user_asm("sth", __x, ptr); break;		\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#228: FILE: arch/parisc/include/asm/uaccess.h:169:
++	case 4: __put_user_asm("stw", __x, ptr); break;		\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#229: FILE: arch/parisc/include/asm/uaccess.h:170:
++	case 8: STD_USER(__x, ptr); break;			\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#230: FILE: arch/parisc/include/asm/uaccess.h:171:
++	default: BUILD_BUG();					\
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#242: FILE: arch/parisc/include/asm/uaccess.h:183:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#468: FILE: arch/x86/include/asm/pmem.h:101:
++	if (iter_is_iovec(i)) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#469: FILE: arch/x86/include/asm/pmem.h:102:
++		unsigned long flushed, dest = (unsigned long) addr;
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'bytes != 4'
+#472: FILE: arch/x86/include/asm/pmem.h:105:
++			if (!IS_ALIGNED(dest, 4) || (bytes != 4))
+
+CHECK:SPACING: No space is necessary after a cast
+#480: FILE: arch/x86/include/asm/pmem.h:113:
++			flushed = dest - (unsigned long) addr;
+
+CHECK:BRACES: Unbalanced braces around else statement
+#484: FILE: arch/x86/include/asm/pmem.h:117:
++	} else
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#1517: FILE: drivers/gpu/drm/nouveau/nvkm/engine/device/base.c:2739:
++		case 0x137: device->chip = &nv137_chipset; break;
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1692: FILE: drivers/nvdimm/claim.c:254:
++		if (IS_ALIGNED(offset, 512) && IS_ALIGNED(size, 512)
++				&& (!ndns->claim || !is_nd_btt(ndns->claim))) {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1829: FILE: drivers/platform/x86/acer-wmi.c:1856:
++	if (!strcmp(ctx, "SENR")) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1834: FILE: drivers/platform/x86/acer-wmi.c:1861:
++	} else
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1876: FILE: drivers/pwm/pwm-rockchip.c:195:
++static int rockchip_pwm_enable(struct pwm_chip *chip,
++			 struct pwm_device *pwm,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1918: FILE: drivers/pwm/pwm-rockchip.c:242:
++			rockchip_pwm_enable(chip, pwm, !enabled,
++				      state->polarity);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1927: FILE: drivers/pwm/pwm-rockchip.c:248:
++		ret = rockchip_pwm_enable(chip, pwm, state->enabled,
++				    state->polarity);
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#1939: FILE: drivers/rtc/rtc-tegra.c:18:
+  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.$
+
+Kernel maintainers reject new instances of the GPL boilerplate paragraph
+directing people to write to the FSF for a copy of the GPL, since the
+FSF has moved in the past and may do so again.
+So do not write paragraphs about writing to the Free Software Foundation's
+mailing address.
+
+See: https://lore.kernel.org/lkml/20131006222342.GT19510@leaf/
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#2183: FILE: drivers/target/target_core_fabric_configfs.c:97:
++		pr_err("Unable to create mappedlun symlink because"
++			" lun->lun_shutdown=true\n");
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#2240: FILE: drivers/target/target_core_user.c:328:
++		uint32_t count;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2264: FILE: drivers/target/target_core_user.c:351:
++				block = find_first_bit(bitmap,
+ 						DATA_BLOCK_BITS);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2281: FILE: drivers/target/target_core_user.c:425:
++		BUG_ON(!(se_cmd->t_bidi_data_sg && se_cmd->t_bidi_data_nents));
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2343: FILE: drivers/target/target_core_user.c:551:
++		alloc_and_scatter_data_area(udev, se_cmd->t_bidi_data_sg,
++				se_cmd->t_bidi_data_nents, &iov, &iov_cnt,
+
+CHECK:CAMELCASE: Avoid CamelCase: <orig_video_isVGA>
+#2398: FILE: drivers/video/fbdev/efifb.c:158:
++	if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI || pci_dev_disabled)
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:CAMELCASE: Avoid CamelCase: <XenbusStateConnected>
+#2485: FILE: drivers/video/fbdev/xen-fbfront.c:657:
++			xenbus_switch_state(dev, XenbusStateConnected);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!sk"
+#2898: FILE: kernel/audit.c:776:
++		if (sk == NULL || rc < 0)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3103: FILE: lib/iov_iter.c:798:
++		size_t off = i->iov_offset;
++		while (1) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3105: FILE: lib/iov_iter.c:800:
++			size_t n = off - pipe->bufs[idx].offset;
++			if (unroll < n) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3130: FILE: lib/iov_iter.c:825:
++		const struct bio_vec *bvec = i->bvec;
++		while (1) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3132: FILE: lib/iov_iter.c:827:
++			size_t n = (--bvec)->bv_len;
++			i->nr_segs++;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3142: FILE: lib/iov_iter.c:837:
++		const struct iovec *iov = i->iov;
++		while (1) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3144: FILE: lib/iov_iter.c:839:
++			size_t n = (--iov)->iov_len;
++			i->nr_segs++;
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000216958.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 12 errors, 9 warnings, 24 checks, 2868 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000216958.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

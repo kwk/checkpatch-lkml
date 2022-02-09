@@ -1,0 +1,260 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#48: 
+Oaktrail platform.  It is programming the EC space, through existing ACPI EC
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#64: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#90: FILE: drivers/platform/x86/Kconfig:658:
++config INTEL_OAKTRAIL
++	tristate "Intel Oaktrail Platform Extras"
++	depends on ACPI
++	depends on RFKILL
++	---help---
++	  Intel Oaktrail platform need this driver to provide interfaces to
++	  enable/disable the Camera, WiFi, BT etc. devices. If in doubt, say Y
++	  here; it will only load on supported platforms.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#115: FILE: drivers/platform/x86/intel_oaktrail.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#116: FILE: drivers/platform/x86/intel_oaktrail.c:2:
++/*
++  Copyright (C) 2010 Intel Corporation
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#138: FILE: drivers/platform/x86/intel_oaktrail.c:24:
++  along with this program; if not, write to the Free Software$
+
+Kernel maintainers reject new instances of the GPL boilerplate paragraph
+directing people to write to the FSF for a copy of the GPL, since the
+FSF has moved in the past and may do so again.
+So do not write paragraphs about writing to the Free Software Foundation's
+mailing address.
+
+See: https://lore.kernel.org/lkml/20131006222342.GT19510@leaf/
+
+ERROR:FSF_MAILING_ADDRESS: Do not include the paragraph about writing to the Free Software Foundation's mailing address from the sample GPL notice. The FSF has changed addresses in the past, and may do so again. Linux already includes a copy of the GPL.
+#139: FILE: drivers/platform/x86/intel_oaktrail.c:25:
++  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA$
+
+WARNING:TYPO_SPELLING: 'disalbe' may be misspelled - perhaps 'disable'?
+#188: FILE: drivers/platform/x86/intel_oaktrail.c:74:
++ * (1 << 4):	WWAN (3G) enable/disalbe, RW.
+             	                 ^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#193: FILE: drivers/platform/x86/intel_oaktrail.c:79:
++#define OT_EC_CAMERA_MASK	(1 << 0)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#194: FILE: drivers/platform/x86/intel_oaktrail.c:80:
++#define OT_EC_BT_MASK		(1 << 1)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#195: FILE: drivers/platform/x86/intel_oaktrail.c:81:
++#define OT_EC_GPS_MASK		(1 << 2)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#196: FILE: drivers/platform/x86/intel_oaktrail.c:82:
++#define OT_EC_WIFI_MASK		(1 << 3)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#197: FILE: drivers/platform/x86/intel_oaktrail.c:83:
++#define OT_EC_WWAN_MASK		(1 << 4)
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#198: FILE: drivers/platform/x86/intel_oaktrail.c:84:
++#define OT_EC_TS_MASK		(1 << 5)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'MASK' - possible side-effects?
+#210: FILE: drivers/platform/x86/intel_oaktrail.c:96:
++#define SIMPLE_MASKED_STORE_SHOW(NAME, MASK)				\
++static ssize_t NAME##_show(struct device *dev,				\
++	struct device_attribute *attr, char *buf)			\
++{									\
++	u8 value;							\
++	ec_read(OT_EC_DEVICE_STATE_ADDRESS, &value);			\
++	return sprintf(buf, "%d\n", ((value & MASK) != 0));		\
++}									\
++static ssize_t NAME##_store(struct device *dev,				\
++	struct device_attribute *attr, const char *buf, size_t count)	\
++{									\
++	int state;							\
++	u8 old_val;							\
++	ec_read(OT_EC_DEVICE_STATE_ADDRESS, &old_val);			\
++	if (sscanf(buf, "%d", &state) != 1 || (state < 0 || state > 1))	\
++		return -EINVAL;						\
++	ec_write(OT_EC_DEVICE_STATE_ADDRESS, state ?			\
++		 (old_val | MASK) : (old_val & ~MASK));			\
++	return count;							\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'MASK' may be better as '(MASK)' to avoid precedence issues
+#210: FILE: drivers/platform/x86/intel_oaktrail.c:96:
++#define SIMPLE_MASKED_STORE_SHOW(NAME, MASK)				\
++static ssize_t NAME##_show(struct device *dev,				\
++	struct device_attribute *attr, char *buf)			\
++{									\
++	u8 value;							\
++	ec_read(OT_EC_DEVICE_STATE_ADDRESS, &value);			\
++	return sprintf(buf, "%d\n", ((value & MASK) != 0));		\
++}									\
++static ssize_t NAME##_store(struct device *dev,				\
++	struct device_attribute *attr, const char *buf, size_t count)	\
++{									\
++	int state;							\
++	u8 old_val;							\
++	ec_read(OT_EC_DEVICE_STATE_ADDRESS, &old_val);			\
++	if (sscanf(buf, "%d", &state) != 1 || (state < 0 || state > 1))	\
++		return -EINVAL;						\
++	ec_write(OT_EC_DEVICE_STATE_ADDRESS, state ?			\
++		 (old_val | MASK) : (old_val & ~MASK));			\
++	return count;							\
++}
+
+WARNING:SSCANF_TO_KSTRTO: Prefer kstrto<type> to single variable sscanf
+#224: FILE: drivers/platform/x86/intel_oaktrail.c:110:
++	if (sscanf(buf, "%d", &state) != 1 || (state < 0 || state > 1))	\
++		return -EINVAL;						\
+
+WARNING:DEVICE_ATTR_RW: Use DEVICE_ATTR_RW
+#229: FILE: drivers/platform/x86/intel_oaktrail.c:115:
++}
+
+The DEVICE_ATTR_RW(name) helper macro can be used instead of
+DEVICE_ATTR(name, 0644, name_show, name_store);
+
+Note that the macro automatically appends _show and _store to the
+named attribute variable of the device for the show and store methods.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+WARNING:DEVICE_ATTR_RO: Use DEVICE_ATTR_RO
+#235: FILE: drivers/platform/x86/intel_oaktrail.c:121:
++static DEVICE_ATTR(touchscreen, 0444, touchscreen_show, NULL);
+
+The DEVICE_ATTR_RO(name) helper macro can be used instead of
+DEVICE_ATTR(name, 0444, name_show, NULL);
+
+Note that the macro automatically appends _show to the named
+attribute variable of the device for the show method.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+CHECK:SPACING: No space is necessary after a cast
+#251: FILE: drivers/platform/x86/intel_oaktrail.c:137:
++	unsigned long radio = (unsigned long) data;
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#256: FILE: drivers/platform/x86/intel_oaktrail.c:142:
++		value = (u8) (result | radio);
+
+CHECK:SPACING: No space is necessary after a cast
+#258: FILE: drivers/platform/x86/intel_oaktrail.c:144:
++		value = (u8) (result & ~radio);
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#296: FILE: drivers/platform/x86/intel_oaktrail.c:182:
++	return;
++}
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#306: FILE: drivers/platform/x86/intel_oaktrail.c:192:
++	return;
++}
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#355: FILE: drivers/platform/x86/intel_oaktrail.c:241:
++static int __devinit oaktrail_probe(struct platform_device *pdev)
+
+WARNING:HOTPLUG_SECTION: Using __devexit is unnecessary
+#360: FILE: drivers/platform/x86/intel_oaktrail.c:246:
++static int __devexit oaktrail_remove(struct platform_device *pdev)
+
+WARNING:MISPLACED_INIT: __initdata should be placed after oaktrail_dmi_table[]
+#382: FILE: drivers/platform/x86/intel_oaktrail.c:268:
++static struct dmi_system_id __initdata oaktrail_dmi_table[] = {
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#432: FILE: drivers/platform/x86/intel_oaktrail.c:318:
++	pr_info("Driver "DRIVER_VERSION" successfully loaded\n");
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000332865.commit.50c234c910ddd03a627257cc11704614c0619761 total: 2 errors, 14 warnings, 12 checks, 377 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000332865.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

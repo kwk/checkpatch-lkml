@@ -1,0 +1,87 @@
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#83: FILE: include/linux/swap.h:375:
++#define SWAP_ADDRESS_SPACE_PAGES	(1 << SWAP_ADDRESS_SPACE_SHIFT)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+ERROR:POINTER_LOCATION: "foo* bar" should be "foo *bar"
+#84: FILE: include/linux/swap.h:376:
++extern struct address_space* swapper_spaces[];
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'entry' - possible side-effects?
+#85: FILE: include/linux/swap.h:377:
++#define swap_address_space(entry)					\
++	(&swapper_spaces[swp_type(entry)][swp_offset(entry) >> SWAP_ADDRESS_SPACE_SHIFT])
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#94: FILE: include/linux/swap.h:432:
++extern int init_swap_address_space(unsigned int type, unsigned long nr_pages);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#95: FILE: include/linux/swap.h:433:
++extern void exit_swap_address_space(unsigned int type);
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*spaces)...) over kzalloc(sizeof(struct address_space)...)
+#187: FILE: mm/swap_state.c:524:
++	spaces = kzalloc(sizeof(struct address_space) * nr, GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#187: FILE: mm/swap_state.c:524:
++	spaces = kzalloc(sizeof(struct address_space) * nr, GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer vzalloc(sizeof(*spaces)...) over vzalloc(sizeof(struct address_space)...)
+#189: FILE: mm/swap_state.c:526:
++		spaces = vzalloc(sizeof(struct address_space) * nr);
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#195: FILE: mm/swap_state.c:532:
++		INIT_RADIX_TREE(&space->page_tree, GFP_ATOMIC|__GFP_NOWARN);
+ 		                                             ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000345210.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 1 errors, 1 warnings, 7 checks, 169 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000345210.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

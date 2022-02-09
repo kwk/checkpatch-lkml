@@ -1,0 +1,86 @@
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#46: FILE: arch/x86/kvm/mmutrace.h:10:
++#define KVM_MMU_PAGE_FIELDS			\
++	__field(unsigned long, mmu_valid_gen)	\
++	__field(__u64, gfn)			\
++	__field(__u32, role)			\
++	__field(__u32, root_count)		\
+ 	__field(bool, unsync)
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#57: FILE: arch/x86/kvm/mmutrace.h:17:
++#define KVM_MMU_PAGE_ASSIGN(sp)				\
++	__entry->mmu_valid_gen = sp->mmu_valid_gen;	\
++	__entry->gfn = sp->gfn;				\
++	__entry->role = sp->role.word;			\
++	__entry->root_count = sp->root_count;		\
+ 	__entry->unsync = sp->unsync;
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sp' - possible side-effects?
+#57: FILE: arch/x86/kvm/mmutrace.h:17:
++#define KVM_MMU_PAGE_ASSIGN(sp)				\
++	__entry->mmu_valid_gen = sp->mmu_valid_gen;	\
++	__entry->gfn = sp->gfn;				\
++	__entry->role = sp->role.word;			\
++	__entry->root_count = sp->root_count;		\
+ 	__entry->unsync = sp->unsync;
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'sp' may be better as '(sp)' to avoid precedence issues
+#57: FILE: arch/x86/kvm/mmutrace.h:17:
++#define KVM_MMU_PAGE_ASSIGN(sp)				\
++	__entry->mmu_valid_gen = sp->mmu_valid_gen;	\
++	__entry->gfn = sp->gfn;				\
++	__entry->role = sp->role.word;			\
++	__entry->root_count = sp->root_count;		\
+ 	__entry->unsync = sp->unsync;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#57: FILE: arch/x86/kvm/mmutrace.h:17:
++#define KVM_MMU_PAGE_ASSIGN(sp)				\
++	__entry->mmu_valid_gen = sp->mmu_valid_gen;	\
++	__entry->gfn = sp->gfn;				\
++	__entry->role = sp->role.word;			\
++	__entry->root_count = sp->root_count;		\
+ 	__entry->unsync = sp->unsync;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000382592.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 2 errors, 1 warnings, 2 checks, 36 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000382592.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,128 @@
+ERROR:SPACING: spaces required around that ':' (ctx:VxW)
+#215: FILE: arch/x86/include/asm/alternative-asm.h:11:
++672:	lock
+    ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#278: FILE: arch/x86/include/asm/asm.h:123:
++	.pushsection "__ex_table","a" ;				\
+ 	                         ^
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#368: FILE: arch/x86/include/asm/bug.h:33:
++#define _BUG_FLAGS(ins, flags)						\
++do {									\
++	asm volatile("1:\t" ins "\n"					\
++		     ".pushsection __bug_table,\"aw\"\n"		\
++		     "2:\t" __BUG_REL(1b) "\t# bug_entry::bug_addr\n"	\
++		     "\t"  __BUG_REL(%c0) "\t# bug_entry::file\n"	\
++		     "\t.word %c1"        "\t# bug_entry::line\n"	\
++		     "\t.word %c2"        "\t# bug_entry::flags\n"	\
++		     "\t.org 2b+%c3\n"					\
++		     ".popsection"					\
++		     : : "i" (__FILE__), "i" (__LINE__),		\
++			 "i" (flags),					\
++			 "i" (sizeof(struct bug_entry)));		\
++} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:BxV)
+#373: FILE: arch/x86/include/asm/bug.h:38:
++		     "\t"  __BUG_REL(%c0) "\t# bug_entry::file\n"	\
+ 		                     ^
+
+WARNING:STRING_FRAGMENTS: Consecutive strings are generally better as a single string
+#374: FILE: arch/x86/include/asm/bug.h:39:
++		     "\t.word %c1"        "\t# bug_entry::line\n"	\
+
+WARNING:STRING_FRAGMENTS: Consecutive strings are generally better as a single string
+#375: FILE: arch/x86/include/asm/bug.h:40:
++		     "\t.word %c2"        "\t# bug_entry::flags\n"	\
+
+WARNING:STRING_FRAGMENTS: Consecutive strings are generally better as a single string
+#394: FILE: arch/x86/include/asm/bug.h:55:
++		     "\t.word %c0"        "\t# bug_entry::flags\n"	\
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#405: FILE: arch/x86/include/asm/bug.h:66:
++#define _BUG_FLAGS(ins, flags)  asm volatile(ins)
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#496: FILE: arch/x86/include/asm/cpufeature.h:167:
++		 ".skip -(((5f-4f) - (2b-1b)) > 0) * "
++			 "((5f-4f) - (2b-1b)),0x90\n"
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#585: FILE: arch/x86/include/asm/jump_label.h:24:
++	asm_volatile_goto("1:"
++		".byte " __stringify(STATIC_KEY_INIT_NOP) "\n\t"
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#586: FILE: arch/x86/include/asm/jump_label.h:25:
++		".pushsection __jump_table,  \"aw\" \n\t"
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#588: FILE: arch/x86/include/asm/jump_label.h:27:
++		".long 1b - ., %l[l_yes] - . \n\t"
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#590: FILE: arch/x86/include/asm/jump_label.h:29:
++		".popsection \n\t"
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#603: FILE: arch/x86/include/asm/jump_label.h:40:
++	asm_volatile_goto("1:"
++		".byte 0xe9\n\t .long %l[l_yes] - 2f\n\t"
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#605: FILE: arch/x86/include/asm/jump_label.h:42:
++		".pushsection __jump_table,  \"aw\" \n\t"
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#607: FILE: arch/x86/include/asm/jump_label.h:44:
++		".long 1b - ., %l[l_yes] - . \n\t"
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#609: FILE: arch/x86/include/asm/jump_label.h:46:
++		".popsection \n\t"
+
+WARNING:STRING_FRAGMENTS: Consecutive strings are generally better as a single string
+#626: FILE: arch/x86/include/asm/paravirt_types.h:356:
++	"771:\n\t" insn_string "\n" "772:\n"		\
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#858: 
+deleted file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000063511.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 3 errors, 15 warnings, 1 checks, 747 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000063511.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

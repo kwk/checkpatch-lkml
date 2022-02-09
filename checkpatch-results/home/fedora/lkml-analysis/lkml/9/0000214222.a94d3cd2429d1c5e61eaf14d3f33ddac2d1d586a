@@ -1,0 +1,153 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#76: 
+       internal buffer representation changed. This is only an issue if tools
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'vaddr' - possible side-effects?
+#130: FILE: arch/arc/include/asm/highmem.h:35:
++#define arch_kmap_local_post_unmap(vaddr)			\
++	local_flush_tlb_kernel_range(vaddr, vaddr + PAGE_SIZE)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#224: FILE: arch/arm/include/asm/highmem.h:56:
++}
++#define arch_kmap_local_high_get arch_kmap_local_high_get
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#293: 
+deleted file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#615: FILE: arch/microblaze/include/asm/highmem.h:54:
++#define arch_kmap_local_post_map(vaddr, pteval)	\
++	local_flush_tlb_page(NULL, vaddr);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#617: FILE: arch/microblaze/include/asm/highmem.h:56:
++#define arch_kmap_local_post_unmap(vaddr)	\
++	local_flush_tlb_page(NULL, vaddr);
+
+WARNING:TYPO_SPELLING: 'interupted' may be misspelled - perhaps 'interrupted'?
+#899: FILE: arch/nds32/include/asm/highmem.h:49:
++ * is interupted and another kmap_atomic() happens in interrupt context.
+       ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'vaddr' - possible side-effects?
+#905: FILE: arch/nds32/include/asm/highmem.h:52:
++#define arch_kmap_local_post_map(vaddr, pteval)			\
++	do {							\
++		__nds32__tlbop_inv(vaddr);			\
++		__nds32__mtsr_dsb(vaddr, NDS32_SR_TLB_VPN);	\
++		__nds32__tlbop_rwr(pteval);			\
++		__nds32__isb();					\
++	} while (0)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1167: FILE: arch/sparc/include/asm/highmem.h:58:
++
++
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'vaddr' - possible side-effects?
+#1674: FILE: arch/xtensa/include/asm/highmem.h:77:
++#define arch_kmap_local_post_unmap(vaddr)	\
++	local_flush_tlb_kernel_range(vaddr, vaddr + PAGE_SIZE)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__addr' - possible side-effects?
+#2058: FILE: include/linux/highmem.h:308:
++#define kunmap_atomic(__addr)					\
++do {								\
++	BUILD_BUG_ON(__same_type((__addr), struct page *));	\
++	__kunmap_atomic(__addr);				\
++	pagefault_enable();					\
++	if (IS_ENABLED(CONFIG_PREEMPT_RT))			\
++		migrate_enable();				\
++	else							\
++		preempt_enable();				\
+ } while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__addr' - possible side-effects?
+#2069: FILE: include/linux/highmem.h:319:
++#define kunmap_local(__addr)					\
++do {								\
++	BUILD_BUG_ON(__same_type((__addr), struct page *));	\
++	__kunmap_local(__addr);					\
++	migrate_enable();					\
++} while (0)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2112: FILE: include/linux/io-mapping.h:96:
++	BUG_ON(offset >= mapping->size);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2183: FILE: include/linux/kernel.h:207:
++extern void __cant_migrate(const char *file, int line);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2697: FILE: mm/highmem.c:375:
++	BUG_ON(idx >= KM_TYPE_NR);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2709: FILE: mm/highmem.c:387:
++	BUG_ON(current->kmap_ctrl.idx < 0);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2771: FILE: mm/highmem.c:449:
++	BUG_ON(!pte_none(*(kmap_pte - idx)));
+
+CHECK:SPACING: No space is necessary after a cast
+#2800: FILE: mm/highmem.c:478:
++	unsigned long addr = (unsigned long) vaddr & PAGE_MASK;
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000214222.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a total: 0 errors, 9 warnings, 9 checks, 1886 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000214222.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

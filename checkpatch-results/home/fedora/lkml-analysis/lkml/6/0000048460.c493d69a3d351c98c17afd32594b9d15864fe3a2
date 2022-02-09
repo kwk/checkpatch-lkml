@@ -1,0 +1,449 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#213: FILE: arch/arm64/include/asm/kvm_arm.h:107:
++#define VTCR_EL2_RES1		(1U << 31)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/mmzone.h> instead of <asm/mmzone.h>
+#605: FILE: arch/mips/include/asm/r4kcache.h:23:
++#include <asm/mmzone.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'desc' - possible side-effects?
+#614: FILE: arch/mips/include/asm/r4kcache.h:679:
++#define __BUILD_BLAST_CACHE_NODE(pfx, desc, indexop, hitop, lsize)	\
++static inline void blast_##pfx##cache##lsize##_node(long node)		\
++{									\
++	unsigned long start = CAC_BASE | nid_to_addrbase(node);		\
++	unsigned long end = start + current_cpu_data.desc.waysize;	\
++	unsigned long ws_inc = 1UL << current_cpu_data.desc.waybit;	\
++	unsigned long ws_end = current_cpu_data.desc.ways <<		\
++			       current_cpu_data.desc.waybit;		\
++	unsigned long ws, addr;						\
++									\
++	for (ws = 0; ws < ws_end; ws += ws_inc)				\
++		for (addr = start; addr < end; addr += lsize * 32)	\
++			cache##lsize##_unroll32(addr|ws, indexop);	\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'lsize' may be better as '(lsize)' to avoid precedence issues
+#614: FILE: arch/mips/include/asm/r4kcache.h:679:
++#define __BUILD_BLAST_CACHE_NODE(pfx, desc, indexop, hitop, lsize)	\
++static inline void blast_##pfx##cache##lsize##_node(long node)		\
++{									\
++	unsigned long start = CAC_BASE | nid_to_addrbase(node);		\
++	unsigned long end = start + current_cpu_data.desc.waysize;	\
++	unsigned long ws_inc = 1UL << current_cpu_data.desc.waybit;	\
++	unsigned long ws_end = current_cpu_data.desc.ways <<		\
++			       current_cpu_data.desc.waybit;		\
++	unsigned long ws, addr;						\
++									\
++	for (ws = 0; ws < ws_end; ws += ws_inc)				\
++		for (addr = start; addr < end; addr += lsize * 32)	\
++			cache##lsize##_unroll32(addr|ws, indexop);	\
++}
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#626: FILE: arch/mips/include/asm/r4kcache.h:691:
++			cache##lsize##_unroll32(addr|ws, indexop);	\
+ 			                            ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:CAMELCASE: Avoid CamelCase: <Index_Writeback_Inv_SD>
+#629: FILE: arch/mips/include/asm/r4kcache.h:694:
++__BUILD_BLAST_CACHE_NODE(s, scache, Index_Writeback_Inv_SD, Hit_Writeback_Inv_SD, 16)
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:CAMELCASE: Avoid CamelCase: <Hit_Writeback_Inv_SD>
+#629: FILE: arch/mips/include/asm/r4kcache.h:694:
++__BUILD_BLAST_CACHE_NODE(s, scache, Index_Writeback_Inv_SD, Hit_Writeback_Inv_SD, 16)
+
+CHECK:SPACING: No space is necessary after a cast
+#833: FILE: arch/parisc/mm/init.c:515:
++	unsigned long start = (unsigned long) _text;
+
+CHECK:SPACING: No space is necessary after a cast
+#834: FILE: arch/parisc/mm/init.c:516:
++	unsigned long end   = (unsigned long) &data_start;
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#847: FILE: arch/powerpc/kernel/security.c:25:
+ };
++static enum count_cache_flush_type count_cache_flush_type = COUNT_CACHE_FLUSH_NONE;
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:PREFER_FALLTHROUGH: Prefer 'fallthrough;' over fallthrough comment
+#882: FILE: arch/powerpc/kernel/signal_32.c:1203:
++	/* Fall through, for non-TM restore */
+
+Use the `fallthrough;` pseudo keyword instead of
+`/* fallthrough */` like comments.
+
+WARNING:PREFER_FALLTHROUGH: Prefer 'fallthrough;' over fallthrough comment
+#905: FILE: arch/powerpc/kernel/signal_64.c:744:
++	/* Fall through, for non-TM restore */
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'kvm_spurious_fault', this function's name, in a string
+#1007: FILE: arch/x86/include/asm/kvm_host.h:1495:
++	"jmp kvm_spurious_fault \n\t"	      \
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+WARNING:QUOTED_WHITESPACE_BEFORE_NEWLINE: unnecessary whitespace before a quoted newline
+#1007: FILE: arch/x86/include/asm/kvm_host.h:1495:
++	"jmp kvm_spurious_fault \n\t"	      \
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1021: FILE: arch/x86/kernel/cpu/bugs.c:1006:
++	if (l1tf_mitigation != L1TF_MITIGATION_OFF &&
++			e820__mapped_any(half_pa, ULLONG_MAX - half_pa, E820_TYPE_RAM)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1136: FILE: crypto/tcrypt.c:2065:
++		test_cipher_speed("cfb(aes)", ENCRYPT, sec, NULL, 0,
++				speed_template_16_24_32);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1138: FILE: crypto/tcrypt.c:2067:
++		test_cipher_speed("cfb(aes)", DECRYPT, sec, NULL, 0,
++				speed_template_16_24_32);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1353: FILE: drivers/base/platform-msi.c:372:
++	struct msi_desc *desc, *tmp;
++	for_each_msi_entry_safe(desc, tmp, data->dev) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1445: FILE: drivers/clk/rockchip/clk-rk3188.c:386:
++	COMPOSITE_FRACMUX(0, "spdif_frac", "spdif_pre", CLK_SET_RATE_PARENT,
+ 			RK2928_CLKSEL_CON(9), 0,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1969: FILE: drivers/media/cec/cec-pin.c:605:
++		if (!ack && (!pin->tx_ignore_nack_until_eom ||
++		    pin->tx_bit / 10 == pin->tx_msg.len - 1) &&
+
+CHECK:SPACING: No space is necessary after a cast
+#2177: FILE: drivers/misc/ocxl/config.c:321:
++		*ptr = le32_to_cpu((__force __le32) val);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2415: FILE: drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:5204:
++	ops = kmemdup(&brcmf_cfg80211_ops, sizeof(brcmf_cfg80211_ops),
+ 		       GFP_KERNEL);
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#2582: FILE: drivers/spi/spi-bcm2835.c:235:
++	if (cmpxchg(&bs->dma_pending, true, false)) {
++		dmaengine_terminate_all(master->dma_tx);
++	}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#2714: 
+deleted file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#3055: FILE: drivers/usb/dwc2/hcd_queue.c:62:
++#define DWC2_RETRY_WAIT_DELAY 1*1E6L
+                                ^
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#3055: FILE: drivers/usb/dwc2/hcd_queue.c:62:
++#define DWC2_RETRY_WAIT_DELAY 1*1E6L
+
+WARNING:TYPO_SPELLING: 'Unregsiter' may be misspelled - perhaps 'Unregister'?
+#3511: FILE: drivers/usb/roles/class.c:286:
++ * usb_role_switch_unregister - Unregsiter USB Role Switch
+                                 ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:LONG_LINE_COMMENT: line length of 106 exceeds 100 columns
+#3548: FILE: drivers/usb/serial/option.c:1958:
++	{ USB_DEVICE(0x2cb7, 0x0104),						/* Fibocom NL678 series */
+
+A comment starts before but extends beyond the maximum line length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:LONG_LINE_COMMENT: line length of 106 exceeds 100 columns
+#3550: FILE: drivers/usb/serial/option.c:1960:
++	{ USB_DEVICE_INTERFACE_CLASS(0x2cb7, 0x0105, 0xff),			/* Fibocom NL678 series */
+
+CHECK:CAMELCASE: Avoid CamelCase: <CIFSMaxBufSize>
+#3933: FILE: fs/cifs/smb2ops.c:3387:
++	if (pdu_length > CIFSMaxBufSize + MAX_HEADER_SIZE(server)) {
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#3950: FILE: fs/ext4/ext4.h:2457:
++typedef enum {
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#3953: FILE: fs/ext4/ext4.h:2460:
++^IEXT4_IGET_HANDLE = ^I0x0002^I/* Inode # is from a handle */$
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#3956: FILE: fs/ext4/ext4.h:2463:
++extern struct inode *__ext4_iget(struct super_block *sb, unsigned long ino,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#3970: FILE: fs/ext4/ext4.h:2552:
++extern struct buffer_head *ext4_sb_bread(struct super_block *sb,
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'ino < EXT4_ROOT_INO'
+#4024: FILE: fs/ext4/inode.c:4836:
++	if (((flags & EXT4_IGET_NORMAL) &&
++	     (ino < EXT4_FIRST_INO(sb) && ino != EXT4_ROOT_INO)) ||
++	    (ino < EXT4_ROOT_INO) ||
++	    (ino > le32_to_cpu(EXT4_SB(sb)->s_es->s_inodes_count))) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'ino > le32_to_cpu(EXT4_SB(sb)->s_es->s_inodes_count)'
+#4024: FILE: fs/ext4/inode.c:4836:
++	if (((flags & EXT4_IGET_NORMAL) &&
++	     (ino < EXT4_FIRST_INO(sb) && ino != EXT4_ROOT_INO)) ||
++	    (ino < EXT4_ROOT_INO) ||
++	    (ino > le32_to_cpu(EXT4_SB(sb)->s_es->s_inodes_count))) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'raw_inode->i_links_count == 0'
+#4050: FILE: fs/ext4/inode.c:4869:
++	if ((flags & EXT4_IGET_HANDLE) &&
++	    (raw_inode->i_links_count == 0) && (raw_inode->i_mode == 0)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'raw_inode->i_mode == 0'
+#4050: FILE: fs/ext4/inode.c:4869:
++	if ((flags & EXT4_IGET_HANDLE) &&
++	    (raw_inode->i_links_count == 0) && (raw_inode->i_mode == 0)) {
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#4065: FILE: fs/ext4/inode.c:4882:
++					 "iget: bad extra_isize %u "
++					 "(inode size %u)",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#4107: FILE: fs/ext4/inode.c:5070:
++					 "iget: immutable or append flags "
++					 "not allowed on symlinks");
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#4286: FILE: fs/ext4/resize.c:130:
++	else if (IS_ERR(bh = ext4_sb_bread(sb, end - 1, 0))) {
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!bh"
+#4505: FILE: fs/ext4/super.c:154:
++	if (bh == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:TYPO_SPELLING: 'iput' may be misspelled - perhaps 'input'?
+#4602: FILE: fs/ext4/super.c:5720:
++	iput(qf_inode);
+ 	^^^^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#4993: FILE: include/linux/fdtable.h:124:
++extern int __close_fd_get_file(unsigned int fd, struct file **res);
+
+ERROR:SPACING: spaces required around that '==' (ctx:VxV)
+#5082: FILE: include/net/sock.h:478:
++#if BITS_PER_LONG==32
+                  ^
+
+ERROR:SPACING: spaces required around that '==' (ctx:VxV)
+#5094: FILE: include/net/sock.h:2296:
++#if BITS_PER_LONG==32
+                  ^
+
+ERROR:SPACING: spaces required around that '==' (ctx:VxV)
+#5111: FILE: include/net/sock.h:2313:
++#if BITS_PER_LONG==32
+                  ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5153: FILE: include/trace/events/ext4.h:230:
++TRACE_EVENT(ext4_nfs_commit_metadata,
++	TP_PROTO(struct inode *inode),
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#5157: FILE: include/trace/events/ext4.h:234:
++	TP_STRUCT__entry(
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#5158: FILE: include/trace/events/ext4.h:235:
++		__field(	dev_t,	dev			)
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#5158: FILE: include/trace/events/ext4.h:235:
++		__field(	dev_t,	dev			)
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#5159: FILE: include/trace/events/ext4.h:236:
++		__field(	ino_t,	ino			)
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#5159: FILE: include/trace/events/ext4.h:236:
++		__field(	ino_t,	ino			)
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#5162: FILE: include/trace/events/ext4.h:239:
++	TP_fast_assign(
+
+CHECK:SPACING: No space is necessary after a cast
+#5169: FILE: include/trace/events/ext4.h:246:
++		  (unsigned long) __entry->ino)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#5315: FILE: net/compat.c:476:
++		ktime_t kt = ktime_get_real();
++		sock_write_timestamp(sk, kt);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#5332: FILE: net/compat.c:504:
++		ktime_t kt = ktime_get_real();
++		sock_write_timestamp(sk, kt);
+
+ERROR:SPACING: spaces required around that '==' (ctx:VxV)
+#5345: FILE: net/core/sock.c:2746:
++#if BITS_PER_LONG==32
+                  ^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#5363: FILE: net/core/sock.c:2853:
++		ktime_t kt = ktime_get_real();
++		sock_write_timestamp(sk, kt);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#5379: FILE: net/core/sock.c:2870:
++		ktime_t kt = ktime_get_real();
++		sock_write_timestamp(sk, kt);
+
+WARNING:TYPO_SPELLING: 'parms' may be misspelled - perhaps 'params'?
+#5532: FILE: net/ipv6/ip6_gre.c:1009:
++			if (ipv6_addr_equal(&t->parms.raddr, &ipv6_hdr(skb)->saddr))
+ 			                        ^^^^^
+
+CHECK:CAMELCASE: Avoid CamelCase: <Opt_err>
+#5788: FILE: security/keys/keyctl_pkey.c:53:
++		if (token == Opt_err)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#6390: FILE: virt/kvm/arm/arm.c:488:
++	u64 current_vmid_gen = atomic64_read(&kvm_vmid_gen);
++	smp_rmb(); /* Orders read of kvm_vmid_gen and kvm->arch.vmid */
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#6436: FILE: virt/kvm/arm/arm.c:549:
++	smp_wmb();
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000048460.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 10 errors, 23 warnings, 32 checks, 5027 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000048460.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

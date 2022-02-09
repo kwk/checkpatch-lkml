@@ -1,0 +1,62 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#136: FILE: include/linux/virtio_config.h:312:
++#define __virtio_pick_endian(x, x16, x32, x64, otherwise)			\
++	__virtio_pick_type(x, x16, __u16,					\
++		__virtio_pick_type(x, x32, __u32,				\
++			__virtio_pick_type(x, x64, __u64,			\
++				otherwise)))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#142: FILE: include/linux/virtio_config.h:318:
++#define __virtio_native_typeof(x) typeof(					\
++	__virtio_pick_type(x, __u8, __u8,					\
++		__virtio_pick_endian(x, __virtio16, __virtio32, __virtio64,	\
++			__virtio_pick_endian(x, __le16, __le32, __le64,		\
++				__virtio_pick_endian(x, __u16, __u32, __u64,	\
++					/* No other type allowed */		\
++					(void)0)))))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'structname' may be better as '(structname)' to avoid precedence issues
+#152: FILE: include/linux/virtio_config.h:328:
++#define __virtio_native_type(structname, member) \
++	__virtio_native_typeof(((structname*)0)->member)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'member' may be better as '(member)' to avoid precedence issues
+#152: FILE: include/linux/virtio_config.h:328:
++#define __virtio_native_type(structname, member) \
++	__virtio_native_typeof(((structname*)0)->member)
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#153: FILE: include/linux/virtio_config.h:329:
++	__virtio_native_typeof(((structname*)0)->member)
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#159: FILE: include/linux/virtio_config.h:335:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000043343.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 1 errors, 0 warnings, 5 checks, 73 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000043343.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

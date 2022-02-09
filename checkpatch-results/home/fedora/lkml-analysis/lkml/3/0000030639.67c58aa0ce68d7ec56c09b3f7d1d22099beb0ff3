@@ -1,0 +1,255 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#30: 
+   git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git sched-core-for-linus
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#431: FILE: include/linux/kernel.h:165:
++  void ___might_sleep(const char *file, int line, int preempt_offset);$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#441: FILE: include/linux/kernel.h:181:
++  static inline void ___might_sleep(const char *file, int line,$
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#442: FILE: include/linux/kernel.h:182:
++  static inline void ___might_sleep(const char *file, int line,
++				   int preempt_offset) { }
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'tsk' - possible side-effects?
+#460: FILE: include/linux/sched.h:248:
++#define __set_task_state(tsk, state_value)			\
++	do {							\
++		(tsk)->task_state_change = _THIS_IP_;		\
++		(tsk)->state = (state_value);			\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'tsk' - possible side-effects?
+#465: FILE: include/linux/sched.h:253:
++#define set_task_state(tsk, state_value)			\
++	do {							\
++		(tsk)->task_state_change = _THIS_IP_;		\
++		set_mb((tsk)->state, (state_value));		\
++	} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#503: FILE: include/linux/sched.h:299:
++#define __set_current_state(state_value)		\
+ 	do { current->state = (state_value); } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#570: FILE: include/linux/sched.h:2092:
++extern int cpuset_cpumask_can_shrink(const struct cpumask *cur,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#572: FILE: include/linux/sched.h:2094:
++extern int task_can_attach(struct task_struct *p,
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'condition' - possible side-effects?
+#647: FILE: include/linux/wait.h:286:
++#define wait_event_freezable(wq, condition)				\
++({									\
++	int __ret = 0;							\
++	might_sleep();							\
++	if (!(condition))						\
++		__ret = __wait_event_freezable(wq, condition);		\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'condition' - possible side-effects?
+#678: FILE: include/linux/wait.h:337:
++#define wait_event_freezable_timeout(wq, condition, timeout)		\
++({									\
++	long __ret = timeout;						\
++	might_sleep();							\
++	if (!___wait_cond_timeout(condition))				\
++		__ret = __wait_event_freezable_timeout(wq, condition, timeout);	\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'timeout' - possible side-effects?
+#678: FILE: include/linux/wait.h:337:
++#define wait_event_freezable_timeout(wq, condition, timeout)		\
++({									\
++	long __ret = timeout;						\
++	might_sleep();							\
++	if (!___wait_cond_timeout(condition))				\
++		__ret = __wait_event_freezable_timeout(wq, condition, timeout);	\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'condition' - possible side-effects?
+#745: FILE: include/linux/wait.h:530:
++#define wait_event_freezable_exclusive(wq, condition)			\
++({									\
++	int __ret = 0;							\
++	might_sleep();							\
++	if (!(condition))						\
++		__ret = __wait_event_freezable_exclusive(wq, condition);\
++	__ret;								\
++})
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#754: FILE: include/linux/wait.h:539:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#770: FILE: include/linux/wait.h:902:
++long wait_woken(wait_queue_t *wait, unsigned mode, long timeout);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#771: FILE: include/linux/wait.h:903:
++int woken_wake_function(wait_queue_t *wait, unsigned mode, int sync, void *key);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#852: FILE: include/trace/events/sched.h:101:
++	BUG_ON(p != current);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:TYPO_SPELLING: 'Possble' may be misspelled - perhaps 'Possible'?
+#1102: FILE: kernel/sched/core.c:1021:
++		/* Possble rq->lock 'hole'.  */
+ 		   ^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1349: FILE: kernel/sched/core.c:4687:
++		if (overflow)
+[...]
++		else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1351: FILE: kernel/sched/core.c:4689:
++		else {
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#1363: FILE: kernel/sched/core.c:4701:
++
++	}
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1468: FILE: kernel/sched/core.c:7293:
++	if (WARN_ONCE(current->state != TASK_RUNNING,
++			"do not call blocking ops when !TASK_RUNNING; "
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1734: FILE: kernel/sched/deadline.c:1669:
++		if (p->nr_cpus_allowed > 1 && rq->dl.overloaded &&
++			push_dl_task(rq) && rq != task_rq(p))
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#1783: FILE: kernel/sched/debug.c:539:
++				nr_faults = p->numa_faults[2*node + i];
+ 				                            ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1884: FILE: kernel/sched/fair.c:975:
++		if (sched_numa_topology_type == NUMA_BACKPLANE &&
++					dist > maxdist)
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#2025: FILE: kernel/sched/fair.c:1445:
++	dist = env.dist = node_distance(env.src_nid, env.dst_nid);
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2046: FILE: kernel/sched/fair.c:1464:
++	if (env.best_cpu == -1 || (p->numa_group &&
++			nodes_weight(p->numa_group->active_nodes) > 1)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2053: FILE: kernel/sched/fair.c:1471:
++			if (sched_numa_topology_type == NUMA_BACKPLANE &&
++						dist != env.dist) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#2140: FILE: kernel/sched/fair.c:1743:
++			nodemask_t this_group;
++			nodes_clear(this_group);
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#2328: FILE: kernel/sched/fair.c:2042:
++		p->numa_faults = kzalloc(size, GFP_KERNEL|__GFP_NOWARN);
+ 		                                         ^
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#2486: FILE: kernel/sched/sched.h:706:
++};
++extern enum numa_topology_type sched_numa_topology_type;
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2488: FILE: kernel/sched/sched.h:708:
++extern bool find_numa_distance(int distance);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2518: FILE: kernel/sched/sched.h:1549:
++extern void print_dl_stats(struct seq_file *m, int cpu);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2563: FILE: kernel/sched/wait.c:326:
++long wait_woken(wait_queue_t *wait, unsigned mode, long timeout)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#2587: FILE: kernel/sched/wait.c:350:
++int woken_wake_function(wait_queue_t *wait, unsigned mode, int sync, void *key)
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000030639.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 11 warnings, 24 checks, 2317 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000030639.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

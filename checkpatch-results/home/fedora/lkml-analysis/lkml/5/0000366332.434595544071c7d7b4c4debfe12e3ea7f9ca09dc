@@ -1,0 +1,443 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#39: 
+It's useful for profiling hardware to determine problems and latencies in the system.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#51: FILE: drivers/greybus/loopback.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#126: FILE: drivers/greybus/loopback.c:76:
++	struct mutex mutex;
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#169: FILE: drivers/greybus/loopback.c:119:
++};
++static DEFINE_IDA(loopback_ida);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#177: FILE: drivers/greybus/loopback.c:127:
++static unsigned kfifo_depth = GB_LOOPBACK_FIFO_DEFAULT;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#186: FILE: drivers/greybus/loopback.c:136:
++#define gb_loopback_ro_attr(field)				\
++static ssize_t field##_show(struct device *dev,			\
++			    struct device_attribute *attr,		\
++			    char *buf)					\
++{									\
++	struct gb_loopback *gb = dev_get_drvdata(dev);			\
++	return sprintf(buf, "%u\n", gb->field);			\
++}									\
++static DEVICE_ATTR_RO(field)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#186: FILE: drivers/greybus/loopback.c:136:
++#define gb_loopback_ro_attr(field)				\
++static ssize_t field##_show(struct device *dev,			\
++			    struct device_attribute *attr,		\
++			    char *buf)					\
++{									\
++	struct gb_loopback *gb = dev_get_drvdata(dev);			\
++	return sprintf(buf, "%u\n", gb->field);			\
++}									\
++static DEVICE_ATTR_RO(field)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'name' may be better as '(name)' to avoid precedence issues
+#196: FILE: drivers/greybus/loopback.c:146:
++#define gb_loopback_ro_stats_attr(name, field, type)		\
++static ssize_t name##_##field##_show(struct device *dev,	\
++			    struct device_attribute *attr,		\
++			    char *buf)					\
++{									\
++	struct gb_loopback *gb = dev_get_drvdata(dev);			\
++	/* Report 0 for min and max if no transfer successed */		\
++	if (!gb->requests_completed)					\
++		return sprintf(buf, "0\n");				\
++	return sprintf(buf, "%"#type"\n", gb->name.field);	\
++}									\
++static DEVICE_ATTR_RO(name##_##field)
+
+WARNING:TYPO_SPELLING: 'successed' may be misspelled - perhaps 'succeeded'?
+#202: FILE: drivers/greybus/loopback.c:152:
++	/* Report 0 for min and max if no transfer successed */		\
+ 	                                           ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#205: FILE: drivers/greybus/loopback.c:155:
++	return sprintf(buf, "%"#type"\n", gb->name.field);	\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'name' may be better as '(name)' to avoid precedence issues
+#209: FILE: drivers/greybus/loopback.c:159:
++#define gb_loopback_ro_avg_attr(name)			\
++static ssize_t name##_avg_show(struct device *dev,		\
++			    struct device_attribute *attr,		\
++			    char *buf)					\
++{									\
++	struct gb_loopback_stats *stats;				\
++	struct gb_loopback *gb;						\
++	u64 avg, rem;							\
++	u32 count;							\
++	gb = dev_get_drvdata(dev);			\
++	stats = &gb->name;					\
++	count = stats->count ? stats->count : 1;			\
++	avg = stats->sum + count / 2000000; /* round closest */		\
++	rem = do_div(avg, count);					\
++	rem *= 1000000;							\
++	do_div(rem, count);						\
++	return sprintf(buf, "%llu.%06u\n", avg, (u32)rem);		\
++}									\
++static DEVICE_ATTR_RO(name##_avg)
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#229: FILE: drivers/greybus/loopback.c:179:
++#define gb_loopback_stats_attrs(field)				\
++	gb_loopback_ro_stats_attr(field, min, u);		\
++	gb_loopback_ro_stats_attr(field, max, u);		\
++	gb_loopback_ro_avg_attr(field)
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#229: FILE: drivers/greybus/loopback.c:179:
++#define gb_loopback_stats_attrs(field)				\
++	gb_loopback_ro_stats_attr(field, min, u);		\
++	gb_loopback_ro_stats_attr(field, max, u);		\
++	gb_loopback_ro_avg_attr(field)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#234: FILE: drivers/greybus/loopback.c:184:
++#define gb_loopback_attr(field, type)					\
++static ssize_t field##_show(struct device *dev,				\
++			    struct device_attribute *attr,		\
++			    char *buf)					\
++{									\
++	struct gb_loopback *gb = dev_get_drvdata(dev);			\
++	return sprintf(buf, "%"#type"\n", gb->field);			\
++}									\
++static ssize_t field##_store(struct device *dev,			\
++			    struct device_attribute *attr,		\
++			    const char *buf,				\
++			    size_t len)					\
++{									\
++	int ret;							\
++	struct gb_loopback *gb = dev_get_drvdata(dev);			\
++	mutex_lock(&gb->mutex);						\
++	ret = sscanf(buf, "%"#type, &gb->field);			\
++	if (ret != 1)							\
++		len = -EINVAL;						\
++	else								\
++		gb_loopback_check_attr(gb, bundle);			\
++	mutex_unlock(&gb->mutex);					\
++	return len;							\
++}									\
++static DEVICE_ATTR_RW(field)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#234: FILE: drivers/greybus/loopback.c:184:
++#define gb_loopback_attr(field, type)					\
++static ssize_t field##_show(struct device *dev,				\
++			    struct device_attribute *attr,		\
++			    char *buf)					\
++{									\
++	struct gb_loopback *gb = dev_get_drvdata(dev);			\
++	return sprintf(buf, "%"#type"\n", gb->field);			\
++}									\
++static ssize_t field##_store(struct device *dev,			\
++			    struct device_attribute *attr,		\
++			    const char *buf,				\
++			    size_t len)					\
++{									\
++	int ret;							\
++	struct gb_loopback *gb = dev_get_drvdata(dev);			\
++	mutex_lock(&gb->mutex);						\
++	ret = sscanf(buf, "%"#type, &gb->field);			\
++	if (ret != 1)							\
++		len = -EINVAL;						\
++	else								\
++		gb_loopback_check_attr(gb, bundle);			\
++	mutex_unlock(&gb->mutex);					\
++	return len;							\
++}									\
++static DEVICE_ATTR_RW(field)
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#240: FILE: drivers/greybus/loopback.c:190:
++	return sprintf(buf, "%"#type"\n", gb->field);			\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#260: FILE: drivers/greybus/loopback.c:210:
++#define gb_dev_loopback_ro_attr(field, conn)				\
++static ssize_t field##_show(struct device *dev,		\
++			    struct device_attribute *attr,		\
++			    char *buf)					\
++{									\
++	struct gb_loopback *gb = dev_get_drvdata(dev);			\
++	return sprintf(buf, "%u\n", gb->field);				\
++}									\
++static DEVICE_ATTR_RO(field)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#260: FILE: drivers/greybus/loopback.c:210:
++#define gb_dev_loopback_ro_attr(field, conn)				\
++static ssize_t field##_show(struct device *dev,		\
++			    struct device_attribute *attr,		\
++			    char *buf)					\
++{									\
++	struct gb_loopback *gb = dev_get_drvdata(dev);			\
++	return sprintf(buf, "%u\n", gb->field);				\
++}									\
++static DEVICE_ATTR_RO(field)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#270: FILE: drivers/greybus/loopback.c:220:
++#define gb_dev_loopback_rw_attr(field, type)				\
++static ssize_t field##_show(struct device *dev,				\
++			    struct device_attribute *attr,		\
++			    char *buf)					\
++{									\
++	struct gb_loopback *gb = dev_get_drvdata(dev);			\
++	return sprintf(buf, "%"#type"\n", gb->field);			\
++}									\
++static ssize_t field##_store(struct device *dev,			\
++			    struct device_attribute *attr,		\
++			    const char *buf,				\
++			    size_t len)					\
++{									\
++	int ret;							\
++	struct gb_loopback *gb = dev_get_drvdata(dev);			\
++	mutex_lock(&gb->mutex);						\
++	ret = sscanf(buf, "%"#type, &gb->field);			\
++	if (ret != 1)							\
++		len = -EINVAL;						\
++	else								\
++		gb_loopback_check_attr(gb);		\
++	mutex_unlock(&gb->mutex);					\
++	return len;							\
++}									\
++static DEVICE_ATTR_RW(field)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#270: FILE: drivers/greybus/loopback.c:220:
++#define gb_dev_loopback_rw_attr(field, type)				\
++static ssize_t field##_show(struct device *dev,				\
++			    struct device_attribute *attr,		\
++			    char *buf)					\
++{									\
++	struct gb_loopback *gb = dev_get_drvdata(dev);			\
++	return sprintf(buf, "%"#type"\n", gb->field);			\
++}									\
++static ssize_t field##_store(struct device *dev,			\
++			    struct device_attribute *attr,		\
++			    const char *buf,				\
++			    size_t len)					\
++{									\
++	int ret;							\
++	struct gb_loopback *gb = dev_get_drvdata(dev);			\
++	mutex_lock(&gb->mutex);						\
++	ret = sscanf(buf, "%"#type, &gb->field);			\
++	if (ret != 1)							\
++		len = -EINVAL;						\
++	else								\
++		gb_loopback_check_attr(gb);		\
++	mutex_unlock(&gb->mutex);					\
++	return len;							\
++}									\
++static DEVICE_ATTR_RW(field)
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#276: FILE: drivers/greybus/loopback.c:226:
++	return sprintf(buf, "%"#type"\n", gb->field);			\
+
+WARNING:TYPO_SPELLING: 'te' may be misspelled - perhaps 'the'?
+#433: FILE: drivers/greybus/loopback.c:383:
++static u64 gb_loopback_calc_latency(struct timeval *ts, struct timeval *te)
+                                                                         ^^
+
+WARNING:TYPO_SPELLING: 'te' may be misspelled - perhaps 'the'?
+#438: FILE: drivers/greybus/loopback.c:388:
++	t2 = timeval_to_ns(te);
+ 	                   ^^
+
+WARNING:TYPO_SPELLING: 'te' may be misspelled - perhaps 'the'?
+#444: FILE: drivers/greybus/loopback.c:394:
++					struct timeval *ts, struct timeval *te)
+ 					                                    ^^
+
+WARNING:TYPO_SPELLING: 'te' may be misspelled - perhaps 'the'?
+#447: FILE: drivers/greybus/loopback.c:397:
++	kfifo_in(&gb->kfifo_ts, (unsigned char *)te, sizeof(*te));
+ 	                                         ^^
+
+WARNING:TYPO_SPELLING: 'te' may be misspelled - perhaps 'the'?
+#447: FILE: drivers/greybus/loopback.c:397:
++	kfifo_in(&gb->kfifo_ts, (unsigned char *)te, sizeof(*te));
+ 	                                                     ^^
+
+WARNING:TYPO_SPELLING: 'te' may be misspelled - perhaps 'the'?
+#455: FILE: drivers/greybus/loopback.c:405:
++	struct timeval ts, te;
+ 	                   ^^
+
+WARNING:TYPO_SPELLING: 'te' may be misspelled - perhaps 'the'?
+#486: FILE: drivers/greybus/loopback.c:436:
++	do_gettimeofday(&te);
+ 	                 ^^
+
+WARNING:TYPO_SPELLING: 'te' may be misspelled - perhaps 'the'?
+#489: FILE: drivers/greybus/loopback.c:439:
++	gb_loopback_push_latency_ts(gb, &ts, &te);
+ 	                                      ^^
+
+WARNING:TYPO_SPELLING: 'te' may be misspelled - perhaps 'the'?
+#490: FILE: drivers/greybus/loopback.c:440:
++	gb->elapsed_nsecs = gb_loopback_calc_latency(&ts, &te);
+ 	                                                   ^^
+
+WARNING:TYPO_SPELLING: 'te' may be misspelled - perhaps 'the'?
+#558: FILE: drivers/greybus/loopback.c:508:
++	struct timeval te;
+ 	               ^^
+
+WARNING:TYPO_SPELLING: 'te' may be misspelled - perhaps 'the'?
+#561: FILE: drivers/greybus/loopback.c:511:
++	do_gettimeofday(&te);
+ 	                 ^^
+
+WARNING:TYPO_SPELLING: 'te' may be misspelled - perhaps 'the'?
+#578: FILE: drivers/greybus/loopback.c:528:
++		gb_loopback_push_latency_ts(gb, &op_async->ts, &te);
+ 		                                                ^^
+
+WARNING:TYPO_SPELLING: 'te' may be misspelled - perhaps 'the'?
+#580: FILE: drivers/greybus/loopback.c:530:
++							     &te);
+ 							      ^^
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#782: FILE: drivers/greybus/loopback.c:732:
++static int gb_loopback_async_transfer_complete(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#873: FILE: drivers/greybus/loopback.c:823:
++		if (!gb_operation_response_alloc(operation,
++				len + sizeof(*response), GFP_KERNEL)) {
+
+WARNING:TYPO_SPELLING: 'te' may be misspelled - perhaps 'the'?
+#993: FILE: drivers/greybus/loopback.c:943:
++	struct timeval te;
+ 	               ^^
+
+WARNING:TYPO_SPELLING: 'te' may be misspelled - perhaps 'the'?
+#1000: FILE: drivers/greybus/loopback.c:950:
++	do_gettimeofday(&te);
+ 	                 ^^
+
+WARNING:TYPO_SPELLING: 'te' may be misspelled - perhaps 'the'?
+#1001: FILE: drivers/greybus/loopback.c:951:
++	nlat = gb_loopback_calc_latency(&gb->ts, &te);
+ 	                                          ^^
+
+WARNING:TYPO_SPELLING: 'te' may be misspelled - perhaps 'the'?
+#1009: FILE: drivers/greybus/loopback.c:959:
++			gb->ts = te;
+ 			         ^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1066: FILE: drivers/greybus/loopback.c:1016:
++				sysfs_notify(&gb->dev->kobj,  NULL,
++						"iteration_count");
+
+WARNING:BRACES: braces {} are not necessary for any arm of this statement
+#1080: FILE: drivers/greybus/loopback.c:1030:
++			if (type == GB_LOOPBACK_TYPE_PING) {
+[...]
++			} else if (type == GB_LOOPBACK_TYPE_TRANSFER) {
+[...]
++			} else if (type == GB_LOOPBACK_TYPE_SINK) {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#1253: FILE: drivers/greybus/loopback.c:1203:
++	gb->file = debugfs_create_file(name, S_IFREG | S_IRUGO, gb_dev.root, gb,
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1278: FILE: drivers/greybus/loopback.c:1228:
++	if (kfifo_alloc(&gb->kfifo_lat, kfifo_depth * sizeof(u32),
++			  GFP_KERNEL)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1283: FILE: drivers/greybus/loopback.c:1233:
++	if (kfifo_alloc(&gb->kfifo_ts, kfifo_depth * sizeof(struct timeval) * 2,
++			  GFP_KERNEL)) {
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000366332.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 1 errors, 23 warnings, 21 checks, 1365 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000366332.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

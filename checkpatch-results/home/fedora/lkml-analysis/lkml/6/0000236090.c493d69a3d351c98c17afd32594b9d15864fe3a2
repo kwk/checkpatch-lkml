@@ -1,0 +1,129 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'func' - possible side-effects?
+#70: FILE: lib/test_overflow.c:315:
++#define DEFINE_TEST_ALLOC(func, free_func, want_arg, want_gfp, want_node)\
++static int __init test_ ## func (void *arg)				\
++{									\
++	volatile size_t a = TEST_SIZE;					\
++	volatile size_t b = (SIZE_MAX / TEST_SIZE) + 1;			\
++	void *ptr;							\
++									\
++	/* Tiny allocation test. */					\
++	ptr = alloc ## want_arg ## want_gfp ## want_node (func, arg, 1);\
++	if (!ptr) {							\
++		pr_warn(#func " failed regular allocation?!\n");	\
++		return 1;						\
++	}								\
++	free ## want_arg (free_func, arg, ptr);				\
++									\
++	/* Wrapped allocation test. */					\
++	ptr = alloc ## want_arg ## want_gfp ## want_node (func, arg,	\
++							  a * b);	\
++	if (!ptr) {							\
++		pr_warn(#func " unexpectedly failed bad wrapping?!\n");	\
++		return 1;						\
++	}								\
++	free ## want_arg (free_func, arg, ptr);				\
++									\
++	/* Saturated allocation test. */				\
++	ptr = alloc ## want_arg ## want_gfp ## want_node (func, arg,	\
++						   array_size(a, b));	\
++	if (ptr) {							\
++		pr_warn(#func " missed saturation!\n");			\
++		free ## want_arg (free_func, arg, ptr);			\
++		return 1;						\
++	}								\
++	pr_info(#func " detected saturation\n");			\
++	return 0;							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'free_func' - possible side-effects?
+#70: FILE: lib/test_overflow.c:315:
++#define DEFINE_TEST_ALLOC(func, free_func, want_arg, want_gfp, want_node)\
++static int __init test_ ## func (void *arg)				\
++{									\
++	volatile size_t a = TEST_SIZE;					\
++	volatile size_t b = (SIZE_MAX / TEST_SIZE) + 1;			\
++	void *ptr;							\
++									\
++	/* Tiny allocation test. */					\
++	ptr = alloc ## want_arg ## want_gfp ## want_node (func, arg, 1);\
++	if (!ptr) {							\
++		pr_warn(#func " failed regular allocation?!\n");	\
++		return 1;						\
++	}								\
++	free ## want_arg (free_func, arg, ptr);				\
++									\
++	/* Wrapped allocation test. */					\
++	ptr = alloc ## want_arg ## want_gfp ## want_node (func, arg,	\
++							  a * b);	\
++	if (!ptr) {							\
++		pr_warn(#func " unexpectedly failed bad wrapping?!\n");	\
++		return 1;						\
++	}								\
++	free ## want_arg (free_func, arg, ptr);				\
++									\
++	/* Saturated allocation test. */				\
++	ptr = alloc ## want_arg ## want_gfp ## want_node (func, arg,	\
++						   array_size(a, b));	\
++	if (ptr) {							\
++		pr_warn(#func " missed saturation!\n");			\
++		free ## want_arg (free_func, arg, ptr);			\
++		return 1;						\
++	}								\
++	pr_info(#func " detected saturation\n");			\
++	return 0;							\
++}
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#71: FILE: lib/test_overflow.c:316:
++static int __init test_ ## func (void *arg)				\
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#73: FILE: lib/test_overflow.c:318:
++	volatile size_t a = TEST_SIZE;					\
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#74: FILE: lib/test_overflow.c:319:
++	volatile size_t b = (SIZE_MAX / TEST_SIZE) + 1;			\
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#78: FILE: lib/test_overflow.c:323:
++	ptr = alloc ## want_arg ## want_gfp ## want_node (func, arg, 1);\
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#83: FILE: lib/test_overflow.c:328:
++	free ## want_arg (free_func, arg, ptr);				\
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#86: FILE: lib/test_overflow.c:331:
++	ptr = alloc ## want_arg ## want_gfp ## want_node (func, arg,	\
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#92: FILE: lib/test_overflow.c:337:
++	free ## want_arg (free_func, arg, ptr);				\
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#95: FILE: lib/test_overflow.c:340:
++	ptr = alloc ## want_arg ## want_gfp ## want_node (func, arg,	\
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#99: FILE: lib/test_overflow.c:344:
++		free ## want_arg (free_func, arg, ptr);			\
+
+WARNING:STATIC_CONST_CHAR_ARRAY: const array should probably be static const
+#129: FILE: lib/test_overflow.c:374:
++	const char device_name[] = "overflow-test";
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000236090.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 0 errors, 10 warnings, 2 checks, 126 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000236090.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

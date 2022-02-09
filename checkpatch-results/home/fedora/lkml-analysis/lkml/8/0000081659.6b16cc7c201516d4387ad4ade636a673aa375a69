@@ -1,0 +1,267 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#78: 
+https://lkml.kernel.org/r/5231d2c0-41d9-6721-e15f-a7eedf3ce69e@infradead.org
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'bits' - possible side-effects?
+#117: FILE: kernel/kcsan/core.c:876:
++#define DEFINE_TSAN_ATOMIC_LOAD_STORE(bits)                                                        \
++	u##bits __tsan_atomic##bits##_load(const u##bits *ptr, int memorder);                      \
++	u##bits __tsan_atomic##bits##_load(const u##bits *ptr, int memorder)                       \
++	{                                                                                          \
++		check_access(ptr, bits / BITS_PER_BYTE, KCSAN_ACCESS_ATOMIC);                      \
++		return __atomic_load_n(ptr, memorder);                                             \
++	}                                                                                          \
++	EXPORT_SYMBOL(__tsan_atomic##bits##_load);                                                 \
++	void __tsan_atomic##bits##_store(u##bits *ptr, u##bits v, int memorder);                   \
++	void __tsan_atomic##bits##_store(u##bits *ptr, u##bits v, int memorder)                    \
++	{                                                                                          \
++		check_access(ptr, bits / BITS_PER_BYTE, KCSAN_ACCESS_WRITE | KCSAN_ACCESS_ATOMIC); \
++		__atomic_store_n(ptr, v, memorder);                                                \
++	}                                                                                          \
++	EXPORT_SYMBOL(__tsan_atomic##bits##_store)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'bits' may be better as '(bits)' to avoid precedence issues
+#117: FILE: kernel/kcsan/core.c:876:
++#define DEFINE_TSAN_ATOMIC_LOAD_STORE(bits)                                                        \
++	u##bits __tsan_atomic##bits##_load(const u##bits *ptr, int memorder);                      \
++	u##bits __tsan_atomic##bits##_load(const u##bits *ptr, int memorder)                       \
++	{                                                                                          \
++		check_access(ptr, bits / BITS_PER_BYTE, KCSAN_ACCESS_ATOMIC);                      \
++		return __atomic_load_n(ptr, memorder);                                             \
++	}                                                                                          \
++	EXPORT_SYMBOL(__tsan_atomic##bits##_load);                                                 \
++	void __tsan_atomic##bits##_store(u##bits *ptr, u##bits v, int memorder);                   \
++	void __tsan_atomic##bits##_store(u##bits *ptr, u##bits v, int memorder)                    \
++	{                                                                                          \
++		check_access(ptr, bits / BITS_PER_BYTE, KCSAN_ACCESS_WRITE | KCSAN_ACCESS_ATOMIC); \
++		__atomic_store_n(ptr, v, memorder);                                                \
++	}                                                                                          \
++	EXPORT_SYMBOL(__tsan_atomic##bits##_store)
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#118: FILE: kernel/kcsan/core.c:877:
++	u##bits __tsan_atomic##bits##_load(const u##bits *ptr, int memorder);                      \
+ 	                                                 ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#119: FILE: kernel/kcsan/core.c:878:
++	u##bits __tsan_atomic##bits##_load(const u##bits *ptr, int memorder)                       \
+ 	                                                 ^
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#124: FILE: kernel/kcsan/core.c:883:
++	EXPORT_SYMBOL(__tsan_atomic##bits##_load);                                                 \
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#125: FILE: kernel/kcsan/core.c:884:
++	void __tsan_atomic##bits##_store(u##bits *ptr, u##bits v, int memorder);                   \
+ 	                                         ^
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#125: FILE: kernel/kcsan/core.c:884:
++	void __tsan_atomic##bits##_store(u##bits *ptr, u##bits v, int memorder);                   \
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#126: FILE: kernel/kcsan/core.c:885:
++	void __tsan_atomic##bits##_store(u##bits *ptr, u##bits v, int memorder)                    \
+ 	                                         ^
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#133: FILE: kernel/kcsan/core.c:892:
++#define DEFINE_TSAN_ATOMIC_RMW(op, bits, suffix)                                                   \
++	u##bits __tsan_atomic##bits##_##op(u##bits *ptr, u##bits v, int memorder);                 \
++	u##bits __tsan_atomic##bits##_##op(u##bits *ptr, u##bits v, int memorder)                  \
++	{                                                                                          \
++		check_access(ptr, bits / BITS_PER_BYTE, KCSAN_ACCESS_WRITE | KCSAN_ACCESS_ATOMIC); \
++		return __atomic_##op##suffix(ptr, v, memorder);                                    \
++	}                                                                                          \
++	EXPORT_SYMBOL(__tsan_atomic##bits##_##op)
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'bits' may be better as '(bits)' to avoid precedence issues
+#133: FILE: kernel/kcsan/core.c:892:
++#define DEFINE_TSAN_ATOMIC_RMW(op, bits, suffix)                                                   \
++	u##bits __tsan_atomic##bits##_##op(u##bits *ptr, u##bits v, int memorder);                 \
++	u##bits __tsan_atomic##bits##_##op(u##bits *ptr, u##bits v, int memorder)                  \
++	{                                                                                          \
++		check_access(ptr, bits / BITS_PER_BYTE, KCSAN_ACCESS_WRITE | KCSAN_ACCESS_ATOMIC); \
++		return __atomic_##op##suffix(ptr, v, memorder);                                    \
++	}                                                                                          \
++	EXPORT_SYMBOL(__tsan_atomic##bits##_##op)
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#134: FILE: kernel/kcsan/core.c:893:
++	u##bits __tsan_atomic##bits##_##op(u##bits *ptr, u##bits v, int memorder);                 \
+ 	                                           ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#135: FILE: kernel/kcsan/core.c:894:
++	u##bits __tsan_atomic##bits##_##op(u##bits *ptr, u##bits v, int memorder)                  \
+ 	                                           ^
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'bits' may be better as '(bits)' to avoid precedence issues
+#159: FILE: kernel/kcsan/core.c:918:
++#define DEFINE_TSAN_ATOMIC_CMPXCHG(bits, strength, weak)                                           \
++	int __tsan_atomic##bits##_compare_exchange_##strength(u##bits *ptr, u##bits *exp,          \
++							      u##bits val, int mo, int fail_mo);   \
++	int __tsan_atomic##bits##_compare_exchange_##strength(u##bits *ptr, u##bits *exp,          \
++							      u##bits val, int mo, int fail_mo)    \
++	{                                                                                          \
++		check_access(ptr, bits / BITS_PER_BYTE, KCSAN_ACCESS_WRITE | KCSAN_ACCESS_ATOMIC); \
++		return __atomic_compare_exchange_n(ptr, exp, val, weak, mo, fail_mo);              \
++	}                                                                                          \
++	EXPORT_SYMBOL(__tsan_atomic##bits##_compare_exchange_##strength)
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#160: FILE: kernel/kcsan/core.c:919:
++	int __tsan_atomic##bits##_compare_exchange_##strength(u##bits *ptr, u##bits *exp,          \
+ 	                                                              ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#160: FILE: kernel/kcsan/core.c:919:
++	int __tsan_atomic##bits##_compare_exchange_##strength(u##bits *ptr, u##bits *exp,          \
+ 	                                                                            ^
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#160: FILE: kernel/kcsan/core.c:919:
++	int __tsan_atomic##bits##_compare_exchange_##strength(u##bits *ptr, u##bits *exp,          \
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#162: FILE: kernel/kcsan/core.c:921:
++	int __tsan_atomic##bits##_compare_exchange_##strength(u##bits *ptr, u##bits *exp,          \
+ 	                                                              ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#162: FILE: kernel/kcsan/core.c:921:
++	int __tsan_atomic##bits##_compare_exchange_##strength(u##bits *ptr, u##bits *exp,          \
+ 	                                                                            ^
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#170: FILE: kernel/kcsan/core.c:929:
++#define DEFINE_TSAN_ATOMIC_CMPXCHG_VAL(bits)                                                       \
++	u##bits __tsan_atomic##bits##_compare_exchange_val(u##bits *ptr, u##bits exp, u##bits val, \
++							   int mo, int fail_mo);                   \
++	u##bits __tsan_atomic##bits##_compare_exchange_val(u##bits *ptr, u##bits exp, u##bits val, \
++							   int mo, int fail_mo)                    \
++	{                                                                                          \
++		check_access(ptr, bits / BITS_PER_BYTE, KCSAN_ACCESS_WRITE | KCSAN_ACCESS_ATOMIC); \
++		__atomic_compare_exchange_n(ptr, &exp, val, 0, mo, fail_mo);                       \
++		return exp;                                                                        \
++	}                                                                                          \
++	EXPORT_SYMBOL(__tsan_atomic##bits##_compare_exchange_val)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'bits' may be better as '(bits)' to avoid precedence issues
+#170: FILE: kernel/kcsan/core.c:929:
++#define DEFINE_TSAN_ATOMIC_CMPXCHG_VAL(bits)                                                       \
++	u##bits __tsan_atomic##bits##_compare_exchange_val(u##bits *ptr, u##bits exp, u##bits val, \
++							   int mo, int fail_mo);                   \
++	u##bits __tsan_atomic##bits##_compare_exchange_val(u##bits *ptr, u##bits exp, u##bits val, \
++							   int mo, int fail_mo)                    \
++	{                                                                                          \
++		check_access(ptr, bits / BITS_PER_BYTE, KCSAN_ACCESS_WRITE | KCSAN_ACCESS_ATOMIC); \
++		__atomic_compare_exchange_n(ptr, &exp, val, 0, mo, fail_mo);                       \
++		return exp;                                                                        \
++	}                                                                                          \
++	EXPORT_SYMBOL(__tsan_atomic##bits##_compare_exchange_val)
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#171: FILE: kernel/kcsan/core.c:930:
++	u##bits __tsan_atomic##bits##_compare_exchange_val(u##bits *ptr, u##bits exp, u##bits val, \
+ 	                                                           ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#173: FILE: kernel/kcsan/core.c:932:
++	u##bits __tsan_atomic##bits##_compare_exchange_val(u##bits *ptr, u##bits exp, u##bits val, \
+ 	                                                           ^
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#182: FILE: kernel/kcsan/core.c:941:
++#define DEFINE_TSAN_ATOMIC_OPS(bits)                                                               \
++	DEFINE_TSAN_ATOMIC_LOAD_STORE(bits);                                                       \
++	DEFINE_TSAN_ATOMIC_RMW(exchange, bits, _n);                                                \
++	DEFINE_TSAN_ATOMIC_RMW(fetch_add, bits, );                                                 \
++	DEFINE_TSAN_ATOMIC_RMW(fetch_sub, bits, );                                                 \
++	DEFINE_TSAN_ATOMIC_RMW(fetch_and, bits, );                                                 \
++	DEFINE_TSAN_ATOMIC_RMW(fetch_or, bits, );                                                  \
++	DEFINE_TSAN_ATOMIC_RMW(fetch_xor, bits, );                                                 \
++	DEFINE_TSAN_ATOMIC_RMW(fetch_nand, bits, );                                                \
++	DEFINE_TSAN_ATOMIC_CMPXCHG(bits, strong, 0);                                               \
++	DEFINE_TSAN_ATOMIC_CMPXCHG(bits, weak, 1);                                                 \
++	DEFINE_TSAN_ATOMIC_CMPXCHG_VAL(bits)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'bits' - possible side-effects?
+#182: FILE: kernel/kcsan/core.c:941:
++#define DEFINE_TSAN_ATOMIC_OPS(bits)                                                               \
++	DEFINE_TSAN_ATOMIC_LOAD_STORE(bits);                                                       \
++	DEFINE_TSAN_ATOMIC_RMW(exchange, bits, _n);                                                \
++	DEFINE_TSAN_ATOMIC_RMW(fetch_add, bits, );                                                 \
++	DEFINE_TSAN_ATOMIC_RMW(fetch_sub, bits, );                                                 \
++	DEFINE_TSAN_ATOMIC_RMW(fetch_and, bits, );                                                 \
++	DEFINE_TSAN_ATOMIC_RMW(fetch_or, bits, );                                                  \
++	DEFINE_TSAN_ATOMIC_RMW(fetch_xor, bits, );                                                 \
++	DEFINE_TSAN_ATOMIC_RMW(fetch_nand, bits, );                                                \
++	DEFINE_TSAN_ATOMIC_CMPXCHG(bits, strong, 0);                                               \
++	DEFINE_TSAN_ATOMIC_CMPXCHG(bits, weak, 1);                                                 \
++	DEFINE_TSAN_ATOMIC_CMPXCHG_VAL(bits)
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#185: FILE: kernel/kcsan/core.c:944:
++	DEFINE_TSAN_ATOMIC_RMW(fetch_add, bits, );                                                 \
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#186: FILE: kernel/kcsan/core.c:945:
++	DEFINE_TSAN_ATOMIC_RMW(fetch_sub, bits, );                                                 \
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#187: FILE: kernel/kcsan/core.c:946:
++	DEFINE_TSAN_ATOMIC_RMW(fetch_and, bits, );                                                 \
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#188: FILE: kernel/kcsan/core.c:947:
++	DEFINE_TSAN_ATOMIC_RMW(fetch_or, bits, );                                                  \
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#189: FILE: kernel/kcsan/core.c:948:
++	DEFINE_TSAN_ATOMIC_RMW(fetch_xor, bits, );                                                 \
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#190: FILE: kernel/kcsan/core.c:949:
++	DEFINE_TSAN_ATOMIC_RMW(fetch_nand, bits, );                                                \
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#200: FILE: kernel/kcsan/core.c:959:
++void __tsan_atomic_thread_fence(int memorder);
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#207: FILE: kernel/kcsan/core.c:966:
++void __tsan_atomic_signal_fence(int memorder);
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000081659.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 9 errors, 6 warnings, 18 checks, 113 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000081659.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

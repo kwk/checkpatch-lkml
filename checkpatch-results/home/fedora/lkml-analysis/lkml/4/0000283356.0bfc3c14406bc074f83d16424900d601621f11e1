@@ -1,0 +1,1257 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:DT_SPLIT_BINDING_PATCH: DT binding docs and includes should be a separate patch. See: Documentation/devicetree/bindings/submitting-patches.rst
+
+Devicetree bindings should be their own patch.  This is because
+bindings are logically independent from a driver implementation,
+they have a different maintainer (even though they often
+are applied via the same tree), and it makes for a cleaner history in the
+DT only tree created with git-filter-branch.
+
+See: https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.html#i-for-patch-submitters
+
+WARNING:DT_SPLIT_BINDING_PATCH: DT binding docs and includes should be a separate patch. See: Documentation/devicetree/bindings/submitting-patches.rst
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "outfile"
+#695: FILE: arch/arm/vdso/vdsomunge.c:101:
++	if (failed && outfile != NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:CAMELCASE: Avoid CamelCase: <Rd>
+#844: FILE: arch/arm64/net/bpf_jit.h:114:
++#define A64_UXTH(sf, Rd, Rn) A64_UBFM(sf, Rd, Rn, 0, 15)
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:CAMELCASE: Avoid CamelCase: <Rn>
+#844: FILE: arch/arm64/net/bpf_jit.h:114:
++#define A64_UXTH(sf, Rd, Rn) A64_UBFM(sf, Rd, Rn, 0, 15)
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#931: FILE: arch/m68k/Kconfig.cpu:128:
++choice
++	prompt "ColdFire SoC type"
++	default M520x
++	help
++	  Select the type of ColdFire System-on-Chip (SoC) that you want
++	  to build for.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1152: FILE: crypto/asymmetric_keys/asymmetric_keys.h:14:
++extern int __asymmetric_key_hex_to_key_id(const char *id,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*match_id)...) over kmalloc(sizeof(struct asymmetric_key_id)...)
+#1195: FILE: crypto/asymmetric_keys/asymmetric_type.c:132:
++	match_id = kmalloc(sizeof(struct asymmetric_key_id) + asciihexlen / 2,
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:CAMELCASE: Avoid CamelCase: <Xfacs>
+#1297: FILE: drivers/acpi/acpica/tbfadt.c:359:
++		if (acpi_gbl_FADT.Xfacs) {
+
+WARNING:BRACES: braces {} are not necessary for any arm of this statement
+#1353: FILE: drivers/acpi/acpica/tbutils.c:90:
++	if (acpi_gbl_use32_bit_facs_addresses) {
+[...]
++	} else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1368: FILE: drivers/acpi/acpica/tbutils.c:116:
++	if (acpi_gbl_root_table_list.current_table_count >= 4) {
+ 		return (TRUE);
+ 	}
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 24)
+#1839: FILE: drivers/ata/libata-transport.c:574:
++	else if (ata_dev->horkage & ATA_HORKAGE_NO_NCQ_TRIM)
++			mode = "forced_unqueued";
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'show_ata_dev_trim' to 'trim_show'
+#1847: FILE: drivers/ata/libata-transport.c:582:
++}
+
+The function names used in DEVICE_ATTR is unusual.
+Typically, the store and show functions are used with <attr>_store and
+<attr>_show, where <attr> is a named attribute variable of the device.
+
+Consider the following examples::
+
+  static DEVICE_ATTR(type, 0444, type_show, NULL);
+  static DEVICE_ATTR(power, 0644, power_show, power_store);
+
+The function names should preferably follow the above pattern.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#1849: FILE: drivers/ata/libata-transport.c:584:
++static DEVICE_ATTR(trim, S_IRUGO, show_ata_dev_trim, NULL);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1929: FILE: drivers/block/loop.c:728:
++	lo->wq = alloc_workqueue("kloopd%d",
++			WQ_MEM_RECLAIM | WQ_HIGHPRI | WQ_UNBOUND, 16,
+
+CHECK:CAMELCASE: Avoid CamelCase: <Lo_bound>
+#1953: FILE: drivers/block/loop.c:1438:
++	if (lo->lo_state != Lo_bound)
+
+WARNING:TYPO_SPELLING: 'paramter' may be misspelled - perhaps 'parameter'?
+#2102: FILE: drivers/bluetooth/btusb.c:2553:
++		/* The paramter length of the secure send command requires
+ 		       ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:TYPO_SPELLING: 'fragement' may be misspelled - perhaps 'fragment'?
+#2108: FILE: drivers/bluetooth/btusb.c:2559:
++		 * firmware data buffer as a single Data fragement.
+ 		                                         ^^^^^^^^^
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments should align the * on each line
+#2183: FILE: drivers/char/tpm/tpm_crb.c:238:
++	 * zero address for the control area and therefore we must fail.
++	*/
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2275: FILE: drivers/clk/qcom/clk-rcg2.c:542:
++		if ((parent_rate < (request - delta)) ||
++			(parent_rate > (request + delta)))
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#2309: FILE: drivers/clocksource/exynos_mct.c:469:
+ 	if (mct_int_type == MCT_INT_SPI) {
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2363: FILE: drivers/clocksource/exynos_mct.c:564:
++				pr_err("exynos-mct: cannot register IRQ (cpu%d)\n",
++									cpu);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#2608: FILE: drivers/gpu/drm/drm_dp_mst_topology.c:872:
++		/* we can't destroy the connector here, as
++		   we might be holding the mode_config.mutex
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#2609: FILE: drivers/gpu/drm/drm_dp_mst_topology.c:873:
++		   from an EDID retrieval */
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#2670: FILE: drivers/gpu/drm/drm_dp_mst_topology.c:1235:
++	if (mstb) {
++		kref_get(&mstb->kref);
++	}
+
+WARNING:LONG_LINE: line length of 121 exceeds 100 columns
+#2687: FILE: drivers/gpu/drm/drm_dp_mst_topology.c:2662:
++	struct drm_dp_mst_topology_mgr *mgr = container_of(work, struct drm_dp_mst_topology_mgr, destroy_connector_work);
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:TYPO_SPELLING: 'BA' may be misspelled - perhaps 'BY'?
+#2692: FILE: drivers/gpu/drm/drm_dp_mst_topology.c:2667:
++	 * connector lock before destroying the connector, to avoid AB->BA
+ 	                                                                ^^
+
+WARNING:LONG_LINE: line length of 119 exceeds 100 columns
+#2697: FILE: drivers/gpu/drm/drm_dp_mst_topology.c:2672:
++		connector = list_first_entry_or_null(&mgr->destroy_connector_list, struct drm_connector, destroy_list);
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#2751: FILE: drivers/gpu/drm/drm_ioc32.c:1021:
++typedef struct drm_mode_fb_cmd232 {
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __packed over __attribute__((packed))
+#2761: FILE: drivers/gpu/drm/drm_ioc32.c:1031:
++} __attribute__((packed)) drm_mode_fb_cmd232_t;
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2778: FILE: drivers/gpu/drm/drm_ioc32.c:1048:
++	if (!access_ok(VERIFY_WRITE, req64, sizeof(*req64))
++	    || __put_user(req32.width, &req64->width)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2779: FILE: drivers/gpu/drm/drm_ioc32.c:1049:
++	    || __put_user(req32.width, &req64->width)
++	    || __put_user(req32.height, &req64->height)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2780: FILE: drivers/gpu/drm/drm_ioc32.c:1050:
++	    || __put_user(req32.height, &req64->height)
++	    || __put_user(req32.pixel_format, &req64->pixel_format)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2781: FILE: drivers/gpu/drm/drm_ioc32.c:1051:
++	    || __put_user(req32.pixel_format, &req64->pixel_format)
++	    || __put_user(req32.flags, &req64->flags))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#2911: FILE: drivers/gpu/drm/i915/i915_reg.h:3212:
++#define  BLM_HISTOGRAM_ENABLE			(1 << 31)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#3003: FILE: drivers/gpu/drm/i915/intel_uncore.c:1223:
++	unsigned size;
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#3030: FILE: drivers/gpu/drm/i915/intel_uncore.c:1248:
++		reg->val = I915_READ64_2x32(offset, offset+4);
+ 		                                          ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#3139: FILE: drivers/gpu/drm/radeon/cik.c:4625:
++		cik_compute_stop(rdev,&rdev->ring[CAYMAN_RING_TYPE_CP1_INDEX]);
+ 		                     ^
+
+ERROR:SPACING: space required before that '&' (ctx:OxV)
+#3139: FILE: drivers/gpu/drm/radeon/cik.c:4625:
++		cik_compute_stop(rdev,&rdev->ring[CAYMAN_RING_TYPE_CP1_INDEX]);
+ 		                      ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#3140: FILE: drivers/gpu/drm/radeon/cik.c:4626:
++		cik_compute_stop(rdev,&rdev->ring[CAYMAN_RING_TYPE_CP2_INDEX]);
+ 		                     ^
+
+ERROR:SPACING: space required before that '&' (ctx:OxV)
+#3140: FILE: drivers/gpu/drm/radeon/cik.c:4626:
++		cik_compute_stop(rdev,&rdev->ring[CAYMAN_RING_TYPE_CP2_INDEX]);
+ 		                      ^
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#3202: FILE: drivers/gpu/drm/radeon/cik.c:7972:
++				if (!(rdev->irq.stat_regs.cik.disp_int_cont & LB_D2_VBLANK_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#3221: FILE: drivers/gpu/drm/radeon/cik.c:7987:
++				if (!(rdev->irq.stat_regs.cik.disp_int_cont & LB_D2_VLINE_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#3244: FILE: drivers/gpu/drm/radeon/cik.c:8002:
++				if (!(rdev->irq.stat_regs.cik.disp_int_cont2 & LB_D3_VBLANK_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#3263: FILE: drivers/gpu/drm/radeon/cik.c:8017:
++				if (!(rdev->irq.stat_regs.cik.disp_int_cont2 & LB_D3_VLINE_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#3286: FILE: drivers/gpu/drm/radeon/cik.c:8032:
++				if (!(rdev->irq.stat_regs.cik.disp_int_cont3 & LB_D4_VBLANK_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#3305: FILE: drivers/gpu/drm/radeon/cik.c:8047:
++				if (!(rdev->irq.stat_regs.cik.disp_int_cont3 & LB_D4_VLINE_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#3328: FILE: drivers/gpu/drm/radeon/cik.c:8062:
++				if (!(rdev->irq.stat_regs.cik.disp_int_cont4 & LB_D5_VBLANK_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#3347: FILE: drivers/gpu/drm/radeon/cik.c:8077:
++				if (!(rdev->irq.stat_regs.cik.disp_int_cont4 & LB_D5_VLINE_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#3370: FILE: drivers/gpu/drm/radeon/cik.c:8092:
++				if (!(rdev->irq.stat_regs.cik.disp_int_cont5 & LB_D6_VBLANK_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#3389: FILE: drivers/gpu/drm/radeon/cik.c:8107:
++				if (!(rdev->irq.stat_regs.cik.disp_int_cont5 & LB_D6_VLINE_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#3519: FILE: drivers/gpu/drm/radeon/cik.c:8204:
++				if (!(rdev->irq.stat_regs.cik.disp_int_cont2 & DC_HPD3_RX_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#3533: FILE: drivers/gpu/drm/radeon/cik.c:8213:
++				if (!(rdev->irq.stat_regs.cik.disp_int_cont3 & DC_HPD4_RX_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#3547: FILE: drivers/gpu/drm/radeon/cik.c:8222:
++				if (!(rdev->irq.stat_regs.cik.disp_int_cont4 & DC_HPD5_RX_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#3561: FILE: drivers/gpu/drm/radeon/cik.c:8231:
++				if (!(rdev->irq.stat_regs.cik.disp_int_cont5 & DC_HPD6_RX_INTERRUPT))
+
+CHECK:USLEEP_RANGE: usleep_range is preferred over udelay; see Documentation/timers/timers-howto.rst
+#3587: FILE: drivers/gpu/drm/radeon/cik_sdma.c:279:
++	udelay(50);
+
+usleep_range() should be preferred over udelay(). The proper way of
+using usleep_range() is mentioned in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/timers/timers-howto.html#delays-information-on-the-various-kernel-delay-sleep-mechanisms
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#3620: FILE: drivers/gpu/drm/radeon/evergreen.c:4876:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int & LB_D1_VBLANK_INTERRUPT))
+
+WARNING:LONG_LINE_STRING: line length of 102 exceeds 100 columns
+#3621: FILE: drivers/gpu/drm/radeon/evergreen.c:4877:
++					DRM_DEBUG("IH: D1 vblank - IH event w/o asserted irq bit?\n");
+
+A string starts before but extends beyond the maximum line length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#3639: FILE: drivers/gpu/drm/radeon/evergreen.c:4891:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int & LB_D1_VLINE_INTERRUPT))
+
+WARNING:LONG_LINE_STRING: line length of 101 exceeds 100 columns
+#3640: FILE: drivers/gpu/drm/radeon/evergreen.c:4892:
++					DRM_DEBUG("IH: D1 vline - IH event w/o asserted irq bit?\n");
+
+WARNING:LONG_LINE: line length of 108 exceeds 100 columns
+#3662: FILE: drivers/gpu/drm/radeon/evergreen.c:4906:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont & LB_D2_VBLANK_INTERRUPT))
+
+WARNING:LONG_LINE_STRING: line length of 102 exceeds 100 columns
+#3663: FILE: drivers/gpu/drm/radeon/evergreen.c:4907:
++					DRM_DEBUG("IH: D2 vblank - IH event w/o asserted irq bit?\n");
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#3672: FILE: drivers/gpu/drm/radeon/evergreen.c:4916:
++				rdev->irq.stat_regs.evergreen.disp_int_cont &= ~LB_D2_VBLANK_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#3681: FILE: drivers/gpu/drm/radeon/evergreen.c:4921:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont & LB_D2_VLINE_INTERRUPT))
+
+WARNING:LONG_LINE_STRING: line length of 101 exceeds 100 columns
+#3682: FILE: drivers/gpu/drm/radeon/evergreen.c:4922:
++					DRM_DEBUG("IH: D2 vline - IH event w/o asserted irq bit?\n");
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#3684: FILE: drivers/gpu/drm/radeon/evergreen.c:4924:
++				rdev->irq.stat_regs.evergreen.disp_int_cont &= ~LB_D2_VLINE_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#3704: FILE: drivers/gpu/drm/radeon/evergreen.c:4936:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont2 & LB_D3_VBLANK_INTERRUPT))
+
+WARNING:LONG_LINE_STRING: line length of 102 exceeds 100 columns
+#3705: FILE: drivers/gpu/drm/radeon/evergreen.c:4937:
++					DRM_DEBUG("IH: D3 vblank - IH event w/o asserted irq bit?\n");
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#3714: FILE: drivers/gpu/drm/radeon/evergreen.c:4946:
++				rdev->irq.stat_regs.evergreen.disp_int_cont2 &= ~LB_D3_VBLANK_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 108 exceeds 100 columns
+#3723: FILE: drivers/gpu/drm/radeon/evergreen.c:4951:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont2 & LB_D3_VLINE_INTERRUPT))
+
+WARNING:LONG_LINE_STRING: line length of 101 exceeds 100 columns
+#3724: FILE: drivers/gpu/drm/radeon/evergreen.c:4952:
++					DRM_DEBUG("IH: D3 vline - IH event w/o asserted irq bit?\n");
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#3726: FILE: drivers/gpu/drm/radeon/evergreen.c:4954:
++				rdev->irq.stat_regs.evergreen.disp_int_cont2 &= ~LB_D3_VLINE_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#3746: FILE: drivers/gpu/drm/radeon/evergreen.c:4966:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont3 & LB_D4_VBLANK_INTERRUPT))
+
+WARNING:LONG_LINE_STRING: line length of 102 exceeds 100 columns
+#3747: FILE: drivers/gpu/drm/radeon/evergreen.c:4967:
++					DRM_DEBUG("IH: D4 vblank - IH event w/o asserted irq bit?\n");
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#3756: FILE: drivers/gpu/drm/radeon/evergreen.c:4976:
++				rdev->irq.stat_regs.evergreen.disp_int_cont3 &= ~LB_D4_VBLANK_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 108 exceeds 100 columns
+#3765: FILE: drivers/gpu/drm/radeon/evergreen.c:4981:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont3 & LB_D4_VLINE_INTERRUPT))
+
+WARNING:LONG_LINE_STRING: line length of 101 exceeds 100 columns
+#3766: FILE: drivers/gpu/drm/radeon/evergreen.c:4982:
++					DRM_DEBUG("IH: D4 vline - IH event w/o asserted irq bit?\n");
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#3768: FILE: drivers/gpu/drm/radeon/evergreen.c:4984:
++				rdev->irq.stat_regs.evergreen.disp_int_cont3 &= ~LB_D4_VLINE_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#3788: FILE: drivers/gpu/drm/radeon/evergreen.c:4996:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont4 & LB_D5_VBLANK_INTERRUPT))
+
+WARNING:LONG_LINE_STRING: line length of 102 exceeds 100 columns
+#3789: FILE: drivers/gpu/drm/radeon/evergreen.c:4997:
++					DRM_DEBUG("IH: D5 vblank - IH event w/o asserted irq bit?\n");
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#3798: FILE: drivers/gpu/drm/radeon/evergreen.c:5006:
++				rdev->irq.stat_regs.evergreen.disp_int_cont4 &= ~LB_D5_VBLANK_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 108 exceeds 100 columns
+#3807: FILE: drivers/gpu/drm/radeon/evergreen.c:5011:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont4 & LB_D5_VLINE_INTERRUPT))
+
+WARNING:LONG_LINE_STRING: line length of 101 exceeds 100 columns
+#3808: FILE: drivers/gpu/drm/radeon/evergreen.c:5012:
++					DRM_DEBUG("IH: D5 vline - IH event w/o asserted irq bit?\n");
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#3810: FILE: drivers/gpu/drm/radeon/evergreen.c:5014:
++				rdev->irq.stat_regs.evergreen.disp_int_cont4 &= ~LB_D5_VLINE_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#3830: FILE: drivers/gpu/drm/radeon/evergreen.c:5026:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont5 & LB_D6_VBLANK_INTERRUPT))
+
+WARNING:LONG_LINE_STRING: line length of 102 exceeds 100 columns
+#3831: FILE: drivers/gpu/drm/radeon/evergreen.c:5027:
++					DRM_DEBUG("IH: D6 vblank - IH event w/o asserted irq bit?\n");
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#3840: FILE: drivers/gpu/drm/radeon/evergreen.c:5036:
++				rdev->irq.stat_regs.evergreen.disp_int_cont5 &= ~LB_D6_VBLANK_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 108 exceeds 100 columns
+#3849: FILE: drivers/gpu/drm/radeon/evergreen.c:5041:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont5 & LB_D6_VLINE_INTERRUPT))
+
+WARNING:LONG_LINE_STRING: line length of 101 exceeds 100 columns
+#3850: FILE: drivers/gpu/drm/radeon/evergreen.c:5042:
++					DRM_DEBUG("IH: D6 vline - IH event w/o asserted irq bit?\n");
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#3852: FILE: drivers/gpu/drm/radeon/evergreen.c:5044:
++				rdev->irq.stat_regs.evergreen.disp_int_cont5 &= ~LB_D6_VLINE_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#3880: FILE: drivers/gpu/drm/radeon/evergreen.c:5074:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont & DC_HPD2_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#3893: FILE: drivers/gpu/drm/radeon/evergreen.c:5082:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont2 & DC_HPD3_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#3906: FILE: drivers/gpu/drm/radeon/evergreen.c:5090:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont3 & DC_HPD4_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#3919: FILE: drivers/gpu/drm/radeon/evergreen.c:5098:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont4 & DC_HPD5_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#3932: FILE: drivers/gpu/drm/radeon/evergreen.c:5106:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont5 & DC_HPD6_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#3945: FILE: drivers/gpu/drm/radeon/evergreen.c:5114:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int & DC_HPD1_RX_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 106 exceeds 100 columns
+#3958: FILE: drivers/gpu/drm/radeon/evergreen.c:5122:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont & DC_HPD2_RX_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#3961: FILE: drivers/gpu/drm/radeon/evergreen.c:5125:
++				rdev->irq.stat_regs.evergreen.disp_int_cont &= ~DC_HPD2_RX_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#3971: FILE: drivers/gpu/drm/radeon/evergreen.c:5130:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont2 & DC_HPD3_RX_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#3974: FILE: drivers/gpu/drm/radeon/evergreen.c:5133:
++				rdev->irq.stat_regs.evergreen.disp_int_cont2 &= ~DC_HPD3_RX_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#3984: FILE: drivers/gpu/drm/radeon/evergreen.c:5138:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont3 & DC_HPD4_RX_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#3987: FILE: drivers/gpu/drm/radeon/evergreen.c:5141:
++				rdev->irq.stat_regs.evergreen.disp_int_cont3 &= ~DC_HPD4_RX_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#3997: FILE: drivers/gpu/drm/radeon/evergreen.c:5146:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont4 & DC_HPD5_RX_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#4000: FILE: drivers/gpu/drm/radeon/evergreen.c:5149:
++				rdev->irq.stat_regs.evergreen.disp_int_cont4 &= ~DC_HPD5_RX_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#4010: FILE: drivers/gpu/drm/radeon/evergreen.c:5154:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont5 & DC_HPD6_RX_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#4013: FILE: drivers/gpu/drm/radeon/evergreen.c:5157:
++				rdev->irq.stat_regs.evergreen.disp_int_cont5 &= ~DC_HPD6_RX_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#4028: FILE: drivers/gpu/drm/radeon/evergreen.c:5169:
++				if (!(rdev->irq.stat_regs.evergreen.afmt_status1 & AFMT_AZ_FORMAT_WTRIG))
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#4041: FILE: drivers/gpu/drm/radeon/evergreen.c:5177:
++				if (!(rdev->irq.stat_regs.evergreen.afmt_status2 & AFMT_AZ_FORMAT_WTRIG))
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#4054: FILE: drivers/gpu/drm/radeon/evergreen.c:5185:
++				if (!(rdev->irq.stat_regs.evergreen.afmt_status3 & AFMT_AZ_FORMAT_WTRIG))
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#4067: FILE: drivers/gpu/drm/radeon/evergreen.c:5193:
++				if (!(rdev->irq.stat_regs.evergreen.afmt_status4 & AFMT_AZ_FORMAT_WTRIG))
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#4080: FILE: drivers/gpu/drm/radeon/evergreen.c:5201:
++				if (!(rdev->irq.stat_regs.evergreen.afmt_status5 & AFMT_AZ_FORMAT_WTRIG))
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#4093: FILE: drivers/gpu/drm/radeon/evergreen.c:5209:
++				if (!(rdev->irq.stat_regs.evergreen.afmt_status6 & AFMT_AZ_FORMAT_WTRIG))
+
+WARNING:LONG_LINE_STRING: line length of 102 exceeds 100 columns
+#4121: FILE: drivers/gpu/drm/radeon/r600.c:4043:
++					DRM_DEBUG("IH: D1 vblank - IH event w/o asserted irq bit?\n");
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (32, 36)
+#4139: FILE: drivers/gpu/drm/radeon/r600.c:4057:
++				if (!(rdev->irq.stat_regs.r600.disp_int & LB_D1_VLINE_INTERRUPT))
++				    DRM_DEBUG("IH: D1 vline - IH event w/o asserted irq bit?\n");
+
+WARNING:LONG_LINE_STRING: line length of 102 exceeds 100 columns
+#4163: FILE: drivers/gpu/drm/radeon/r600.c:4073:
++					DRM_DEBUG("IH: D2 vblank - IH event w/o asserted irq bit?\n");
+
+WARNING:LONG_LINE_STRING: line length of 101 exceeds 100 columns
+#4182: FILE: drivers/gpu/drm/radeon/r600.c:4088:
++					DRM_DEBUG("IH: D2 vline - IH event w/o asserted irq bit?\n");
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#4283: FILE: drivers/gpu/drm/radeon/r600.c:4168:
++				if (!(rdev->irq.stat_regs.r600.hdmi0_status & HDMI0_AZ_FORMAT_WTRIG))
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#4297: FILE: drivers/gpu/drm/radeon/r600.c:4177:
++				if (!(rdev->irq.stat_regs.r600.hdmi1_status & HDMI0_AZ_FORMAT_WTRIG))
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4580: FILE: drivers/gpu/drm/radeon/radeon_device.c:1583:
++			struct radeon_bo *robj = gem_to_radeon_bo(radeon_crtc->cursor_bo);
++			r = radeon_bo_reserve(robj, false);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4608: FILE: drivers/gpu/drm/radeon/radeon_device.c:1698:
++			struct radeon_bo *robj = gem_to_radeon_bo(radeon_crtc->cursor_bo);
++			r = radeon_bo_reserve(robj, false);
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#4649: FILE: drivers/gpu/drm/radeon/radeon_gart.c:264:
++		mb();
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#4662: FILE: drivers/gpu/drm/radeon/radeon_gart.c:312:
++		mb();
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#4747: FILE: drivers/gpu/drm/radeon/si.c:6469:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int & LB_D1_VBLANK_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#4766: FILE: drivers/gpu/drm/radeon/si.c:6484:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int & LB_D1_VLINE_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 108 exceeds 100 columns
+#4789: FILE: drivers/gpu/drm/radeon/si.c:6499:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont & LB_D2_VBLANK_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#4799: FILE: drivers/gpu/drm/radeon/si.c:6509:
++				rdev->irq.stat_regs.evergreen.disp_int_cont &= ~LB_D2_VBLANK_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#4808: FILE: drivers/gpu/drm/radeon/si.c:6514:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont & LB_D2_VLINE_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#4811: FILE: drivers/gpu/drm/radeon/si.c:6517:
++				rdev->irq.stat_regs.evergreen.disp_int_cont &= ~LB_D2_VLINE_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#4831: FILE: drivers/gpu/drm/radeon/si.c:6529:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont2 & LB_D3_VBLANK_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#4841: FILE: drivers/gpu/drm/radeon/si.c:6539:
++				rdev->irq.stat_regs.evergreen.disp_int_cont2 &= ~LB_D3_VBLANK_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 108 exceeds 100 columns
+#4850: FILE: drivers/gpu/drm/radeon/si.c:6544:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont2 & LB_D3_VLINE_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#4853: FILE: drivers/gpu/drm/radeon/si.c:6547:
++				rdev->irq.stat_regs.evergreen.disp_int_cont2 &= ~LB_D3_VLINE_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#4873: FILE: drivers/gpu/drm/radeon/si.c:6559:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont3 & LB_D4_VBLANK_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#4883: FILE: drivers/gpu/drm/radeon/si.c:6569:
++				rdev->irq.stat_regs.evergreen.disp_int_cont3 &= ~LB_D4_VBLANK_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 108 exceeds 100 columns
+#4892: FILE: drivers/gpu/drm/radeon/si.c:6574:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont3 & LB_D4_VLINE_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#4895: FILE: drivers/gpu/drm/radeon/si.c:6577:
++				rdev->irq.stat_regs.evergreen.disp_int_cont3 &= ~LB_D4_VLINE_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#4915: FILE: drivers/gpu/drm/radeon/si.c:6589:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont4 & LB_D5_VBLANK_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#4925: FILE: drivers/gpu/drm/radeon/si.c:6599:
++				rdev->irq.stat_regs.evergreen.disp_int_cont4 &= ~LB_D5_VBLANK_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 108 exceeds 100 columns
+#4934: FILE: drivers/gpu/drm/radeon/si.c:6604:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont4 & LB_D5_VLINE_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#4937: FILE: drivers/gpu/drm/radeon/si.c:6607:
++				rdev->irq.stat_regs.evergreen.disp_int_cont4 &= ~LB_D5_VLINE_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 109 exceeds 100 columns
+#4957: FILE: drivers/gpu/drm/radeon/si.c:6619:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont5 & LB_D6_VBLANK_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#4967: FILE: drivers/gpu/drm/radeon/si.c:6629:
++				rdev->irq.stat_regs.evergreen.disp_int_cont5 &= ~LB_D6_VBLANK_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 108 exceeds 100 columns
+#4976: FILE: drivers/gpu/drm/radeon/si.c:6634:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont5 & LB_D6_VLINE_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#4979: FILE: drivers/gpu/drm/radeon/si.c:6637:
++				rdev->irq.stat_regs.evergreen.disp_int_cont5 &= ~LB_D6_VLINE_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#5008: FILE: drivers/gpu/drm/radeon/si.c:6668:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont & DC_HPD2_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#5022: FILE: drivers/gpu/drm/radeon/si.c:6677:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont2 & DC_HPD3_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#5036: FILE: drivers/gpu/drm/radeon/si.c:6686:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont3 & DC_HPD4_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#5050: FILE: drivers/gpu/drm/radeon/si.c:6695:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont4 & DC_HPD5_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#5064: FILE: drivers/gpu/drm/radeon/si.c:6704:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont5 & DC_HPD6_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#5078: FILE: drivers/gpu/drm/radeon/si.c:6713:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int & DC_HPD1_RX_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 106 exceeds 100 columns
+#5092: FILE: drivers/gpu/drm/radeon/si.c:6722:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont & DC_HPD2_RX_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#5095: FILE: drivers/gpu/drm/radeon/si.c:6725:
++				rdev->irq.stat_regs.evergreen.disp_int_cont &= ~DC_HPD2_RX_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#5106: FILE: drivers/gpu/drm/radeon/si.c:6731:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont2 & DC_HPD3_RX_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#5109: FILE: drivers/gpu/drm/radeon/si.c:6734:
++				rdev->irq.stat_regs.evergreen.disp_int_cont2 &= ~DC_HPD3_RX_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#5120: FILE: drivers/gpu/drm/radeon/si.c:6740:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont3 & DC_HPD4_RX_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#5123: FILE: drivers/gpu/drm/radeon/si.c:6743:
++				rdev->irq.stat_regs.evergreen.disp_int_cont3 &= ~DC_HPD4_RX_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#5134: FILE: drivers/gpu/drm/radeon/si.c:6749:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont4 & DC_HPD5_RX_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#5137: FILE: drivers/gpu/drm/radeon/si.c:6752:
++				rdev->irq.stat_regs.evergreen.disp_int_cont4 &= ~DC_HPD5_RX_INTERRUPT;
+
+WARNING:LONG_LINE: line length of 107 exceeds 100 columns
+#5148: FILE: drivers/gpu/drm/radeon/si.c:6758:
++				if (!(rdev->irq.stat_regs.evergreen.disp_int_cont5 & DC_HPD6_RX_INTERRUPT))
+
+WARNING:LONG_LINE: line length of 102 exceeds 100 columns
+#5151: FILE: drivers/gpu/drm/radeon/si.c:6761:
++				rdev->irq.stat_regs.evergreen.disp_int_cont5 &= ~DC_HPD6_RX_INTERRUPT;
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#5245: FILE: drivers/gpu/drm/rockchip/rockchip_drm_gem.c:95:
++int rockchip_gem_mmap(struct file *filp, struct vm_area_struct *vma)
+                                    ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#5252: FILE: drivers/gpu/drm/rockchip/rockchip_drm_gem.c:100:
++	ret = drm_gem_mmap(filp, vma);
+ 	                   ^^^^
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#5709: FILE: drivers/iio/common/hid-sensors/hid-sensor-trigger.c:101:
+ {
++
+
+WARNING:STRLCPY: Prefer strscpy over strlcpy - see: https://lore.kernel.org/r/CAHk-=wgfRnXz0W3D37d01q3JFkr_i_uTL=V6A6G1oUZcprmknw@mail.gmail.com/
+#5882: FILE: drivers/md/bitmap.c:622:
++		strlcpy(bitmap->mddev->bitmap_info.cluster_name,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5883: FILE: drivers/md/bitmap.c:623:
++		strlcpy(bitmap->mddev->bitmap_info.cluster_name,
++				sb->cluster_name, 64);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#6119: FILE: drivers/md/dm-cache-target.c:1460:
++	BUG();
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#6468: FILE: drivers/media/dvb-frontends/cx24116.c:968:
++                return -EINVAL;$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#6468: FILE: drivers/media/dvb-frontends/cx24116.c:968:
++                return -EINVAL;$
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6652: FILE: drivers/media/usb/dvb-usb/dib0700_core.c:740:
++			keycode = RC_SCANCODE_NEC(poll_reply->nec.system,
++						   poll_reply->nec.data);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'max_frame > adapter->max_hw_frame_size'
+#6936: FILE: drivers/net/ethernet/intel/e1000e/netdev.c:5794:
++	if ((new_mtu < (VLAN_ETH_ZLEN + ETH_FCS_LEN)) ||
+ 	    (max_frame > adapter->max_hw_frame_size)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7963: FILE: drivers/staging/comedi/drivers/cb_pcimdas.c:262:
++static int cb_pcimdas_do_insn_bits(struct comedi_device *dev,
+ 				    struct comedi_subdevice *s,
+
+CHECK:CAMELCASE: Avoid CamelCase: <pRD>
+#8007: FILE: drivers/staging/vt6655/device_main.c:811:
++		if (!pRD->pRDInfo->skb)
+
+CHECK:CAMELCASE: Avoid CamelCase: <pRDInfo>
+#8007: FILE: drivers/staging/vt6655/device_main.c:811:
++		if (!pRD->pRDInfo->skb)
+
+CHECK:CAMELCASE: Avoid CamelCase: <bcdUSB>
+#8158: FILE: drivers/usb/core/hcd.c:1026:
++	if (le16_to_cpu(usb_dev->descriptor.bcdUSB) >= 0x0201) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8248: FILE: drivers/usb/core/hub.c:2731:
++			if (hub_port_warm_reset_required(hub, port1,
++							portstatus))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8259: FILE: drivers/usb/core/hub.c:2759:
++			usb_clear_port_feature(hub->hdev, port1,
++					USB_PORT_FEAT_C_RESET);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8265: FILE: drivers/usb/core/hub.c:2765:
++			usb_clear_port_feature(hub->hdev, port1,
++					USB_PORT_FEAT_C_BH_PORT_RESET);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8267: FILE: drivers/usb/core/hub.c:2767:
++			usb_clear_port_feature(hub->hdev, port1,
++					USB_PORT_FEAT_C_PORT_LINK_STATE);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8269: FILE: drivers/usb/core/hub.c:2769:
++			usb_clear_port_feature(hub->hdev, port1,
++					USB_PORT_FEAT_C_CONNECTION);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#8309: FILE: drivers/usb/core/usb.h:68:
++extern int usb_device_supports_lpm(struct usb_device *udev);
+
+WARNING:PREFER_FALLTHROUGH: Prefer 'fallthrough;' over fallthrough comment
+#8324: FILE: drivers/usb/dwc3/ep0.c:733:
++		/* Fall through */
+
+Use the `fallthrough;` pseudo keyword instead of
+`/* fallthrough */` like comments.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8364: FILE: drivers/usb/dwc3/gadget.c:1918:
++	if (clean_busy && (is_xfer_complete ||
++				usb_endpoint_xfer_isoc(dep->endpoint.desc)))
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#8440: FILE: drivers/usb/gadget/function/f_mass_storage.c:3564:
++	unsigned nluns, i;
+
+WARNING:LONG_LINE_COMMENT: line length of 102 exceeds 100 columns
+#8577: FILE: drivers/usb/serial/option.c:1768:
++	{ USB_DEVICE_INTERFACE_CLASS(0x2020, 0x4000, 0xff) },                /* OLICARD300 - MT6225 */
+
+A comment starts before but extends beyond the maximum line length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#8602: FILE: drivers/w1/slaves/w1_therm.c:63:
++	uint8_t rom[9];
+
+ERROR:POINTER_LOCATION: "(foo*)" should be "(foo *)"
+#8608: FILE: drivers/w1/slaves/w1_therm.c:69:
++	(&((struct w1_therm_family_data*)family_data)->refcnt)
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*sl->family_data)...) over kzalloc(sizeof(struct w1_therm_family_data)...)
+#8613: FILE: drivers/w1/slaves/w1_therm.c:73:
++	sl->family_data = kzalloc(sizeof(struct w1_therm_family_data),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#8614: FILE: drivers/w1/slaves/w1_therm.c:74:
++	sl->family_data = kzalloc(sizeof(struct w1_therm_family_data),
++		GFP_KERNEL);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#8624: FILE: drivers/w1/slaves/w1_therm.c:84:
++	int refcnt = atomic_sub_return(1, THERM_REFCNT(sl->family_data));
++	while(refcnt) {
+
+ERROR:SPACING: space required before the open parenthesis '('
+#8624: FILE: drivers/w1/slaves/w1_therm.c:84:
++	while(refcnt) {
+
+ERROR:OPEN_BRACE: that open brace { should be on the previous line
+#8647: FILE: drivers/w1/slaves/w1_therm.c:221:
++	if(!sl->family_data)
++	{
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+ERROR:SPACING: space required before the open parenthesis '('
+#8647: FILE: drivers/w1/slaves/w1_therm.c:221:
++	if(!sl->family_data)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#9110: FILE: fs/ext4/mballoc.c:4808:
++		new_entry = kmem_cache_alloc(ext4_free_data_cachep,
++				GFP_NOFS|__GFP_NOFAIL);
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#9110: FILE: fs/ext4/mballoc.c:4808:
++				GFP_NOFS|__GFP_NOFAIL);
+ 				        ^
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#9146: FILE: fs/ext4/migrate.c:662:
++		blk = len = start = end = 0;
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#9344: FILE: fs/jbd2/journal.c:1397:
++int jbd2_journal_update_sb_log_tail(journal_t *journal, tid_t tail_tid,
+ 				     unsigned long tail_block, int write_op)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#9464: FILE: fs/nfs/nfs4state.c:1486:
++				clear_bit(NFS4CLNT_RECLAIM_NOGRACE,
++					&state->flags);
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#9736: FILE: include/drm/drm_atomic.h:82:
++^I     (connector_state) = (state)->connector_states[__i], 1); ^I\$
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#9757: FILE: include/drm/drm_atomic.h:94:
++#define for_each_plane_in_state(state, plane, plane_state, __i)		\
++	for ((__i) = 0;							\
++	     (__i) < (state)->dev->mode_config.num_total_plane &&	\
++	     ((plane) = (state)->planes[__i],				\
++	     (plane_state) = (state)->plane_states[__i], 1);		\
++	     (__i)++)							\
+ 		if (plane_state)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'state' - possible side-effects?
+#9757: FILE: include/drm/drm_atomic.h:94:
++#define for_each_plane_in_state(state, plane, plane_state, __i)		\
++	for ((__i) = 0;							\
++	     (__i) < (state)->dev->mode_config.num_total_plane &&	\
++	     ((plane) = (state)->planes[__i],				\
++	     (plane_state) = (state)->plane_states[__i], 1);		\
++	     (__i)++)							\
+ 		if (plane_state)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'plane_state' - possible side-effects?
+#9757: FILE: include/drm/drm_atomic.h:94:
++#define for_each_plane_in_state(state, plane, plane_state, __i)		\
++	for ((__i) = 0;							\
++	     (__i) < (state)->dev->mode_config.num_total_plane &&	\
++	     ((plane) = (state)->planes[__i],				\
++	     (plane_state) = (state)->plane_states[__i], 1);		\
++	     (__i)++)							\
+ 		if (plane_state)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__i' - possible side-effects?
+#9757: FILE: include/drm/drm_atomic.h:94:
++#define for_each_plane_in_state(state, plane, plane_state, __i)		\
++	for ((__i) = 0;							\
++	     (__i) < (state)->dev->mode_config.num_total_plane &&	\
++	     ((plane) = (state)->planes[__i],				\
++	     (plane_state) = (state)->plane_states[__i], 1);		\
++	     (__i)++)							\
+ 		if (plane_state)
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#9789: FILE: include/drm/drm_dp_mst_helper.h:468:
++	struct mutex destroy_connector_lock;
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#9842: FILE: include/linux/buffer_head.h:320:
+ 
++
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#9880: FILE: include/linux/gpio/consumer.h:412:
++static inline struct gpio_desc *fwnode_get_named_gpiod(
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#9883: FILE: include/linux/gpio/consumer.h:415:
++	return ERR_PTR(-ENOSYS);
+
+ENOSYS means that a nonexistent system call was called.
+Earlier, it was wrongly used for things like invalid operations on
+otherwise valid syscalls.  This should be avoided in new code.
+
+See: https://lore.kernel.org/lkml/5eb299021dec23c1a48fa7d9f2c8b794e967766d.1408730669.git.luto@amacapital.net/
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#9886: FILE: include/linux/gpio/consumer.h:418:
++static inline struct gpio_desc *devm_get_gpiod_from_child(
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#9889: FILE: include/linux/gpio/consumer.h:421:
++	return ERR_PTR(-ENOSYS);
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#9925: FILE: include/linux/jbd2.h:1160:
++extern int	   jbd2_journal_update_sb_log_tail	(journal_t *, tid_t,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#9925: FILE: include/linux/jbd2.h:1160:
++extern int	   jbd2_journal_update_sb_log_tail	(journal_t *, tid_t,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'journal_t *' should also have an identifier name
+#9925: FILE: include/linux/jbd2.h:1160:
++extern int	   jbd2_journal_update_sb_log_tail	(journal_t *, tid_t,
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'tid_t' should also have an identifier name
+#9925: FILE: include/linux/jbd2.h:1160:
++extern int	   jbd2_journal_update_sb_log_tail	(journal_t *, tid_t,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned long' should also have an identifier name
+#9925: FILE: include/linux/jbd2.h:1160:
++extern int	   jbd2_journal_update_sb_log_tail	(journal_t *, tid_t,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#9925: FILE: include/linux/jbd2.h:1160:
++extern int	   jbd2_journal_update_sb_log_tail	(journal_t *, tid_t,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#9926: FILE: include/linux/jbd2.h:1161:
++extern int	   jbd2_journal_update_sb_log_tail	(journal_t *, tid_t,
+ 				unsigned long, int);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#9980: FILE: include/uapi/drm/i915_drm.h:1068:
+ };
++/* Known registers:
+
+WARNING:TYPO_SPELLING: 'an user' may be misspelled - perhaps 'a user'?
+#10352: FILE: net/bluetooth/hci_sock.c:768:
++				 * This can happen when opening an user
+ 				                                ^^^^^^^
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#10515: FILE: security/integrity/evm/evm_main.c:302:
++		if (dentry->d_inode->i_sb->s_magic == TMPFS_MAGIC
++		    || dentry->d_inode->i_sb->s_magic == SYSFS_MAGIC)
+
+CHECK:UNDOCUMENTED_SETUP: __setup appears un-documented -- check Documentation/admin-guide/kernel-parameters.txt
+#10655: FILE: security/integrity/ima/ima_policy.c:163:
++__setup("ima_policy=", policy_setup);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#10675: FILE: security/integrity/ima/ima_policy.c:236:
++		if (has_capability_noaudit(current, CAP_SETUID)) {
+[...]
++		} else if (!uid_eq(rule->uid, cred->euid))
+[...]
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#10677: FILE: security/integrity/ima/ima_policy.c:238:
++			if (!uid_eq(rule->uid, cred->euid)
++			    && !uid_eq(rule->uid, cred->suid)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#10678: FILE: security/integrity/ima/ima_policy.c:239:
++			    && !uid_eq(rule->uid, cred->suid)
++			    && !uid_eq(rule->uid, cred->uid))
+
+CHECK:CAMELCASE: Avoid CamelCase: <Opt_func>
+#10734: FILE: security/integrity/ima/ima_policy.c:438:
++	Opt_func, Opt_mask, Opt_fsmagic,
+
+CHECK:CAMELCASE: Avoid CamelCase: <Opt_mask>
+#10734: FILE: security/integrity/ima/ima_policy.c:438:
++	Opt_func, Opt_mask, Opt_fsmagic,
+
+CHECK:CAMELCASE: Avoid CamelCase: <Opt_fsmagic>
+#10734: FILE: security/integrity/ima/ima_policy.c:438:
++	Opt_func, Opt_mask, Opt_fsmagic,
+
+CHECK:CAMELCASE: Avoid CamelCase: <Opt_uid>
+#10735: FILE: security/integrity/ima/ima_policy.c:439:
++	Opt_uid, Opt_euid, Opt_fowner,
+
+CHECK:CAMELCASE: Avoid CamelCase: <Opt_euid>
+#10735: FILE: security/integrity/ima/ima_policy.c:439:
++	Opt_uid, Opt_euid, Opt_fowner,
+
+CHECK:CAMELCASE: Avoid CamelCase: <Opt_fowner>
+#10735: FILE: security/integrity/ima/ima_policy.c:439:
++	Opt_uid, Opt_euid, Opt_fowner,
+
+CHECK:SPACING: No space is necessary after a cast
+#10801: FILE: security/integrity/ima/ima_policy.c:651:
++						       (uid_t) lnum);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#10840: FILE: security/keys/keyring.c:1187:
++			key_payload_reserve(keyring,
++				keyring->datalen - KEYQUOTA_LINK_BYTES);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#11045: FILE: sound/soc/fsl/imx-wm8962.c:194:
++	ret = imx_audmux_v2_configure_port(ext_port,
+ 			IMX_AUDMUX_V2_PTCR_SYN,
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000283356.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 10 errors, 157 warnings, 65 checks, 9179 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000283356.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

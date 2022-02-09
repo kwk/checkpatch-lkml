@@ -1,0 +1,263 @@
+CHECK:INVALID_UTF8: Invalid UTF-8, patch and commit message should be encoded in UTF-8
+#63: 
+>                           %d
+  ^
+
+CHECK:INVALID_UTF8: Invalid UTF-8, patch and commit message should be encoded in UTF-8
+#67: 
+>  drivers/scsi/scsi_sysfs.c | 2 +-
+  ^
+
+CHECK:INVALID_UTF8: Invalid UTF-8, patch and commit message should be encoded in UTF-8
+#68: 
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+  ^
+
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#74: 
+> @@ -370,7 +370,7 @@ static DEVICE_ATTR(eh_deadline, S_IRUGO | S_IWUSR, show_shost_eh_deadline, store
+
+CHECK:INVALID_UTF8: Invalid UTF-8, patch and commit message should be encoded in UTF-8
+#75: 
+>  
+  ^
+
+CHECK:INVALID_UTF8: Invalid UTF-8, patch and commit message should be encoded in UTF-8
+#77: 
+>  shost_rd_attr(unique_id, "%u\n");
+  ^
+
+CHECK:INVALID_UTF8: Invalid UTF-8, patch and commit message should be encoded in UTF-8
+#78: 
+>  shost_rd_attr(cmd_per_lun, "%hd\n");
+  ^
+
+CHECK:INVALID_UTF8: Invalid UTF-8, patch and commit message should be encoded in UTF-8
+#81: 
+>  shost_rd_attr(sg_tablesize, "%hu\n");
+  ^
+
+CHECK:INVALID_UTF8: Invalid UTF-8, patch and commit message should be encoded in UTF-8
+#82: 
+>  shost_rd_attr(sg_prot_tablesize, "%hu\n");
+  ^
+
+CHECK:INVALID_UTF8: Invalid UTF-8, patch and commit message should be encoded in UTF-8
+#83: 
+>  shost_rd_attr(unchecked_isa_dma, "%d\n");
+  ^
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#116: FILE: drivers/scsi/scsi_sysfs.c:159:
++#define shost_function_show(name, format, field)			\
+ static ssize_t								\
++name##_show(struct device *dev, struct device_attribute *attr, char *buf) \
+ {									\
+ 	struct Scsi_Host *shost = class_to_shost(dev);			\
++	return sysfs_emit(buf, format "\n", shost->field);		\
+ }
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#134: FILE: drivers/scsi/scsi_sysfs.c:171:
++#define shost_rd_attr2(name, format, field)				\
++	shost_function_show(name, format, field)			\
++static DEVICE_ATTR(name, 0444, name##_show, NULL);
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#134: FILE: drivers/scsi/scsi_sysfs.c:171:
++#define shost_rd_attr2(name, format, field)				\
++	shost_function_show(name, format, field)			\
++static DEVICE_ATTR(name, 0444, name##_show, NULL);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#134: FILE: drivers/scsi/scsi_sysfs.c:171:
++#define shost_rd_attr2(name, format, field)				\
++	shost_function_show(name, format, field)			\
++static DEVICE_ATTR(name, 0444, name##_show, NULL);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#140: FILE: drivers/scsi/scsi_sysfs.c:175:
++#define shost_rd_attr(format, field)					\
++	shost_rd_attr2(field, format, field)
+
+WARNING:DEVICE_ATTR_WO: Use DEVICE_ATTR_WO
+#158: FILE: drivers/scsi/scsi_sysfs.c:194:
++static DEVICE_ATTR(scan, 0200, NULL, scan_store);
+
+The DEVICE_AATR_WO(name) helper macro can be used instead of
+DEVICE_ATTR(name, 0200, NULL, name_store);
+
+Note that the macro automatically appends _store to the
+named attribute variable of the device for the store method.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#375: FILE: drivers/scsi/scsi_sysfs.c:578:
++#define sdev_function_show(format, field)				\
+ static ssize_t								\
++sdev_##field##_show(struct device *dev, struct device_attribute *attr,	\
++		    char *buf)						\
+ {									\
+ 	struct scsi_device *sdev;					\
+ 	sdev = to_scsi_device(dev);					\
++	return sysfs_emit(buf, format "\n", sdev->field);		\
+ }									\
+ 
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#396: FILE: drivers/scsi/scsi_sysfs.c:592:
++#define sdev_rd_attr(format, field)					\
++	sdev_function_show(format, field)				\
++static DEVICE_ATTR(field, 0444, sdev_##field##_show, NULL)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#396: FILE: drivers/scsi/scsi_sysfs.c:592:
++#define sdev_rd_attr(format, field)					\
++	sdev_function_show(format, field)				\
++static DEVICE_ATTR(field, 0444, sdev_##field##_show, NULL)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'format' - possible side-effects?
+#406: FILE: drivers/scsi/scsi_sysfs.c:600:
++#define sdev_rw_attr(format, field)					\
++	sdev_function_show(format, field)				\
+ 									\
+ static ssize_t								\
++sdev_##field##_store(struct device *dev, struct device_attribute *attr, \
++		     const char *buf, size_t count)			\
+ {									\
+ 	struct scsi_device *sdev;					\
+ 	sdev = to_scsi_device(dev);					\
++	sscanf(buf, format, &sdev->field);				\
+ 	return count;							\
+ }									\
++static DEVICE_ATTR(field, 0644, sdev_##field##_show, sdev_##field##_store);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#406: FILE: drivers/scsi/scsi_sysfs.c:600:
++#define sdev_rw_attr(format, field)					\
++	sdev_function_show(format, field)				\
+ 									\
+ static ssize_t								\
++sdev_##field##_store(struct device *dev, struct device_attribute *attr, \
++		     const char *buf, size_t count)			\
+ {									\
+ 	struct scsi_device *sdev;					\
+ 	sdev = to_scsi_device(dev);					\
++	sscanf(buf, format, &sdev->field);				\
+ 	return count;							\
+ }									\
++static DEVICE_ATTR(field, 0644, sdev_##field##_show, sdev_##field##_store);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#406: FILE: drivers/scsi/scsi_sysfs.c:600:
++#define sdev_rw_attr(format, field)					\
++	sdev_function_show(format, field)				\
+ 									\
+ static ssize_t								\
++sdev_##field##_store(struct device *dev, struct device_attribute *attr, \
++		     const char *buf, size_t count)			\
+ {									\
+ 	struct scsi_device *sdev;					\
+ 	sdev = to_scsi_device(dev);					\
++	sscanf(buf, format, &sdev->field);				\
+ 	return count;							\
+ }									\
++static DEVICE_ATTR(field, 0644, sdev_##field##_show, sdev_##field##_store);
+
+WARNING:NAKED_SSCANF: unchecked sscanf return value
+#418: FILE: drivers/scsi/scsi_sysfs.c:609:
++	sscanf(buf, format, &sdev->field);				\
+
+WARNING:NAKED_SSCANF: unchecked sscanf return value
+#526: FILE: drivers/scsi/scsi_sysfs.c:702:
++	sscanf(buf, "%d\n", &timeout);
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'sdev_delete_store' to 'delete_store'
+#582: FILE: drivers/scsi/scsi_sysfs.c:780:
++static DEVICE_ATTR(delete, 0200, NULL, sdev_delete_store);
+
+The function names used in DEVICE_ATTR is unusual.
+Typically, the store and show functions are used with <attr>_store and
+<attr>_show, where <attr> is a named attribute variable of the device.
+
+Consider the following examples::
+
+  static DEVICE_ATTR(type, 0444, type_show, NULL);
+  static DEVICE_ATTR(power, 0644, power_show, power_store);
+
+The function names should preferably follow the above pattern.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#672: FILE: drivers/scsi/scsi_sysfs.c:925:
++#define sdev_iostat_show(field)						\
+ static ssize_t								\
++iostat_##field##_show(struct device *dev, struct device_attribute *attr, \
++		      char *buf)					\
+ {									\
+ 	struct scsi_device *sdev = to_scsi_device(dev);			\
+ 	unsigned long long count = atomic_read(&sdev->field);		\
++	return sysfs_emit(buf, "0x%llx\n", count);			\
+ }									\
++static DEVICE_ATTR(field, 0444, iostat_##field##_show, NULL)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#672: FILE: drivers/scsi/scsi_sysfs.c:925:
++#define sdev_iostat_show(field)						\
+ static ssize_t								\
++iostat_##field##_show(struct device *dev, struct device_attribute *attr, \
++		      char *buf)					\
+ {									\
+ 	struct scsi_device *sdev = to_scsi_device(dev);			\
+ 	unsigned long long count = atomic_read(&sdev->field);		\
++	return sysfs_emit(buf, "0x%llx\n", count);			\
+ }									\
++static DEVICE_ATTR(field, 0444, iostat_##field##_show, NULL)
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'sdev_queue_depth_show' to 'queue_depth_show' 'sdev_queue_depth_store' to 'queue_depth_store'
+#758: FILE: drivers/scsi/scsi_sysfs.c:1016:
++static DEVICE_ATTR(queue_depth, 0644, sdev_queue_depth_show,
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000204129.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a total: 2 errors, 8 warnings, 18 checks, 797 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000204129.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

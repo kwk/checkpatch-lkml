@@ -1,0 +1,279 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#48: FILE: block/Kconfig.iosched:35:
++config MQ_IOSCHED_DEADLINE
++	tristate "MQ deadline I/O scheduler"
++	default y
++	---help---
++	  MQ version of the deadline IO scheduler.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#70: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#75: FILE: block/mq-deadline.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#115: FILE: block/mq-deadline.c:41:
++static const int fifo_batch = 16;       /* # of sequential requests treated as one
++				     by the above parameters. For throughput. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#115: FILE: block/mq-deadline.c:41:
++				     by the above parameters. For throughput. */
+
+CHECK:UNCOMMENTED_DEFINITION: spinlock_t definition without comment
+#143: FILE: block/mq-deadline.c:69:
++	spinlock_t lock;
+
+WARNING:IF_0: Consider removing the code enclosed by this #if 0 and its #endif
+#203: FILE: block/mq-deadline.c:129:
++#if 0
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#302: FILE: block/mq-deadline.c:228:
++		BUG_ON(RB_EMPTY_ROOT(&dd->sort_list[READ]));
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#318: FILE: block/mq-deadline.c:244:
++		BUG_ON(RB_EMPTY_ROOT(&dd->sort_list[WRITE]));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#371: FILE: block/mq-deadline.c:297:
++	BUG_ON(!list_empty(&dd->fifo_list[READ]));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#372: FILE: block/mq-deadline.c:298:
++	BUG_ON(!list_empty(&dd->fifo_list[WRITE]));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#460: FILE: block/mq-deadline.c:386:
++		BUG_ON(sector != blk_rq_pos(__rq));
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#557: FILE: block/mq-deadline.c:483:
++	if (unlikely(flush_fua_bypass(bio->bi_opf)))
+[...]
++	else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#559: FILE: block/mq-deadline.c:485:
++	else {
+
+CHECK:SPACING: No space is necessary after a cast
+#605: FILE: block/mq-deadline.c:531:
++	char *p = (char *) page;
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:CONSIDER_KSTRTO: simple_strtol is obsolete, use kstrtol instead
+#607: FILE: block/mq-deadline.c:533:
++	*var = simple_strtol(p, &p, 10);
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#611: FILE: block/mq-deadline.c:537:
++#define SHOW_FUNCTION(__FUNC, __VAR, __CONV)				\
++static ssize_t __FUNC(struct elevator_queue *e, char *page)		\
++{									\
++	struct deadline_data *dd = e->elevator_data;			\
++	int __data = __VAR;						\
++	if (__CONV)							\
++		__data = jiffies_to_msecs(__data);			\
++	return deadline_var_show(__data, (page));			\
++}
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#620: FILE: block/mq-deadline.c:546:
++}
++SHOW_FUNCTION(deadline_read_expire_show, dd->fifo_expire[READ], 1);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__PTR' - possible side-effects?
+#627: FILE: block/mq-deadline.c:553:
++#define STORE_FUNCTION(__FUNC, __PTR, MIN, MAX, __CONV)			\
++static ssize_t __FUNC(struct elevator_queue *e, const char *page, size_t count)	\
++{									\
++	struct deadline_data *dd = e->elevator_data;			\
++	int __data;							\
++	int ret = deadline_var_store(&__data, (page), count);		\
++	if (__data < (MIN))						\
++		__data = (MIN);						\
++	else if (__data > (MAX))					\
++		__data = (MAX);						\
++	if (__CONV)							\
++		*(__PTR) = msecs_to_jiffies(__data);			\
++	else								\
++		*(__PTR) = __data;					\
++	return ret;							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'MIN' - possible side-effects?
+#627: FILE: block/mq-deadline.c:553:
++#define STORE_FUNCTION(__FUNC, __PTR, MIN, MAX, __CONV)			\
++static ssize_t __FUNC(struct elevator_queue *e, const char *page, size_t count)	\
++{									\
++	struct deadline_data *dd = e->elevator_data;			\
++	int __data;							\
++	int ret = deadline_var_store(&__data, (page), count);		\
++	if (__data < (MIN))						\
++		__data = (MIN);						\
++	else if (__data > (MAX))					\
++		__data = (MAX);						\
++	if (__CONV)							\
++		*(__PTR) = msecs_to_jiffies(__data);			\
++	else								\
++		*(__PTR) = __data;					\
++	return ret;							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'MAX' - possible side-effects?
+#627: FILE: block/mq-deadline.c:553:
++#define STORE_FUNCTION(__FUNC, __PTR, MIN, MAX, __CONV)			\
++static ssize_t __FUNC(struct elevator_queue *e, const char *page, size_t count)	\
++{									\
++	struct deadline_data *dd = e->elevator_data;			\
++	int __data;							\
++	int ret = deadline_var_store(&__data, (page), count);		\
++	if (__data < (MIN))						\
++		__data = (MIN);						\
++	else if (__data > (MAX))					\
++		__data = (MAX);						\
++	if (__CONV)							\
++		*(__PTR) = msecs_to_jiffies(__data);			\
++	else								\
++		*(__PTR) = __data;					\
++	return ret;							\
++}
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#627: FILE: block/mq-deadline.c:553:
++#define STORE_FUNCTION(__FUNC, __PTR, MIN, MAX, __CONV)			\
++static ssize_t __FUNC(struct elevator_queue *e, const char *page, size_t count)	\
++{									\
++	struct deadline_data *dd = e->elevator_data;			\
++	int __data;							\
++	int ret = deadline_var_store(&__data, (page), count);		\
++	if (__data < (MIN))						\
++		__data = (MIN);						\
++	else if (__data > (MAX))					\
++		__data = (MAX);						\
++	if (__CONV)							\
++		*(__PTR) = msecs_to_jiffies(__data);			\
++	else								\
++		*(__PTR) = __data;					\
++	return ret;							\
++}
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#643: FILE: block/mq-deadline.c:569:
++}
++STORE_FUNCTION(deadline_read_expire_store, &dd->fifo_expire[READ], 0, INT_MAX, 1);
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#651: FILE: block/mq-deadline.c:577:
++	__ATTR(name, S_IRUGO|S_IWUSR, deadline_##name##_show, \
+ 	                    ^
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO|S_IWUSR' are not preferred. Consider using octal permissions '0644'.
+#651: FILE: block/mq-deadline.c:577:
++	__ATTR(name, S_IRUGO|S_IWUSR, deadline_##name##_show, \
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000310683.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 16 warnings, 10 checks, 641 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000310683.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

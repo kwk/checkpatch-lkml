@@ -1,0 +1,466 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#120: FILE: include/linux/lsm_hooks.h:1902:
++extern void __init landlock_add_hooks(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#255: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#269: FILE: security/landlock/lsm.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:CAMELCASE: Avoid CamelCase: <LANDLOCK_HOOKx>
+#290: FILE: security/landlock/lsm.c:22:
++#define LANDLOCK_HOOKx(X, NAME, CNAME, ...)				\
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'X' - possible side-effects?
+#290: FILE: security/landlock/lsm.c:22:
++#define LANDLOCK_HOOKx(X, NAME, CNAME, ...)				\
++	static inline int landlock_hook_##NAME(				\
++		LANDLOCK_MAP(X, LANDLOCK_ARG_TA, __VA_ARGS__))		\
++	{								\
++		__u64 args[6] = {					\
++			LANDLOCK_MAP(X, LANDLOCK_ARG_A, __VA_ARGS__)	\
++		};							\
++		return landlock_run_prog(args);				\
++	}								\
++	static inline bool bpf_landlock_##NAME##_is_valid_access(	\
++			int off, int size, enum bpf_access_type type,	\
++			enum bpf_reg_type *reg_type)			\
++	{								\
++		enum bpf_reg_type arg_types[6] = {			\
++			LANDLOCK_MAP(X, LANDLOCK_ARG_D, __VA_ARGS__)	\
++		};							\
++		return __is_valid_access(off, size, type, reg_type, arg_types); \
++	}								\
++	static const struct bpf_verifier_ops bpf_landlock_##NAME##_ops = { \
++		.get_func_proto	= bpf_landlock_func_proto,		\
++		.is_valid_access = bpf_landlock_##NAME##_is_valid_access, \
++		.convert_ctx_access = landlock_convert_ctx_access,	\
++	};								\
++	static struct bpf_prog_type_list bpf_landlock_##NAME##_type __read_mostly = { \
++		.ops	= &bpf_landlock_##NAME##_ops,			\
++		.type	= BPF_PROG_TYPE_LANDLOCK_##CNAME,		\
++	};								\
++	static int __init register_landlock_##NAME##_filter_ops(void)	\
++	{								\
++		bpf_register_prog_type(&bpf_landlock_##NAME##_type);	\
++		return 0;						\
++	}								\
++	late_initcall(register_landlock_##NAME##_filter_ops);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#290: FILE: security/landlock/lsm.c:22:
++#define LANDLOCK_HOOKx(X, NAME, CNAME, ...)				\
++	static inline int landlock_hook_##NAME(				\
++		LANDLOCK_MAP(X, LANDLOCK_ARG_TA, __VA_ARGS__))		\
++	{								\
++		__u64 args[6] = {					\
++			LANDLOCK_MAP(X, LANDLOCK_ARG_A, __VA_ARGS__)	\
++		};							\
++		return landlock_run_prog(args);				\
++	}								\
++	static inline bool bpf_landlock_##NAME##_is_valid_access(	\
++			int off, int size, enum bpf_access_type type,	\
++			enum bpf_reg_type *reg_type)			\
++	{								\
++		enum bpf_reg_type arg_types[6] = {			\
++			LANDLOCK_MAP(X, LANDLOCK_ARG_D, __VA_ARGS__)	\
++		};							\
++		return __is_valid_access(off, size, type, reg_type, arg_types); \
++	}								\
++	static const struct bpf_verifier_ops bpf_landlock_##NAME##_ops = { \
++		.get_func_proto	= bpf_landlock_func_proto,		\
++		.is_valid_access = bpf_landlock_##NAME##_is_valid_access, \
++		.convert_ctx_access = landlock_convert_ctx_access,	\
++	};								\
++	static struct bpf_prog_type_list bpf_landlock_##NAME##_type __read_mostly = { \
++		.ops	= &bpf_landlock_##NAME##_ops,			\
++		.type	= BPF_PROG_TYPE_LANDLOCK_##CNAME,		\
++	};								\
++	static int __init register_landlock_##NAME##_filter_ops(void)	\
++	{								\
++		bpf_register_prog_type(&bpf_landlock_##NAME##_type);	\
++		return 0;						\
++	}								\
++	late_initcall(register_landlock_##NAME##_filter_ops);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#331: FILE: security/landlock/lsm.c:63:
++#define LANDLOCK_MAP0(m,...)
+                        ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#332: FILE: security/landlock/lsm.c:64:
++#define LANDLOCK_MAP1(m,d,t,a) m(d,t,a)
+                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#332: FILE: security/landlock/lsm.c:64:
++#define LANDLOCK_MAP1(m,d,t,a) m(d,t,a)
+                          ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#332: FILE: security/landlock/lsm.c:64:
++#define LANDLOCK_MAP1(m,d,t,a) m(d,t,a)
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#332: FILE: security/landlock/lsm.c:64:
++#define LANDLOCK_MAP1(m,d,t,a) m(d,t,a)
+                                   ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#332: FILE: security/landlock/lsm.c:64:
++#define LANDLOCK_MAP1(m,d,t,a) m(d,t,a)
+                                     ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#333: FILE: security/landlock/lsm.c:65:
++#define LANDLOCK_MAP2(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP1(m,__VA_ARGS__)
+                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#333: FILE: security/landlock/lsm.c:65:
++#define LANDLOCK_MAP2(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP1(m,__VA_ARGS__)
+                          ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#333: FILE: security/landlock/lsm.c:65:
++#define LANDLOCK_MAP2(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP1(m,__VA_ARGS__)
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#333: FILE: security/landlock/lsm.c:65:
++#define LANDLOCK_MAP2(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP1(m,__VA_ARGS__)
+                              ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#333: FILE: security/landlock/lsm.c:65:
++#define LANDLOCK_MAP2(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP1(m,__VA_ARGS__)
+                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#333: FILE: security/landlock/lsm.c:65:
++#define LANDLOCK_MAP2(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP1(m,__VA_ARGS__)
+                                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#333: FILE: security/landlock/lsm.c:65:
++#define LANDLOCK_MAP2(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP1(m,__VA_ARGS__)
+                                                             ^
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#333: FILE: security/landlock/lsm.c:65:
++#define LANDLOCK_MAP2(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP1(m,__VA_ARGS__)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'm' - possible side-effects?
+#333: FILE: security/landlock/lsm.c:65:
++#define LANDLOCK_MAP2(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP1(m,__VA_ARGS__)
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#334: FILE: security/landlock/lsm.c:66:
++#define LANDLOCK_MAP3(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP2(m,__VA_ARGS__)
+                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#334: FILE: security/landlock/lsm.c:66:
++#define LANDLOCK_MAP3(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP2(m,__VA_ARGS__)
+                          ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#334: FILE: security/landlock/lsm.c:66:
++#define LANDLOCK_MAP3(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP2(m,__VA_ARGS__)
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#334: FILE: security/landlock/lsm.c:66:
++#define LANDLOCK_MAP3(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP2(m,__VA_ARGS__)
+                              ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#334: FILE: security/landlock/lsm.c:66:
++#define LANDLOCK_MAP3(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP2(m,__VA_ARGS__)
+                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#334: FILE: security/landlock/lsm.c:66:
++#define LANDLOCK_MAP3(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP2(m,__VA_ARGS__)
+                                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#334: FILE: security/landlock/lsm.c:66:
++#define LANDLOCK_MAP3(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP2(m,__VA_ARGS__)
+                                                             ^
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#334: FILE: security/landlock/lsm.c:66:
++#define LANDLOCK_MAP3(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP2(m,__VA_ARGS__)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'm' - possible side-effects?
+#334: FILE: security/landlock/lsm.c:66:
++#define LANDLOCK_MAP3(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP2(m,__VA_ARGS__)
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#335: FILE: security/landlock/lsm.c:67:
++#define LANDLOCK_MAP4(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP3(m,__VA_ARGS__)
+                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#335: FILE: security/landlock/lsm.c:67:
++#define LANDLOCK_MAP4(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP3(m,__VA_ARGS__)
+                          ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#335: FILE: security/landlock/lsm.c:67:
++#define LANDLOCK_MAP4(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP3(m,__VA_ARGS__)
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#335: FILE: security/landlock/lsm.c:67:
++#define LANDLOCK_MAP4(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP3(m,__VA_ARGS__)
+                              ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#335: FILE: security/landlock/lsm.c:67:
++#define LANDLOCK_MAP4(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP3(m,__VA_ARGS__)
+                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#335: FILE: security/landlock/lsm.c:67:
++#define LANDLOCK_MAP4(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP3(m,__VA_ARGS__)
+                                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#335: FILE: security/landlock/lsm.c:67:
++#define LANDLOCK_MAP4(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP3(m,__VA_ARGS__)
+                                                             ^
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#335: FILE: security/landlock/lsm.c:67:
++#define LANDLOCK_MAP4(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP3(m,__VA_ARGS__)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'm' - possible side-effects?
+#335: FILE: security/landlock/lsm.c:67:
++#define LANDLOCK_MAP4(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP3(m,__VA_ARGS__)
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#336: FILE: security/landlock/lsm.c:68:
++#define LANDLOCK_MAP5(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP4(m,__VA_ARGS__)
+                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#336: FILE: security/landlock/lsm.c:68:
++#define LANDLOCK_MAP5(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP4(m,__VA_ARGS__)
+                          ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#336: FILE: security/landlock/lsm.c:68:
++#define LANDLOCK_MAP5(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP4(m,__VA_ARGS__)
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#336: FILE: security/landlock/lsm.c:68:
++#define LANDLOCK_MAP5(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP4(m,__VA_ARGS__)
+                              ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#336: FILE: security/landlock/lsm.c:68:
++#define LANDLOCK_MAP5(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP4(m,__VA_ARGS__)
+                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#336: FILE: security/landlock/lsm.c:68:
++#define LANDLOCK_MAP5(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP4(m,__VA_ARGS__)
+                                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#336: FILE: security/landlock/lsm.c:68:
++#define LANDLOCK_MAP5(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP4(m,__VA_ARGS__)
+                                                             ^
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#336: FILE: security/landlock/lsm.c:68:
++#define LANDLOCK_MAP5(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP4(m,__VA_ARGS__)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'm' - possible side-effects?
+#336: FILE: security/landlock/lsm.c:68:
++#define LANDLOCK_MAP5(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP4(m,__VA_ARGS__)
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#337: FILE: security/landlock/lsm.c:69:
++#define LANDLOCK_MAP6(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP5(m,__VA_ARGS__)
+                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#337: FILE: security/landlock/lsm.c:69:
++#define LANDLOCK_MAP6(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP5(m,__VA_ARGS__)
+                          ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#337: FILE: security/landlock/lsm.c:69:
++#define LANDLOCK_MAP6(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP5(m,__VA_ARGS__)
+                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#337: FILE: security/landlock/lsm.c:69:
++#define LANDLOCK_MAP6(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP5(m,__VA_ARGS__)
+                              ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#337: FILE: security/landlock/lsm.c:69:
++#define LANDLOCK_MAP6(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP5(m,__VA_ARGS__)
+                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#337: FILE: security/landlock/lsm.c:69:
++#define LANDLOCK_MAP6(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP5(m,__VA_ARGS__)
+                                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#337: FILE: security/landlock/lsm.c:69:
++#define LANDLOCK_MAP6(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP5(m,__VA_ARGS__)
+                                                             ^
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#337: FILE: security/landlock/lsm.c:69:
++#define LANDLOCK_MAP6(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP5(m,__VA_ARGS__)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'm' - possible side-effects?
+#337: FILE: security/landlock/lsm.c:69:
++#define LANDLOCK_MAP6(m,d,t,a,...) m(d,t,a), LANDLOCK_MAP5(m,__VA_ARGS__)
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#338: FILE: security/landlock/lsm.c:70:
++#define LANDLOCK_MAP(n,...) LANDLOCK_MAP##n(__VA_ARGS__)
+                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#340: FILE: security/landlock/lsm.c:72:
++#define LANDLOCK_ARG_D(d,t,a) d
+                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#340: FILE: security/landlock/lsm.c:72:
++#define LANDLOCK_ARG_D(d,t,a) d
+                           ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#341: FILE: security/landlock/lsm.c:73:
++#define LANDLOCK_ARG_TA(d,t,a) t a
+                          ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#341: FILE: security/landlock/lsm.c:73:
++#define LANDLOCK_ARG_TA(d,t,a) t a
+                            ^
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#341: FILE: security/landlock/lsm.c:73:
++#define LANDLOCK_ARG_TA(d,t,a) t a
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#342: FILE: security/landlock/lsm.c:74:
++#define LANDLOCK_ARG_A(d,t,a) (u64)a
+                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#342: FILE: security/landlock/lsm.c:74:
++#define LANDLOCK_ARG_A(d,t,a) (u64)a
+                           ^
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#342: FILE: security/landlock/lsm.c:74:
++#define LANDLOCK_ARG_A(d,t,a) (u64)a
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#344: FILE: security/landlock/lsm.c:76:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#385: FILE: security/landlock/lsm.c:117:
++static const struct bpf_func_proto *bpf_landlock_func_proto(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#392: FILE: security/landlock/lsm.c:124:
++static u32 landlock_convert_ctx_access(enum bpf_access_type type, int dst_reg,
++				      int src_reg, int ctx_off,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#411: FILE: security/landlock/lsm.c:143:
++static bool __is_valid_access(int off, int size, enum bpf_access_type type,
++		enum bpf_reg_type *reg_type, enum bpf_reg_type arg_types[6])
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#453: FILE: security/landlock/lsm.c:185:
++LANDLOCK_HOOK2(file_open, FILE_OPEN,
++	PTR_TO_STRUCT_FILE, struct file *, file,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#458: FILE: security/landlock/lsm.c:190:
++LANDLOCK_HOOK2(file_permission, FILE_PERMISSION,
++	PTR_TO_STRUCT_FILE, struct file *, file,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#463: FILE: security/landlock/lsm.c:195:
++LANDLOCK_HOOK4(mmap_file, MMAP_FILE,
++	PTR_TO_STRUCT_FILE, struct file *, file,
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000002440.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 55 errors, 3 warnings, 15 checks, 348 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000002440.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

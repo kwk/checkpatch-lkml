@@ -1,0 +1,356 @@
+WARNING:TYPO_SPELLING: 'Concurency' may be misspelled - perhaps 'Concurrency'?
+#113: 
+Subject: sched: User Mode Concurency Groups
+                          ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:BAD_SIGN_OFF: Non-standard signature: Originally-by:
+#119: 
+Originally-by: Peter Oskolkov <posk@google.com>
+
+The signed-off-by line does not fall in line with the standards
+specified by the community.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#157: FILE: arch/x86/include/asm/thread_info.h:111:
++#define _TIF_UMCG		(1 << TIF_UMCG)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ptr' - possible side-effects?
+#167: FILE: arch/x86/include/asm/uaccess.h:344:
++#define __try_cmpxchg_user_asm(itype, _ptr, _pold, _new, label)	({	\
++	bool success;							\
++	__typeof__(_ptr) _old = (__typeof__(_ptr))(_pold);		\
++	__typeof__(*(_ptr)) __old = *_old;				\
++	__typeof__(*(_ptr)) __new = (_new);				\
++	asm_volatile_goto("\n"						\
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
++		     _ASM_EXTABLE_UA(1b, %l[label])			\
++		     : CC_OUT(z) (success),				\
++		       [ptr] "+m" (*_ptr),				\
++		       [old] "+a" (__old)				\
++		     : [new] "r" (__new)				\
++		     : "memory", "cc"					\
++		     : label);						\
++	if (unlikely(!success))						\
++		*_old = __old;						\
++	likely(success);					})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'label' - possible side-effects?
+#167: FILE: arch/x86/include/asm/uaccess.h:344:
++#define __try_cmpxchg_user_asm(itype, _ptr, _pold, _new, label)	({	\
++	bool success;							\
++	__typeof__(_ptr) _old = (__typeof__(_ptr))(_pold);		\
++	__typeof__(*(_ptr)) __old = *_old;				\
++	__typeof__(*(_ptr)) __new = (_new);				\
++	asm_volatile_goto("\n"						\
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
++		     _ASM_EXTABLE_UA(1b, %l[label])			\
++		     : CC_OUT(z) (success),				\
++		       [ptr] "+m" (*_ptr),				\
++		       [old] "+a" (__old)				\
++		     : [new] "r" (__new)				\
++		     : "memory", "cc"					\
++		     : label);						\
++	if (unlikely(!success))						\
++		*_old = __old;						\
++	likely(success);					})
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#173: FILE: arch/x86/include/asm/uaccess.h:350:
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:WxV)
+#174: FILE: arch/x86/include/asm/uaccess.h:351:
++		     _ASM_EXTABLE_UA(1b, %l[label])			\
+ 		                         ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ptr' - possible side-effects?
+#192: FILE: arch/x86/include/asm/uaccess.h:432:
++#define __try_cmpxchg_user_asm(itype, _ptr, _pold, _new, label)	({	\
++	int __err = 0;							\
++	bool success;							\
++	__typeof__(_ptr) _old = (__typeof__(_ptr))(_pold);		\
++	__typeof__(*(_ptr)) __old = *_old;				\
++	__typeof__(*(_ptr)) __new = (_new);				\
++	asm volatile("\n"						\
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
++		     CC_SET(z)						\
++		     "2:\n"						\
++		     ".pushsection .fixup,\"ax\"\n"			\
++		     "3:	mov %[efault], %[errout]\n"		\
++		     "		jmp 2b\n"				\
++		     ".popsection\n"					\
++		     _ASM_EXTABLE_UA(1b, 3b)				\
++		     : CC_OUT(z) (success),				\
++		       [errout] "+r" (__err),				\
++		       [ptr] "+m" (*_ptr),				\
++		       [old] "+a" (__old)				\
++		     : [new] "r" (__new),				\
++		       [efault] "i" (-EFAULT)				\
++		     : "memory", "cc");					\
++	if (unlikely(__err))						\
++		goto label;						\
++	if (unlikely(!success))						\
++		*_old = __old;						\
++	likely(success);					})
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#192: FILE: arch/x86/include/asm/uaccess.h:432:
++#define __try_cmpxchg_user_asm(itype, _ptr, _pold, _new, label)	({	\
++	int __err = 0;							\
++	bool success;							\
++	__typeof__(_ptr) _old = (__typeof__(_ptr))(_pold);		\
++	__typeof__(*(_ptr)) __old = *_old;				\
++	__typeof__(*(_ptr)) __new = (_new);				\
++	asm volatile("\n"						\
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
++		     CC_SET(z)						\
++		     "2:\n"						\
++		     ".pushsection .fixup,\"ax\"\n"			\
++		     "3:	mov %[efault], %[errout]\n"		\
++		     "		jmp 2b\n"				\
++		     ".popsection\n"					\
++		     _ASM_EXTABLE_UA(1b, 3b)				\
++		     : CC_OUT(z) (success),				\
++		       [errout] "+r" (__err),				\
++		       [ptr] "+m" (*_ptr),				\
++		       [old] "+a" (__old)				\
++		     : [new] "r" (__new),				\
++		       [efault] "i" (-EFAULT)				\
++		     : "memory", "cc");					\
++	if (unlikely(__err))						\
++		goto label;						\
++	if (unlikely(!success))						\
++		*_old = __old;						\
++	likely(success);					})
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#199: FILE: arch/x86/include/asm/uaccess.h:439:
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#227: FILE: arch/x86/include/asm/uaccess.h:554:
++extern void __try_cmpxchg_user_wrong_size(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ptr' - possible side-effects?
+#229: FILE: arch/x86/include/asm/uaccess.h:556:
++#define unsafe_try_cmpxchg_user(_ptr, _oldp, _nval, _label) ({		\
++	__typeof__(*(_ptr)) __ret;					\
++	switch (sizeof(__ret)) {					\
++	case 4:	__ret = __try_cmpxchg_user_asm("l", (_ptr), (_oldp),	\
++					       (_nval), _label);	\
++		break;							\
++	case 8:	__ret = __try_cmpxchg_user_asm("q", (_ptr), (_oldp),	\
++					       (_nval), _label);	\
++		break;							\
++	default: __try_cmpxchg_user_wrong_size();			\
++	}								\
++	__ret;						})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_oldp' - possible side-effects?
+#229: FILE: arch/x86/include/asm/uaccess.h:556:
++#define unsafe_try_cmpxchg_user(_ptr, _oldp, _nval, _label) ({		\
++	__typeof__(*(_ptr)) __ret;					\
++	switch (sizeof(__ret)) {					\
++	case 4:	__ret = __try_cmpxchg_user_asm("l", (_ptr), (_oldp),	\
++					       (_nval), _label);	\
++		break;							\
++	case 8:	__ret = __try_cmpxchg_user_asm("q", (_ptr), (_oldp),	\
++					       (_nval), _label);	\
++		break;							\
++	default: __try_cmpxchg_user_wrong_size();			\
++	}								\
++	__ret;						})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_nval' - possible side-effects?
+#229: FILE: arch/x86/include/asm/uaccess.h:556:
++#define unsafe_try_cmpxchg_user(_ptr, _oldp, _nval, _label) ({		\
++	__typeof__(*(_ptr)) __ret;					\
++	switch (sizeof(__ret)) {					\
++	case 4:	__ret = __try_cmpxchg_user_asm("l", (_ptr), (_oldp),	\
++					       (_nval), _label);	\
++		break;							\
++	case 8:	__ret = __try_cmpxchg_user_asm("q", (_ptr), (_oldp),	\
++					       (_nval), _label);	\
++		break;							\
++	default: __try_cmpxchg_user_wrong_size();			\
++	}								\
++	__ret;						})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_label' - possible side-effects?
+#229: FILE: arch/x86/include/asm/uaccess.h:556:
++#define unsafe_try_cmpxchg_user(_ptr, _oldp, _nval, _label) ({		\
++	__typeof__(*(_ptr)) __ret;					\
++	switch (sizeof(__ret)) {					\
++	case 4:	__ret = __try_cmpxchg_user_asm("l", (_ptr), (_oldp),	\
++					       (_nval), _label);	\
++		break;							\
++	case 8:	__ret = __try_cmpxchg_user_asm("q", (_ptr), (_oldp),	\
++					       (_nval), _label);	\
++		break;							\
++	default: __try_cmpxchg_user_wrong_size();			\
++	}								\
++	__ret;						})
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#232: FILE: arch/x86/include/asm/uaccess.h:559:
++	case 4:	__ret = __try_cmpxchg_user_asm("l", (_ptr), (_oldp),	\
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#235: FILE: arch/x86/include/asm/uaccess.h:562:
++	case 8:	__ret = __try_cmpxchg_user_asm("q", (_ptr), (_oldp),	\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#238: FILE: arch/x86/include/asm/uaccess.h:565:
++	default: __try_cmpxchg_user_wrong_size();			\
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#330: FILE: include/linux/sched.h:2309:
++extern void umcg_sys_enter(struct pt_regs *regs, long syscall);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#331: FILE: include/linux/sched.h:2310:
++extern void umcg_sys_exit(struct pt_regs *regs);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#332: FILE: include/linux/sched.h:2311:
++extern void umcg_notify_resume(struct pt_regs *regs);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#333: FILE: include/linux/sched.h:2312:
++extern void umcg_worker_exit(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#334: FILE: include/linux/sched.h:2313:
++extern void umcg_clear_child(struct task_struct *tsk);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#354: FILE: include/linux/sched.h:2333:
++extern void umcg_wq_worker_sleeping(struct task_struct *tsk);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#355: FILE: include/linux/sched.h:2334:
++extern void umcg_wq_worker_running(struct task_struct *tsk);
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#374: FILE: include/linux/sched.h:2353:
++}
++static inline void umcg_execve(struct task_struct *tsk)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#377: FILE: include/linux/sched.h:2356:
++}
++static inline void umcg_handle_exit(void)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#380: FILE: include/linux/sched.h:2359:
++}
++static inline void umcg_wq_worker_sleeping(struct task_struct *tsk)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#383: FILE: include/linux/sched.h:2362:
++}
++static inline void umcg_wq_worker_running(struct task_struct *tsk)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#772: FILE: kernel/sched/sched.h:3080:
++extern int try_to_wake_up(struct task_struct *tsk, unsigned int state, int wake_flags);
+
+WARNING:TYPO_SPELLING: 'commment' may be misspelled - perhaps 'comment'?
+#890: FILE: kernel/sched/umcg.c:111:
++		/* These can be simple writes - see the commment above. */
+ 		                                        ^^^^^^^^
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#934: FILE: kernel/sched/umcg.c:155:
++		case CLOCK_REALTIME:      now = ktime_get_real_ns();     break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#935: FILE: kernel/sched/umcg.c:156:
++		case CLOCK_MONOTONIC:     now = ktime_get_ns();          break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#936: FILE: kernel/sched/umcg.c:157:
++		case CLOCK_BOOTTIME:      now = ktime_get_boottime_ns(); break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#937: FILE: kernel/sched/umcg.c:158:
++		case CLOCK_TAI:           now = ktime_get_clocktai_ns(); break;
+
+CHECK:CAMELCASE: Avoid CamelCase: <Efault>
+#944: FILE: kernel/sched/umcg.c:165:
++	unsafe_get_user(old, &self->state, Efault);
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1000: FILE: kernel/sched/umcg.c:221:
++	int ret = umcg_update_state(tsk, UMCG_TASK_RUNNABLE, UMCG_TASK_RUNNING, NULL);
++	if (ret)
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#1116: FILE: kernel/sched/umcg.c:337:
++	} while (!unsafe_try_cmpxchg_user(&server->runnable_workers_ptr, &first_ptr, self_ptr, Efault));
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+./tmp.3ThM2397W7//home/fedora/lkml-analysis/lkml/10/patch.offset.0000038167.commit.177e463923b18590e622117af373596d2a8f7dbd total: 7 errors, 6 warnings, 25 checks, 1335 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.3ThM2397W7//home/fedora/lkml-analysis/lkml/10/patch.offset.0000038167.commit.177e463923b18590e622117af373596d2a8f7dbd has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

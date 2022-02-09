@@ -1,0 +1,112 @@
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#130: FILE: fs/pstore/Kconfig:164:
++config PSTORE_BLK
++	tristate "Log panic/oops to a block device"
++	depends on PSTORE
++	depends on BLOCK
++	select PSTORE_ZONE
++	default n
++	help
++	  This enables panic and oops message to be logged to a block dev
++	  where it can be read back at some later point.
++
++	  If unsure, say N.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:TYPO_SPELLING: 'MSDOS' may be misspelled - perhaps ''?
+#159: FILE: fs/pstore/Kconfig:193:
++	     The UUID may be either an EFI/GPT UUID, or refer to an MSDOS
+ 	                                                            ^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#205: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:TYPO_SPELLING: 'MSDOS' may be misspelled - perhaps ''?
+#254: FILE: fs/pstore/blk.c:45:
++ *    The UUID may be either an EFI/GPT UUID, or refer to an MSDOS
+                                                              ^^^^^
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*pstore_zone_info)...) over kzalloc(sizeof(struct pstore_zone_info)...)
+#322: FILE: fs/pstore/blk.c:113:
++	pstore_zone_info = kzalloc(sizeof(struct pstore_zone_info), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#332: FILE: fs/pstore/blk.c:123:
++#define verify_size(name, alignsize, enabled) {				\
++		long _##name_ = (enabled) ? (name) : 0;			\
++		_##name_ = _##name_ <= 0 ? 0 : (_##name_ * 1024);	\
++		if (_##name_ & ((alignsize) - 1)) {			\
++			pr_info(#name " must align to %d\n",		\
++					(alignsize));			\
++			_##name_ = ALIGN(name, (alignsize));		\
++		}							\
++		name = _##name_ / 1024;					\
++		pstore_zone_info->name = _##name_;			\
++	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'alignsize' - possible side-effects?
+#332: FILE: fs/pstore/blk.c:123:
++#define verify_size(name, alignsize, enabled) {				\
++		long _##name_ = (enabled) ? (name) : 0;			\
++		_##name_ = _##name_ <= 0 ? 0 : (_##name_ * 1024);	\
++		if (_##name_ & ((alignsize) - 1)) {			\
++			pr_info(#name " must align to %d\n",		\
++					(alignsize));			\
++			_##name_ = ALIGN(name, (alignsize));		\
++		}							\
++		name = _##name_ / 1024;					\
++		pstore_zone_info->name = _##name_;			\
++	}
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#471: FILE: fs/pstore/blk.c:262:
++static ssize_t psblk_generic_blk_write(const char *buf, size_t bytes,
++		loff_t pos)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#513: FILE: fs/pstore/blk.c:304:
++static ssize_t psblk_blk_panic_write(const char *buf, size_t size,
++		loff_t off)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#522: FILE: fs/pstore/blk.c:313:
++	ret = blkdev_panic_write(buf, off >> SECTOR_SHIFT,
++			size >> SECTOR_SHIFT);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#549: FILE: fs/pstore/blk.c:340:
++		pr_debug("invalid major %u (expect %u)\n",
++				info->major, MAJOR(binfo.devt));
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000147585.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 4 warnings, 7 checks, 561 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000147585.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

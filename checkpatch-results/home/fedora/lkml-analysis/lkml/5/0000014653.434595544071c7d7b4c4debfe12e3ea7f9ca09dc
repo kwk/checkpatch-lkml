@@ -1,0 +1,237 @@
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#80: FILE: arch/x86/include/asm/nospec-branch.h:30:
++#define __FILL_RETURN_BUFFER_PREP(reg, nr)	\
++	mov	$(nr/2), reg
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'nr' may be better as '(nr)' to avoid precedence issues
+#80: FILE: arch/x86/include/asm/nospec-branch.h:30:
++#define __FILL_RETURN_BUFFER_PREP(reg, nr)	\
++	mov	$(nr/2), reg
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#81: FILE: arch/x86/include/asm/nospec-branch.h:31:
++	mov	$(nr/2), reg
+ 	   	    ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#83: FILE: arch/x86/include/asm/nospec-branch.h:33:
++#define __FILL_RETURN_BUFFER(reg, nr, sp, uniq)	\
++	.align	16;				\
++.Ldo_call1_ ## uniq:				\
++	call	.Ldo_call2_ ## uniq;		\
++.Ltrap1_ ## uniq:				\
++	pause;					\
++	jmp	.Ltrap1_ ## uniq;		\
++	.align	16;				\
++.Ldo_call2_ ## uniq:				\
++	call	.Ldo_loop_ ## uniq;		\
++.Ltrap2_ ## uniq:				\
++	pause;					\
++	jmp	.Ltrap2_ ## uniq;		\
++	.align	16;				\
++.Ldo_loop_ ## uniq:				\
++	dec	reg;				\
++	jnz	.Ldo_call1_ ## uniq;		\
++	add	$(BITS_PER_LONG/8) * nr, sp; \
++.Lskip_rsb_ ## uniq:;
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'nr' may be better as '(nr)' to avoid precedence issues
+#83: FILE: arch/x86/include/asm/nospec-branch.h:33:
++#define __FILL_RETURN_BUFFER(reg, nr, sp, uniq)	\
++	.align	16;				\
++.Ldo_call1_ ## uniq:				\
++	call	.Ldo_call2_ ## uniq;		\
++.Ltrap1_ ## uniq:				\
++	pause;					\
++	jmp	.Ltrap1_ ## uniq;		\
++	.align	16;				\
++.Ldo_call2_ ## uniq:				\
++	call	.Ldo_loop_ ## uniq;		\
++.Ltrap2_ ## uniq:				\
++	pause;					\
++	jmp	.Ltrap2_ ## uniq;		\
++	.align	16;				\
++.Ldo_loop_ ## uniq:				\
++	dec	reg;				\
++	jnz	.Ldo_call1_ ## uniq;		\
++	add	$(BITS_PER_LONG/8) * nr, sp; \
++.Lskip_rsb_ ## uniq:;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#83: FILE: arch/x86/include/asm/nospec-branch.h:33:
++#define __FILL_RETURN_BUFFER(reg, nr, sp, uniq)	\
++	.align	16;				\
++.Ldo_call1_ ## uniq:				\
++	call	.Ldo_call2_ ## uniq;		\
++.Ltrap1_ ## uniq:				\
++	pause;					\
++	jmp	.Ltrap1_ ## uniq;		\
++	.align	16;				\
++.Ldo_call2_ ## uniq:				\
++	call	.Ldo_loop_ ## uniq;		\
++.Ltrap2_ ## uniq:				\
++	pause;					\
++	jmp	.Ltrap2_ ## uniq;		\
++	.align	16;				\
++.Ldo_loop_ ## uniq:				\
++	dec	reg;				\
++	jnz	.Ldo_call1_ ## uniq;		\
++	add	$(BITS_PER_LONG/8) * nr, sp; \
++.Lskip_rsb_ ## uniq:;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:CAMELCASE: Avoid CamelCase: <Ldo_call1_ ## uniq>
+#85: FILE: arch/x86/include/asm/nospec-branch.h:35:
++.Ldo_call1_ ## uniq:				\
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:CAMELCASE: Avoid CamelCase: <Ldo_call2_ ## uniq>
+#86: FILE: arch/x86/include/asm/nospec-branch.h:36:
++	call	.Ldo_call2_ ## uniq;		\
+
+CHECK:CAMELCASE: Avoid CamelCase: <Ltrap1_ ## uniq>
+#87: FILE: arch/x86/include/asm/nospec-branch.h:37:
++.Ltrap1_ ## uniq:				\
+
+CHECK:CAMELCASE: Avoid CamelCase: <Ldo_loop_ ## uniq>
+#92: FILE: arch/x86/include/asm/nospec-branch.h:42:
++	call	.Ldo_loop_ ## uniq;		\
+
+CHECK:CAMELCASE: Avoid CamelCase: <Ltrap2_ ## uniq>
+#93: FILE: arch/x86/include/asm/nospec-branch.h:43:
++.Ltrap2_ ## uniq:				\
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#100: FILE: arch/x86/include/asm/nospec-branch.h:50:
++	add	$(BITS_PER_LONG/8) * nr, sp; \
+ 	   	               ^
+
+CHECK:CAMELCASE: Avoid CamelCase: <Lskip_rsb_ ## uniq>
+#101: FILE: arch/x86/include/asm/nospec-branch.h:51:
++.Lskip_rsb_ ## uniq:;
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#103: FILE: arch/x86/include/asm/nospec-branch.h:53:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces required around that ':' (ctx:VxV)
+#115: FILE: arch/x86/include/asm/nospec-branch.h:112:
++.macro FILL_RETURN_BUFFER reg:req nr:req ftr:req
+                              ^
+
+CHECK:SPACING: spaces required around that ':' (ctx:VxV)
+#115: FILE: arch/x86/include/asm/nospec-branch.h:112:
++.macro FILL_RETURN_BUFFER reg:req nr:req ftr:req
+                                     ^
+
+CHECK:SPACING: spaces required around that ':' (ctx:VxV)
+#115: FILE: arch/x86/include/asm/nospec-branch.h:112:
++.macro FILL_RETURN_BUFFER reg:req nr:req ftr:req
+                                             ^
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#117: FILE: arch/x86/include/asm/nospec-branch.h:114:
++	 ALTERNATIVE "jmp .Lskip_rsb_\@",				\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#118: FILE: arch/x86/include/asm/nospec-branch.h:115:
++		     __stringify(__FILL_RETURN_BUFFER_PREP(\reg,\nr)),	\
+ 		                                               ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#120: FILE: arch/x86/include/asm/nospec-branch.h:117:
++	__FILL_RETURN_BUFFER(\reg,\nr,%_ASM_SP,\@)
+ 	                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#120: FILE: arch/x86/include/asm/nospec-branch.h:117:
++	__FILL_RETURN_BUFFER(\reg,\nr,%_ASM_SP,\@)
+ 	                             ^
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:OxV)
+#120: FILE: arch/x86/include/asm/nospec-branch.h:117:
++	__FILL_RETURN_BUFFER(\reg,\nr,%_ASM_SP,\@)
+ 	                              ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#120: FILE: arch/x86/include/asm/nospec-branch.h:117:
++	__FILL_RETURN_BUFFER(\reg,\nr,%_ASM_SP,\@)
+ 	                                      ^
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:BxV)
+#143: FILE: arch/x86/include/asm/nospec-branch.h:187:
++				  __stringify(__FILL_RETURN_BUFFER_PREP(%0, RSB_CLEAR_LOOPS)),
+ 				                                        ^
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:BxV)
+#145: FILE: arch/x86/include/asm/nospec-branch.h:189:
++		      __stringify(__FILL_RETURN_BUFFER(%0, RSB_CLEAR_LOOPS, %1, _%=))
+ 		                                       ^
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:WxV)
+#145: FILE: arch/x86/include/asm/nospec-branch.h:189:
++		      __stringify(__FILL_RETURN_BUFFER(%0, RSB_CLEAR_LOOPS, %1, _%=))
+ 		                                                            ^
+
+ERROR:SPACING: spaces required around that '%=' (ctx:VxB)
+#145: FILE: arch/x86/include/asm/nospec-branch.h:189:
++		      __stringify(__FILL_RETURN_BUFFER(%0, RSB_CLEAR_LOOPS, %1, _%=))
+ 		                                                                 ^
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#147: FILE: arch/x86/include/asm/nospec-branch.h:191:
++		      : "r" (loops) : "memory" );
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000014653.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 8 errors, 2 warnings, 18 checks, 125 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000014653.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

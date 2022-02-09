@@ -1,0 +1,51 @@
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'lower_name' may be better as '(lower_name)' to avoid precedence issues
+#94: FILE: drivers/misc/dlb2/dlb2_ioctl.c:53:
++#define DLB2_DOMAIN_IOCTL_CALLBACK_TEMPLATE(lower_name)			   \
++static int dlb2_domain_ioctl_##lower_name(struct dlb2_dev *dev,		   \
++					  struct dlb2_domain *domain,	   \
++					  unsigned long user_arg,	   \
++					  u16 size)			   \
++{									   \
++	struct dlb2_##lower_name##_args arg;				   \
++	struct dlb2_cmd_response response = {0};			   \
++	int ret;							   \
++									   \
++	dev_dbg(dev->dlb2_device, "Entering %s()\n", __func__);		   \
++									   \
++	ret = dlb2_copy_from_user(dev, user_arg, size, &arg, sizeof(arg)); \
++	if (ret)							   \
++		return ret;						   \
++									   \
++	/* Copy zeroes to verify the user-provided response pointer */	   \
++	ret = dlb2_copy_resp_to_user(dev, arg.response, &response);	   \
++	if (ret)							   \
++		return ret;						   \
++									   \
++	mutex_lock(&dev->resource_mutex);				   \
++									   \
++	ret = dev->ops->lower_name(&dev->hw,				   \
++				   domain->id,				   \
++				   &arg,				   \
++				   &response);				   \
++									   \
++	mutex_unlock(&dev->resource_mutex);				   \
++									   \
++	if (copy_to_user((void __user *)arg.response,			   \
++			 &response,					   \
++			 sizeof(response)))				   \
++		return -EFAULT;						   \
++									   \
++	dev_dbg(dev->dlb2_device, "Exiting %s()\n", __func__);		   \
++									   \
++	return ret;							   \
++}
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000072740.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 0 warnings, 1 checks, 1271 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000072740.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

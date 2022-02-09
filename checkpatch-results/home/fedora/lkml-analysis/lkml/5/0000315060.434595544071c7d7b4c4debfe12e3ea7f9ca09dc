@@ -1,0 +1,68 @@
+WARNING:CONST_STRUCT: struct file_operations should normally be const
+#117: FILE: fs/overlayfs/inode.c:345:
++	struct file_operations fops;
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'file' may be better as '(file)' to avoid precedence issues
+#136: FILE: fs/overlayfs/inode.c:364:
++#define OVL_CALL_REAL_FOP(file, call) \
++	({ struct ovl_fops *__ofop =					 \
++			container_of(file->f_op, struct ovl_fops, fops); \
++	   WARN_ON(__ofop->magic != OVL_FOPS_MAGIC) ? -EIO :		 \
++		   __ofop->orig_fops->call;				 \
++	})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'call' may be better as '(call)' to avoid precedence issues
+#136: FILE: fs/overlayfs/inode.c:364:
++#define OVL_CALL_REAL_FOP(file, call) \
++	({ struct ovl_fops *__ofop =					 \
++			container_of(file->f_op, struct ovl_fops, fops); \
++	   WARN_ON(__ofop->magic != OVL_FOPS_MAGIC) ? -EIO :		 \
++		   __ofop->orig_fops->call;				 \
++	})
+
+CHECK:SPACING: No space is necessary after a cast
+#147: FILE: fs/overlayfs/inode.c:375:
++	hash_for_each_possible_rcu(ovl_fops_htable, ofop, entry, (long) orig) {
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*ofop)...) over kzalloc(sizeof(struct ovl_fops)...)
+#167: FILE: fs/overlayfs/inode.c:395:
++	ofop = kzalloc(sizeof(struct ovl_fops), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:SPACING: No space is necessary after a cast
+#231: FILE: fs/overlayfs/inode.c:459:
++	hash_add_rcu(ovl_fops_htable, &ofop->entry, (long) orig);
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000315060.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 1 warnings, 5 checks, 182 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000315060.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

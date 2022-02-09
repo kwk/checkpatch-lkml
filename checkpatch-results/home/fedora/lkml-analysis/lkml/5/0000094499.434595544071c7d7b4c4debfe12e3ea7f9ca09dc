@@ -1,0 +1,215 @@
+WARNING:EMAIL_SUBJECT: A patch subject line should describe the change not the tool that found it
+#16: 
+Subject: [PATCH v2] staging: fbtft: differentiate between buffer and data types to fix sparse warning
+
+Naming the tool that found the issue is not very useful in the
+subject line.  A good subject line summarizes the change that
+the patch brings.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'buffer_type' - possible side-effects?
+#103: FILE: drivers/staging/fbtft/fbtft-bus.c:13:
++#define define_fbtft_write_reg(func, buffer_type, data_type, modifier)        \
+ void func(struct fbtft_par *par, int len, ...)                                \
+ {                                                                             \
+ 	va_list args;                                                         \
+ 	int i, ret;                                                           \
+ 	int offset = 0;                                                       \
++	buffer_type *buf = (buffer_type *)par->buf;                           \
+ 									      \
+ 	if (unlikely(par->debug & DEBUG_WRITE_REGISTER)) {                    \
+ 		va_start(args, len);                                          \
+ 		for (i = 0; i < len; i++) {                                   \
++			buf[i] = modifier((data_type)va_arg(args, unsigned int)); \
+ 		}                                                             \
+ 		va_end(args);                                                 \
++		fbtft_par_dbg_hex(DEBUG_WRITE_REGISTER, par, par->info->device, buffer_type, buf, len, "%s: ", __func__); \
+ 	}                                                                     \
+ 									      \
+ 	va_start(args, len);                                                  \
+ 									      \
+ 	if (par->startbyte) {                                                 \
+ 		*(u8 *)par->buf = par->startbyte;                             \
++		buf = (buffer_type *)(par->buf + 1);                          \
+ 		offset = 1;                                                   \
+ 	}                                                                     \
+ 									      \
++	*buf = modifier((data_type)va_arg(args, unsigned int));               \
++	ret = fbtft_write_buf_dc(par, par->buf, sizeof(data_type) + offset, 0); \
+ 	if (ret < 0)							      \
+ 		goto out;						      \
+ 	len--;                                                                \
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'buffer_type' may be better as '(buffer_type)' to avoid precedence issues
+#103: FILE: drivers/staging/fbtft/fbtft-bus.c:13:
++#define define_fbtft_write_reg(func, buffer_type, data_type, modifier)        \
+ void func(struct fbtft_par *par, int len, ...)                                \
+ {                                                                             \
+ 	va_list args;                                                         \
+ 	int i, ret;                                                           \
+ 	int offset = 0;                                                       \
++	buffer_type *buf = (buffer_type *)par->buf;                           \
+ 									      \
+ 	if (unlikely(par->debug & DEBUG_WRITE_REGISTER)) {                    \
+ 		va_start(args, len);                                          \
+ 		for (i = 0; i < len; i++) {                                   \
++			buf[i] = modifier((data_type)va_arg(args, unsigned int)); \
+ 		}                                                             \
+ 		va_end(args);                                                 \
++		fbtft_par_dbg_hex(DEBUG_WRITE_REGISTER, par, par->info->device, buffer_type, buf, len, "%s: ", __func__); \
+ 	}                                                                     \
+ 									      \
+ 	va_start(args, len);                                                  \
+ 									      \
+ 	if (par->startbyte) {                                                 \
+ 		*(u8 *)par->buf = par->startbyte;                             \
++		buf = (buffer_type *)(par->buf + 1);                          \
+ 		offset = 1;                                                   \
+ 	}                                                                     \
+ 									      \
++	*buf = modifier((data_type)va_arg(args, unsigned int));               \
++	ret = fbtft_write_buf_dc(par, par->buf, sizeof(data_type) + offset, 0); \
+ 	if (ret < 0)							      \
+ 		goto out;						      \
+ 	len--;                                                                \
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'data_type' - possible side-effects?
+#103: FILE: drivers/staging/fbtft/fbtft-bus.c:13:
++#define define_fbtft_write_reg(func, buffer_type, data_type, modifier)        \
+ void func(struct fbtft_par *par, int len, ...)                                \
+ {                                                                             \
+ 	va_list args;                                                         \
+ 	int i, ret;                                                           \
+ 	int offset = 0;                                                       \
++	buffer_type *buf = (buffer_type *)par->buf;                           \
+ 									      \
+ 	if (unlikely(par->debug & DEBUG_WRITE_REGISTER)) {                    \
+ 		va_start(args, len);                                          \
+ 		for (i = 0; i < len; i++) {                                   \
++			buf[i] = modifier((data_type)va_arg(args, unsigned int)); \
+ 		}                                                             \
+ 		va_end(args);                                                 \
++		fbtft_par_dbg_hex(DEBUG_WRITE_REGISTER, par, par->info->device, buffer_type, buf, len, "%s: ", __func__); \
+ 	}                                                                     \
+ 									      \
+ 	va_start(args, len);                                                  \
+ 									      \
+ 	if (par->startbyte) {                                                 \
+ 		*(u8 *)par->buf = par->startbyte;                             \
++		buf = (buffer_type *)(par->buf + 1);                          \
+ 		offset = 1;                                                   \
+ 	}                                                                     \
+ 									      \
++	*buf = modifier((data_type)va_arg(args, unsigned int));               \
++	ret = fbtft_write_buf_dc(par, par->buf, sizeof(data_type) + offset, 0); \
+ 	if (ret < 0)							      \
+ 		goto out;						      \
+ 	len--;                                                                \
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'modifier' - possible side-effects?
+#103: FILE: drivers/staging/fbtft/fbtft-bus.c:13:
++#define define_fbtft_write_reg(func, buffer_type, data_type, modifier)        \
+ void func(struct fbtft_par *par, int len, ...)                                \
+ {                                                                             \
+ 	va_list args;                                                         \
+ 	int i, ret;                                                           \
+ 	int offset = 0;                                                       \
++	buffer_type *buf = (buffer_type *)par->buf;                           \
+ 									      \
+ 	if (unlikely(par->debug & DEBUG_WRITE_REGISTER)) {                    \
+ 		va_start(args, len);                                          \
+ 		for (i = 0; i < len; i++) {                                   \
++			buf[i] = modifier((data_type)va_arg(args, unsigned int)); \
+ 		}                                                             \
+ 		va_end(args);                                                 \
++		fbtft_par_dbg_hex(DEBUG_WRITE_REGISTER, par, par->info->device, buffer_type, buf, len, "%s: ", __func__); \
+ 	}                                                                     \
+ 									      \
+ 	va_start(args, len);                                                  \
+ 									      \
+ 	if (par->startbyte) {                                                 \
+ 		*(u8 *)par->buf = par->startbyte;                             \
++		buf = (buffer_type *)(par->buf + 1);                          \
+ 		offset = 1;                                                   \
+ 	}                                                                     \
+ 									      \
++	*buf = modifier((data_type)va_arg(args, unsigned int));               \
++	ret = fbtft_write_buf_dc(par, par->buf, sizeof(data_type) + offset, 0); \
+ 	if (ret < 0)							      \
+ 		goto out;						      \
+ 	len--;                                                                \
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#103: FILE: drivers/staging/fbtft/fbtft-bus.c:13:
++#define define_fbtft_write_reg(func, buffer_type, data_type, modifier)        \
+ void func(struct fbtft_par *par, int len, ...)                                \
+ {                                                                             \
+ 	va_list args;                                                         \
+ 	int i, ret;                                                           \
+ 	int offset = 0;                                                       \
++	buffer_type *buf = (buffer_type *)par->buf;                           \
+ 									      \
+ 	if (unlikely(par->debug & DEBUG_WRITE_REGISTER)) {                    \
+ 		va_start(args, len);                                          \
+ 		for (i = 0; i < len; i++) {                                   \
++			buf[i] = modifier((data_type)va_arg(args, unsigned int)); \
+ 		}                                                             \
+ 		va_end(args);                                                 \
++		fbtft_par_dbg_hex(DEBUG_WRITE_REGISTER, par, par->info->device, buffer_type, buf, len, "%s: ", __func__); \
+ 	}                                                                     \
+ 									      \
+ 	va_start(args, len);                                                  \
+ 									      \
+ 	if (par->startbyte) {                                                 \
+ 		*(u8 *)par->buf = par->startbyte;                             \
++		buf = (buffer_type *)(par->buf + 1);                          \
+ 		offset = 1;                                                   \
+ 	}                                                                     \
+ 									      \
++	*buf = modifier((data_type)va_arg(args, unsigned int));               \
++	ret = fbtft_write_buf_dc(par, par->buf, sizeof(data_type) + offset, 0); \
+ 	if (ret < 0)							      \
+ 		goto out;						      \
+ 	len--;                                                                \
+
+WARNING:LONG_LINE: line length of 123 exceeds 100 columns
+#120: FILE: drivers/staging/fbtft/fbtft-bus.c:27:
++		fbtft_par_dbg_hex(DEBUG_WRITE_REGISTER, par, par->info->device, buffer_type, buf, len, "%s: ", __func__); \
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:TRACING_LOGGING: Unnecessary ftrace-like logging - prefer using ftrace
+#120: FILE: drivers/staging/fbtft/fbtft-bus.c:27:
++		fbtft_par_dbg_hex(DEBUG_WRITE_REGISTER, par, par->info->device, buffer_type, buf, len, "%s: ", __func__); \
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#157: FILE: drivers/staging/fbtft/fbtft-bus.c:59:
++define_fbtft_write_reg(fbtft_write_reg8_bus8, u8, u8, )
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#159: FILE: drivers/staging/fbtft/fbtft-bus.c:61:
++define_fbtft_write_reg(fbtft_write_reg16_bus16, u16, u16, )
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000094499.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 2 errors, 4 warnings, 4 checks, 63 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000094499.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

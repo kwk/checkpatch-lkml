@@ -1,0 +1,92 @@
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#79: FILE: drivers/staging/fbtft/fbtft.h:275:
++#define FBTFT_DT_TABLE(_compatible)						\
++static const struct of_device_id dt_ids[] = {					\
++	{ .compatible = _compatible },						\
++	{},									\
++};										\
++MODULE_DEVICE_TABLE(of, dt_ids);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#86: FILE: drivers/staging/fbtft/fbtft.h:282:
++#define FBTFT_SPI_DRIVER(_name, _compatible, _display, _spi_ids)		\
++										\
++static int fbtft_driver_probe_spi(struct spi_device *spi)			\
++{										\
++	return fbtft_probe_common(_display, spi, NULL);				\
++}										\
++										\
++static int fbtft_driver_remove_spi(struct spi_device *spi)			\
++{										\
++	struct fb_info *info = spi_get_drvdata(spi);				\
++										\
++	fbtft_remove_common(&spi->dev, info);					\
++	return 0;								\
++}										\
++										\
++static struct spi_driver fbtft_driver_spi_driver = {				\
++	.driver = {								\
++		.name = _name,							\
++		.of_match_table = dt_ids,					\
++	},									\
++	.id_table = _spi_ids,							\
++	.probe = fbtft_driver_probe_spi,					\
++	.remove = fbtft_driver_remove_spi,					\
++};
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#86: FILE: drivers/staging/fbtft/fbtft.h:282:
++#define FBTFT_SPI_DRIVER(_name, _compatible, _display, _spi_ids)		\
++										\
++static int fbtft_driver_probe_spi(struct spi_device *spi)			\
++{										\
++	return fbtft_probe_common(_display, spi, NULL);				\
++}										\
++										\
++static int fbtft_driver_remove_spi(struct spi_device *spi)			\
++{										\
++	struct fb_info *info = spi_get_drvdata(spi);				\
++										\
++	fbtft_remove_common(&spi->dev, info);					\
++	return 0;								\
++}										\
++										\
++static struct spi_driver fbtft_driver_spi_driver = {				\
++	.driver = {								\
++		.name = _name,							\
++		.of_match_table = dt_ids,					\
++	},									\
++	.id_table = _spi_ids,							\
++	.probe = fbtft_driver_probe_spi,					\
++	.remove = fbtft_driver_remove_spi,					\
++};
+
+./tmp.L8M9DVV7bm//home/fedora/lkml-analysis/lkml/11/patch.offset.0000018781.commit.172f2ee9a2cc7645fcf7b58ab0a6fc17d4080426 total: 0 errors, 3 warnings, 0 checks, 121 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.L8M9DVV7bm//home/fedora/lkml-analysis/lkml/11/patch.offset.0000018781.commit.172f2ee9a2cc7645fcf7b58ab0a6fc17d4080426 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

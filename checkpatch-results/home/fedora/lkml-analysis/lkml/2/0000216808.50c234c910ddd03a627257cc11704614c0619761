@@ -1,0 +1,164 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#28: 
+- support to use PCK as ISI_MCK. PCK's parent is managed in SoC level, e.g. at91sam9g45_devices.c
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#66: FILE: arch/arm/mach-at91/at91sam9g45_devices.c:871:
++ * -------------------------------------------------------------------- */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:PREFER_IS_ENABLED: Prefer IS_ENABLED(<FOO>) to CONFIG_<FOO> || CONFIG_<FOO>_MODULE
+#67: FILE: arch/arm/mach-at91/at91sam9g45_devices.c:872:
++#if defined(CONFIG_VIDEO_ATMEL_ISI) || defined(CONFIG_VIDEO_ATMEL_ISI_MODULE)
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#100: FILE: arch/arm/mach-at91/at91sam9g45_devices.c:905:
++void __init at91_add_device_isi(struct isi_platform_data * data,
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#101: FILE: arch/arm/mach-at91/at91sam9g45_devices.c:906:
++void __init at91_add_device_isi(struct isi_platform_data * data,
++		bool use_pck_as_mck)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#135: FILE: arch/arm/mach-at91/at91sam9g45_devices.c:940:
++			BUG();
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#137: FILE: arch/arm/mach-at91/at91sam9g45_devices.c:942:
++		if (clk_set_parent(pck, parent))
+[...]
++		else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#138: FILE: arch/arm/mach-at91/at91sam9g45_devices.c:943:
++			printk(KERN_ERR "Failed to set PCK's parent\n");
+
+CHECK:BRACES: Unbalanced braces around else statement
+#139: FILE: arch/arm/mach-at91/at91sam9g45_devices.c:944:
++		else {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#143: FILE: arch/arm/mach-at91/at91sam9g45_devices.c:948:
++			clkdev_add_table(isi_mck_lookups,
++					ARRAY_SIZE(isi_mck_lookups));
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#151: FILE: arch/arm/mach-at91/at91sam9g45_devices.c:956:
++	return;
++}
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#153: FILE: arch/arm/mach-at91/at91sam9g45_devices.c:958:
++void __init at91_add_device_isi(struct isi_platform_data * data,
+
+ERROR:OPEN_BRACE: open brace '{' following function definitions go on the next line
+#153: FILE: arch/arm/mach-at91/at91sam9g45_devices.c:958:
++void __init at91_add_device_isi(struct isi_platform_data * data,
++		int use_pck_as_mck) {}
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#154: FILE: arch/arm/mach-at91/at91sam9g45_devices.c:959:
++void __init at91_add_device_isi(struct isi_platform_data * data,
++		int use_pck_as_mck) {}
+
+WARNING:MISPLACED_INIT: __initdata should be placed after isi_data
+#185: FILE: arch/arm/mach-at91/board-sam9m10g45ek.c:194:
++static struct isi_platform_data __initdata isi_data = {
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#199: FILE: arch/arm/mach-at91/board-sam9m10g45ek.c:208:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#251: FILE: arch/arm/mach-at91/board-sam9m10g45ek.c:260:
++
++
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000216808.commit.50c234c910ddd03a627257cc11704614c0619761 total: 3 errors, 7 warnings, 7 checks, 236 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000216808.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

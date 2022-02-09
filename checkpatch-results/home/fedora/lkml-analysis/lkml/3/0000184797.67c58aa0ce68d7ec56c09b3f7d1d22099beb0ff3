@@ -1,0 +1,148 @@
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#99: FILE: drivers/staging/lustre/lustre/include/lustre/lustre_idl.h:2709:
++#define LOV_DESC_STRIPE_SIZE_DEFAULT (1 << LNET_MTU_BITS)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#190: 
+deleted file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#330: FILE: drivers/staging/lustre/lustre/lov/lov_ea.c:351:
++	CDEBUG(level, "lsm %p, objid "DOSTID", maxbytes "LPX64", magic 0x%08X,"
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#331: FILE: drivers/staging/lustre/lustre/lov/lov_ea.c:352:
++	CDEBUG(level, "lsm %p, objid "DOSTID", maxbytes "LPX64", magic 0x%08X,"
++	       " stripe_size %u, stripe_count %u, refc: %d,"
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#332: FILE: drivers/staging/lustre/lustre/lov/lov_ea.c:353:
++	       " stripe_size %u, stripe_count %u, refc: %d,"
++	       " layout_gen %u, pool ["LOV_POOLNAMEF"]\n", lsm,
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#332: FILE: drivers/staging/lustre/lustre/lov/lov_ea.c:353:
++	       " layout_gen %u, pool ["LOV_POOLNAMEF"]\n", lsm,
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#352: FILE: drivers/staging/lustre/lustre/lov/lov_internal.h:46:
++ * already a 32-bit value the compiler handles this directly. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#354: FILE: drivers/staging/lustre/lustre/lov/lov_internal.h:48:
++# define lov_do_div64(n, base) ({					\
++	uint64_t __base = (base);					\
++	uint64_t __rem;							\
++	__rem = ((uint64_t)(n)) % __base;				\
++	(n) = ((uint64_t)(n)) / __base;					\
++	__rem;								\
++})
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#355: FILE: drivers/staging/lustre/lustre/lov/lov_internal.h:49:
++	uint64_t __base = (base);					\
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#356: FILE: drivers/staging/lustre/lustre/lov/lov_internal.h:50:
++	uint64_t __rem;							\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#362: FILE: drivers/staging/lustre/lustre/lov/lov_internal.h:56:
++# define lov_do_div64(n, base) ({					\
++	uint64_t __rem;							\
++	if ((sizeof(base) > 4) && (((base) & 0xffffffff00000000ULL) != 0)) {  \
++		int __remainder;					      \
++		LASSERTF(!((base) & (LOV_MIN_STRIPE_SIZE - 1)), "64 bit lov " \
++			 "division %llu / %llu\n", (n), (uint64_t)(base));    \
++		__remainder = (n) & (LOV_MIN_STRIPE_SIZE - 1);		\
++		(n) >>= LOV_MIN_STRIPE_BITS;				\
++		__rem = do_div(n, (base) >> LOV_MIN_STRIPE_BITS);	\
++		__rem <<= LOV_MIN_STRIPE_BITS;				\
++		__rem += __remainder;					\
++	} else {							\
++		__rem = do_div(n, base);				\
++	}								\
++	__rem;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'base' - possible side-effects?
+#362: FILE: drivers/staging/lustre/lustre/lov/lov_internal.h:56:
++# define lov_do_div64(n, base) ({					\
++	uint64_t __rem;							\
++	if ((sizeof(base) > 4) && (((base) & 0xffffffff00000000ULL) != 0)) {  \
++		int __remainder;					      \
++		LASSERTF(!((base) & (LOV_MIN_STRIPE_SIZE - 1)), "64 bit lov " \
++			 "division %llu / %llu\n", (n), (uint64_t)(base));    \
++		__remainder = (n) & (LOV_MIN_STRIPE_SIZE - 1);		\
++		(n) >>= LOV_MIN_STRIPE_BITS;				\
++		__rem = do_div(n, (base) >> LOV_MIN_STRIPE_BITS);	\
++		__rem <<= LOV_MIN_STRIPE_BITS;				\
++		__rem += __remainder;					\
++	} else {							\
++		__rem = do_div(n, base);				\
++	}								\
++	__rem;								\
++})
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#363: FILE: drivers/staging/lustre/lustre/lov/lov_internal.h:57:
++	uint64_t __rem;							\
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#482: FILE: drivers/staging/lustre/lustre/lov/lov_pack.c:179:
++		stripe_count = lov_mds_md_max_stripe_count(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#494: FILE: drivers/staging/lustre/lustre/lov/lov_pack.c:267:
++		max_stripes = lov_mds_md_max_stripe_count(
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000184797.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 4 warnings, 11 checks, 337 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000184797.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

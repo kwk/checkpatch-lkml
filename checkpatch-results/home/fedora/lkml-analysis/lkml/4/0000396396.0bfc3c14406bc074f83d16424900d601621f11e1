@@ -1,0 +1,107 @@
+WARNING:DEVICE_ATTR_RW: Use DEVICE_ATTR_RW
+#142: FILE: drivers/thermal/thermal_core.c:904:
++}
+
+The DEVICE_ATTR_RW(name) helper macro can be used instead of
+DEVICE_ATTR(name, 0644, name_show, name_store);
+
+Note that the macro automatically appends _show and _store to the
+named attribute variable of the device for the show and store methods.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR | S_IRUGO' are not preferred. Consider using octal permissions '0644'.
+#143: FILE: drivers/thermal/thermal_core.c:905:
++static DEVICE_ATTR(sustainable_power, S_IWUSR | S_IRUGO, sustainable_power_show,
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#146: FILE: drivers/thermal/thermal_core.c:908:
++#define create_s32_tzp_attr(name)					\
++	static ssize_t							\
++	name##_show(struct device *dev, struct device_attribute *devattr, \
++		char *buf)						\
++	{								\
++	struct thermal_zone_device *tz = to_thermal_zone(dev);		\
++									\
++	if (tz->tzp)							\
++		return sprintf(buf, "%u\n", tz->tzp->name);		\
++	else								\
++		return -EIO;						\
++	}								\
++									\
++	static ssize_t							\
++	name##_store(struct device *dev, struct device_attribute *devattr, \
++		const char *buf, size_t count)				\
++	{								\
++		struct thermal_zone_device *tz = to_thermal_zone(dev);	\
++		s32 value;						\
++									\
++		if (!tz->tzp)						\
++			return -EIO;					\
++									\
++		if (kstrtos32(buf, 10, &value))				\
++			return -EINVAL;					\
++									\
++		tz->tzp->name = value;					\
++									\
++		return count;						\
++	}								\
++	static DEVICE_ATTR(name, S_IWUSR | S_IRUGO, name##_show, name##_store)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'name' may be better as '(name)' to avoid precedence issues
+#146: FILE: drivers/thermal/thermal_core.c:908:
++#define create_s32_tzp_attr(name)					\
++	static ssize_t							\
++	name##_show(struct device *dev, struct device_attribute *devattr, \
++		char *buf)						\
++	{								\
++	struct thermal_zone_device *tz = to_thermal_zone(dev);		\
++									\
++	if (tz->tzp)							\
++		return sprintf(buf, "%u\n", tz->tzp->name);		\
++	else								\
++		return -EIO;						\
++	}								\
++									\
++	static ssize_t							\
++	name##_store(struct device *dev, struct device_attribute *devattr, \
++		const char *buf, size_t count)				\
++	{								\
++		struct thermal_zone_device *tz = to_thermal_zone(dev);	\
++		s32 value;						\
++									\
++		if (!tz->tzp)						\
++			return -EIO;					\
++									\
++		if (kstrtos32(buf, 10, &value))				\
++			return -EINVAL;					\
++									\
++		tz->tzp->name = value;					\
++									\
++		return count;						\
++	}								\
++	static DEVICE_ATTR(name, S_IWUSR | S_IRUGO, name##_show, name##_store)
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR | S_IRUGO' are not preferred. Consider using octal permissions '0644'.
+#176: FILE: drivers/thermal/thermal_core.c:938:
++	static DEVICE_ATTR(name, S_IWUSR | S_IRUGO, name##_show, name##_store)
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000396396.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 3 warnings, 2 checks, 177 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000396396.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

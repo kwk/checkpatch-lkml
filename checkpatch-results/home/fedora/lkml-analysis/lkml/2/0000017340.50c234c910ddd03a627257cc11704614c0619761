@@ -1,0 +1,151 @@
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#72: FILE: tools/perf/ui/gtk/browser.c:66:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_field' - possible side-effects?
+#73: FILE: tools/perf/ui/gtk/browser.c:67:
++#define __HPP_COLOR_PERCENT_FN(_type, _field)					\
++static int perf_gtk__hpp_color_##_type(struct perf_hpp *hpp,			\
++				       struct hist_entry *he)			\
+ {										\
++	int ret;								\
++	double percent = 0.0;							\
+ 	struct hists *hists = he->hists;					\
+ 										\
++	if (hists->stats.total_period)						\
++		percent = 100.0 * he->stat._field / hists->stats.total_period; 	\
++										\
++	ret = perf_gtk__percent_color_snprintf(hpp->buf, hpp->size, percent);	\
++										\
++	if (symbol_conf.event_group) {						\
++		int i;								\
++		struct perf_evsel *evsel = hists_to_evsel(hists);		\
++		struct hist_entry *pair;					\
++		int nr_members = evsel->nr_members;				\
++		double *percents;						\
++										\
++		if (nr_members <= 1)						\
++			return ret;						\
++										\
++		percents = zalloc(sizeof(*percents) * nr_members);		\
++		if (percents == NULL) {						\
++			pr_warning("Not enough memory!\n");			\
++			return ret;						\
++		}								\
++										\
++		list_for_each_entry(pair, &he->pairs.head, pairs.node) { 	\
++			u64 period = pair->stat._field;				\
++			u64 total = pair->hists->stats.total_period;		\
++										\
++			if (!total)						\
++				continue;					\
++										\
++			evsel = hists_to_evsel(pair->hists);			\
++			i = perf_evsel__group_idx(evsel);			\
++			percents[i] = 100.0 * period / total;			\
++		}								\
+ 										\
++		for (i = 1; i < nr_members; i++) {				\
++			ret += scnprintf(hpp->buf + ret, hpp->size -ret, " ");	\
++			ret += perf_gtk__percent_color_snprintf(hpp->buf + ret,	\
++								hpp->size - ret,\
++								percents[i]);	\
++		}								\
++		free(percents);							\
++	}									\
+ 	return ret;								\
+ }
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_field' may be better as '(_field)' to avoid precedence issues
+#73: FILE: tools/perf/ui/gtk/browser.c:67:
++#define __HPP_COLOR_PERCENT_FN(_type, _field)					\
++static int perf_gtk__hpp_color_##_type(struct perf_hpp *hpp,			\
++				       struct hist_entry *he)			\
+ {										\
++	int ret;								\
++	double percent = 0.0;							\
+ 	struct hists *hists = he->hists;					\
+ 										\
++	if (hists->stats.total_period)						\
++		percent = 100.0 * he->stat._field / hists->stats.total_period; 	\
++										\
++	ret = perf_gtk__percent_color_snprintf(hpp->buf, hpp->size, percent);	\
++										\
++	if (symbol_conf.event_group) {						\
++		int i;								\
++		struct perf_evsel *evsel = hists_to_evsel(hists);		\
++		struct hist_entry *pair;					\
++		int nr_members = evsel->nr_members;				\
++		double *percents;						\
++										\
++		if (nr_members <= 1)						\
++			return ret;						\
++										\
++		percents = zalloc(sizeof(*percents) * nr_members);		\
++		if (percents == NULL) {						\
++			pr_warning("Not enough memory!\n");			\
++			return ret;						\
++		}								\
++										\
++		list_for_each_entry(pair, &he->pairs.head, pairs.node) { 	\
++			u64 period = pair->stat._field;				\
++			u64 total = pair->hists->stats.total_period;		\
++										\
++			if (!total)						\
++				continue;					\
++										\
++			evsel = hists_to_evsel(pair->hists);			\
++			i = perf_evsel__group_idx(evsel);			\
++			percents[i] = 100.0 * period / total;			\
++		}								\
+ 										\
++		for (i = 1; i < nr_members; i++) {				\
++			ret += scnprintf(hpp->buf + ret, hpp->size -ret, " ");	\
++			ret += perf_gtk__percent_color_snprintf(hpp->buf + ret,	\
++								hpp->size - ret,\
++								percents[i]);	\
++		}								\
++		free(percents);							\
++	}									\
+ 	return ret;								\
+ }
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#91: FILE: tools/perf/ui/gtk/browser.c:76:
++^I^Ipercent = 100.0 * he->stat._field / hists->stats.total_period; ^I\$
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!percents"
+#106: FILE: tools/perf/ui/gtk/browser.c:91:
++		if (percents == NULL) {						\
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#111: FILE: tools/perf/ui/gtk/browser.c:96:
++^I^Ilist_for_each_entry(pair, &he->pairs.head, pairs.node) { ^I\$
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:WxV)
+#124: FILE: tools/perf/ui/gtk/browser.c:109:
++			ret += scnprintf(hpp->buf + ret, hpp->size -ret, " ");	\
+ 			                                           ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000017340.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 2 warnings, 5 checks, 106 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000017340.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

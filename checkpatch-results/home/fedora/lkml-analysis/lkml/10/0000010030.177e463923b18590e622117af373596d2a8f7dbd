@@ -1,0 +1,173 @@
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'name' may be better as '(name)' to avoid precedence issues
+#173: FILE: drivers/misc/dlb/dlb_configfs.c:616:
++#define DLB_CONFIGFS_PORT_LINK_SHOW(name, port)				\
++static ssize_t dlb_cfs_port_##name##_##port##_show(			\
++	struct config_item *item,					\
++	char *page)							\
++{									\
++	return sprintf(page, "Ox%08x\n",				\
++	       to_dlb_cfs_port(item)->name[port]);			\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#189: FILE: drivers/misc/dlb/dlb_configfs.c:657:
++#define DLB_CONFIGFS_PORT_LINK_STORE(name, port)			\
++static ssize_t dlb_cfs_port_##name##_##port##_store(			\
++	struct config_item *item,					\
++	const char *page,						\
++	size_t count)							\
++{									\
++	struct dlb_cfs_port *dlb_cfs_port = to_dlb_cfs_port(item);	\
++	struct dlb_domain *dlb_domain;					\
++	struct dlb *dlb = NULL;						\
++	int ret;							\
++									\
++	ret = dlb_configfs_get_dlb_domain(dlb_cfs_port->domain_grp,	\
++					  &dlb, &dlb_domain);		\
++	if (ret)							\
++		return ret;						\
++									\
++	ret = kstrtoint(page, 16, &dlb_cfs_port->name[port]);		\
++	if (ret)							\
++		return ret;						\
++									\
++	if (dlb_cfs_port->name[port] & 0x10000) {			\
++		struct dlb_map_qid_args args;				\
++									\
++		args.port_id = dlb_cfs_port->port_id;			\
++		args.qid = dlb_cfs_port->name[port] & 0xff;		\
++		args.priority = (dlb_cfs_port->name[port] >> 8) & 0xff;	\
++									\
++		ret = dlb_domain_configfs_map_qid(dlb, dlb_domain,	\
++						  &args);		\
++									\
++		dlb_cfs_port->status = args.response.status;		\
++	} else {							\
++		struct dlb_unmap_qid_args args;				\
++									\
++		args.port_id = dlb_cfs_port->port_id;			\
++		args.qid = dlb_cfs_port->name[port] & 0xff;		\
++									\
++		ret = dlb_domain_configfs_unmap_qid(dlb, dlb_domain,	\
++						    &args);		\
++									\
++		dlb_cfs_port->status = args.response.status;		\
++	}								\
++									\
++	if (ret)							\
++		return ret;						\
++									\
++	return count;							\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'name' may be better as '(name)' to avoid precedence issues
+#189: FILE: drivers/misc/dlb/dlb_configfs.c:657:
++#define DLB_CONFIGFS_PORT_LINK_STORE(name, port)			\
++static ssize_t dlb_cfs_port_##name##_##port##_store(			\
++	struct config_item *item,					\
++	const char *page,						\
++	size_t count)							\
++{									\
++	struct dlb_cfs_port *dlb_cfs_port = to_dlb_cfs_port(item);	\
++	struct dlb_domain *dlb_domain;					\
++	struct dlb *dlb = NULL;						\
++	int ret;							\
++									\
++	ret = dlb_configfs_get_dlb_domain(dlb_cfs_port->domain_grp,	\
++					  &dlb, &dlb_domain);		\
++	if (ret)							\
++		return ret;						\
++									\
++	ret = kstrtoint(page, 16, &dlb_cfs_port->name[port]);		\
++	if (ret)							\
++		return ret;						\
++									\
++	if (dlb_cfs_port->name[port] & 0x10000) {			\
++		struct dlb_map_qid_args args;				\
++									\
++		args.port_id = dlb_cfs_port->port_id;			\
++		args.qid = dlb_cfs_port->name[port] & 0xff;		\
++		args.priority = (dlb_cfs_port->name[port] >> 8) & 0xff;	\
++									\
++		ret = dlb_domain_configfs_map_qid(dlb, dlb_domain,	\
++						  &args);		\
++									\
++		dlb_cfs_port->status = args.response.status;		\
++	} else {							\
++		struct dlb_unmap_qid_args args;				\
++									\
++		args.port_id = dlb_cfs_port->port_id;			\
++		args.qid = dlb_cfs_port->name[port] & 0xff;		\
++									\
++		ret = dlb_domain_configfs_unmap_qid(dlb, dlb_domain,	\
++						    &args);		\
++									\
++		dlb_cfs_port->status = args.response.status;		\
++	}								\
++									\
++	if (ret)							\
++		return ret;						\
++									\
++	return count;							\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'port' - possible side-effects?
+#189: FILE: drivers/misc/dlb/dlb_configfs.c:657:
++#define DLB_CONFIGFS_PORT_LINK_STORE(name, port)			\
++static ssize_t dlb_cfs_port_##name##_##port##_store(			\
++	struct config_item *item,					\
++	const char *page,						\
++	size_t count)							\
++{									\
++	struct dlb_cfs_port *dlb_cfs_port = to_dlb_cfs_port(item);	\
++	struct dlb_domain *dlb_domain;					\
++	struct dlb *dlb = NULL;						\
++	int ret;							\
++									\
++	ret = dlb_configfs_get_dlb_domain(dlb_cfs_port->domain_grp,	\
++					  &dlb, &dlb_domain);		\
++	if (ret)							\
++		return ret;						\
++									\
++	ret = kstrtoint(page, 16, &dlb_cfs_port->name[port]);		\
++	if (ret)							\
++		return ret;						\
++									\
++	if (dlb_cfs_port->name[port] & 0x10000) {			\
++		struct dlb_map_qid_args args;				\
++									\
++		args.port_id = dlb_cfs_port->port_id;			\
++		args.qid = dlb_cfs_port->name[port] & 0xff;		\
++		args.priority = (dlb_cfs_port->name[port] >> 8) & 0xff;	\
++									\
++		ret = dlb_domain_configfs_map_qid(dlb, dlb_domain,	\
++						  &args);		\
++									\
++		dlb_cfs_port->status = args.response.status;		\
++	} else {							\
++		struct dlb_unmap_qid_args args;				\
++									\
++		args.port_id = dlb_cfs_port->port_id;			\
++		args.qid = dlb_cfs_port->name[port] & 0xff;		\
++									\
++		ret = dlb_domain_configfs_unmap_qid(dlb, dlb_domain,	\
++						    &args);		\
++									\
++		dlb_cfs_port->status = args.response.status;		\
++	}								\
++									\
++	if (ret)							\
++		return ret;						\
++									\
++	return count;							\
++}
+
+./tmp.3ThM2397W7//home/fedora/lkml-analysis/lkml/10/patch.offset.0000010030.commit.177e463923b18590e622117af373596d2a8f7dbd total: 0 errors, 0 warnings, 4 checks, 627 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.3ThM2397W7//home/fedora/lkml-analysis/lkml/10/patch.offset.0000010030.commit.177e463923b18590e622117af373596d2a8f7dbd has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

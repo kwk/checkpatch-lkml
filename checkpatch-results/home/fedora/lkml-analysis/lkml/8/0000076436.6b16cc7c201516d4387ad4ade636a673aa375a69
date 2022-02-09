@@ -1,0 +1,430 @@
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#218: FILE: include/linux/seqlock.h:134:
++typedef seqcount_t * __seqprop_ptr_t;
+
+ERROR:POINTER_LOCATION: "foo * bar" should be "foo *bar"
+#218: FILE: include/linux/seqlock.h:134:
++typedef seqcount_t * __seqprop_ptr_t;
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#219: FILE: include/linux/seqlock.h:135:
++typedef bool	     __seqprop_preempt_t;
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#220: FILE: include/linux/seqlock.h:136:
++typedef void	     __seqprop_assert_t;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#221: FILE: include/linux/seqlock.h:137:
++typedef unsigned     __seqprop_begin_t;
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#221: FILE: include/linux/seqlock.h:137:
++typedef unsigned     __seqprop_begin_t;
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#223: FILE: include/linux/seqlock.h:139:
++#define __SEQPROP(name, prop)			\
++static __always_inline __seqprop_##prop##_t	\
++__seqprop##name##_##prop(seqcount##name##_t *s)
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#225: FILE: include/linux/seqlock.h:141:
++__seqprop##name##_##prop(seqcount##name##_t *s)
+                                             ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'locktype' - possible side-effects?
+#232: FILE: include/linux/seqlock.h:148:
++#define SEQCOUNT_LOCKTYPE(name, locktype, lockbase, blocking, lockmember)	\
++typedef struct seqcount_##name {					\
++	seqcount_t	seqcount;					\
++	__SEQ_LOCK(locktype *lock);					\
++} seqcount_##name##_t;							\
++									\
++static __always_inline void						\
++seqcount_##name##_init(seqcount_##name##_t *s, locktype *l)		\
++{									\
++	seqcount_init(&s->seqcount);					\
++	__SEQ_LOCK(s->lock = l);					\
++}									\
++									\
++__SEQPROP(_##name, ptr)	    { return &s->seqcount; }			\
++__SEQPROP(_##name, preempt) { return blocking; }			\
++__SEQPROP(_##name, assert)  {						\
++	__SEQ_LOCK(lockdep_assert_held(s->lockmember));			\
++}									\
++__SEQPROP(_##name, begin)   {						\
++	if (!__SEQ_RT || !blocking)					\
++		return __seqprop_begin(&s->seqcount);			\
++									\
++	__SEQ_LOCK(lockbase##_lock(&s->lock);				\
++		   lockbase##_unlock(&s->lock));			\
++									\
++	return READ_ONCE(s->seqcount.sequence);				\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'locktype' may be better as '(locktype)' to avoid precedence issues
+#232: FILE: include/linux/seqlock.h:148:
++#define SEQCOUNT_LOCKTYPE(name, locktype, lockbase, blocking, lockmember)	\
++typedef struct seqcount_##name {					\
++	seqcount_t	seqcount;					\
++	__SEQ_LOCK(locktype *lock);					\
++} seqcount_##name##_t;							\
++									\
++static __always_inline void						\
++seqcount_##name##_init(seqcount_##name##_t *s, locktype *l)		\
++{									\
++	seqcount_init(&s->seqcount);					\
++	__SEQ_LOCK(s->lock = l);					\
++}									\
++									\
++__SEQPROP(_##name, ptr)	    { return &s->seqcount; }			\
++__SEQPROP(_##name, preempt) { return blocking; }			\
++__SEQPROP(_##name, assert)  {						\
++	__SEQ_LOCK(lockdep_assert_held(s->lockmember));			\
++}									\
++__SEQPROP(_##name, begin)   {						\
++	if (!__SEQ_RT || !blocking)					\
++		return __seqprop_begin(&s->seqcount);			\
++									\
++	__SEQ_LOCK(lockbase##_lock(&s->lock);				\
++		   lockbase##_unlock(&s->lock));			\
++									\
++	return READ_ONCE(s->seqcount.sequence);				\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'blocking' - possible side-effects?
+#232: FILE: include/linux/seqlock.h:148:
++#define SEQCOUNT_LOCKTYPE(name, locktype, lockbase, blocking, lockmember)	\
++typedef struct seqcount_##name {					\
++	seqcount_t	seqcount;					\
++	__SEQ_LOCK(locktype *lock);					\
++} seqcount_##name##_t;							\
++									\
++static __always_inline void						\
++seqcount_##name##_init(seqcount_##name##_t *s, locktype *l)		\
++{									\
++	seqcount_init(&s->seqcount);					\
++	__SEQ_LOCK(s->lock = l);					\
++}									\
++									\
++__SEQPROP(_##name, ptr)	    { return &s->seqcount; }			\
++__SEQPROP(_##name, preempt) { return blocking; }			\
++__SEQPROP(_##name, assert)  {						\
++	__SEQ_LOCK(lockdep_assert_held(s->lockmember));			\
++}									\
++__SEQPROP(_##name, begin)   {						\
++	if (!__SEQ_RT || !blocking)					\
++		return __seqprop_begin(&s->seqcount);			\
++									\
++	__SEQ_LOCK(lockbase##_lock(&s->lock);				\
++		   lockbase##_unlock(&s->lock));			\
++									\
++	return READ_ONCE(s->seqcount.sequence);				\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'lockmember' may be better as '(lockmember)' to avoid precedence issues
+#232: FILE: include/linux/seqlock.h:148:
++#define SEQCOUNT_LOCKTYPE(name, locktype, lockbase, blocking, lockmember)	\
++typedef struct seqcount_##name {					\
++	seqcount_t	seqcount;					\
++	__SEQ_LOCK(locktype *lock);					\
++} seqcount_##name##_t;							\
++									\
++static __always_inline void						\
++seqcount_##name##_init(seqcount_##name##_t *s, locktype *l)		\
++{									\
++	seqcount_init(&s->seqcount);					\
++	__SEQ_LOCK(s->lock = l);					\
++}									\
++									\
++__SEQPROP(_##name, ptr)	    { return &s->seqcount; }			\
++__SEQPROP(_##name, preempt) { return blocking; }			\
++__SEQPROP(_##name, assert)  {						\
++	__SEQ_LOCK(lockdep_assert_held(s->lockmember));			\
++}									\
++__SEQPROP(_##name, begin)   {						\
++	if (!__SEQ_RT || !blocking)					\
++		return __seqprop_begin(&s->seqcount);			\
++									\
++	__SEQ_LOCK(lockbase##_lock(&s->lock);				\
++		   lockbase##_unlock(&s->lock));			\
++									\
++	return READ_ONCE(s->seqcount.sequence);				\
++}
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#233: FILE: include/linux/seqlock.h:149:
++typedef struct seqcount_##name {					\
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#235: FILE: include/linux/seqlock.h:151:
++	__SEQ_LOCK(locktype *lock);					\
+ 	                    ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#239: FILE: include/linux/seqlock.h:155:
++seqcount_##name##_init(seqcount_##name##_t *s, locktype *l)		\
+                                            ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#239: FILE: include/linux/seqlock.h:155:
++seqcount_##name##_init(seqcount_##name##_t *s, locktype *l)		\
+                                                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#274: FILE: include/linux/seqlock.h:190:
++SEQCOUNT_LOCKTYPE(ww_mutex,	struct ww_mutex,ww_mutex, true,		lock->base)
+                            	               ^
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#285: FILE: include/linux/seqlock.h:201:
++#define __seqprop_pick(s, name, prop, otherwise)			\
++	__builtin_choose_expr(__same_type(*(s), seqcount##name##_t,	\
++			      __seqprop##name##_##prop((void *)(s)),	\
++			      otherwise)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#285: FILE: include/linux/seqlock.h:201:
++#define __seqprop_pick(s, name, prop, otherwise)			\
++	__builtin_choose_expr(__same_type(*(s), seqcount##name##_t,	\
++			      __seqprop##name##_##prop((void *)(s)),	\
++			      otherwise)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#290: FILE: include/linux/seqlock.h:206:
++extern void __seqprop_invalid(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#294: FILE: include/linux/seqlock.h:210:
++#define __seqprop(s, prop)				\
++	__seqprop_pick((s), , prop,			\
++	  __seqprop_pick((s), _raw_spinlock, prop,	\
++	    __seqprop_pick((s), _spinlock, prop,	\
++	      __seqprop_pick((s), _rwlock, prop,	\
++	        __seqprop_pick((s), _mutex, prop,	\
++	          __seqprop_pick((s), _ww_mutex, prop,	\
++		    __seqprop_invalid()))))))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'prop' - possible side-effects?
+#294: FILE: include/linux/seqlock.h:210:
++#define __seqprop(s, prop)				\
++	__seqprop_pick((s), , prop,			\
++	  __seqprop_pick((s), _raw_spinlock, prop,	\
++	    __seqprop_pick((s), _spinlock, prop,	\
++	      __seqprop_pick((s), _rwlock, prop,	\
++	        __seqprop_pick((s), _mutex, prop,	\
++	          __seqprop_pick((s), _ww_mutex, prop,	\
++		    __seqprop_invalid()))))))
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#295: FILE: include/linux/seqlock.h:211:
++	__seqprop_pick((s), , prop,			\
+ 	                    ^
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#299: FILE: include/linux/seqlock.h:215:
++^I        __seqprop_pick((s), _mutex, prop,^I\$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#300: FILE: include/linux/seqlock.h:216:
++^I          __seqprop_pick((s), _ww_mutex, prop,^I\$
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#305: FILE: include/linux/seqlock.h:221:
++#define __seqprop_case(s, name, prop) \
++	seqcount##name##_t: __seqprop##name##_##prop((void *)s)
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxW)
+#306: FILE: include/linux/seqlock.h:222:
++	seqcount##name##_t: __seqprop##name##_##prop((void *)s)
+ 	                  ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#308: FILE: include/linux/seqlock.h:224:
++#define __seqprop(s, prop)					\
++	_Generic(*(s),						\
++		 __seqprop_case((s), , prop),			\
++		 __seqprop_case((s), _raw_spinlock, prop),	\
++		 __seqprop_case((s), _spinlock, prop),		\
++		 __seqprop_case((s), _rwlock, prop),		\
++		 __seqprop_case((s), _mutex, prop),		\
++		 __seqprop_case((s), _ww_mutex, prop))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'prop' - possible side-effects?
+#308: FILE: include/linux/seqlock.h:224:
++#define __seqprop(s, prop)					\
++	_Generic(*(s),						\
++		 __seqprop_case((s), , prop),			\
++		 __seqprop_case((s), _raw_spinlock, prop),	\
++		 __seqprop_case((s), _spinlock, prop),		\
++		 __seqprop_case((s), _rwlock, prop),		\
++		 __seqprop_case((s), _mutex, prop),		\
++		 __seqprop_case((s), _ww_mutex, prop))
+
+CHECK:CAMELCASE: Avoid CamelCase: <_Generic>
+#309: FILE: include/linux/seqlock.h:225:
++	_Generic(*(s),						\
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#310: FILE: include/linux/seqlock.h:226:
++		 __seqprop_case((s), , prop),			\
+ 		                     ^
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#338: FILE: include/linux/seqlock.h:254:
++	unsigned ret = __seqprop(s, begin);			\
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#343: FILE: include/linux/seqlock.h:259:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#344: FILE: include/linux/seqlock.h:260:
++static inline unsigned do___read_seqcount_begin(const seqcount_t *s)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#368: FILE: include/linux/seqlock.h:286:
++static inline unsigned do_raw_read_seqcount(const seqcount_t *s)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#391: FILE: include/linux/seqlock.h:305:
++static inline unsigned do_raw_read_seqcount_begin(const seqcount_t *s)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#394: FILE: include/linux/seqlock.h:307:
++	unsigned ret = do___read_seqcount_begin(s);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#418: FILE: include/linux/seqlock.h:321:
++#define read_seqcount_begin(s)				\
++({							\
++	seqcount_lockdep_reader_access(s);		\
++	__read_seqcount_begin(s);			\
++})
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#443: FILE: include/linux/seqlock.h:343:
++static inline unsigned do_raw_seqcount_begin(const seqcount_t *s)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#465: FILE: include/linux/seqlock.h:367:
++static inline int do___read_seqcount_retry(const seqcount_t *s, unsigned start)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#487: FILE: include/linux/seqlock.h:385:
++static inline int do_read_seqcount_retry(const seqcount_t *s, unsigned start)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#494: FILE: include/linux/seqlock.h:391:
++#define raw_write_seqcount_begin(s)					\
++do {									\
++	if (__associated_lock_is_preemptible(s))			\
++		preempt_disable();					\
++									\
++	do_raw_write_seqcount_begin(__to_seqcount_t(s));		\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#512: FILE: include/linux/seqlock.h:406:
++#define raw_write_seqcount_end(s)					\
++do {									\
++	do_raw_write_seqcount_end(__to_seqcount_t(s));			\
++									\
++	if (__associated_lock_is_preemptible(s))			\
++		preempt_enable();					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#709: FILE: include/linux/seqlock.h:593:
++#define write_seqcount_begin_nested(s, subclass)			\
++do {									\
++	__assert_associated_lock_held(s);				\
++									\
++	if (__associated_lock_is_preemptible(s))			\
++		preempt_disable();					\
++									\
++	do_write_seqcount_begin_nested(__to_seqcount_t(s), subclass);	\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#750: FILE: include/linux/seqlock.h:628:
++#define write_seqcount_begin(s)						\
++do {									\
++	__assert_associated_lock_held(s);				\
++									\
++	if (__associated_lock_is_preemptible(s))			\
++		preempt_disable();					\
++									\
++	do_write_seqcount_begin(__to_seqcount_t(s));			\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#772: FILE: include/linux/seqlock.h:649:
++#define write_seqcount_end(s)						\
++do {									\
++	do_write_seqcount_end(__to_seqcount_t(s));			\
++									\
++	if (__associated_lock_is_preemptible(s))			\
++		preempt_enable();					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sl' - possible side-effects?
+#836: FILE: include/linux/seqlock.h:705:
++#define seqlock_init(sl)				\
+ 	do {						\
++		seqcount_init(&(sl)->seqcount);		\
++		spin_lock_init(&(sl)->lock);		\
+ 	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sl' - possible side-effects?
+#850: FILE: include/linux/seqlock.h:715:
++#define DEFINE_SEQLOCK(sl) \
++		seqlock_t sl = __SEQLOCK_UNLOCKED(sl)
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000076436.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 10 errors, 14 warnings, 24 checks, 1160 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000076436.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,250 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#41: 
+Add new callbacks into struct acpi_device_ops to provide better error handling,
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#88: FILE: drivers/acpi/hotplug/device.c:34:
++	int ret = -ENOSYS;
+
+ENOSYS means that a nonexistent system call was called.
+Earlier, it was wrongly used for things like invalid operations on
+otherwise valid syscalls.  This should be avoided in new code.
+
+See: https://lore.kernel.org/lkml/5eb299021dec23c1a48fa7d9f2c8b794e967766d.1408730669.git.luto@amacapital.net/
+
+WARNING:IF_0: Consider removing the code enclosed by this #if 0 and its #endif
+#97: FILE: drivers/acpi/hotplug/device.c:43:
++#if 0
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'method' - possible side-effects?
+#114: FILE: drivers/acpi/hotplug/device.c:60:
++#define	ACPIHP_DEFINE_FUNC(method, def, err) \
++int acpihp_dev_##method(struct acpi_device *device) \
++{ \
++	int ret; \
++	BUG_ON(device == NULL); \
++	if (!device->driver || !device->driver->ops.hp_ops) \
++		ret = (err); \
++	else if (!device->driver->ops.hp_ops->method) \
++		ret = (def); \
++	else \
++		ret = device->driver->ops.hp_ops->method(device);\
++	return ret; \
++} \
++EXPORT_SYMBOL_GPL(acpihp_dev_##method)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'method' may be better as '(method)' to avoid precedence issues
+#114: FILE: drivers/acpi/hotplug/device.c:60:
++#define	ACPIHP_DEFINE_FUNC(method, def, err) \
++int acpihp_dev_##method(struct acpi_device *device) \
++{ \
++	int ret; \
++	BUG_ON(device == NULL); \
++	if (!device->driver || !device->driver->ops.hp_ops) \
++		ret = (err); \
++	else if (!device->driver->ops.hp_ops->method) \
++		ret = (def); \
++	else \
++		ret = device->driver->ops.hp_ops->method(device);\
++	return ret; \
++} \
++EXPORT_SYMBOL_GPL(acpihp_dev_##method)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#118: FILE: drivers/acpi/hotplug/device.c:64:
++	BUG_ON(device == NULL); \
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!device"
+#118: FILE: drivers/acpi/hotplug/device.c:64:
++	BUG_ON(device == NULL); \
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'method' - possible side-effects?
+#129: FILE: drivers/acpi/hotplug/device.c:75:
++#define	ACPIHP_DEFINE_FUNC1(method, def, err, type) \
++int acpihp_dev_##method(struct acpi_device *device, type val) \
++{ \
++	int ret; \
++	BUG_ON(device == NULL); \
++	if (!device->driver || !device->driver->ops.hp_ops) \
++		ret = (err); \
++	else if (!device->driver->ops.hp_ops->method) \
++		ret = (def); \
++	else \
++		ret = device->driver->ops.hp_ops->method(device, val); \
++	return ret; \
++} \
++EXPORT_SYMBOL_GPL(acpihp_dev_##method)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'method' may be better as '(method)' to avoid precedence issues
+#129: FILE: drivers/acpi/hotplug/device.c:75:
++#define	ACPIHP_DEFINE_FUNC1(method, def, err, type) \
++int acpihp_dev_##method(struct acpi_device *device, type val) \
++{ \
++	int ret; \
++	BUG_ON(device == NULL); \
++	if (!device->driver || !device->driver->ops.hp_ops) \
++		ret = (err); \
++	else if (!device->driver->ops.hp_ops->method) \
++		ret = (def); \
++	else \
++		ret = device->driver->ops.hp_ops->method(device, val); \
++	return ret; \
++} \
++EXPORT_SYMBOL_GPL(acpihp_dev_##method)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#133: FILE: drivers/acpi/hotplug/device.c:79:
++	BUG_ON(device == NULL); \
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!device"
+#133: FILE: drivers/acpi/hotplug/device.c:79:
++	BUG_ON(device == NULL); \
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#145: FILE: drivers/acpi/hotplug/device.c:91:
++ACPIHP_DEFINE_FUNC1(configure, 0, -ENOSYS, struct acpihp_cancel_context *);
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#153: FILE: drivers/acpi/hotplug/device.c:99:
++ACPIHP_DEFINE_FUNC(unconfigure, 0, -ENOSYS);
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#189: FILE: include/acpi/acpi_hotplug.h:77:
++	uint32_t			status;
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct acpi_device *' should also have an identifier name
+#212: FILE: include/acpi/acpi_hotplug.h:100:
++	int (*get_info)(struct acpi_device *, struct acpihp_dev_info *info);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct acpi_device *' should also have an identifier name
+#213: FILE: include/acpi/acpi_hotplug.h:101:
++	int (*pre_configure)(struct acpi_device *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct acpihp_cancel_context *' should also have an identifier name
+#213: FILE: include/acpi/acpi_hotplug.h:101:
++	int (*pre_configure)(struct acpi_device *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct acpi_device *' should also have an identifier name
+#215: FILE: include/acpi/acpi_hotplug.h:103:
++	int (*configure)(struct acpi_device *, struct acpihp_cancel_context *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct acpihp_cancel_context *' should also have an identifier name
+#215: FILE: include/acpi/acpi_hotplug.h:103:
++	int (*configure)(struct acpi_device *, struct acpihp_cancel_context *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct acpi_device *' should also have an identifier name
+#216: FILE: include/acpi/acpi_hotplug.h:104:
++	int (*post_configure)(struct acpi_device *, enum acpihp_dev_post_cmd);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct acpi_device *' should also have an identifier name
+#217: FILE: include/acpi/acpi_hotplug.h:105:
++	int (*pre_release)(struct acpi_device *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct acpihp_cancel_context *' should also have an identifier name
+#217: FILE: include/acpi/acpi_hotplug.h:105:
++	int (*pre_release)(struct acpi_device *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct acpi_device *' should also have an identifier name
+#219: FILE: include/acpi/acpi_hotplug.h:107:
++	int (*release)(struct acpi_device *, struct acpihp_cancel_context *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct acpihp_cancel_context *' should also have an identifier name
+#219: FILE: include/acpi/acpi_hotplug.h:107:
++	int (*release)(struct acpi_device *, struct acpihp_cancel_context *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct acpi_device *' should also have an identifier name
+#220: FILE: include/acpi/acpi_hotplug.h:108:
++	int (*post_release)(struct acpi_device *, enum acpihp_dev_post_cmd);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct acpi_device *' should also have an identifier name
+#221: FILE: include/acpi/acpi_hotplug.h:109:
++	int (*pre_unconfigure)(struct acpi_device *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct acpi_device *' should also have an identifier name
+#222: FILE: include/acpi/acpi_hotplug.h:110:
++	int (*unconfigure)(struct acpi_device *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct acpi_device *' should also have an identifier name
+#223: FILE: include/acpi/acpi_hotplug.h:111:
++	int (*post_unconfigure)(struct acpi_device *);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#234: FILE: include/acpi/acpi_hotplug.h:214:
++extern int acpihp_dev_get_info(struct acpi_device *device,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#236: FILE: include/acpi/acpi_hotplug.h:216:
++extern int acpihp_dev_pre_configure(struct acpi_device *device,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#238: FILE: include/acpi/acpi_hotplug.h:218:
++extern int acpihp_dev_configure(struct acpi_device *device,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#240: FILE: include/acpi/acpi_hotplug.h:220:
++extern int acpihp_dev_post_configure(struct acpi_device *device,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#242: FILE: include/acpi/acpi_hotplug.h:222:
++extern int acpihp_dev_pre_release(struct acpi_device *device,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#244: FILE: include/acpi/acpi_hotplug.h:224:
++extern int acpihp_dev_release(struct acpi_device *device,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#246: FILE: include/acpi/acpi_hotplug.h:226:
++extern int acpihp_dev_post_release(struct acpi_device *device,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#248: FILE: include/acpi/acpi_hotplug.h:228:
++extern int acpihp_dev_pre_unconfigure(struct acpi_device *device);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#249: FILE: include/acpi/acpi_hotplug.h:229:
++extern int acpihp_dev_unconfigure(struct acpi_device *device);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#250: FILE: include/acpi/acpi_hotplug.h:230:
++extern int acpihp_dev_post_unconfigure(struct acpi_device *device);
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000081750.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 21 warnings, 17 checks, 169 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000081750.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

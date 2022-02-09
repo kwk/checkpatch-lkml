@@ -1,0 +1,426 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pte' - possible side-effects?
+#112: FILE: arch/arm64/include/asm/pgtable.h:117:
++#define pte_access_permitted(pte, write) \
++	(pte_valid_user(pte) && (!(write) || pte_write(pte)))
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#178: FILE: arch/mips/include/asm/asmmacro.h:111:
++	.set	fp=64
+ 	    	  ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: spaces required around that '=' (ctx:VxV)
+#197: FILE: arch/mips/include/asm/asmmacro.h:170:
++	.set	fp=64
+ 	    	  ^
+
+WARNING:TYPO_SPELLING: 'severly' may be misspelled - perhaps 'severely'?
+#821: FILE: arch/powerpc/mm/pgtable-radix.c:175:
++	 * an invalid pte and the system will crash quite severly.
+ 	                                                  ^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#902: FILE: arch/powerpc/mm/slice.c:455:
++	BUG_ON(mm->context.addr_limit == 0);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#962: FILE: arch/powerpc/perf/imc-pmu.c:540:
++	mem_info->vbase = page_address(alloc_pages_node(nid,
+ 					  GFP_KERNEL | __GFP_ZERO | __GFP_THISNODE |
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#979: FILE: arch/powerpc/perf/imc-pmu.c:808:
++		local_mem = page_address(alloc_pages_node(nid,
+ 				  GFP_KERNEL | __GFP_ZERO | __GFP_THISNODE |
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*item)...) over kzalloc(sizeof(struct vmcs02_list)...)
+#1465: FILE: arch/x86/kvm/vmx.c:6996:
++	item = kzalloc(sizeof(struct vmcs02_list), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_warn([subsystem]dev, ... then dev_warn(dev, ... then pr_warn(...  to printk(KERN_WARNING ...
+#1493: FILE: arch/x86/kvm/vmx.c:8870:
++			printk(KERN_WARNING "%s: Breaking out of NMI-blocked "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#1494: FILE: arch/x86/kvm/vmx.c:8871:
++			printk(KERN_WARNING "%s: Breaking out of NMI-blocked "
++			       "state on VCPU %d after 1 s timeout\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'srpt_parse_i_port_id', this function's name, in a string
+#2349: FILE: drivers/infiniband/ulp/srpt/ib_srpt.c:2794:
++		pr_debug("hex2bin failed for srpt_parse_i_port_id: %d\n", ret);
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#2568: FILE: drivers/md/dm-cache-target.c:1526:
++			bool rb = bio_detain_shared(mg->cache, mg->op->oblock, mg->overwrite_bio);
++			BUG_ON(rb); /* An exclussive lock must _not_ be held for this block */
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#2568: FILE: drivers/md/dm-cache-target.c:1526:
++			BUG_ON(rb); /* An exclussive lock must _not_ be held for this block */
+
+CHECK:BRACES: Unbalanced braces around else statement
+#2602: FILE: drivers/md/dm-cache-target.c:1542:
++	} else
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'ti->len != dev->capacity'
+#2776: FILE: drivers/md/dm-zoned-target.c:692:
++	if (ti->begin ||
++	    ((ti->len != dev->capacity) && (ti->len != aligned_capacity))) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'ti->len != aligned_capacity'
+#2776: FILE: drivers/md/dm-zoned-target.c:692:
++	if (ti->begin ||
++	    ((ti->len != dev->capacity) && (ti->len != aligned_capacity))) {
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#3196: FILE: drivers/media/usb/as102/as102_fw.c:112:
++
++
+
+CHECK:CAMELCASE: Avoid CamelCase: <bFirstInterface>
+#3264: FILE: drivers/media/usb/cx231xx/cx231xx-cards.c:1687:
++	if (!assoc_desc || assoc_desc->bFirstInterface != ifnum) {
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+WARNING:LONG_LINE_STRING: line length of 107 exceeds 100 columns
+#3441: FILE: drivers/mtd/nand/nandsim.c:530:
++			NS_WARN("CONFIG_MTD_PARTITIONED_MASTER must be enabled to expose debugfs stuff\n");
+
+A string starts before but extends beyond the maximum line length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'hw->phy.type == e1000_phy_igp_3'
+#4045: FILE: drivers/net/ethernet/intel/e1000e/netdev.c:5121:
++	if ((ret_val == -E1000_ERR_PHY) && (hw->phy.type == e1000_phy_igp_3) &&
+ 	    (er32(CTRL) & E1000_PHY_CTRL_GBE_DISABLE)) {
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#4090: FILE: drivers/net/ethernet/intel/fm10k/fm10k_main.c:1232:
++		smp_rmb();
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#4103: FILE: drivers/net/ethernet/intel/i40e/i40e_main.c:3763:
++		smp_rmb();
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#4116: FILE: drivers/net/ethernet/intel/i40e/i40e_txrx.c:762:
++		smp_rmb();
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#4129: FILE: drivers/net/ethernet/intel/i40evf/i40e_txrx.c:182:
++		smp_rmb();
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#4142: FILE: drivers/net/ethernet/intel/igb/igb_main.c:6973:
++		smp_rmb();
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#4155: FILE: drivers/net/ethernet/intel/igbvf/netdev.c:813:
++		smp_rmb();
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#4168: FILE: drivers/net/ethernet/intel/ixgbe/ixgbe_main.c:1195:
++		smp_rmb();
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#4181: FILE: drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c:329:
++		smp_rmb();
+
+WARNING:TYPO_SPELLING: 'pring' may be misspelled - perhaps 'print'?
+#5204: FILE: drivers/scsi/lpfc/lpfc_attr.c:3138:
++			pring ? pring->txq_max : 0);
+ 			^^^^^
+
+WARNING:TYPO_SPELLING: 'pring' may be misspelled - perhaps 'print'?
+#5214: FILE: drivers/scsi/lpfc/lpfc_attr.c:3152:
++			pring ? pring->txcmplq_max : 0);
+ 			^^^^^
+
+WARNING:TYPO_SPELLING: 'pring' may be misspelled - perhaps 'print'?
+#5227: FILE: drivers/scsi/lpfc/lpfc_bsg.c:2914:
++	if (!cmdiocbq || !rxbmp || !rxbpl || !rxbuffer || !pring) {
+ 	                                                   ^^^^^
+
+WARNING:TYPO_SPELLING: 'pring' may be misspelled - perhaps 'print'?
+#5235: FILE: drivers/scsi/lpfc/lpfc_bsg.c:5424:
++	if (unlikely(!pring))
+ 	              ^^^^^
+
+WARNING:TYPO_SPELLING: 'pring' may be misspelled - perhaps 'print'?
+#5248: FILE: drivers/scsi/lpfc/lpfc_els.c:7433:
++	if (unlikely(!pring))
+ 	              ^^^^^
+
+WARNING:TYPO_SPELLING: 'pring' may be misspelled - perhaps 'print'?
+#5257: FILE: drivers/scsi/lpfc/lpfc_els.c:9315:
++	if (unlikely(!pring))
+ 	              ^^^^^
+
+WARNING:TYPO_SPELLING: 'pring' may be misspelled - perhaps 'print'?
+#5268: FILE: drivers/scsi/lpfc/lpfc_els.c:9424:
++			if (pring && !list_empty(&pring->txq))
+ 			    ^^^^^
+
+WARNING:TYPO_SPELLING: 'pring' may be misspelled - perhaps 'print'?
+#5281: FILE: drivers/scsi/lpfc/lpfc_hbadisc.c:3327:
++	if (pring)
+ 	    ^^^^^
+
+WARNING:TYPO_SPELLING: 'pring' may be misspelled - perhaps 'print'?
+#5290: FILE: drivers/scsi/lpfc/lpfc_hbadisc.c:5434:
++	if (unlikely(!pring))
+ 	              ^^^^^
+
+WARNING:TYPO_SPELLING: 'pring' may be misspelled - perhaps 'print'?
+#5338: FILE: drivers/scsi/lpfc/lpfc_nportdisc.c:219:
++	if (unlikely(!pring))
+ 	              ^^^^^
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#5353: FILE: drivers/scsi/lpfc/lpfc_nvmet.c:1142:
++				"6025 Cannot register NVME targetport x%x: "
++				"portnm %llx nodenm %llx segs %d qs %d\n",
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#5368: FILE: drivers/scsi/lpfc/lpfc_nvmet.c:1160:
+ 				"targetport: %p, private %p "
++				"portnm %llx nodenm %llx segs %d qs %d\n",
+
+WARNING:TYPO_SPELLING: 'pring' may be misspelled - perhaps 'print'?
+#5400: FILE: drivers/scsi/lpfc/lpfc_sli.c:10638:
++	if (!pring) {
+ 	     ^^^^^
+
+WARNING:TYPO_SPELLING: 'pring' may be misspelled - perhaps 'print'?
+#5415: FILE: drivers/scsi/lpfc/lpfc_sli.c:12514:
++	if (unlikely(!pring))
+ 	              ^^^^^
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#5434: FILE: drivers/scsi/lpfc/lpfc_sli.c:12527:
+ 				"0386 ELS complete with no corresponding "
++				"cmdiocb: 0x%x 0x%x 0x%x 0x%x\n",
+
+WARNING:TYPO_SPELLING: 'pring' may be misspelled - perhaps 'print'?
+#5442: FILE: drivers/scsi/lpfc/lpfc_sli.c:12535:
++	lpfc_sli_ringtxcmpl_put(phba, pring, cmdiocbq);
+ 	                              ^^^^^
+
+WARNING:TYPO_SPELLING: 'pring' may be misspelled - perhaps 'print'?
+#5462: FILE: drivers/scsi/lpfc/lpfc_sli.c:18710:
++	if (unlikely(!pring))
+ 	              ^^^^^
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#5601: FILE: drivers/target/target_core_tmr.c:139:
++			pr_debug("Attempted to abort io tag: %llu early failure"
++				 " status: 0x%02x\n", se_cmd->tag,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5692: FILE: drivers/target/target_core_transport.c:2589:
++		pr_debug("%s:%d CMD_T_STOP|CMD_T_ABORTED for ITT: 0x%08llx\n",
++			__func__, __LINE__, cmd->tag);
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 8)
+#5841: FILE: fs/autofs4/waitq.c:173:
+ 	if (autofs4_write(sbi, pipe, &pkt, pktsz))
++	switch (ret = autofs4_write(sbi, pipe, &pkt, pktsz)) {
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#6146: FILE: fs/ext4/super.c:3713:
++			ext4_msg(sb, KERN_ERR, "Cannot use DAX on a filesystem"
++					" that may contain inline data");
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6163: FILE: fs/f2fs/file.c:689:
++	if ((S_ISREG(inode->i_mode) && f2fs_has_inline_data(inode)) ||
++					f2fs_has_inline_dentry(inode))
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#6178: FILE: fs/isofs/isofs.h:110:
+ }
++extern int iso_date(u8 *, int);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#6178: FILE: fs/isofs/isofs.h:110:
++extern int iso_date(u8 *, int);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6470: FILE: fs/nfsd/nfs4state.c:3970:
++	ret = find_stateid_by_type(cl, s,
++				NFS4_DELEG_STID|NFS4_REVOKED_DELEG_STID);
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#6470: FILE: fs/nfsd/nfs4state.c:3970:
++				NFS4_DELEG_STID|NFS4_REVOKED_DELEG_STID);
+ 				               ^
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#6800: FILE: include/linux/genhd.h:246:
++extern struct hd_struct *__disk_get_part(struct gendisk *disk, int partno);
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#6889: FILE: include/target/target_core_base.h:493:
++#define CMD_T_PRE_EXECUTE	(1 << 12)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6914: FILE: include/trace/events/sunrpc.h:470:
++		memcpy(__get_dynamic_array(addr),
++			&rqst->rq_addr, rqst->rq_addrlen);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6919: FILE: include/trace/events/sunrpc.h:474:
++	TP_printk("addr=%pIScp xid=0x%x status=%d flags=%s",
++			(struct sockaddr *)__get_dynamic_array(addr),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6941: FILE: include/trace/events/sunrpc.h:530:
++		memcpy(__get_dynamic_array(addr),
++			&rqst->rq_addr, rqst->rq_addrlen);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#7481: FILE: kernel/sched/sched.h:666:
++extern void rto_push_irq_work_func(struct irq_work *work);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#7625: FILE: net/9p/trans_virtio.c:331:
++			err = wait_event_killable(vp_wq,
+ 			      (atomic_read(&vp_pinned) < chan->p9_max_pages));
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#7866: FILE: sound/pci/hda/patch_realtek.c:345:
++		alc_update_coef_idx(codec, 0xe, 0, 1<<0);
+ 		                                    ^
+
+CHECK:CAMELCASE: Avoid CamelCase: <bLength>
+#7996: FILE: sound/usb/clock.c:46:
++		if (cs->bLength >= sizeof(*cs) && cs->bClockID == clock_id)
+
+CHECK:CAMELCASE: Avoid CamelCase: <bClockID>
+#7996: FILE: sound/usb/clock.c:46:
++		if (cs->bLength >= sizeof(*cs) && cs->bClockID == clock_id)
+
+CHECK:CAMELCASE: Avoid CamelCase: <bNrInPins>
+#8006: FILE: sound/usb/clock.c:63:
++			if (cs->bLength < 5 + cs->bNrInPins)
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000048764.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 2 errors, 37 warnings, 27 checks, 6749 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000048764.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

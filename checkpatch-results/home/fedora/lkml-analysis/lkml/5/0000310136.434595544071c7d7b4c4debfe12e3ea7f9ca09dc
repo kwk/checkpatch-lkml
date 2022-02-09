@@ -1,0 +1,262 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'end' - possible side-effects?
+#135: FILE: include/asm-generic/pgtable.h:343:
++#define p4d_addr_end(addr, end)						\
++({	unsigned long __boundary = ((addr) + P4D_SIZE) & P4D_MASK;	\
++	(__boundary - 1 < (end) - 1)? __boundary: (end);		\
++})
+
+ERROR:SPACING: spaces required around that '?' (ctx:VxW)
+#137: FILE: include/asm-generic/pgtable.h:345:
++	(__boundary - 1 < (end) - 1)? __boundary: (end);		\
+ 	                            ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxW)
+#137: FILE: include/asm-generic/pgtable.h:345:
++	(__boundary - 1 < (end) - 1)? __boundary: (end);		\
+ 	                                        ^
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'p4d_t *' should also have an identifier name
+#148: FILE: include/asm-generic/pgtable.h:369:
++void p4d_clear_bad(p4d_t *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#183: FILE: include/asm-generic/pgtable.h:791:
++}
++static inline int p4d_clear_huge(p4d_t *p4d)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#205: FILE: include/asm-generic/pgtable.h:814:
+ }
++static inline int p4d_clear_huge(p4d_t *p4d)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#257: FILE: include/linux/mm.h:1546:
++static inline int __p4d_alloc(struct mm_struct *mm, pgd_t *pgd,
++						unsigned long address)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#268: FILE: include/linux/mm.h:1556:
++static inline int __pud_alloc(struct mm_struct *mm, p4d_t *p4d,
+ 						unsigned long address)
+
+ERROR:SPACING: spaces required around that '?' (ctx:VxE)
+#285: FILE: include/linux/mm.h:1617:
++	return (unlikely(pgd_none(*pgd)) && __p4d_alloc(mm, pgd, address))?
+ 	                                                                  ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxW)
+#286: FILE: include/linux/mm.h:1618:
++		NULL: p4d_offset(pgd, address);
+ 		    ^
+
+WARNING:INDENTED_LABEL: labels should not be indented
+#286: FILE: include/linux/mm.h:1618:
++		NULL: p4d_offset(pgd, address);
+
+ERROR:SPACING: spaces required around that '?' (ctx:VxE)
+#293: FILE: include/linux/mm.h:1623:
++	return (unlikely(p4d_none(*p4d)) && __pud_alloc(mm, p4d, address))?
+ 	                                                                  ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxW)
+#294: FILE: include/linux/mm.h:1624:
++		NULL: pud_offset(p4d, address);
+ 		    ^
+
+WARNING:INDENTED_LABEL: labels should not be indented
+#294: FILE: include/linux/mm.h:1624:
++		NULL: pud_offset(p4d, address);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#346: FILE: lib/ioremap.c:105:
++static inline int ioremap_pud_range(p4d_t *p4d, unsigned long addr,
+ 		unsigned long end, phys_addr_t phys_addr, pgprot_t prot)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#362: FILE: lib/ioremap.c:131:
++static inline int ioremap_p4d_range(pgd_t *pgd, unsigned long addr,
++		unsigned long end, phys_addr_t phys_addr, pgprot_t prot)
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#395: FILE: lib/ioremap.c:171:
++		err = ioremap_p4d_range(pgd, addr, next, phys_addr+addr, prot);
+ 		                                                  ^
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#441: FILE: mm/gup.c:331:
++	BUG_ON(p4d_none(*p4d));
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#480: FILE: mm/gup.c:1443:
++		if (unlikely(is_hugepd(__hugepd(p4d_val(p4d))))) {
+[...]
++		} else if (!gup_p4d_range(p4d, addr, next, write, pages, nr))
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#609: FILE: mm/kasan/kasan_init.c:88:
++static void __init zero_pud_populate(p4d_t *p4d, unsigned long addr,
+ 				unsigned long end)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#621: FILE: mm/kasan/kasan_init.c:113:
++static void __init zero_p4d_populate(pgd_t *pgd, unsigned long addr,
++				unsigned long end)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#631: FILE: mm/kasan/kasan_init.c:123:
++			p4d_populate(&init_mm, p4d,
++				early_alloc(PAGE_SIZE, NUMA_NO_NODE));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#681: FILE: mm/memory.c:448:
++static inline void free_pud_range(struct mmu_gather *tlb, p4d_t *p4d,
+ 				unsigned long addr, unsigned long end,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#714: FILE: mm/memory.c:481:
++static inline void free_p4d_range(struct mmu_gather *tlb, pgd_t *pgd,
++				unsigned long addr, unsigned long end,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#789: FILE: mm/memory.c:1077:
++static inline int copy_p4d_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
++		pgd_t *dst_pgd, pgd_t *src_pgd, struct vm_area_struct *vma,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#804: FILE: mm/memory.c:1092:
++		if (copy_pud_range(dst_mm, src_mm, dst_p4d, src_p4d,
++						vma, addr, next))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#844: FILE: mm/memory.c:1341:
++static inline unsigned long zap_p4d_range(struct mmu_gather *tlb,
++				struct vm_area_struct *vma, pgd_t *pgd,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#915: FILE: mm/memory.c:1810:
++static inline int remap_pud_range(struct mm_struct *mm, p4d_t *p4d,
+ 			unsigned long addr, unsigned long end,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#932: FILE: mm/memory.c:1830:
++static inline int remap_p4d_range(struct mm_struct *mm, pgd_t *pgd,
++			unsigned long addr, unsigned long end,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#945: FILE: mm/memory.c:1843:
++		if (remap_pud_range(mm, p4d, addr, next,
++				pfn + (addr >> PAGE_SHIFT), prot))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#960: FILE: mm/memory.c:1906:
++		err = remap_p4d_range(mm, pgd, addr, next,
+ 				pfn + (addr >> PAGE_SHIFT), prot);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#969: FILE: mm/memory.c:2022:
++static int apply_to_pud_range(struct mm_struct *mm, p4d_t *p4d,
+ 				     unsigned long addr, unsigned long end,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#986: FILE: mm/memory.c:2042:
++static int apply_to_p4d_range(struct mm_struct *mm, pgd_t *pgd,
++				     unsigned long addr, unsigned long end,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1121: FILE: mm/mprotect.c:218:
++static inline unsigned long change_p4d_range(struct vm_area_struct *vma,
++		pgd_t *pgd, unsigned long addr, unsigned long end,
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1342: FILE: mm/sparse-vmemmap.c:214:
++	p4d_t *p4d = p4d_offset(pgd, addr);
++	if (p4d_none(*p4d)) {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1344: FILE: mm/sparse-vmemmap.c:216:
++		void *p = vmemmap_alloc_block(PAGE_SIZE, node);
++		if (!p)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1384: FILE: mm/swapfile.c:1242:
++static inline int unuse_pud_range(struct vm_area_struct *vma, p4d_t *p4d,
+ 				unsigned long addr, unsigned long end,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1401: FILE: mm/swapfile.c:1262:
++static inline int unuse_p4d_range(struct vm_area_struct *vma, pgd_t *pgd,
++				unsigned long addr, unsigned long end,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1526: FILE: mm/vmalloc.c:180:
++static int vmap_pud_range(p4d_t *p4d, unsigned long addr,
+ 		unsigned long end, pgprot_t prot, struct page **pages, int *nr)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1541: FILE: mm/vmalloc.c:197:
++static int vmap_p4d_range(pgd_t *pgd, unsigned long addr,
++		unsigned long end, pgprot_t prot, struct page **pages, int *nr)
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000310136.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 6 errors, 6 warnings, 28 checks, 1372 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000310136.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

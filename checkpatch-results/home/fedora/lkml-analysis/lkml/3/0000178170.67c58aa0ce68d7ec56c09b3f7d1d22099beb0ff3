@@ -1,0 +1,773 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:DT_SPLIT_BINDING_PATCH: DT binding docs and includes should be a separate patch. See: Documentation/devicetree/bindings/submitting-patches.rst
+
+Devicetree bindings should be their own patch.  This is because
+bindings are logically independent from a driver implementation,
+they have a different maintainer (even though they often
+are applied via the same tree), and it makes for a cleaner history in the
+DT only tree created with git-filter-branch.
+
+See: https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.html#i-for-patch-submitters
+
+WARNING:TYPO_SPELLING: 'EXTRAVERSION' may be misspelled - perhaps 'EXTROVERSION'?
+#69: FILE: Makefile:4:
++EXTRAVERSION = 1
+ ^^^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#178: FILE: arch/arm/mach-omap2/irq.c:259:
++	 * the INTC with an ack.*/
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:CAMELCASE: Avoid CamelCase: <MT_DEVICE_nGnRnE>
+#327: FILE: arch/arm64/include/asm/pgtable.h:256:
++	__pgprot_modify(prot, PTE_ATTRINDX_MASK, PTE_ATTRINDX(MT_DEVICE_nGnRnE) | PTE_PXN | PTE_UXN)
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+ERROR:SPACING: space required before the open brace '{'
+#444: FILE: arch/powerpc/kernel/process.c:572:
++	if (!MSR_TM_ACTIVE(new->thread.regs->msr)){
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__barrier' - possible side-effects?
+#536: FILE: arch/s390/include/asm/atomic.h:32:
++#define __ATOMIC_LOOP(ptr, op_val, op_string, __barrier)		\
+ ({									\
+ 	int old_val;							\
+ 									\
+ 	typecheck(atomic_t *, ptr);					\
+ 	asm volatile(							\
++		__barrier						\
+ 		op_string "	%0,%2,%1\n"				\
++		__barrier						\
+ 		: "=d" (old_val), "+Q" ((ptr)->counter)			\
+ 		: "d" (op_val)						\
+ 		: "cc", "memory");					\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__barrier' - possible side-effects?
+#612: FILE: arch/s390/include/asm/atomic.h:174:
++#define __ATOMIC64_LOOP(ptr, op_val, op_string, __barrier)		\
+ ({									\
+ 	long long old_val;						\
+ 									\
+ 	typecheck(atomic64_t *, ptr);					\
+ 	asm volatile(							\
++		__barrier						\
+ 		op_string "	%0,%2,%1\n"				\
++		__barrier						\
+ 		: "=d" (old_val), "+Q" ((ptr)->counter)			\
+ 		: "d" (op_val)						\
+ 		: "cc", "memory");					\
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'i < 128'
+#646: FILE: arch/s390/include/asm/atomic.h:240:
++	if (__builtin_constant_p(i) && (i > -129) && (i < 128)) {
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#647: FILE: arch/s390/include/asm/atomic.h:241:
++		asm volatile(
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__barrier' - possible side-effects?
+#739: FILE: arch/s390/include/asm/bitops.h:87:
++#define __BITOPS_LOOP(__addr, __val, __op_string, __barrier)	\
+ ({								\
+ 	unsigned long __old;					\
+ 								\
+ 	typecheck(unsigned long *, (__addr));			\
+ 	asm volatile(						\
++		__barrier					\
+ 		__op_string "	%0,%2,%1\n"			\
++		__barrier					\
+ 		: "=d" (__old),	"+Q" (*(__addr))		\
+ 		: "d" (__val)					\
++		: "cc", "memory");				\
+ 	__old;							\
+ })
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#859: FILE: arch/s390/include/asm/ccwdev.h:222:
++extern struct ccw_device *ccw_device_probe_console(struct ccw_driver *);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct ccw_driver *' should also have an identifier name
+#859: FILE: arch/s390/include/asm/ccwdev.h:222:
++extern struct ccw_device *ccw_device_probe_console(struct ccw_driver *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:PRINTK_WITHOUT_KERN_LEVEL: printk() should include KERN_<LEVEL> facility level
+#886: FILE: arch/sh/kernel/dumpstack.c:118:
++	printk("%s", (char *)data);
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#898: FILE: arch/x86/include/asm/cpufeature.h:219:
++#define X86_FEATURE_AVX512F	(9*32+16) /* AVX-512 Foundation */
+                            	  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#898: FILE: arch/x86/include/asm/cpufeature.h:219:
++#define X86_FEATURE_AVX512F	(9*32+16) /* AVX-512 Foundation */
+                            	     ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#902: FILE: arch/x86/include/asm/cpufeature.h:223:
++#define X86_FEATURE_AVX512PF	(9*32+26) /* AVX-512 Prefetch */
+                             	  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#902: FILE: arch/x86/include/asm/cpufeature.h:223:
++#define X86_FEATURE_AVX512PF	(9*32+26) /* AVX-512 Prefetch */
+                             	     ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#903: FILE: arch/x86/include/asm/cpufeature.h:224:
++#define X86_FEATURE_AVX512ER	(9*32+27) /* AVX-512 Exponential and Reciprocal */
+                             	  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#903: FILE: arch/x86/include/asm/cpufeature.h:224:
++#define X86_FEATURE_AVX512ER	(9*32+27) /* AVX-512 Exponential and Reciprocal */
+                             	     ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#904: FILE: arch/x86/include/asm/cpufeature.h:225:
++#define X86_FEATURE_AVX512CD	(9*32+28) /* AVX-512 Conflict Detection */
+                             	  ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#904: FILE: arch/x86/include/asm/cpufeature.h:225:
++#define X86_FEATURE_AVX512CD	(9*32+28) /* AVX-512 Conflict Detection */
+                             	     ^
+
+WARNING:LONG_LINE: line length of 114 exceeds 100 columns
+#935: FILE: arch/x86/include/asm/xsave.h:31:
++#define XCNTXT_MASK	(XSTATE_FP | XSTATE_SSE | XSTATE_YMM | XSTATE_OPMASK | XSTATE_ZMM_Hi256 | XSTATE_Hi16_ZMM)
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#1014: FILE: drivers/acpi/acpica/nsrepair.c:225:
++				if (ACPI_SUCCESS(status)) {
++					return (AE_OK);	/* Repair was successful */
++				}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+ERROR:RETURN_PARENTHESES: return is not a function, parentheses are not required
+#1015: FILE: drivers/acpi/acpica/nsrepair.c:226:
++					return (AE_OK);	/* Repair was successful */
+
+return is not a function and as such doesn't need parentheses::
+
+  return (bar);
+
+can simply be::
+
+  return bar;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#1036: FILE: drivers/block/floppy.c:3057:
++		struct floppy_raw_cmd cmd = *ptr;
++		cmd.next = NULL;
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#1077: FILE: drivers/block/mtip32xx/mtip32xx.c:237:
++	void (*func)(void *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#1077: FILE: drivers/block/mtip32xx/mtip32xx.c:237:
++	void (*func)(void *, int);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1103: FILE: drivers/block/mtip32xx/mtip32xx.c:258:
++		dma_unmap_sg(&dd->pdev->dev,
++			cmd->sg,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#1141: FILE: drivers/block/mtip32xx/mtip32xx.c:654:
++	void (*func)(void *, int);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#1141: FILE: drivers/block/mtip32xx/mtip32xx.c:654:
++	void (*func)(void *, int);
+
+CHECK:SPACING: No space is necessary after a cast
+#1152: FILE: drivers/block/mtip32xx/mtip32xx.c:685:
++			fis = (struct host_to_dev_fis *) cmd->command;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1186: FILE: drivers/block/mtip32xx/mtip32xx.c:708:
++				dma_unmap_sg(&port->dd->pdev->dev,
++						cmd->sg,
+
+WARNING:TYPO_SPELLING: 'suspedn' may be misspelled - perhaps 'suspend'?
+#1367: FILE: drivers/gpu/drm/i915/i915_drv.c:899:
++	 * We have a suspedn ordering issue with the snd-hda driver also
+ 	             ^^^^^^^
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#1672: FILE: drivers/gpu/drm/vmwgfx/vmwgfx_fb.c:150:
++					var->xres * var->bits_per_pixel/8,
+ 					                               ^
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#1680: FILE: drivers/gpu/drm/vmwgfx/vmwgfx_fb.c:165:
++	info->fix.line_length = info->var.xres * info->var.bits_per_pixel/8;
+ 	                                                                 ^
+
+WARNING:ONE_SEMICOLON: Statements terminations use 1 semicolon
+#1917: FILE: drivers/infiniband/hw/qib/qib_init.c:1141:
++	return ERR_PTR(ret);;
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#2064: FILE: drivers/infiniband/ulp/srpt/ib_srpt.c:1159:
++						dma_len = ib_sg_dma_len(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#2086: FILE: drivers/infiniband/ulp/srpt/ib_srpt.c:1221:
++						dma_len = ib_sg_dma_len(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#2088: FILE: drivers/infiniband/ulp/srpt/ib_srpt.c:1223:
++						dma_addr = ib_sg_dma_address(
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#2317: FILE: drivers/md/dm-cache-target.c:236:
++	uint32_t discard_block_size;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2730: FILE: drivers/media/dvb-frontends/m88rs2000.c:716:
++static int m88rs2000_get_tune_settings(struct dvb_frontend *fe,
++	struct dvb_frontend_tune_settings *tune)
+
+CHECK:CAMELCASE: Avoid CamelCase: <bEndpointAddress>
+#2836: FILE: drivers/media/usb/uvc/uvc_video.c:1859:
++			unsigned int epnum = stream->header.bEndpointAddress
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3112: FILE: drivers/misc/mei/client.c:86:
++static inline bool mei_cl_cmp_id(const struct mei_cl *cl1,
++				const struct mei_cl *cl2)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#3155: FILE: drivers/misc/mei/client.c:127:
++
++
+
+CHECK:CAMELCASE: Avoid CamelCase: <tqi_readyTime>
+#3275: FILE: drivers/net/wireless/ath/ath9k/xmit.c:1715:
++	qi.tqi_readyTime = (TU_TO_USEC(cur_conf->beacon_interval) *
+
+WARNING:TYPO_SPELLING: 'reenable' may be misspelled - perhaps 're-enable'?
+#3363: FILE: drivers/net/wireless/rtlwifi/rtl8188ee/hw.c:1033:
++	 * and can be called with irqs disabled, reenable the irqs
+ 	                                         ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'reenable' may be misspelled - perhaps 're-enable'?
+#3419: FILE: drivers/net/wireless/rtlwifi/rtl8192cu/hw.c:991:
++	 * and can be called with irqs disabled, reenable the irqs
+ 	                                         ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'reenable' may be misspelled - perhaps 're-enable'?
+#3466: FILE: drivers/net/wireless/rtlwifi/rtl8192se/hw.c:971:
++	 * and can be called with irqs disabled, reenable the irqs
+ 	                                         ^^^^^^^^
+
+WARNING:TYPO_SPELLING: 'reenable' may be misspelled - perhaps 're-enable'?
+#3541: FILE: drivers/net/wireless/rtlwifi/rtl8723ae/hw.c:887:
++	 * and can be called with irqs disabled, reenable the irqs
+ 	                                         ^^^^^^^^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3620: FILE: drivers/platform/x86/thinkpad_acpi.c:8462:
++		struct tp_led_table *t = &led_tables[i];
++		if (t->state >= 0)
+
+CHECK:CAMELCASE: Avoid CamelCase: <idProduct>
+#3782: FILE: drivers/staging/serqt_usb2/serqt_usb2.c:728:
++	switch (le16_to_cpu(serial->dev->descriptor.idProduct)) {
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*write_sg)...) over kmalloc(sizeof(struct scatterlist)...)
+#3821: FILE: drivers/target/target_core_sbc.c:422:
++	write_sg = kmalloc(sizeof(struct scatterlist) * cmd->t_data_nents,
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:CAMELCASE: Avoid CamelCase: <bNumInterfaces>
+#3924: FILE: drivers/usb/core/driver.c:989:
++		for (i = 0; i < config->desc.bNumInterfaces; ++i) {
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#4090: FILE: drivers/usb/core/usb.h:58:
++extern void usb_unbind_and_rebind_marked_interfaces(struct usb_device *udev);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#4143: FILE: drivers/usb/dwc3/core.h:899:
++int dwc3_send_gadget_ep_cmd(struct dwc3 *dwc, unsigned ep,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4144: FILE: drivers/usb/dwc3/core.h:900:
++int dwc3_send_gadget_ep_cmd(struct dwc3 *dwc, unsigned ep,
++		unsigned cmd, struct dwc3_gadget_ep_cmd_params *params);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#4144: FILE: drivers/usb/dwc3/core.h:900:
++		unsigned cmd, struct dwc3_gadget_ep_cmd_params *params);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4154: FILE: drivers/usb/dwc3/core.h:910:
++static inline int dwc3_gadget_set_link_state(struct dwc3 *dwc,
++		enum dwc3_link_state state)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#4157: FILE: drivers/usb/dwc3/core.h:913:
++static inline int dwc3_send_gadget_ep_cmd(struct dwc3 *dwc, unsigned ep,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4158: FILE: drivers/usb/dwc3/core.h:914:
++static inline int dwc3_send_gadget_ep_cmd(struct dwc3 *dwc, unsigned ep,
++		unsigned cmd, struct dwc3_gadget_ep_cmd_params *params)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#4158: FILE: drivers/usb/dwc3/core.h:914:
++		unsigned cmd, struct dwc3_gadget_ep_cmd_params *params)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4161: FILE: drivers/usb/dwc3/core.h:917:
++static inline int dwc3_send_gadget_generic_command(struct dwc3 *dwc,
++		int cmd, u32 param)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4387: FILE: drivers/video/aty/mach64_cursor.c:184:
++				l = comp(l, 0xaaaa,
++				    (1 << ((cursor->image.width & 7) * 2)) - 1);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#4404: FILE: drivers/video/cfbcopyarea.c:46:
++bitcpy(struct fb_info *p, unsigned long __iomem *dst, unsigned dst_idx,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4405: FILE: drivers/video/cfbcopyarea.c:47:
++bitcpy(struct fb_info *p, unsigned long __iomem *dst, unsigned dst_idx,
++		const unsigned long __iomem *src, unsigned src_idx, int bits,
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#4405: FILE: drivers/video/cfbcopyarea.c:47:
++		const unsigned long __iomem *src, unsigned src_idx, int bits,
+
+WARNING:IF_0: Consider removing the code enclosed by this #if 0 and its #endif
+#4412: FILE: drivers/video/cfbcopyarea.c:53:
++#if 0
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#4534: FILE: drivers/video/cfbcopyarea.c:212:
++bitcpy_rev(struct fb_info *p, unsigned long __iomem *dst, unsigned dst_idx,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4535: FILE: drivers/video/cfbcopyarea.c:213:
++bitcpy_rev(struct fb_info *p, unsigned long __iomem *dst, unsigned dst_idx,
++		const unsigned long __iomem *src, unsigned src_idx, int bits,
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#4535: FILE: drivers/video/cfbcopyarea.c:213:
++		const unsigned long __iomem *src, unsigned src_idx, int bits,
+
+WARNING:IF_0: Consider removing the code enclosed by this #if 0 and its #endif
+#4551: FILE: drivers/video/cfbcopyarea.c:219:
++#if 0
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#4584: FILE: drivers/video/cfbcopyarea.c:246:
++			FB_WRITEL( comp( FB_READL(src), FB_READL(dst), last), dst);
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#4610: FILE: drivers/video/cfbcopyarea.c:283:
++		int const left = shift & (bits-1);
+ 		                              ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#4611: FILE: drivers/video/cfbcopyarea.c:284:
++		int const right = -shift & (bits-1);
+ 		                                ^
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#4713: FILE: drivers/video/cfbcopyarea.c:385:
++	unsigned dst_idx = 0, src_idx = 0, rev_copy = 0;
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#4722: FILE: drivers/video/cfbcopyarea.c:401:
++	base = (unsigned long __iomem *)((unsigned long)p->screen_base & ~(bytes-1));
+ 	                                                                        ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4736: FILE: drivers/video/cfbcopyarea.c:415:
++			bitcpy_rev(p, base + (dst_idx / bits), dst_idx % bits,
++				base + (src_idx / bits), src_idx % bits, bits,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4747: FILE: drivers/video/cfbcopyarea.c:421:
++			bitcpy(p, base + (dst_idx / bits), dst_idx % bits,
++				base + (src_idx / bits), src_idx % bits, bits,
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'u_int32_t'
+#4882: FILE: drivers/video/matrox/matroxfb_base.h:310:
++	u_int32_t	m_access;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'u_int32_t'
+#4883: FILE: drivers/video/matrox/matroxfb_base.h:311:
++	u_int32_t	m_pitch;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#4927: FILE: drivers/video/tgafb.c:1155:
++	unsigned i, yincr;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#4930: FILE: drivers/video/tgafb.c:1158:
++	unsigned n32;
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#5179: FILE: drivers/video/tgafb.c:1220:
++					__raw_writel(sfb - tga_fb, tga_regs+TGA_COPY64_SRC);
+ 					                                   ^
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#5180: FILE: drivers/video/tgafb.c:1221:
++					wmb();
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#5181: FILE: drivers/video/tgafb.c:1222:
++					__raw_writel(dfb - tga_fb, tga_regs+TGA_COPY64_DST);
+ 					                                   ^
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#5182: FILE: drivers/video/tgafb.c:1223:
++					wmb();
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#5227: FILE: drivers/video/tgafb.c:1320:
++	unsigned memory_size;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#5358: FILE: fs/aio.c:55:
++	unsigned	head;	/* Written to by userland or under ring_lock
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#5359: FILE: fs/aio.c:56:
++				 * mutex by aio_read_events_ring(). */
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#5422: FILE: fs/aio.c:313:
++	if (idx < (pgoff_t)ctx->nr_pages) {
+[...]
+ 	} else
+[...]
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#5472: FILE: fs/aio.c:339:
++	BUG_ON(ctx->ring_pages[idx] != old);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#5542: FILE: fs/aio.c:652:
++	 * the ring_lock mutex held until setup is complete. */
+
+CHECK:CAMELCASE: Avoid CamelCase: <Elong>
+#5607: FILE: fs/dcache.c:3127:
++		goto Elong;
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#5658: FILE: fs/namespace.c:888:
++	mnt->mnt.mnt_flags = old->mnt.mnt_flags & ~(MNT_WRITE_HOLD|MNT_MARKED);
+ 	                                                          ^
+
+WARNING:LONG_LINE: line length of 103 exceeds 100 columns
+#5798: FILE: fs/nfsd/nfs4state.c:5065:
++			clp = list_entry(nn->unconf_id_hashtbl[i].next, struct nfs4_client, cl_idhash);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#5812: FILE: fs/nfsd/nfs4xdr.c:2520:
++		if ((buflen -= 16) < 0)
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_err([subsystem]dev, ... then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+#5836: FILE: fs/nfsd/nfsctl.c:703:
++		printk(KERN_ERR "%s: socket net is different to NFSd's one\n", __func__);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#5930: FILE: fs/ocfs2/dlm/dlmrecovery.c:704:
++			 * cause recovery hung.*/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#5968: FILE: fs/ocfs2/dlm/dlmrecovery.c:1811:
++					lock = list_entry(iter,
++						  struct dlm_lock, list);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#6102: FILE: fs/pnode.c:172:
++			struct mount *next;
++			if (!IS_MNT_NEW(m) && !list_empty(&m->mnt_slave_list))
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#6105: FILE: fs/pnode.c:175:
++			if (m->mnt_group_id == origin->mnt_group_id) {
+[...]
++			} else if (m->mnt_slave.next != &next->mnt_slave)
+[...]
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#6115: FILE: fs/pnode.c:185:
++			struct mount *master = m->mnt_master;
++			if (m->mnt_slave.next != &master->mnt_slave_list)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#6157: FILE: fs/pnode.c:219:
++		struct mount *n, *p;
++		for (n = m; ; n = p) {
+
+ERROR:TRAILING_WHITESPACE: trailing whitespace
+#6182: FILE: fs/pnode.c:238:
++^I^I$
+
+Trailing whitespace should always be removed.
+Some editors highlight the trailing whitespace and cause visual
+distractions when editing files.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#6422: FILE: include/trace/events/block.h:144:
++TRACE_EVENT(block_rq_complete,
+ 
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#6430: FILE: include/trace/events/block.h:150:
++	TP_STRUCT__entry(
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#6431: FILE: include/trace/events/block.h:151:
++		__field(  dev_t,	dev			)
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#6431: FILE: include/trace/events/block.h:151:
++		__field(  dev_t,	dev			)
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#6432: FILE: include/trace/events/block.h:152:
++		__field(  sector_t,	sector			)
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#6432: FILE: include/trace/events/block.h:152:
++		__field(  sector_t,	sector			)
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#6433: FILE: include/trace/events/block.h:153:
++		__field(  unsigned int,	nr_sector		)
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#6433: FILE: include/trace/events/block.h:153:
++		__field(  unsigned int,	nr_sector		)
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#6434: FILE: include/trace/events/block.h:154:
++		__field(  int,		errors			)
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#6434: FILE: include/trace/events/block.h:154:
++		__field(  int,		errors			)
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#6435: FILE: include/trace/events/block.h:155:
++		__array(  char,		rwbs,	RWBS_LEN	)
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#6435: FILE: include/trace/events/block.h:155:
++		__array(  char,		rwbs,	RWBS_LEN	)
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#6436: FILE: include/trace/events/block.h:156:
++		__dynamic_array( char,	cmd,	blk_cmd_buf_len(rq)	)
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#6436: FILE: include/trace/events/block.h:156:
++		__dynamic_array( char,	cmd,	blk_cmd_buf_len(rq)	)
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#6439: FILE: include/trace/events/block.h:159:
++	TP_fast_assign(
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#6520: FILE: kernel/audit.c:1722:
+ 			 " euid=%u suid=%u fsuid=%u"
++			 " egid=%u sgid=%u fsgid=%u tty=%s ses=%u",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#6557: FILE: kernel/sysctl.c:148:
++static unsigned long hung_task_timeout_max = (LONG_MAX/HZ);
+                                                       ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#6838: FILE: mm/page_alloc.c:2676:
++	int alloc_flags = ALLOC_WMARK_LOW|ALLOC_CPUSET|ALLOC_FAIR;
+ 	                                 ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#6838: FILE: mm/page_alloc.c:2676:
++	int alloc_flags = ALLOC_WMARK_LOW|ALLOC_CPUSET|ALLOC_FAIR;
+ 	                                              ^
+
+WARNING:NETWORKING_BLOCK_COMMENT_STYLE: networking block comments don't use an empty /* line, use /* Comment...
+#6937: FILE: net/mac80211/mlme.c:3499:
++		/*
++		 * If we are trying to authenticate while suspending, cfg80211
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000178170.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 17 errors, 48 warnings, 60 checks, 6277 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000178170.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

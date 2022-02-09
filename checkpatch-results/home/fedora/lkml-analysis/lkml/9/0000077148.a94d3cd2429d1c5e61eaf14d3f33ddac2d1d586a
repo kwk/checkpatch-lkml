@@ -1,0 +1,553 @@
+WARNING:UNKNOWN_COMMIT_ID: Unknown commit id '5ef3fe4cecdf82fdd71ce78988403963d01444d4', maybe rebased or not pulled?
+#53: 
+commit 5ef3fe4cecdf82fdd71ce78988403963d01444d4 upstream.
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#79: FILE: arch/arm64/include/asm/atomic_ll_sc.h:251:
++#define __CMPXCHG_CASE(w, sfx, name, sz, mb, acq, rel, cl)		\
++__LL_SC_INLINE u##sz							\
++__LL_SC_PREFIX(__cmpxchg_case_##name##sz(volatile void *ptr,		\
++					 unsigned long old,		\
++					 u##sz new))			\
+ {									\
++	unsigned long tmp;						\
++	u##sz oldval;							\
+ 									\
+ 	asm volatile(							\
+ 	"	prfm	pstl1strm, %[v]\n"				\
++	"1:	ld" #acq "xr" #sfx "\t%" #w "[oldval], %[v]\n"		\
+ 	"	eor	%" #w "[tmp], %" #w "[oldval], %" #w "[old]\n"	\
+ 	"	cbnz	%" #w "[tmp], 2f\n"				\
++	"	st" #rel "xr" #sfx "\t%w[tmp], %" #w "[new], %[v]\n"	\
+ 	"	cbnz	%w[tmp], 1b\n"					\
+ 	"	" #mb "\n"						\
+ 	"2:"								\
+ 	: [tmp] "=&r" (tmp), [oldval] "=&r" (oldval),			\
++	  [v] "+Q" (*(u##sz *)ptr)					\
+ 	: [old] "Lr" (old), [new] "r" (new)				\
+ 	: cl);								\
+ 									\
+ 	return oldval;							\
+ }									\
++__LL_SC_EXPORT(__cmpxchg_case_##name##sz);
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#79: FILE: arch/arm64/include/asm/atomic_ll_sc.h:251:
++#define __CMPXCHG_CASE(w, sfx, name, sz, mb, acq, rel, cl)		\
++__LL_SC_INLINE u##sz							\
++__LL_SC_PREFIX(__cmpxchg_case_##name##sz(volatile void *ptr,		\
++					 unsigned long old,		\
++					 u##sz new))			\
+ {									\
++	unsigned long tmp;						\
++	u##sz oldval;							\
+ 									\
+ 	asm volatile(							\
+ 	"	prfm	pstl1strm, %[v]\n"				\
++	"1:	ld" #acq "xr" #sfx "\t%" #w "[oldval], %[v]\n"		\
+ 	"	eor	%" #w "[tmp], %" #w "[oldval], %" #w "[old]\n"	\
+ 	"	cbnz	%" #w "[tmp], 2f\n"				\
++	"	st" #rel "xr" #sfx "\t%w[tmp], %" #w "[new], %[v]\n"	\
+ 	"	cbnz	%w[tmp], 1b\n"					\
+ 	"	" #mb "\n"						\
+ 	"2:"								\
+ 	: [tmp] "=&r" (tmp), [oldval] "=&r" (oldval),			\
++	  [v] "+Q" (*(u##sz *)ptr)					\
+ 	: [old] "Lr" (old), [new] "r" (new)				\
+ 	: cl);								\
+ 									\
+ 	return oldval;							\
+ }									\
++__LL_SC_EXPORT(__cmpxchg_case_##name##sz);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#81: FILE: arch/arm64/include/asm/atomic_ll_sc.h:253:
++__LL_SC_PREFIX(__cmpxchg_case_##name##sz(volatile void *ptr,		\
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#127: FILE: arch/arm64/include/asm/atomic_ll_sc.h:278:
++__CMPXCHG_CASE(w, b,     ,  8,        ,  ,  ,         )
+                          ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#127: FILE: arch/arm64/include/asm/atomic_ll_sc.h:278:
++__CMPXCHG_CASE(w, b,     ,  8,        ,  ,  ,         )
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#128: FILE: arch/arm64/include/asm/atomic_ll_sc.h:279:
++__CMPXCHG_CASE(w, h,     , 16,        ,  ,  ,         )
+                          ^
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#128: FILE: arch/arm64/include/asm/atomic_ll_sc.h:279:
++__CMPXCHG_CASE(w, h,     , 16,        ,  ,  ,         )
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#129: FILE: arch/arm64/include/asm/atomic_ll_sc.h:280:
++__CMPXCHG_CASE(w,  ,     , 32,        ,  ,  ,         )
+                          ^
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#129: FILE: arch/arm64/include/asm/atomic_ll_sc.h:280:
++__CMPXCHG_CASE(w,  ,     , 32,        ,  ,  ,         )
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#130: FILE: arch/arm64/include/asm/atomic_ll_sc.h:281:
++__CMPXCHG_CASE( ,  ,     , 64,        ,  ,  ,         )
+                          ^
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#130: FILE: arch/arm64/include/asm/atomic_ll_sc.h:281:
++__CMPXCHG_CASE( ,  ,     , 64,        ,  ,  ,         )
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#130: FILE: arch/arm64/include/asm/atomic_ll_sc.h:281:
++__CMPXCHG_CASE( ,  ,     , 64,        ,  ,  ,         )
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#131: FILE: arch/arm64/include/asm/atomic_ll_sc.h:282:
++__CMPXCHG_CASE(w, b, acq_,  8,        , a,  , "memory")
+                                       ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#131: FILE: arch/arm64/include/asm/atomic_ll_sc.h:282:
++__CMPXCHG_CASE(w, b, acq_,  8,        , a,  , "memory")
+                                             ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#132: FILE: arch/arm64/include/asm/atomic_ll_sc.h:283:
++__CMPXCHG_CASE(w, h, acq_, 16,        , a,  , "memory")
+                                       ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#132: FILE: arch/arm64/include/asm/atomic_ll_sc.h:283:
++__CMPXCHG_CASE(w, h, acq_, 16,        , a,  , "memory")
+                                             ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#133: FILE: arch/arm64/include/asm/atomic_ll_sc.h:284:
++__CMPXCHG_CASE(w,  , acq_, 32,        , a,  , "memory")
+                    ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#133: FILE: arch/arm64/include/asm/atomic_ll_sc.h:284:
++__CMPXCHG_CASE(w,  , acq_, 32,        , a,  , "memory")
+                                       ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#133: FILE: arch/arm64/include/asm/atomic_ll_sc.h:284:
++__CMPXCHG_CASE(w,  , acq_, 32,        , a,  , "memory")
+                                             ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#134: FILE: arch/arm64/include/asm/atomic_ll_sc.h:285:
++__CMPXCHG_CASE( ,  , acq_, 64,        , a,  , "memory")
+                    ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#134: FILE: arch/arm64/include/asm/atomic_ll_sc.h:285:
++__CMPXCHG_CASE( ,  , acq_, 64,        , a,  , "memory")
+                                       ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#134: FILE: arch/arm64/include/asm/atomic_ll_sc.h:285:
++__CMPXCHG_CASE( ,  , acq_, 64,        , a,  , "memory")
+                                             ^
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#134: FILE: arch/arm64/include/asm/atomic_ll_sc.h:285:
++__CMPXCHG_CASE( ,  , acq_, 64,        , a,  , "memory")
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#135: FILE: arch/arm64/include/asm/atomic_ll_sc.h:286:
++__CMPXCHG_CASE(w, b, rel_,  8,        ,  , l, "memory")
+                                          ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#136: FILE: arch/arm64/include/asm/atomic_ll_sc.h:287:
++__CMPXCHG_CASE(w, h, rel_, 16,        ,  , l, "memory")
+                                          ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#137: FILE: arch/arm64/include/asm/atomic_ll_sc.h:288:
++__CMPXCHG_CASE(w,  , rel_, 32,        ,  , l, "memory")
+                    ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#137: FILE: arch/arm64/include/asm/atomic_ll_sc.h:288:
++__CMPXCHG_CASE(w,  , rel_, 32,        ,  , l, "memory")
+                                          ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#138: FILE: arch/arm64/include/asm/atomic_ll_sc.h:289:
++__CMPXCHG_CASE( ,  , rel_, 64,        ,  , l, "memory")
+                    ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#138: FILE: arch/arm64/include/asm/atomic_ll_sc.h:289:
++__CMPXCHG_CASE( ,  , rel_, 64,        ,  , l, "memory")
+                                          ^
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#138: FILE: arch/arm64/include/asm/atomic_ll_sc.h:289:
++__CMPXCHG_CASE( ,  , rel_, 64,        ,  , l, "memory")
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#139: FILE: arch/arm64/include/asm/atomic_ll_sc.h:290:
++__CMPXCHG_CASE(w, b,  mb_,  8, dmb ish,  , l, "memory")
+                                          ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#140: FILE: arch/arm64/include/asm/atomic_ll_sc.h:291:
++__CMPXCHG_CASE(w, h,  mb_, 16, dmb ish,  , l, "memory")
+                                          ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#141: FILE: arch/arm64/include/asm/atomic_ll_sc.h:292:
++__CMPXCHG_CASE(w,  ,  mb_, 32, dmb ish,  , l, "memory")
+                    ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#141: FILE: arch/arm64/include/asm/atomic_ll_sc.h:292:
++__CMPXCHG_CASE(w,  ,  mb_, 32, dmb ish,  , l, "memory")
+                                          ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#142: FILE: arch/arm64/include/asm/atomic_ll_sc.h:293:
++__CMPXCHG_CASE( ,  ,  mb_, 64, dmb ish,  , l, "memory")
+                    ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#142: FILE: arch/arm64/include/asm/atomic_ll_sc.h:293:
++__CMPXCHG_CASE( ,  ,  mb_, 64, dmb ish,  , l, "memory")
+                                          ^
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#142: FILE: arch/arm64/include/asm/atomic_ll_sc.h:293:
++__CMPXCHG_CASE( ,  ,  mb_, 64, dmb ish,  , l, "memory")
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#157: FILE: arch/arm64/include/asm/atomic_lse.h:450:
++static inline u##sz __cmpxchg_case_##name##sz(volatile void *ptr,	\
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#198: FILE: arch/arm64/include/asm/atomic_lse.h:473:
++__CMPXCHG_CASE(w, b,     ,  8,   )
+                          ^
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#198: FILE: arch/arm64/include/asm/atomic_lse.h:473:
++__CMPXCHG_CASE(w, b,     ,  8,   )
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#199: FILE: arch/arm64/include/asm/atomic_lse.h:474:
++__CMPXCHG_CASE(w, h,     , 16,   )
+                          ^
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#199: FILE: arch/arm64/include/asm/atomic_lse.h:474:
++__CMPXCHG_CASE(w, h,     , 16,   )
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#200: FILE: arch/arm64/include/asm/atomic_lse.h:475:
++__CMPXCHG_CASE(w,  ,     , 32,   )
+                          ^
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#200: FILE: arch/arm64/include/asm/atomic_lse.h:475:
++__CMPXCHG_CASE(w,  ,     , 32,   )
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#201: FILE: arch/arm64/include/asm/atomic_lse.h:476:
++__CMPXCHG_CASE(x,  ,     , 64,   )
+                          ^
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#201: FILE: arch/arm64/include/asm/atomic_lse.h:476:
++__CMPXCHG_CASE(x,  ,     , 64,   )
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#204: FILE: arch/arm64/include/asm/atomic_lse.h:479:
++__CMPXCHG_CASE(w,  , acq_, 32,  a, "memory")
+                    ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#205: FILE: arch/arm64/include/asm/atomic_lse.h:480:
++__CMPXCHG_CASE(x,  , acq_, 64,  a, "memory")
+                    ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#208: FILE: arch/arm64/include/asm/atomic_lse.h:483:
++__CMPXCHG_CASE(w,  , rel_, 32,  l, "memory")
+                    ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#209: FILE: arch/arm64/include/asm/atomic_lse.h:484:
++__CMPXCHG_CASE(x,  , rel_, 64,  l, "memory")
+                    ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#212: FILE: arch/arm64/include/asm/atomic_lse.h:487:
++__CMPXCHG_CASE(w,  ,  mb_, 32, al, "memory")
+                    ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#213: FILE: arch/arm64/include/asm/atomic_lse.h:488:
++__CMPXCHG_CASE(x,  ,  mb_, 64, al, "memory")
+                    ^
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#245: FILE: arch/arm64/include/asm/cmpxchg.h:32:
++#define __XCHG_CASE(w, sfx, name, sz, mb, nop_lse, acq, acq_lse, rel, cl)	\
++static inline u##sz __xchg_case_##name##sz(u##sz x, volatile void *ptr)		\
++{										\
++	u##sz ret;								\
++	unsigned long tmp;							\
++										\
++	asm volatile(ARM64_LSE_ATOMIC_INSN(					\
++	/* LL/SC */								\
++	"	prfm	pstl1strm, %2\n"					\
++	"1:	ld" #acq "xr" #sfx "\t%" #w "0, %2\n"				\
++	"	st" #rel "xr" #sfx "\t%w1, %" #w "3, %2\n"			\
++	"	cbnz	%w1, 1b\n"						\
++	"	" #mb,								\
++	/* LSE atomics */							\
++	"	swp" #acq_lse #rel #sfx "\t%" #w "3, %" #w "0, %2\n"		\
++		__nops(3)							\
++	"	" #nop_lse)							\
++	: "=&r" (ret), "=&r" (tmp), "+Q" (*(u##sz *)ptr)			\
++	: "r" (x)								\
++	: cl);									\
++										\
++	return ret;								\
+ }
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#246: FILE: arch/arm64/include/asm/cmpxchg.h:33:
++static inline u##sz __xchg_case_##name##sz(u##sz x, volatile void *ptr)		\
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#285: FILE: arch/arm64/include/asm/cmpxchg.h:56:
++__XCHG_CASE(w, b,     ,  8,        ,    ,  ,  ,  ,         )
+                       ^
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#285: FILE: arch/arm64/include/asm/cmpxchg.h:56:
++__XCHG_CASE(w, b,     ,  8,        ,    ,  ,  ,  ,         )
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#286: FILE: arch/arm64/include/asm/cmpxchg.h:57:
++__XCHG_CASE(w, h,     , 16,        ,    ,  ,  ,  ,         )
+                       ^
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#286: FILE: arch/arm64/include/asm/cmpxchg.h:57:
++__XCHG_CASE(w, h,     , 16,        ,    ,  ,  ,  ,         )
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#287: FILE: arch/arm64/include/asm/cmpxchg.h:58:
++__XCHG_CASE(w,  ,     , 32,        ,    ,  ,  ,  ,         )
+                       ^
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#287: FILE: arch/arm64/include/asm/cmpxchg.h:58:
++__XCHG_CASE(w,  ,     , 32,        ,    ,  ,  ,  ,         )
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#288: FILE: arch/arm64/include/asm/cmpxchg.h:59:
++__XCHG_CASE( ,  ,     , 64,        ,    ,  ,  ,  ,         )
+                       ^
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#288: FILE: arch/arm64/include/asm/cmpxchg.h:59:
++__XCHG_CASE( ,  ,     , 64,        ,    ,  ,  ,  ,         )
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#288: FILE: arch/arm64/include/asm/cmpxchg.h:59:
++__XCHG_CASE( ,  ,     , 64,        ,    ,  ,  ,  ,         )
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#289: FILE: arch/arm64/include/asm/cmpxchg.h:60:
++__XCHG_CASE(w, b, acq_,  8,        ,    , a, a,  , "memory")
+                                         ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#289: FILE: arch/arm64/include/asm/cmpxchg.h:60:
++__XCHG_CASE(w, b, acq_,  8,        ,    , a, a,  , "memory")
+                                                  ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#290: FILE: arch/arm64/include/asm/cmpxchg.h:61:
++__XCHG_CASE(w, h, acq_, 16,        ,    , a, a,  , "memory")
+                                         ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#290: FILE: arch/arm64/include/asm/cmpxchg.h:61:
++__XCHG_CASE(w, h, acq_, 16,        ,    , a, a,  , "memory")
+                                                  ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#291: FILE: arch/arm64/include/asm/cmpxchg.h:62:
++__XCHG_CASE(w,  , acq_, 32,        ,    , a, a,  , "memory")
+                 ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#291: FILE: arch/arm64/include/asm/cmpxchg.h:62:
++__XCHG_CASE(w,  , acq_, 32,        ,    , a, a,  , "memory")
+                                         ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#291: FILE: arch/arm64/include/asm/cmpxchg.h:62:
++__XCHG_CASE(w,  , acq_, 32,        ,    , a, a,  , "memory")
+                                                  ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#292: FILE: arch/arm64/include/asm/cmpxchg.h:63:
++__XCHG_CASE( ,  , acq_, 64,        ,    , a, a,  , "memory")
+                 ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#292: FILE: arch/arm64/include/asm/cmpxchg.h:63:
++__XCHG_CASE( ,  , acq_, 64,        ,    , a, a,  , "memory")
+                                         ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#292: FILE: arch/arm64/include/asm/cmpxchg.h:63:
++__XCHG_CASE( ,  , acq_, 64,        ,    , a, a,  , "memory")
+                                                  ^
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#292: FILE: arch/arm64/include/asm/cmpxchg.h:63:
++__XCHG_CASE( ,  , acq_, 64,        ,    , a, a,  , "memory")
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#293: FILE: arch/arm64/include/asm/cmpxchg.h:64:
++__XCHG_CASE(w, b, rel_,  8,        ,    ,  ,  , l, "memory")
+                                               ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#294: FILE: arch/arm64/include/asm/cmpxchg.h:65:
++__XCHG_CASE(w, h, rel_, 16,        ,    ,  ,  , l, "memory")
+                                               ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#295: FILE: arch/arm64/include/asm/cmpxchg.h:66:
++__XCHG_CASE(w,  , rel_, 32,        ,    ,  ,  , l, "memory")
+                 ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#295: FILE: arch/arm64/include/asm/cmpxchg.h:66:
++__XCHG_CASE(w,  , rel_, 32,        ,    ,  ,  , l, "memory")
+                                               ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#296: FILE: arch/arm64/include/asm/cmpxchg.h:67:
++__XCHG_CASE( ,  , rel_, 64,        ,    ,  ,  , l, "memory")
+                 ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#296: FILE: arch/arm64/include/asm/cmpxchg.h:67:
++__XCHG_CASE( ,  , rel_, 64,        ,    ,  ,  , l, "memory")
+                                               ^
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#296: FILE: arch/arm64/include/asm/cmpxchg.h:67:
++__XCHG_CASE( ,  , rel_, 64,        ,    ,  ,  , l, "memory")
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#297: FILE: arch/arm64/include/asm/cmpxchg.h:68:
++__XCHG_CASE(w, b,  mb_,  8, dmb ish, nop,  , a, l, "memory")
+                                            ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#298: FILE: arch/arm64/include/asm/cmpxchg.h:69:
++__XCHG_CASE(w, h,  mb_, 16, dmb ish, nop,  , a, l, "memory")
+                                            ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#299: FILE: arch/arm64/include/asm/cmpxchg.h:70:
++__XCHG_CASE(w,  ,  mb_, 32, dmb ish, nop,  , a, l, "memory")
+                 ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#299: FILE: arch/arm64/include/asm/cmpxchg.h:70:
++__XCHG_CASE(w,  ,  mb_, 32, dmb ish, nop,  , a, l, "memory")
+                                            ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#300: FILE: arch/arm64/include/asm/cmpxchg.h:71:
++__XCHG_CASE( ,  ,  mb_, 64, dmb ish, nop,  , a, l, "memory")
+                 ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#300: FILE: arch/arm64/include/asm/cmpxchg.h:71:
++__XCHG_CASE( ,  ,  mb_, 64, dmb ish, nop,  , a, l, "memory")
+                                            ^
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#300: FILE: arch/arm64/include/asm/cmpxchg.h:71:
++__XCHG_CASE( ,  ,  mb_, 64, dmb ish, nop,  , a, l, "memory")
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#348: FILE: arch/arm64/include/asm/cmpxchg.h:226:
++static inline void __cmpwait_case_##sz(volatile void *ptr,		\
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#371: FILE: arch/arm64/include/asm/cmpxchg.h:245:
++__CMPWAIT_CASE(w,  , 32);
+                    ^
+
+ERROR:SPACING: space prohibited before that ',' (ctx:WxW)
+#372: FILE: arch/arm64/include/asm/cmpxchg.h:246:
++__CMPWAIT_CASE( ,  , 64);
+                    ^
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#372: FILE: arch/arm64/include/asm/cmpxchg.h:246:
++__CMPWAIT_CASE( ,  , 64);
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000077148.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a total: 87 errors, 6 warnings, 0 checks, 311 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000077148.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

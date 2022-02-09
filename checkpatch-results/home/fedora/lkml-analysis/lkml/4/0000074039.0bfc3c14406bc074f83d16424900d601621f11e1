@@ -1,0 +1,441 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#33: 
+   git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git efi-core-for-linus
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'f' may be better as '(f)' to avoid precedence issues
+#221: FILE: arch/arm/include/asm/efi.h:31:
++#define arch_efi_call_virt(f, args...)					\
+ ({									\
+ 	efi_##f##_t *__f;						\
+ 	__f = efi.systab->runtime->f;					\
++	__f(args);							\
+ })
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'f' may be better as '(f)' to avoid precedence issues
+#244: FILE: arch/arm/include/asm/efi.h:56:
++#define efi_call_early(f, ...)		sys_table_arg->boottime->f(__VA_ARGS__)
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#325: FILE: arch/arm/kernel/setup.c:887:
++    defined(CONFIG_EFI)$
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'f' may be better as '(f)' to avoid precedence issues
+#363: FILE: arch/arm64/include/asm/efi.h:26:
++#define arch_efi_call_virt(f, args...)					\
+ ({									\
+ 	efi_##f##_t *__f;						\
+ 	__f = efi.systab->runtime->f;					\
++	__f(args);							\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'f' may be better as '(f)' to avoid precedence issues
+#390: FILE: arch/arm64/include/asm/efi.h:51:
++#define efi_call_early(f, ...)		sys_table_arg->boottime->f(__VA_ARGS__)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#394: FILE: arch/arm64/include/asm/efi.h:55:
++#define alloc_screen_info(x...)		&screen_info
+
+CHECK:CAMELCASE: Avoid CamelCase: <PROT_DEVICE_nGnRE>
+#436: FILE: arch/arm64/kernel/efi.c:31:
++		return PROT_DEVICE_nGnRE;
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'f' may be better as '(f)' to avoid precedence issues
+#941: FILE: arch/x86/include/asm/efi.h:44:
++#define arch_efi_call_virt(f, args...)					\
+ ({									\
+ 	((efi_##f##_t __attribute__((regparm(0)))*)			\
+ 		efi.systab->runtime->f)(args);				\
+ })
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'f' may be better as '(f)' to avoid precedence issues
+#982: FILE: arch/x86/include/asm/efi.h:84:
++#define arch_efi_call_virt(f, args...)					\
++	efi_call((void *)efi.systab->runtime->f, args)			\
++
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#1010: FILE: arch/x86/include/asm/efi.h:168:
++extern void efifb_setup_from_dmi(struct screen_info *si, const char *opt);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#1019: FILE: arch/x86/include/asm/efi.h:215:
++#define __efi_call_early(f, ...)					\
++	__efi_early()->call((unsigned long)f, __VA_ARGS__);
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#1019: FILE: arch/x86/include/asm/efi.h:215:
++#define __efi_call_early(f, ...)					\
++	__efi_early()->call((unsigned long)f, __VA_ARGS__);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!efi.memmap.map"
+#1227: FILE: arch/x86/platform/efi/efi.c:445:
++	if (efi.memmap.map == NULL) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#1520: FILE: drivers/firmware/efi/Kconfig:90:
++config EFI_BOOTLOADER_CONTROL
++	tristate "EFI Bootloader Control"
++	depends on EFI_VARS
++	default n
++	---help---
++	  This module installs a reboot hook, such that if reboot() is
++	  invoked with a string argument NNN, "NNN" is copied to the
++	  "LoaderEntryOneShot" EFI variable, to be read by the
++	  bootloader. If the string matches one of the boot labels
++	  defined in its configuration, the bootloader will boot once
++	  to that label. The "LoaderEntryRebootReason" EFI variable is
++	  set with the reboot reason: "reboot" or "shutdown". The
++	  bootloader reads this reboot reason and takes particular
++	  action according to its policy.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:MISPLACED_INIT: __initdata should be placed after screen_info_table
+#1611: FILE: drivers/firmware/efi/arm-init.c:58:
++static __initdata unsigned long screen_info_table = EFI_INVALID_TABLE_ADDR;
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+WARNING:MISPLACED_INIT: __initdata should be placed after arch_tables[]
+#1613: FILE: drivers/firmware/efi/arm-init.c:60:
++static __initdata efi_config_table_type_t arch_tables[] = {
+
+CHECK:CAMELCASE: Avoid CamelCase: <orig_video_isVGA>
+#1636: FILE: drivers/firmware/efi/arm-init.c:83:
++	if (screen_info.orig_video_isVGA == VIDEO_TYPE_EFI &&
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!efi.memmap.map"
+#1681: FILE: drivers/firmware/efi/arm-init.c:224:
++	if (efi.memmap.map == NULL) {
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#1829: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1834: FILE: drivers/firmware/efi/capsule-loader.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2183: FILE: drivers/firmware/efi/capsule.c:1:
++/*
+
+WARNING:INCLUDE_LINUX: Use #include <linux/io.h> instead of <asm/io.h>
+#2199: FILE: drivers/firmware/efi/capsule.c:17:
++#include <asm/io.h>
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#2201: FILE: drivers/firmware/efi/capsule.c:19:
++typedef struct {
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#2279: FILE: drivers/firmware/efi/capsule.c:97:
++	capsule.headersize = capsule.imagesize = sizeof(capsule);
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#2416: FILE: drivers/firmware/efi/capsule.c:234:
++	sg_pages = kzalloc(sg_count * sizeof(*sg_pages), GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#2527: FILE: drivers/firmware/efi/efi.c:357:
++					pr_cont(" %s=0x%lx ",
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2593: FILE: drivers/firmware/efi/efibc.c:1:
++/*
+
+CHECK:CAMELCASE: Avoid CamelCase: <Data>
+#2631: FILE: drivers/firmware/efi/efibc.c:39:
++	if (size > sizeof(entry->var.Data)) {
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#2638: FILE: drivers/firmware/efi/efibc.c:46:
++	if (!entry) {
++		pr_err("failed to allocate efivar entry");
+
+CHECK:CAMELCASE: Avoid CamelCase: <VariableName>
+#2642: FILE: drivers/firmware/efi/efibc.c:50:
++	efibc_str_to_str16(name, entry->var.VariableName);
+
+CHECK:CAMELCASE: Avoid CamelCase: <VendorGuid>
+#2644: FILE: drivers/firmware/efi/efibc.c:52:
++	memcpy(&entry->var.VendorGuid, &guid, sizeof(guid));
+
+WARNING:STATIC_CONST: Move const after static - use 'static const efi_char16_t'
+#2869: FILE: drivers/firmware/efi/libstub/arm-stub.c:25:
++	static efi_char16_t const sb_var_name[] = {
+
+WARNING:STATIC_CONST: Move const after static - use 'static const efi_char16_t'
+#2871: FILE: drivers/firmware/efi/libstub/arm-stub.c:27:
++	static efi_char16_t const sm_var_name[] = {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2973: FILE: drivers/firmware/efi/libstub/arm-stub.c:304:
++		pr_efi_err(sys_table,
++			"could not determine UEFI Secure Boot status.\n");
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#3068: FILE: drivers/firmware/efi/libstub/gop.c:1:
++/* -----------------------------------------------------------------------
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3075: FILE: drivers/firmware/efi/libstub/gop.c:8:
++ * ----------------------------------------------------------------------- */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#3181: FILE: drivers/firmware/efi/libstub/gop.c:114:
++            efi_guid_t *proto, unsigned long size, void **gop_handle)$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#3181: FILE: drivers/firmware/efi/libstub/gop.c:114:
++            efi_guid_t *proto, unsigned long size, void **gop_handle)$
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#3428: FILE: drivers/firmware/efi/memattr.c:1:
++/*
+
+WARNING:MISPLACED_INIT: __initdata should be placed after tbl_size
+#3445: FILE: drivers/firmware/efi/memattr.c:18:
++static int __initdata tbl_size;
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3503: FILE: drivers/firmware/efi/memattr.c:76:
++	if (PAGE_SIZE > EFI_PAGE_SIZE &&
+
+Comparisons with a constant or upper case identifier on the left
+side of the test should be avoided.
+
+WARNING:STATIC_CONST_CHAR_ARRAY: char * array declaration might be better as static const
+#3619: FILE: drivers/firmware/efi/reboot.c:12:
++	const char *str[] = { "cold", "warm", "shutdown", "platform" };
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_crit([subsystem]dev, ... then dev_crit(dev, ... then pr_crit(...  to printk(KERN_CRIT ...
+#3630: FILE: drivers/firmware/efi/reboot.c:36:
++			printk(KERN_CRIT "efi: %s reset requested but pending "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#3631: FILE: drivers/firmware/efi/reboot.c:37:
++			printk(KERN_CRIT "efi: %s reset requested but pending "
++			       "capsule update requires %s reset... Performing "
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#3632: FILE: drivers/firmware/efi/reboot.c:38:
++			       "capsule update requires %s reset... Performing "
++			       "%s reset.\n", str[efi_mode], str[cap_reset_mode],
+
+WARNING:TYPO_SPELLING: 'reptition' may be misspelled - perhaps 'repetition'?
+#3672: FILE: drivers/firmware/efi/runtime-wrappers.c:43:
++ * reptition for the void/non-void return cases of {__,}efi_call_virt:
+    ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int' should also have an identifier name
+#3945: FILE: include/linux/efi.h:293:
++	efi_status_t (*locate_handle)(int, efi_guid_t *, void *,
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'efi_guid_t *' should also have an identifier name
+#3945: FILE: include/linux/efi.h:293:
++	efi_status_t (*locate_handle)(int, efi_guid_t *, void *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#3945: FILE: include/linux/efi.h:293:
++	efi_status_t (*locate_handle)(int, efi_guid_t *, void *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned long *' should also have an identifier name
+#3945: FILE: include/linux/efi.h:293:
++	efi_status_t (*locate_handle)(int, efi_guid_t *, void *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'efi_handle_t *' should also have an identifier name
+#3945: FILE: include/linux/efi.h:293:
++	efi_status_t (*locate_handle)(int, efi_guid_t *, void *,
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'efi_guid_t *' should also have an identifier name
+#3949: FILE: include/linux/efi.h:296:
++	efi_status_t (*install_configuration_table)(efi_guid_t *, void *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'void *' should also have an identifier name
+#3949: FILE: include/linux/efi.h:296:
++	efi_status_t (*install_configuration_table)(efi_guid_t *, void *);
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#3985: FILE: include/linux/efi.h:880:
++typedef struct {
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#4034: FILE: include/linux/efi.h:1007:
++extern int efi_memattr_init(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#4035: FILE: include/linux/efi.h:1008:
++extern int efi_memattr_apply_permissions(struct mm_struct *mm,
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'm' - possible side-effects?
+#4040: FILE: include/linux/efi.h:1012:
++#define for_each_efi_memory_desc_in_map(m, md)				   \
+ 	for ((md) = (m)->map;						   \
+ 	     (md) <= (efi_memory_desc_t *)((m)->map_end - (m)->desc_size); \
+ 	     (md) = (void *)(md) + (m)->desc_size)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'md' - possible side-effects?
+#4040: FILE: include/linux/efi.h:1012:
++#define for_each_efi_memory_desc_in_map(m, md)				   \
+ 	for ((md) = (m)->map;						   \
+ 	     (md) <= (efi_memory_desc_t *)((m)->map_end - (m)->desc_size); \
+ 	     (md) = (void *)(md) + (m)->desc_size)
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#4077: FILE: include/linux/efi.h:1096:
++extern int efi_status_to_err(efi_status_t status);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#4156: FILE: include/linux/efi.h:1320:
++typedef efi_status_t (*efi_graphics_output_protocol_query_mode)(
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#4177: FILE: include/linux/efi.h:1385:
++extern bool efi_capsule_pending(int *reset_type);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#4179: FILE: include/linux/efi.h:1387:
++extern int efi_capsule_supported(efi_guid_t guid, u32 flags,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#4182: FILE: include/linux/efi.h:1390:
++extern int efi_capsule_update(efi_capsule_header_t *capsule,
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000074039.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 3 errors, 36 warnings, 25 checks, 3716 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000074039.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

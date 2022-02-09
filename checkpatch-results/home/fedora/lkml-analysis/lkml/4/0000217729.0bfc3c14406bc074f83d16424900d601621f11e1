@@ -1,0 +1,184 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'test' - possible side-effects?
+#60: FILE: lib/atomic64_test.c:35:
++#define FAMILY_TEST(test, bit, op, args...)	\
++do {						\
++	test(bit, op, ##args);		\
++	test(bit, op##_acquire, ##args);	\
++	test(bit, op##_release, ##args);	\
++	test(bit, op##_relaxed, ##args);	\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'bit' - possible side-effects?
+#60: FILE: lib/atomic64_test.c:35:
++#define FAMILY_TEST(test, bit, op, args...)	\
++do {						\
++	test(bit, op, ##args);		\
++	test(bit, op##_acquire, ##args);	\
++	test(bit, op##_release, ##args);	\
++	test(bit, op##_relaxed, ##args);	\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'val' - possible side-effects?
+#68: FILE: lib/atomic64_test.c:43:
++#define TEST_RETURN(bit, op, c_op, val)				\
++do {								\
++	atomic##bit##_set(&v, v0);				\
++	r = v0;							\
++	r c_op val;						\
++	BUG_ON(atomic##bit##_##op(val, &v) != r);		\
++	BUG_ON(atomic##bit##_read(&v) != r);			\
++} while (0)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#73: FILE: lib/atomic64_test.c:48:
++	BUG_ON(atomic##bit##_##op(val, &v) != r);		\
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#74: FILE: lib/atomic64_test.c:49:
++	BUG_ON(atomic##bit##_read(&v) != r);			\
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#77: FILE: lib/atomic64_test.c:52:
++#define RETURN_FAMILY_TEST(bit, op, c_op, val)			\
++do {								\
++	FAMILY_TEST(TEST_RETURN, bit, op, c_op, val);		\
++} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ret' may be better as '(ret)' to avoid precedence issues
+#82: FILE: lib/atomic64_test.c:57:
++#define TEST_ARGS(bit, op, init, ret, expect, args...)		\
++do {								\
++	atomic##bit##_set(&v, init);				\
++	BUG_ON(atomic##bit##_##op(&v, ##args) != ret);		\
++	BUG_ON(atomic##bit##_read(&v) != expect);		\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'expect' may be better as '(expect)' to avoid precedence issues
+#82: FILE: lib/atomic64_test.c:57:
++#define TEST_ARGS(bit, op, init, ret, expect, args...)		\
++do {								\
++	atomic##bit##_set(&v, init);				\
++	BUG_ON(atomic##bit##_##op(&v, ##args) != ret);		\
++	BUG_ON(atomic##bit##_read(&v) != expect);		\
++} while (0)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#85: FILE: lib/atomic64_test.c:60:
++	BUG_ON(atomic##bit##_##op(&v, ##args) != ret);		\
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#86: FILE: lib/atomic64_test.c:61:
++	BUG_ON(atomic##bit##_read(&v) != expect);		\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'init' - possible side-effects?
+#89: FILE: lib/atomic64_test.c:64:
++#define XCHG_FAMILY_TEST(bit, init, new)				\
++do {									\
++	FAMILY_TEST(TEST_ARGS, bit, xchg, init, init, new, new);	\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'new' - possible side-effects?
+#89: FILE: lib/atomic64_test.c:64:
++#define XCHG_FAMILY_TEST(bit, init, new)				\
++do {									\
++	FAMILY_TEST(TEST_ARGS, bit, xchg, init, init, new, new);	\
++} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#89: FILE: lib/atomic64_test.c:64:
++#define XCHG_FAMILY_TEST(bit, init, new)				\
++do {									\
++	FAMILY_TEST(TEST_ARGS, bit, xchg, init, init, new, new);	\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'bit' - possible side-effects?
+#94: FILE: lib/atomic64_test.c:69:
++#define CMPXCHG_FAMILY_TEST(bit, init, new, wrong)			\
++do {									\
++	FAMILY_TEST(TEST_ARGS, bit, cmpxchg, 				\
++			init, init, new, init, new);			\
++	FAMILY_TEST(TEST_ARGS, bit, cmpxchg,				\
++			init, init, init, wrong, new);			\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'init' - possible side-effects?
+#94: FILE: lib/atomic64_test.c:69:
++#define CMPXCHG_FAMILY_TEST(bit, init, new, wrong)			\
++do {									\
++	FAMILY_TEST(TEST_ARGS, bit, cmpxchg, 				\
++			init, init, new, init, new);			\
++	FAMILY_TEST(TEST_ARGS, bit, cmpxchg,				\
++			init, init, init, wrong, new);			\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'new' - possible side-effects?
+#94: FILE: lib/atomic64_test.c:69:
++#define CMPXCHG_FAMILY_TEST(bit, init, new, wrong)			\
++do {									\
++	FAMILY_TEST(TEST_ARGS, bit, cmpxchg, 				\
++			init, init, new, init, new);			\
++	FAMILY_TEST(TEST_ARGS, bit, cmpxchg,				\
++			init, init, init, wrong, new);			\
++} while (0)
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#96: FILE: lib/atomic64_test.c:71:
++^IFAMILY_TEST(TEST_ARGS, bit, cmpxchg, ^I^I^I^I\$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#102: FILE: lib/atomic64_test.c:77:
++#define INC_RETURN_FAMILY_TEST(bit, i)			\
++do {							\
++	FAMILY_TEST(TEST_ARGS, bit, inc_return,		\
++			i, (i) + one, (i) + one);	\
++} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#102: FILE: lib/atomic64_test.c:77:
++#define INC_RETURN_FAMILY_TEST(bit, i)			\
++do {							\
++	FAMILY_TEST(TEST_ARGS, bit, inc_return,		\
++			i, (i) + one, (i) + one);	\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#108: FILE: lib/atomic64_test.c:83:
++#define DEC_RETURN_FAMILY_TEST(bit, i)			\
++do {							\
++	FAMILY_TEST(TEST_ARGS, bit, dec_return,		\
++			i, (i) - one, (i) - one);	\
++} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#108: FILE: lib/atomic64_test.c:83:
++#define DEC_RETURN_FAMILY_TEST(bit, i)			\
++do {							\
++	FAMILY_TEST(TEST_ARGS, bit, dec_return,		\
++			i, (i) - one, (i) - one);	\
++} while (0)
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000217729.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 9 warnings, 12 checks, 149 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000217729.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

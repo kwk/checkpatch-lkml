@@ -1,0 +1,278 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ptr' - possible side-effects?
+#75: FILE: arch/x86/include/asm/uaccess.h:345:
++#define __try_cmpxchg_user_asm(itype, ltype, _ptr, _pold, _new, label)	({ \
++	bool success;							\
++	__typeof__(_ptr) _old = (__typeof__(_ptr))(_pold);		\
++	__typeof__(*(_ptr)) __old = *_old;				\
++	__typeof__(*(_ptr)) __new = (_new);				\
++	asm_volatile_goto("\n"						\
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
++		     _ASM_EXTABLE_UA(1b, %l[label])			\
++		     : CC_OUT(z) (success),				\
++		       [ptr] "+m" (*_ptr),				\
++		       [old] "+a" (__old)				\
++		     : [new] ltype (__new)				\
++		     : "memory", "cc"					\
++		     : label);						\
++	if (unlikely(!success))						\
++		*_old = __old;						\
++	likely(success);					})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'label' - possible side-effects?
+#75: FILE: arch/x86/include/asm/uaccess.h:345:
++#define __try_cmpxchg_user_asm(itype, ltype, _ptr, _pold, _new, label)	({ \
++	bool success;							\
++	__typeof__(_ptr) _old = (__typeof__(_ptr))(_pold);		\
++	__typeof__(*(_ptr)) __old = *_old;				\
++	__typeof__(*(_ptr)) __new = (_new);				\
++	asm_volatile_goto("\n"						\
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
++		     _ASM_EXTABLE_UA(1b, %l[label])			\
++		     : CC_OUT(z) (success),				\
++		       [ptr] "+m" (*_ptr),				\
++		       [old] "+a" (__old)				\
++		     : [new] ltype (__new)				\
++		     : "memory", "cc"					\
++		     : label);						\
++	if (unlikely(!success))						\
++		*_old = __old;						\
++	likely(success);					})
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#81: FILE: arch/x86/include/asm/uaccess.h:351:
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:WxV)
+#82: FILE: arch/x86/include/asm/uaccess.h:352:
++		     _ASM_EXTABLE_UA(1b, %l[label])			\
+ 		                         ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#86: FILE: arch/x86/include/asm/uaccess.h:356:
++		     : [new] ltype (__new)				\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ptr' - possible side-effects?
+#100: FILE: arch/x86/include/asm/uaccess.h:428:
++#define __try_cmpxchg_user_asm(itype, ltype, _ptr, _pold, _new, label)	({ \
++	int __err = 0;							\
++	bool success;							\
++	__typeof__(_ptr) _old = (__typeof__(_ptr))(_pold);		\
++	__typeof__(*(_ptr)) __old = *_old;				\
++	__typeof__(*(_ptr)) __new = (_new);				\
++	asm volatile("\n"						\
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
++		     CC_SET(z)						\
++		     "2:\n"						\
++		     _ASM_EXTABLE_TYPE_REG(1b, 2b, EX_TYPE_EFAULT_REG,	\
++					   %[errout])			\
++		     : CC_OUT(z) (success),				\
++		       [errout] "+r" (__err),				\
++		       [ptr] "+m" (*_ptr),				\
++		       [old] "+a" (__old)				\
++		     : [new] ltype (__new)				\
++		     : "memory", "cc");					\
++	if (unlikely(__err))						\
++		goto label;						\
++	if (unlikely(!success))						\
++		*_old = __old;						\
++	likely(success);					})
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#100: FILE: arch/x86/include/asm/uaccess.h:428:
++#define __try_cmpxchg_user_asm(itype, ltype, _ptr, _pold, _new, label)	({ \
++	int __err = 0;							\
++	bool success;							\
++	__typeof__(_ptr) _old = (__typeof__(_ptr))(_pold);		\
++	__typeof__(*(_ptr)) __old = *_old;				\
++	__typeof__(*(_ptr)) __new = (_new);				\
++	asm volatile("\n"						\
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
++		     CC_SET(z)						\
++		     "2:\n"						\
++		     _ASM_EXTABLE_TYPE_REG(1b, 2b, EX_TYPE_EFAULT_REG,	\
++					   %[errout])			\
++		     : CC_OUT(z) (success),				\
++		       [errout] "+r" (__err),				\
++		       [ptr] "+m" (*_ptr),				\
++		       [old] "+a" (__old)				\
++		     : [new] ltype (__new)				\
++		     : "memory", "cc");					\
++	if (unlikely(__err))						\
++		goto label;						\
++	if (unlikely(!success))						\
++		*_old = __old;						\
++	likely(success);					})
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#107: FILE: arch/x86/include/asm/uaccess.h:435:
++		     "1: " LOCK_PREFIX "cmpxchg"itype" %[new], %[ptr]\n"\
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:ExV)
+#111: FILE: arch/x86/include/asm/uaccess.h:439:
++					   %[errout])			\
+ 					   ^
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#116: FILE: arch/x86/include/asm/uaccess.h:444:
++		     : [new] ltype (__new)				\
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#131: FILE: arch/x86/include/asm/uaccess.h:546:
++extern void __try_cmpxchg_user_wrong_size(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ptr' - possible side-effects?
+#133: FILE: arch/x86/include/asm/uaccess.h:548:
++#define unsafe_try_cmpxchg_user(_ptr, _oldp, _nval, _label) ({		\
++	__typeof__(*(_ptr)) __ret;					\
++	switch (sizeof(__ret)) {					\
++	case 1:	__ret = __try_cmpxchg_user_asm("b", "q",		\
++					       (_ptr), (_oldp),		\
++					       (_nval), _label);	\
++		break;							\
++	case 2:	__ret = __try_cmpxchg_user_asm("w", "r",		\
++					       (_ptr), (_oldp),		\
++					       (_nval), _label);	\
++		break;							\
++	case 4:	__ret = __try_cmpxchg_user_asm("l", "r",		\
++					       (_ptr), (_oldp),		\
++					       (_nval), _label);	\
++		break;							\
++	case 8:	__ret = __try_cmpxchg_user_asm("q", "r",		\
++					       (_ptr), (_oldp),		\
++					       (_nval), _label);	\
++		break;							\
++	default: __try_cmpxchg_user_wrong_size();			\
++	}								\
++	__ret;						})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_oldp' - possible side-effects?
+#133: FILE: arch/x86/include/asm/uaccess.h:548:
++#define unsafe_try_cmpxchg_user(_ptr, _oldp, _nval, _label) ({		\
++	__typeof__(*(_ptr)) __ret;					\
++	switch (sizeof(__ret)) {					\
++	case 1:	__ret = __try_cmpxchg_user_asm("b", "q",		\
++					       (_ptr), (_oldp),		\
++					       (_nval), _label);	\
++		break;							\
++	case 2:	__ret = __try_cmpxchg_user_asm("w", "r",		\
++					       (_ptr), (_oldp),		\
++					       (_nval), _label);	\
++		break;							\
++	case 4:	__ret = __try_cmpxchg_user_asm("l", "r",		\
++					       (_ptr), (_oldp),		\
++					       (_nval), _label);	\
++		break;							\
++	case 8:	__ret = __try_cmpxchg_user_asm("q", "r",		\
++					       (_ptr), (_oldp),		\
++					       (_nval), _label);	\
++		break;							\
++	default: __try_cmpxchg_user_wrong_size();			\
++	}								\
++	__ret;						})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_nval' - possible side-effects?
+#133: FILE: arch/x86/include/asm/uaccess.h:548:
++#define unsafe_try_cmpxchg_user(_ptr, _oldp, _nval, _label) ({		\
++	__typeof__(*(_ptr)) __ret;					\
++	switch (sizeof(__ret)) {					\
++	case 1:	__ret = __try_cmpxchg_user_asm("b", "q",		\
++					       (_ptr), (_oldp),		\
++					       (_nval), _label);	\
++		break;							\
++	case 2:	__ret = __try_cmpxchg_user_asm("w", "r",		\
++					       (_ptr), (_oldp),		\
++					       (_nval), _label);	\
++		break;							\
++	case 4:	__ret = __try_cmpxchg_user_asm("l", "r",		\
++					       (_ptr), (_oldp),		\
++					       (_nval), _label);	\
++		break;							\
++	case 8:	__ret = __try_cmpxchg_user_asm("q", "r",		\
++					       (_ptr), (_oldp),		\
++					       (_nval), _label);	\
++		break;							\
++	default: __try_cmpxchg_user_wrong_size();			\
++	}								\
++	__ret;						})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_label' - possible side-effects?
+#133: FILE: arch/x86/include/asm/uaccess.h:548:
++#define unsafe_try_cmpxchg_user(_ptr, _oldp, _nval, _label) ({		\
++	__typeof__(*(_ptr)) __ret;					\
++	switch (sizeof(__ret)) {					\
++	case 1:	__ret = __try_cmpxchg_user_asm("b", "q",		\
++					       (_ptr), (_oldp),		\
++					       (_nval), _label);	\
++		break;							\
++	case 2:	__ret = __try_cmpxchg_user_asm("w", "r",		\
++					       (_ptr), (_oldp),		\
++					       (_nval), _label);	\
++		break;							\
++	case 4:	__ret = __try_cmpxchg_user_asm("l", "r",		\
++					       (_ptr), (_oldp),		\
++					       (_nval), _label);	\
++		break;							\
++	case 8:	__ret = __try_cmpxchg_user_asm("q", "r",		\
++					       (_ptr), (_oldp),		\
++					       (_nval), _label);	\
++		break;							\
++	default: __try_cmpxchg_user_wrong_size();			\
++	}								\
++	__ret;						})
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#136: FILE: arch/x86/include/asm/uaccess.h:551:
++	case 1:	__ret = __try_cmpxchg_user_asm("b", "q",		\
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#140: FILE: arch/x86/include/asm/uaccess.h:555:
++	case 2:	__ret = __try_cmpxchg_user_asm("w", "r",		\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#144: FILE: arch/x86/include/asm/uaccess.h:559:
++	case 4:	__ret = __try_cmpxchg_user_asm("l", "r",		\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#148: FILE: arch/x86/include/asm/uaccess.h:563:
++	case 8:	__ret = __try_cmpxchg_user_asm("q", "r",		\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#152: FILE: arch/x86/include/asm/uaccess.h:567:
++	default: __try_cmpxchg_user_wrong_size();			\
+
+./tmp.L8M9DVV7bm//home/fedora/lkml-analysis/lkml/11/patch.offset.0000020763.commit.172f2ee9a2cc7645fcf7b58ab0a6fc17d4080426 total: 5 errors, 3 warnings, 12 checks, 85 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.L8M9DVV7bm//home/fedora/lkml-analysis/lkml/11/patch.offset.0000020763.commit.172f2ee9a2cc7645fcf7b58ab0a6fc17d4080426 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

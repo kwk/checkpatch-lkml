@@ -1,0 +1,198 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#43: 
+> >> which happen to be power-on defaults (Source: IBM TrackPoint Engineering
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_name' - possible side-effects?
+#237: FILE: drivers/input/mouse/trackpoint.c:145:
++#define TRACKPOINT_INT_ATTR(_name, _command, _default)				\
+ 	static struct trackpoint_attr_data trackpoint_attr_##_name = {		\
+ 		.field_offset = offsetof(struct trackpoint_data, _name),	\
+ 		.command = _command,						\
++		.power_on_default = _default,					\
+ 	};									\
+ 	PSMOUSE_DEFINE_ATTR(_name, S_IWUSR | S_IRUGO,				\
+ 			    &trackpoint_attr_##_name,				\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_name' - possible side-effects?
+#274: FILE: drivers/input/mouse/trackpoint.c:183:
++#define TRACKPOINT_BIT_ATTR(_name, _command, _mask, _inv, _default)	\
++static struct trackpoint_attr_data trackpoint_attr_##_name = {		\
++	.field_offset		= offsetof(struct trackpoint_data,	\
++					   _name),			\
++	.command		= _command,				\
++	.mask			= _mask,				\
++	.inverted		= _inv,					\
++	.power_on_default	= _default,				\
++	};								\
++PSMOUSE_DEFINE_ATTR(_name, S_IWUSR | S_IRUGO,				\
++		    &trackpoint_attr_##_name,				\
++		    trackpoint_show_int_attr, trackpoint_set_bit_attr)
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUSR | S_IRUGO' are not preferred. Consider using octal permissions '0644'.
+#283: FILE: drivers/input/mouse/trackpoint.c:192:
++PSMOUSE_DEFINE_ATTR(_name, S_IWUSR | S_IRUGO,				\
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_psmouse' may be better as '(_psmouse)' to avoid precedence issues
+#287: FILE: drivers/input/mouse/trackpoint.c:196:
++#define TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name)			\
++do {									\
++	struct trackpoint_attr_data *_attr = &trackpoint_attr_##_name;	\
++									\
++	trackpoint_update_bit(&_psmouse->ps2dev,			\
++			_attr->command, _attr->mask, _tp->_name);	\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_tp' may be better as '(_tp)' to avoid precedence issues
+#287: FILE: drivers/input/mouse/trackpoint.c:196:
++#define TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name)			\
++do {									\
++	struct trackpoint_attr_data *_attr = &trackpoint_attr_##_name;	\
++									\
++	trackpoint_update_bit(&_psmouse->ps2dev,			\
++			_attr->command, _attr->mask, _tp->_name);	\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_name' may be better as '(_name)' to avoid precedence issues
+#287: FILE: drivers/input/mouse/trackpoint.c:196:
++#define TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name)			\
++do {									\
++	struct trackpoint_attr_data *_attr = &trackpoint_attr_##_name;	\
++									\
++	trackpoint_update_bit(&_psmouse->ps2dev,			\
++			_attr->command, _attr->mask, _tp->_name);	\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_power_on' may be better as '(_power_on)' to avoid precedence issues
+#295: FILE: drivers/input/mouse/trackpoint.c:204:
++#define TRACKPOINT_UPDATE(_power_on, _psmouse, _tp, _name)		\
++do {									\
++	if (!_power_on ||						\
++	    _tp->_name != trackpoint_attr_##_name.power_on_default) {	\
++		if (!trackpoint_attr_##_name.mask)			\
++			trackpoint_write(&_psmouse->ps2dev,		\
++				 trackpoint_attr_##_name.command,	\
++				 _tp->_name);				\
++		else							\
++			TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name);	\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_psmouse' - possible side-effects?
+#295: FILE: drivers/input/mouse/trackpoint.c:204:
++#define TRACKPOINT_UPDATE(_power_on, _psmouse, _tp, _name)		\
++do {									\
++	if (!_power_on ||						\
++	    _tp->_name != trackpoint_attr_##_name.power_on_default) {	\
++		if (!trackpoint_attr_##_name.mask)			\
++			trackpoint_write(&_psmouse->ps2dev,		\
++				 trackpoint_attr_##_name.command,	\
++				 _tp->_name);				\
++		else							\
++			TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name);	\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_psmouse' may be better as '(_psmouse)' to avoid precedence issues
+#295: FILE: drivers/input/mouse/trackpoint.c:204:
++#define TRACKPOINT_UPDATE(_power_on, _psmouse, _tp, _name)		\
++do {									\
++	if (!_power_on ||						\
++	    _tp->_name != trackpoint_attr_##_name.power_on_default) {	\
++		if (!trackpoint_attr_##_name.mask)			\
++			trackpoint_write(&_psmouse->ps2dev,		\
++				 trackpoint_attr_##_name.command,	\
++				 _tp->_name);				\
++		else							\
++			TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name);	\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_tp' - possible side-effects?
+#295: FILE: drivers/input/mouse/trackpoint.c:204:
++#define TRACKPOINT_UPDATE(_power_on, _psmouse, _tp, _name)		\
++do {									\
++	if (!_power_on ||						\
++	    _tp->_name != trackpoint_attr_##_name.power_on_default) {	\
++		if (!trackpoint_attr_##_name.mask)			\
++			trackpoint_write(&_psmouse->ps2dev,		\
++				 trackpoint_attr_##_name.command,	\
++				 _tp->_name);				\
++		else							\
++			TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name);	\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_tp' may be better as '(_tp)' to avoid precedence issues
+#295: FILE: drivers/input/mouse/trackpoint.c:204:
++#define TRACKPOINT_UPDATE(_power_on, _psmouse, _tp, _name)		\
++do {									\
++	if (!_power_on ||						\
++	    _tp->_name != trackpoint_attr_##_name.power_on_default) {	\
++		if (!trackpoint_attr_##_name.mask)			\
++			trackpoint_write(&_psmouse->ps2dev,		\
++				 trackpoint_attr_##_name.command,	\
++				 _tp->_name);				\
++		else							\
++			TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name);	\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_name' - possible side-effects?
+#295: FILE: drivers/input/mouse/trackpoint.c:204:
++#define TRACKPOINT_UPDATE(_power_on, _psmouse, _tp, _name)		\
++do {									\
++	if (!_power_on ||						\
++	    _tp->_name != trackpoint_attr_##_name.power_on_default) {	\
++		if (!trackpoint_attr_##_name.mask)			\
++			trackpoint_write(&_psmouse->ps2dev,		\
++				 trackpoint_attr_##_name.command,	\
++				 _tp->_name);				\
++		else							\
++			TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name);	\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_name' may be better as '(_name)' to avoid precedence issues
+#295: FILE: drivers/input/mouse/trackpoint.c:204:
++#define TRACKPOINT_UPDATE(_power_on, _psmouse, _tp, _name)		\
++do {									\
++	if (!_power_on ||						\
++	    _tp->_name != trackpoint_attr_##_name.power_on_default) {	\
++		if (!trackpoint_attr_##_name.mask)			\
++			trackpoint_write(&_psmouse->ps2dev,		\
++				 trackpoint_attr_##_name.command,	\
++				 _tp->_name);				\
++		else							\
++			TRACKPOINT_UPDATE_BIT(_psmouse, _tp, _name);	\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_tp' may be better as '(_tp)' to avoid precedence issues
+#308: FILE: drivers/input/mouse/trackpoint.c:217:
++#define TRACKPOINT_SET_POWER_ON_DEFAULT(_tp, _name)				\
++	(_tp->_name = trackpoint_attr_##_name.power_on_default)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_name' may be better as '(_name)' to avoid precedence issues
+#308: FILE: drivers/input/mouse/trackpoint.c:217:
++#define TRACKPOINT_SET_POWER_ON_DEFAULT(_tp, _name)				\
++	(_tp->_name = trackpoint_attr_##_name.power_on_default)
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000397630.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 2 warnings, 14 checks, 351 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000397630.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

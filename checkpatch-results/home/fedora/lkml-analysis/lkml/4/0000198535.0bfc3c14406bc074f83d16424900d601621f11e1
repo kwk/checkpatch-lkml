@@ -1,0 +1,227 @@
+WARNING:TYPO_SPELLING: 'implementaions' may be misspelled - perhaps 'implementations'?
+#75: 
+We need our own implementaions since we lack LLSC support.
+                ^^^^^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#112: FILE: arch/arc/include/asm/atomic.h:192:
++	__asm__ __volatile__(
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#122: FILE: arch/arc/include/asm/atomic.h:202:
++	__asm__ __volatile__(
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#158: FILE: arch/arc/include/asm/atomic.h:238:
++	smp_mb();							\
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#165: FILE: arch/arc/include/asm/atomic.h:245:
++#define ATOMIC_OPS(op, c_op, asm_op)					\
++	ATOMIC_OP(op, c_op, asm_op)					\
++	ATOMIC_OP_RETURN(op, c_op, asm_op)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'op' - possible side-effects?
+#165: FILE: arch/arc/include/asm/atomic.h:245:
++#define ATOMIC_OPS(op, c_op, asm_op)					\
++	ATOMIC_OP(op, c_op, asm_op)					\
++	ATOMIC_OP_RETURN(op, c_op, asm_op)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'c_op' - possible side-effects?
+#165: FILE: arch/arc/include/asm/atomic.h:245:
++#define ATOMIC_OPS(op, c_op, asm_op)					\
++	ATOMIC_OP(op, c_op, asm_op)					\
++	ATOMIC_OP_RETURN(op, c_op, asm_op)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'asm_op' - possible side-effects?
+#165: FILE: arch/arc/include/asm/atomic.h:245:
++#define ATOMIC_OPS(op, c_op, asm_op)					\
++	ATOMIC_OP(op, c_op, asm_op)					\
++	ATOMIC_OP_RETURN(op, c_op, asm_op)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'asm_op' - possible side-effects?
+#202: FILE: arch/arc/include/asm/bitops.h:160:
++#define BIT_OP(op, c_op, asm_op)					\
++static inline void op##_bit(unsigned long nr, volatile unsigned long *m)\
++{									\
++	m += nr >> 5;							\
++									\
++	nr = (1UL << (nr & 0x1f));					\
++	if (asm_op == CTOP_INST_AAND_DI_R2_R2_R3)			\
++		nr = ~nr;						\
++									\
++	__asm__ __volatile__(						\
++	"	mov r2, %0\n"						\
++	"	mov r3, %1\n"						\
++	"	.word %2\n"						\
++	:								\
++	: "r"(nr), "r"(m), "i"(asm_op)					\
++	: "r2", "r3", "memory");					\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'asm_op' may be better as '(asm_op)' to avoid precedence issues
+#202: FILE: arch/arc/include/asm/bitops.h:160:
++#define BIT_OP(op, c_op, asm_op)					\
++static inline void op##_bit(unsigned long nr, volatile unsigned long *m)\
++{									\
++	m += nr >> 5;							\
++									\
++	nr = (1UL << (nr & 0x1f));					\
++	if (asm_op == CTOP_INST_AAND_DI_R2_R2_R3)			\
++		nr = ~nr;						\
++									\
++	__asm__ __volatile__(						\
++	"	mov r2, %0\n"						\
++	"	mov r3, %1\n"						\
++	"	.word %2\n"						\
++	:								\
++	: "r"(nr), "r"(m), "i"(asm_op)					\
++	: "r2", "r3", "memory");					\
++}
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#203: FILE: arch/arc/include/asm/bitops.h:161:
++static inline void op##_bit(unsigned long nr, volatile unsigned long *m)\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'asm_op' - possible side-effects?
+#220: FILE: arch/arc/include/asm/bitops.h:178:
++#define TEST_N_BIT_OP(op, c_op, asm_op)					\
++static inline int test_and_##op##_bit(unsigned long nr, volatile unsigned long *m)\
++{									\
++	unsigned long old;						\
++									\
++	m += nr >> 5;							\
++									\
++	nr = old = (1UL << (nr & 0x1f));				\
++	if (asm_op == CTOP_INST_AAND_DI_R2_R2_R3)			\
++		old = ~old;						\
++									\
++	/* Explicit full memory barrier needed before/after */		\
++	smp_mb();							\
++									\
++	__asm__ __volatile__(						\
++	"	mov r2, %0\n"						\
++	"	mov r3, %1\n"						\
++	"       .word %2\n"						\
++	"	mov %0, r2"						\
++	: "+r"(old)							\
++	: "r"(m), "i"(asm_op)						\
++	: "r2", "r3", "memory");					\
++									\
++	smp_mb();							\
++									\
++	return (old & nr) != 0;					\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'asm_op' may be better as '(asm_op)' to avoid precedence issues
+#220: FILE: arch/arc/include/asm/bitops.h:178:
++#define TEST_N_BIT_OP(op, c_op, asm_op)					\
++static inline int test_and_##op##_bit(unsigned long nr, volatile unsigned long *m)\
++{									\
++	unsigned long old;						\
++									\
++	m += nr >> 5;							\
++									\
++	nr = old = (1UL << (nr & 0x1f));				\
++	if (asm_op == CTOP_INST_AAND_DI_R2_R2_R3)			\
++		old = ~old;						\
++									\
++	/* Explicit full memory barrier needed before/after */		\
++	smp_mb();							\
++									\
++	__asm__ __volatile__(						\
++	"	mov r2, %0\n"						\
++	"	mov r3, %1\n"						\
++	"       .word %2\n"						\
++	"	mov %0, r2"						\
++	: "+r"(old)							\
++	: "r"(m), "i"(asm_op)						\
++	: "r2", "r3", "memory");					\
++									\
++	smp_mb();							\
++									\
++	return (old & nr) != 0;					\
++}
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#221: FILE: arch/arc/include/asm/bitops.h:179:
++static inline int test_and_##op##_bit(unsigned long nr, volatile unsigned long *m)\
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#227: FILE: arch/arc/include/asm/bitops.h:185:
++	nr = old = (1UL << (nr & 0x1f));				\
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#243: FILE: arch/arc/include/asm/bitops.h:201:
++	smp_mb();							\
+
+ERROR:SPACING: space prohibited after that '&' (ctx:WxW)
+#261: FILE: arch/arc/include/asm/bitops.h:253:
++BIT_OPS(clear, & ~, CTOP_INST_AAND_DI_R2_R2_R3)
+                ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#307: FILE: arch/arc/include/asm/cmpxchg.h:134:
++__cmpxchg(volatile void *ptr, unsigned long expected, unsigned long new)
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#316: FILE: arch/arc/include/asm/cmpxchg.h:143:
++	__asm__ __volatile__(
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#325: FILE: arch/arc/include/asm/cmpxchg.h:152:
++	smp_mb();
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#330: FILE: arch/arc/include/asm/cmpxchg.h:157:
++static inline unsigned long __xchg(unsigned long val, volatile void *ptr,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#333: FILE: arch/arc/include/asm/cmpxchg.h:160:
++	extern unsigned long __xchg_bad_pointer(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#342: FILE: arch/arc/include/asm/cmpxchg.h:169:
++		__asm__ __volatile__(
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#351: FILE: arch/arc/include/asm/cmpxchg.h:178:
++		smp_mb();
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#358: FILE: arch/arc/include/asm/cmpxchg.h:185:
++#define xchg(ptr, with) ((typeof(*(ptr)))__xchg((unsigned long)(with), (ptr), \
++						 sizeof(*(ptr))))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#369: FILE: arch/arc/include/asm/cmpxchg.h:204:
++#define cmpxchg(ptr, o, n) ((typeof(*(ptr)))__cmpxchg((ptr), \
++				(unsigned long)(o), (unsigned long)(n)))
+
+WARNING:TYPO_SPELLING: 'gaurantee' may be misspelled - perhaps 'guarantee'?
+#374: FILE: arch/arc/include/asm/cmpxchg.h:209:
++ * just to gaurantee semantics.
+            ^^^^^^^^^
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000198535.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 2 errors, 10 warnings, 15 checks, 278 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000198535.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

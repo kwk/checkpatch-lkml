@@ -1,0 +1,81 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#42: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#47: FILE: arch/arm64/include/asm/mcs_spinlock.h:1:
++#ifndef __ASM_MCS_SPINLOCK_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'l' - possible side-effects?
+#50: FILE: arch/arm64/include/asm/mcs_spinlock.h:4:
++#define arch_mcs_spin_lock_contended(l)					\
++do {									\
++	int locked_val;							\
++	for (;;) {							\
++		locked_val = READ_ONCE(*l);				\
++		if (locked_val)						\
++			break;						\
++		cmpwait(l, locked_val);					\
++	}								\
++	smp_rmb();							\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'l' may be better as '(l)' to avoid precedence issues
+#50: FILE: arch/arm64/include/asm/mcs_spinlock.h:4:
++#define arch_mcs_spin_lock_contended(l)					\
++do {									\
++	int locked_val;							\
++	for (;;) {							\
++		locked_val = READ_ONCE(*l);				\
++		if (locked_val)						\
++			break;						\
++		cmpwait(l, locked_val);					\
++	}								\
++	smp_rmb();							\
++} while (0)
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#59: FILE: arch/arm64/include/asm/mcs_spinlock.h:13:
++	smp_rmb();							\
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#62: FILE: arch/arm64/include/asm/mcs_spinlock.h:16:
++#define arch_mcs_spin_unlock_contended(l)				\
++do {									\
++	smp_store_release(l, 1);					\
++} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#64: FILE: arch/arm64/include/asm/mcs_spinlock.h:18:
++	smp_store_release(l, 1);					\
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000097685.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 5 warnings, 2 checks, 21 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000097685.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

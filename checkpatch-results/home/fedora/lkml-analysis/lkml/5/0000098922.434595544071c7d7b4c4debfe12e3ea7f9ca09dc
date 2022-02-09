@@ -1,0 +1,133 @@
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#68: FILE: fs/cramfs/Kconfig:23:
++config CRAMFS_BLOCKDEV
++	bool "Support CramFs image over a regular block device" if EXPERT
++	depends on CRAMFS && BLOCK
++	default y
++	help
++	  This option allows the CramFs driver to load data from a regular
++	  block device such a disk partition or a ramdisk.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:TYPO_SPELLING: 'adressed' may be misspelled - perhaps 'addressed'?
+#82: FILE: fs/cramfs/Kconfig:37:
++	  a linear adressed memory range (usually non volatile memory
+ 	           ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 15)
+#155: FILE: fs/cramfs/inode.c:258:
++	if (len > sbi->size || offset > sbi->size - len)
++	       return page_address(ZERO_PAGE(0));
+
+WARNING:TABSTOP: Statements should start on a tabstop
+#156: FILE: fs/cramfs/inode.c:259:
++	       return page_address(ZERO_PAGE(0));
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH' are not preferred. Consider using octal permissions '0555'.
+#274: FILE: fs/cramfs/inode.c:353:
++	super->root.mode |= (S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*sbi)...) over kzalloc(sizeof(struct cramfs_sb_info)...)
+#332: FILE: fs/cramfs/inode.c:403:
++	sbi = kzalloc(sizeof(struct cramfs_sb_info), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*sbi)...) over kzalloc(sizeof(struct cramfs_sb_info)...)
+#354: FILE: fs/cramfs/inode.c:425:
++	sbi = kzalloc(sizeof(struct cramfs_sb_info), GFP_KERNEL);
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#366: FILE: fs/cramfs/inode.c:437:
++	if (!data || !(p = strstr((char *)data, "physaddr="))) {
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#375: FILE: fs/cramfs/inode.c:446:
++	if (sbi->linear_phys_addr & (PAGE_SIZE-1)) {
+ 	                                      ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#377: FILE: fs/cramfs/inode.c:448:
++		pr_err("physical address %pap for linear cramfs isn't aligned to a page boundary\n",
++			&sbi->linear_phys_addr);
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#400: FILE: fs/cramfs/inode.c:471:
++		sbi->size/1024);
+ 		         ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#422: FILE: fs/cramfs/inode.c:710:
++static struct dentry *cramfs_blkdev_mount(struct file_system_type *fs_type,
++				int flags, const char *dev_name, void *data)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#428: FILE: fs/cramfs/inode.c:716:
++static struct dentry *cramfs_physmem_mount(struct file_system_type *fs_type,
++				int flags, const char *dev_name, void *data)
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#469: FILE: fs/cramfs/inode.c:747:
++	if ((rv = cramfs_uncompress_init()) < 0)
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#471: FILE: fs/cramfs/inode.c:749:
++	if (IS_ENABLED(CONFIG_CRAMFS_BLOCKDEV) &&
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#474: FILE: fs/cramfs/inode.c:752:
++	if (IS_ENABLED(CONFIG_CRAMFS_PHYSMEM) &&
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (0, 16)
+#479: FILE: fs/cramfs/inode.c:757:
++err2:	if (IS_ENABLED(CONFIG_CRAMFS_BLOCKDEV))
++		unregister_filesystem(&cramfs_fs_type);
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000098922.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 4 errors, 6 warnings, 7 checks, 422 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000098922.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

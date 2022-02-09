@@ -1,0 +1,30 @@
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'lock' may be better as '(lock)' to avoid precedence issues
+#43: FILE: include/linux/lockdep.h:552:
++#define lock_is_mutex(lock) \
++	__builtin_types_compatible_p(typeof(*lock), struct mutex)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#58: FILE: include/linux/lockdep.h:570:
++# define might_lock(lock) do {						\
++	might_sleep_if(lock_is_mutex(lock));				\
++} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000308701.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 1 warnings, 1 checks, 23 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000308701.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

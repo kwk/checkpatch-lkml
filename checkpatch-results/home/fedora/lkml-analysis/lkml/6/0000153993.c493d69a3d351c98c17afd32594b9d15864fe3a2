@@ -1,0 +1,129 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'lock' - possible side-effects?
+#111: FILE: mm/compaction.c:350:
++#define compact_trylock(lock, flags, cc, lockf, trylockf)		       \
++({									       \
++	bool __ret = true;						       \
++	if ((cc)->mode == MIGRATE_ASYNC) {				       \
++		if (!trylockf((lock), *(flags))) {			       \
++			(cc)->contended = true;				       \
++			__ret = false;					       \
++		}							       \
++	} else {							       \
++		lockf((lock), *(flags));				       \
++	}								       \
++									       \
++	__ret;								       \
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'flags' - possible side-effects?
+#111: FILE: mm/compaction.c:350:
++#define compact_trylock(lock, flags, cc, lockf, trylockf)		       \
++({									       \
++	bool __ret = true;						       \
++	if ((cc)->mode == MIGRATE_ASYNC) {				       \
++		if (!trylockf((lock), *(flags))) {			       \
++			(cc)->contended = true;				       \
++			__ret = false;					       \
++		}							       \
++	} else {							       \
++		lockf((lock), *(flags));				       \
++	}								       \
++									       \
++	__ret;								       \
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cc' - possible side-effects?
+#111: FILE: mm/compaction.c:350:
++#define compact_trylock(lock, flags, cc, lockf, trylockf)		       \
++({									       \
++	bool __ret = true;						       \
++	if ((cc)->mode == MIGRATE_ASYNC) {				       \
++		if (!trylockf((lock), *(flags))) {			       \
++			(cc)->contended = true;				       \
++			__ret = false;					       \
++		}							       \
++	} else {							       \
++		lockf((lock), *(flags));				       \
++	}								       \
++									       \
++	__ret;								       \
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'trylockf' may be better as '(trylockf)' to avoid precedence issues
+#111: FILE: mm/compaction.c:350:
++#define compact_trylock(lock, flags, cc, lockf, trylockf)		       \
++({									       \
++	bool __ret = true;						       \
++	if ((cc)->mode == MIGRATE_ASYNC) {				       \
++		if (!trylockf((lock), *(flags))) {			       \
++			(cc)->contended = true;				       \
++			__ret = false;					       \
++		}							       \
++	} else {							       \
++		lockf((lock), *(flags));				       \
++	}								       \
++									       \
++	__ret;								       \
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'locked' - possible side-effects?
+#155: FILE: mm/compaction.c:380:
++#define compact_unlock_should_abort(lock, flags, locked, cc, unlockf)	       \
++({									       \
++	bool __ret = false;						       \
++									       \
++	if (*(locked)) {						       \
++		unlockf((lock), (flags));				       \
++		*(locked) = false;					       \
++	}								       \
++									       \
++	if (fatal_signal_pending(current)) {				       \
++		(cc)->contended = true;					       \
++		__ret = true;						       \
++	} else if (need_resched()) {					       \
++		if ((cc)->mode == MIGRATE_ASYNC) {			       \
++			(cc)->contended = true;				       \
++			__ret = true;					       \
++		} else {						       \
++			cond_resched();					       \
++		}							       \
++	}								       \
++									       \
++	__ret;								       \
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cc' - possible side-effects?
+#155: FILE: mm/compaction.c:380:
++#define compact_unlock_should_abort(lock, flags, locked, cc, unlockf)	       \
++({									       \
++	bool __ret = false;						       \
++									       \
++	if (*(locked)) {						       \
++		unlockf((lock), (flags));				       \
++		*(locked) = false;					       \
++	}								       \
++									       \
++	if (fatal_signal_pending(current)) {				       \
++		(cc)->contended = true;					       \
++		__ret = true;						       \
++	} else if (need_resched()) {					       \
++		if ((cc)->mode == MIGRATE_ASYNC) {			       \
++			(cc)->contended = true;				       \
++			__ret = true;					       \
++		} else {						       \
++			cond_resched();					       \
++		}							       \
++	}								       \
++									       \
++	__ret;								       \
++})
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000153993.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 0 errors, 0 warnings, 6 checks, 427 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000153993.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

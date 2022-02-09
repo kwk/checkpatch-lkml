@@ -1,0 +1,186 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#75: 
+> Othwerwise we should document the fact that the caller should alvays verify
+
+WARNING:TYPO_SPELLING: 'Othwerwise' may be misspelled - perhaps 'Otherwise'?
+#75: 
+> Othwerwise we should document the fact that the caller should alvays verify
+  ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'state' - possible side-effects?
+#159: FILE: include/linux/wait.h:180:
++#define __wait_signal_pending(state)					\
++	((state == TASK_INTERRUPTIBLE) ? signal_pending(current) :	\
++	 (state == TASK_KILLABLE) ? fatal_signal_pending(current) :	\
++	  0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'state' may be better as '(state)' to avoid precedence issues
+#159: FILE: include/linux/wait.h:180:
++#define __wait_signal_pending(state)					\
++	((state == TASK_INTERRUPTIBLE) ? signal_pending(current) :	\
++	 (state == TASK_KILLABLE) ? fatal_signal_pending(current) :	\
++	  0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'wq' - possible side-effects?
+#164: FILE: include/linux/wait.h:185:
++#define __wait_event_common(wq, condition, state, tout)			\
++({									\
+ 	DEFINE_WAIT(__wait);						\
++	long __ret = 0, __tout = tout;					\
+ 									\
+ 	for (;;) {							\
++		prepare_to_wait(&wq, &__wait, state);			\
++		if (condition) {					\
++			__ret = __wait_no_timeout(tout) ?: __tout ?: 1;	\
++			break;						\
++		}							\
++									\
++		if (__wait_signal_pending(state)) {			\
++			__ret = -ERESTARTSYS;				\
++			break;						\
++		}							\
++									\
++		if (__wait_no_timeout(tout))				\
++			schedule();					\
++		else if (__tout)					\
++			__tout = schedule_timeout(__tout);		\
++		else							\
+ 			break;						\
+ 	}								\
+ 	finish_wait(&wq, &__wait);					\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'wq' may be better as '(wq)' to avoid precedence issues
+#164: FILE: include/linux/wait.h:185:
++#define __wait_event_common(wq, condition, state, tout)			\
++({									\
+ 	DEFINE_WAIT(__wait);						\
++	long __ret = 0, __tout = tout;					\
+ 									\
+ 	for (;;) {							\
++		prepare_to_wait(&wq, &__wait, state);			\
++		if (condition) {					\
++			__ret = __wait_no_timeout(tout) ?: __tout ?: 1;	\
++			break;						\
++		}							\
++									\
++		if (__wait_signal_pending(state)) {			\
++			__ret = -ERESTARTSYS;				\
++			break;						\
++		}							\
++									\
++		if (__wait_no_timeout(tout))				\
++			schedule();					\
++		else if (__tout)					\
++			__tout = schedule_timeout(__tout);		\
++		else							\
+ 			break;						\
+ 	}								\
+ 	finish_wait(&wq, &__wait);					\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'state' - possible side-effects?
+#164: FILE: include/linux/wait.h:185:
++#define __wait_event_common(wq, condition, state, tout)			\
++({									\
+ 	DEFINE_WAIT(__wait);						\
++	long __ret = 0, __tout = tout;					\
+ 									\
+ 	for (;;) {							\
++		prepare_to_wait(&wq, &__wait, state);			\
++		if (condition) {					\
++			__ret = __wait_no_timeout(tout) ?: __tout ?: 1;	\
++			break;						\
++		}							\
++									\
++		if (__wait_signal_pending(state)) {			\
++			__ret = -ERESTARTSYS;				\
++			break;						\
++		}							\
++									\
++		if (__wait_no_timeout(tout))				\
++			schedule();					\
++		else if (__tout)					\
++			__tout = schedule_timeout(__tout);		\
++		else							\
+ 			break;						\
+ 	}								\
+ 	finish_wait(&wq, &__wait);					\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'tout' - possible side-effects?
+#164: FILE: include/linux/wait.h:185:
++#define __wait_event_common(wq, condition, state, tout)			\
++({									\
+ 	DEFINE_WAIT(__wait);						\
++	long __ret = 0, __tout = tout;					\
+ 									\
+ 	for (;;) {							\
++		prepare_to_wait(&wq, &__wait, state);			\
++		if (condition) {					\
++			__ret = __wait_no_timeout(tout) ?: __tout ?: 1;	\
++			break;						\
++		}							\
++									\
++		if (__wait_signal_pending(state)) {			\
++			__ret = -ERESTARTSYS;				\
++			break;						\
++		}							\
++									\
++		if (__wait_no_timeout(tout))				\
++			schedule();					\
++		else if (__tout)					\
++			__tout = schedule_timeout(__tout);		\
++		else							\
+ 			break;						\
+ 	}								\
+ 	finish_wait(&wq, &__wait);					\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'condition' - possible side-effects?
+#196: FILE: include/linux/wait.h:213:
++#define wait_event_common(wq, condition, state, tout)			\
++({									\
++	long __ret;							\
++	if (condition)							\
++		__ret = __wait_no_timeout(tout) ?: (tout) ?: 1;		\
++	else								\
++		__ret = __wait_event_common(wq, condition, state, tout);\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'tout' - possible side-effects?
+#196: FILE: include/linux/wait.h:213:
++#define wait_event_common(wq, condition, state, tout)			\
++({									\
++	long __ret;							\
++	if (condition)							\
++		__ret = __wait_no_timeout(tout) ?: (tout) ?: 1;		\
++	else								\
++		__ret = __wait_event_common(wq, condition, state, tout);\
++	__ret;								\
++})
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#218: FILE: include/linux/wait.h:235:
++#define __wait_event(wq, condition) ^I^I^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#238: FILE: include/linux/wait.h:239:
++#define wait_event(wq, condition) ^I^I^I^I^I\$
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000371597.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 4 warnings, 8 checks, 234 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000371597.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

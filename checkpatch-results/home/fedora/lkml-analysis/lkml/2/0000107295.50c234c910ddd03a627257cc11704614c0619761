@@ -1,0 +1,1340 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#35: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#40: FILE: drivers/md/bcache/util.c:1:
++#include <linux/bio.h>
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:CONSIDER_KSTRTO: simple_strtol is obsolete, use kstrtol instead
+#50: FILE: drivers/md/bcache/util.c:11:
++#define simple_strtoint(c, end, base)	simple_strtol(c, end, base)
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+WARNING:CONSIDER_KSTRTO: simple_strtoul is obsolete, use kstrtoul instead
+#51: FILE: drivers/md/bcache/util.c:12:
++#define simple_strtouint(c, end, base)	simple_strtoul(c, end, base)
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#53: FILE: drivers/md/bcache/util.c:14:
++#define STRTO_H(name, type)					\
++int name ## _h(const char *cp, type *res)		        \
++{								\
++	int u = 0;						\
++	char *e;						\
++	type i = simple_ ## name(cp, &e, 10);			\
++								\
++	switch (tolower(*e)) {					\
++	default:						\
++		return -EINVAL;					\
++	case 'y':						\
++	case 'z':						\
++		u++;						\
++	case 'e':						\
++		u++;						\
++	case 'p':						\
++		u++;						\
++	case 't':						\
++		u++;						\
++	case 'g':						\
++		u++;						\
++	case 'm':						\
++		u++;						\
++	case 'k':						\
++		u++;						\
++		if (e++ == cp)					\
++			return -EINVAL;				\
++	case '\n':						\
++	case '\0':						\
++		if (*e == '\n')					\
++			e++;					\
++	}							\
++								\
++	if (*e)							\
++		return -EINVAL;					\
++								\
++	while (u--) {						\
++		if ((type) ~0 > 0 &&				\
++		    (type) ~0 / 1024 <= i)			\
++			return -EINVAL;				\
++		if ((i > 0 && ANYSINT_MAX(type) / 1024 < i) ||	\
++		    (i < 0 && -ANYSINT_MAX(type) / 1024 > i))	\
++			return -EINVAL;				\
++		i *= 1024;					\
++	}							\
++								\
++	*res = i;						\
++	return 0;						\
++}								\
++EXPORT_SYMBOL_GPL(name ## _h);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#54: FILE: drivers/md/bcache/util.c:15:
++int name ## _h(const char *cp, type *res)		        \
+                                     ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#90: FILE: drivers/md/bcache/util.c:51:
++		if ((type) ~0 > 0 &&				\
+
+CHECK:SPACING: No space is necessary after a cast
+#91: FILE: drivers/md/bcache/util.c:52:
++		    (type) ~0 / 1024 <= i)			\
+
+CHECK:SPACING: No space is necessary after a cast
+#93: FILE: drivers/md/bcache/util.c:54:
++		if ((i > 0 && ANYSINT_MAX(type) / 1024 < i) ||	\
+
+CHECK:SPACING: No space is necessary after a cast
+#94: FILE: drivers/md/bcache/util.c:55:
++		    (i < 0 && -ANYSINT_MAX(type) / 1024 > i))	\
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#128: FILE: drivers/md/bcache/util.c:89:
++	char *s, *d = kstrndup(buf, PAGE_SIZE - 1, GFP_KERNEL);
++	if (!d)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#160: FILE: drivers/md/bcache/util.c:121:
++	size_t i, j, x;
++	memset(uuid, 0, 16);
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#188: FILE: drivers/md/bcache/util.c:149:
++	uint64_t now		= local_clock();
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#189: FILE: drivers/md/bcache/util.c:150:
++	uint64_t duration	= time_after64(now, start_time)
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#191: FILE: drivers/md/bcache/util.c:152:
++	uint64_t last		= time_after64(now, stats->last)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#211: FILE: drivers/md/bcache/util.c:172:
++unsigned next_delay(struct ratelimit *d, uint64_t done)
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#213: FILE: drivers/md/bcache/util.c:174:
++	uint64_t now = local_clock();
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#224: FILE: drivers/md/bcache/util.c:185:
++unsigned latency_warn_ms;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#231: FILE: drivers/md/bcache/util.c:192:
++	unsigned i, size = 0;
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#235: FILE: drivers/md/bcache/util.c:196:
++	BUG_ON(!bio->bi_vcnt);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#236: FILE: drivers/md/bcache/util.c:197:
++	BUG_ON(!bio->bi_size);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#241: FILE: drivers/md/bcache/util.c:202:
++	BUG_ON(size != bio->bi_size);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#242: FILE: drivers/md/bcache/util.c:203:
++	BUG_ON(size > queue_max_sectors(q) << 9);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#245: FILE: drivers/md/bcache/util.c:206:
++	BUG_ON(bio->bi_phys_segments > queue_max_segments(q));
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#259: FILE: drivers/md/bcache/util.c:220:
++	BUG_ON(!bio->bi_size);
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#260: FILE: drivers/md/bcache/util.c:221:
++	BUG_ON(bio->bi_vcnt);
+
+CHECK:SPACING: No space is necessary after a cast
+#262: FILE: drivers/md/bcache/util.c:223:
++	bv->bv_offset = base ? ((unsigned long) base) % PAGE_SIZE : 0;
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments should align the * on each line
+#319: FILE: drivers/md/bcache/util.c:280:
++ * x^7 + x^4 + x + 1
++*/
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#321: FILE: drivers/md/bcache/util.c:282:
++static const uint64_t crc_table[256] = {
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#410: FILE: drivers/md/bcache/util.c:371:
++uint64_t crc64_update(uint64_t crc, const void *_data, size_t len)
+
+CHECK:SPACING: No space is necessary after a cast
+#415: FILE: drivers/md/bcache/util.c:376:
++		int i = ((int) (crc >> 56) ^ *data++) & 0xFF;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#416: FILE: drivers/md/bcache/util.c:377:
++		int i = ((int) (crc >> 56) ^ *data++) & 0xFF;
++		crc = crc_table[i] ^ (crc << 8);
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#425: FILE: drivers/md/bcache/util.c:386:
++	uint64_t crc = 0xffffffffffffffff;
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#438: FILE: drivers/md/bcache/util.h:1:
++
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#458: FILE: drivers/md/bcache/util.h:21:
++#define atomic_dec_bug(v)	BUG_ON(atomic_dec_return(v) < 0)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#459: FILE: drivers/md/bcache/util.h:22:
++#define atomic_inc_bug(v, i)	BUG_ON(atomic_inc_return(v) <= i)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'i' may be better as '(i)' to avoid precedence issues
+#459: FILE: drivers/md/bcache/util.h:22:
++#define atomic_inc_bug(v, i)	BUG_ON(atomic_inc_return(v) <= i)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#468: FILE: drivers/md/bcache/util.h:31:
++#define BITMASK(name, type, field, offset, size)		\
++static inline uint64_t name(const type *k)			\
++{ return (k->field >> offset) & ~(((uint64_t) ~0) << size); }	\
++								\
++static inline void SET_##name(type *k, uint64_t v)		\
++{								\
++	k->field &= ~(~((uint64_t) ~0 << size) << offset);	\
++	k->field |= v << offset;				\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#468: FILE: drivers/md/bcache/util.h:31:
++#define BITMASK(name, type, field, offset, size)		\
++static inline uint64_t name(const type *k)			\
++{ return (k->field >> offset) & ~(((uint64_t) ~0) << size); }	\
++								\
++static inline void SET_##name(type *k, uint64_t v)		\
++{								\
++	k->field &= ~(~((uint64_t) ~0 << size) << offset);	\
++	k->field |= v << offset;				\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'offset' - possible side-effects?
+#468: FILE: drivers/md/bcache/util.h:31:
++#define BITMASK(name, type, field, offset, size)		\
++static inline uint64_t name(const type *k)			\
++{ return (k->field >> offset) & ~(((uint64_t) ~0) << size); }	\
++								\
++static inline void SET_##name(type *k, uint64_t v)		\
++{								\
++	k->field &= ~(~((uint64_t) ~0 << size) << offset);	\
++	k->field |= v << offset;				\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'offset' may be better as '(offset)' to avoid precedence issues
+#468: FILE: drivers/md/bcache/util.h:31:
++#define BITMASK(name, type, field, offset, size)		\
++static inline uint64_t name(const type *k)			\
++{ return (k->field >> offset) & ~(((uint64_t) ~0) << size); }	\
++								\
++static inline void SET_##name(type *k, uint64_t v)		\
++{								\
++	k->field &= ~(~((uint64_t) ~0 << size) << offset);	\
++	k->field |= v << offset;				\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'size' - possible side-effects?
+#468: FILE: drivers/md/bcache/util.h:31:
++#define BITMASK(name, type, field, offset, size)		\
++static inline uint64_t name(const type *k)			\
++{ return (k->field >> offset) & ~(((uint64_t) ~0) << size); }	\
++								\
++static inline void SET_##name(type *k, uint64_t v)		\
++{								\
++	k->field &= ~(~((uint64_t) ~0 << size) << offset);	\
++	k->field |= v << offset;				\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'size' may be better as '(size)' to avoid precedence issues
+#468: FILE: drivers/md/bcache/util.h:31:
++#define BITMASK(name, type, field, offset, size)		\
++static inline uint64_t name(const type *k)			\
++{ return (k->field >> offset) & ~(((uint64_t) ~0) << size); }	\
++								\
++static inline void SET_##name(type *k, uint64_t v)		\
++{								\
++	k->field &= ~(~((uint64_t) ~0 << size) << offset);	\
++	k->field |= v << offset;				\
++}
+
+CHECK:SPACING: No space is necessary after a cast
+#470: FILE: drivers/md/bcache/util.h:33:
++{ return (k->field >> offset) & ~(((uint64_t) ~0) << size); }	\
+
+CHECK:SPACING: No space is necessary after a cast
+#474: FILE: drivers/md/bcache/util.h:37:
++	k->field &= ~(~((uint64_t) ~0 << size) << offset);	\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'heap' - possible side-effects?
+#484: FILE: drivers/md/bcache/util.h:47:
++#define init_heap(heap, _size, gfp)					\
++({									\
++	size_t _bytes;							\
++	(heap)->used = 0;						\
++	(heap)->size = (_size);						\
++	_bytes = (heap)->size * sizeof(*(heap)->data);			\
++	(heap)->data = NULL;						\
++	if (_bytes < KMALLOC_MAX_SIZE)					\
++		(heap)->data = kmalloc(_bytes, (gfp));			\
++	if ((!(heap)->data) && ((gfp) & GFP_KERNEL))			\
++		(heap)->data = vmalloc(_bytes);				\
++	(heap)->data;							\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'gfp' - possible side-effects?
+#484: FILE: drivers/md/bcache/util.h:47:
++#define init_heap(heap, _size, gfp)					\
++({									\
++	size_t _bytes;							\
++	(heap)->used = 0;						\
++	(heap)->size = (_size);						\
++	_bytes = (heap)->size * sizeof(*(heap)->data);			\
++	(heap)->data = NULL;						\
++	if (_bytes < KMALLOC_MAX_SIZE)					\
++		(heap)->data = kmalloc(_bytes, (gfp));			\
++	if ((!(heap)->data) && ((gfp) & GFP_KERNEL))			\
++		(heap)->data = vmalloc(_bytes);				\
++	(heap)->data;							\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'heap' - possible side-effects?
+#498: FILE: drivers/md/bcache/util.h:61:
++#define free_heap(heap)							\
++do {									\
++	if (is_vmalloc_addr((heap)->data))				\
++		vfree((heap)->data);					\
++	else								\
++		kfree((heap)->data);					\
++	(heap)->data = NULL;						\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'h' - possible side-effects?
+#507: FILE: drivers/md/bcache/util.h:70:
++#define heap_swap(h, i, j)	swap((h)->data[i], (h)->data[j])
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'h' - possible side-effects?
+#509: FILE: drivers/md/bcache/util.h:72:
++#define heap_sift(h, i, cmp)						\
++do {									\
++	size_t _r, _j = i;						\
++									\
++	for (; _j * 2 + 1 < (h)->used; _j = _r) {			\
++		_r = _j * 2 + 1;					\
++		if (_r + 1 < (h)->used &&				\
++		    cmp((h)->data[_r], (h)->data[_r + 1]))		\
++			_r++;						\
++									\
++		if (cmp((h)->data[_r], (h)->data[_j]))			\
++			break;						\
++		heap_swap(h, _r, _j);					\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cmp' - possible side-effects?
+#509: FILE: drivers/md/bcache/util.h:72:
++#define heap_sift(h, i, cmp)						\
++do {									\
++	size_t _r, _j = i;						\
++									\
++	for (; _j * 2 + 1 < (h)->used; _j = _r) {			\
++		_r = _j * 2 + 1;					\
++		if (_r + 1 < (h)->used &&				\
++		    cmp((h)->data[_r], (h)->data[_r + 1]))		\
++			_r++;						\
++									\
++		if (cmp((h)->data[_r], (h)->data[_j]))			\
++			break;						\
++		heap_swap(h, _r, _j);					\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'cmp' may be better as '(cmp)' to avoid precedence issues
+#509: FILE: drivers/md/bcache/util.h:72:
++#define heap_sift(h, i, cmp)						\
++do {									\
++	size_t _r, _j = i;						\
++									\
++	for (; _j * 2 + 1 < (h)->used; _j = _r) {			\
++		_r = _j * 2 + 1;					\
++		if (_r + 1 < (h)->used &&				\
++		    cmp((h)->data[_r], (h)->data[_r + 1]))		\
++			_r++;						\
++									\
++		if (cmp((h)->data[_r], (h)->data[_j]))			\
++			break;						\
++		heap_swap(h, _r, _j);					\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'h' - possible side-effects?
+#525: FILE: drivers/md/bcache/util.h:88:
++#define heap_sift_down(h, i, cmp)					\
++do {									\
++	while (i) {							\
++		size_t p = (i - 1) / 2;					\
++		if (cmp((h)->data[i], (h)->data[p]))			\
++			break;						\
++		heap_swap(h, i, p);					\
++		i = p;							\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#525: FILE: drivers/md/bcache/util.h:88:
++#define heap_sift_down(h, i, cmp)					\
++do {									\
++	while (i) {							\
++		size_t p = (i - 1) / 2;					\
++		if (cmp((h)->data[i], (h)->data[p]))			\
++			break;						\
++		heap_swap(h, i, p);					\
++		i = p;							\
++	}								\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'h' - possible side-effects?
+#536: FILE: drivers/md/bcache/util.h:99:
++#define heap_add(h, d, cmp)						\
++({									\
++	bool _r = !heap_full(h);					\
++	if (_r) {							\
++		size_t _i = (h)->used++;				\
++		(h)->data[_i] = d;					\
++									\
++		heap_sift_down(h, _i, cmp);				\
++		heap_sift(h, _i, cmp);					\
++	}								\
++	_r;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cmp' - possible side-effects?
+#536: FILE: drivers/md/bcache/util.h:99:
++#define heap_add(h, d, cmp)						\
++({									\
++	bool _r = !heap_full(h);					\
++	if (_r) {							\
++		size_t _i = (h)->used++;				\
++		(h)->data[_i] = d;					\
++									\
++		heap_sift_down(h, _i, cmp);				\
++		heap_sift(h, _i, cmp);					\
++	}								\
++	_r;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'h' - possible side-effects?
+#549: FILE: drivers/md/bcache/util.h:112:
++#define heap_pop(h, d, cmp)						\
++({									\
++	bool _r = (h)->used;						\
++	if (_r) {							\
++		(d) = (h)->data[0];					\
++		(h)->used--;						\
++		heap_swap(h, 0, (h)->used);				\
++		heap_sift(h, 0, cmp);					\
++	}								\
++	_r;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'h' - possible side-effects?
+#561: FILE: drivers/md/bcache/util.h:124:
++#define heap_peek(h)	((h)->size ? (h)->data[0] : NULL)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'h' - possible side-effects?
+#563: FILE: drivers/md/bcache/util.h:126:
++#define heap_full(h)	((h)->used == (h)->size)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fifo' - possible side-effects?
+#571: FILE: drivers/md/bcache/util.h:134:
++#define fifo_for_each(c, fifo)						\
++	for (size_t _i = (fifo)->front;					\
++	     c = (fifo)->data[_i], _i != (fifo)->back;			\
++	     _i = (_i + 1) & (fifo)->mask)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fifo' - possible side-effects?
+#576: FILE: drivers/md/bcache/util.h:139:
++#define __init_fifo(fifo, gfp)						\
++({									\
++	size_t _allocated_size, _bytes;					\
++	BUG_ON(!(fifo)->size);						\
++									\
++	_allocated_size = roundup_pow_of_two((fifo)->size + 1);		\
++	_bytes = _allocated_size * sizeof(*(fifo)->data);		\
++									\
++	(fifo)->mask = _allocated_size - 1;				\
++	(fifo)->front = (fifo)->back = 0;				\
++	(fifo)->data = NULL;						\
++									\
++	if (_bytes < KMALLOC_MAX_SIZE)					\
++		(fifo)->data = kmalloc(_bytes, (gfp));			\
++	if ((!(fifo)->data) && ((gfp) & GFP_KERNEL))			\
++		(fifo)->data = vmalloc(_bytes);				\
++	(fifo)->data;							\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'gfp' - possible side-effects?
+#576: FILE: drivers/md/bcache/util.h:139:
++#define __init_fifo(fifo, gfp)						\
++({									\
++	size_t _allocated_size, _bytes;					\
++	BUG_ON(!(fifo)->size);						\
++									\
++	_allocated_size = roundup_pow_of_two((fifo)->size + 1);		\
++	_bytes = _allocated_size * sizeof(*(fifo)->data);		\
++									\
++	(fifo)->mask = _allocated_size - 1;				\
++	(fifo)->front = (fifo)->back = 0;				\
++	(fifo)->data = NULL;						\
++									\
++	if (_bytes < KMALLOC_MAX_SIZE)					\
++		(fifo)->data = kmalloc(_bytes, (gfp));			\
++	if ((!(fifo)->data) && ((gfp) & GFP_KERNEL))			\
++		(fifo)->data = vmalloc(_bytes);				\
++	(fifo)->data;							\
++})
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#579: FILE: drivers/md/bcache/util.h:142:
++	BUG_ON(!(fifo)->size);						\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fifo' - possible side-effects?
+#595: FILE: drivers/md/bcache/util.h:158:
++#define init_fifo_exact(fifo, _size, gfp)				\
++({									\
++	(fifo)->size = (_size);						\
++	__init_fifo(fifo, gfp);						\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fifo' - possible side-effects?
+#601: FILE: drivers/md/bcache/util.h:164:
++#define init_fifo(fifo, _size, gfp)					\
++({									\
++	(fifo)->size = (_size);						\
++	if ((fifo)->size > 4)						\
++		(fifo)->size = roundup_pow_of_two((fifo)->size) - 1;	\
++	__init_fifo(fifo, gfp);						\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fifo' - possible side-effects?
+#609: FILE: drivers/md/bcache/util.h:172:
++#define free_fifo(fifo)							\
++do {									\
++	if (is_vmalloc_addr((fifo)->data))				\
++		vfree((fifo)->data);					\
++	else								\
++		kfree((fifo)->data);					\
++	(fifo)->data = NULL;						\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fifo' - possible side-effects?
+#618: FILE: drivers/md/bcache/util.h:181:
++#define fifo_used(fifo)		(((fifo)->back - (fifo)->front) & (fifo)->mask)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fifo' - possible side-effects?
+#619: FILE: drivers/md/bcache/util.h:182:
++#define fifo_free(fifo)		((fifo)->size - fifo_used(fifo))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fifo' - possible side-effects?
+#624: FILE: drivers/md/bcache/util.h:187:
++#define fifo_front(fifo)	((fifo)->data[(fifo)->front])
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fifo' - possible side-effects?
+#625: FILE: drivers/md/bcache/util.h:188:
++#define fifo_back(fifo)							\
++	((fifo)->data[((fifo)->back - 1) & (fifo)->mask])
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fifo' - possible side-effects?
+#628: FILE: drivers/md/bcache/util.h:191:
++#define fifo_idx(fifo, p)	(((p) - &fifo_front(fifo)) & (fifo)->mask)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fifo' - possible side-effects?
+#630: FILE: drivers/md/bcache/util.h:193:
++#define fifo_push_back(fifo, i)						\
++({									\
++	bool _r = !fifo_full((fifo));					\
++	if (_r) {							\
++		(fifo)->data[(fifo)->back++] = (i);			\
++		(fifo)->back &= (fifo)->mask;				\
++	}								\
++	_r;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fifo' - possible side-effects?
+#640: FILE: drivers/md/bcache/util.h:203:
++#define fifo_pop_front(fifo, i)						\
++({									\
++	bool _r = !fifo_empty((fifo));					\
++	if (_r) {							\
++		(i) = (fifo)->data[(fifo)->front++];			\
++		(fifo)->front &= (fifo)->mask;				\
++	}								\
++	_r;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fifo' - possible side-effects?
+#650: FILE: drivers/md/bcache/util.h:213:
++#define fifo_push_front(fifo, i)					\
++({									\
++	bool _r = !fifo_full((fifo));					\
++	if (_r) {							\
++		--(fifo)->front;					\
++		(fifo)->front &= (fifo)->mask;				\
++		(fifo)->data[(fifo)->front] = (i);			\
++	}								\
++	_r;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fifo' - possible side-effects?
+#661: FILE: drivers/md/bcache/util.h:224:
++#define fifo_pop_back(fifo, i)						\
++({									\
++	bool _r = !fifo_empty((fifo));					\
++	if (_r) {							\
++		--(fifo)->back;						\
++		(fifo)->back &= (fifo)->mask;				\
++		(i) = (fifo)->data[(fifo)->back]			\
++	}								\
++	_r;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'l' - possible side-effects?
+#675: FILE: drivers/md/bcache/util.h:238:
++#define fifo_swap(l, r)							\
++do {									\
++	swap((l)->front, (r)->front);					\
++	swap((l)->back, (r)->back);					\
++	swap((l)->size, (r)->size);					\
++	swap((l)->mask, (r)->mask);					\
++	swap((l)->data, (r)->data);					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'r' - possible side-effects?
+#675: FILE: drivers/md/bcache/util.h:238:
++#define fifo_swap(l, r)							\
++do {									\
++	swap((l)->front, (r)->front);					\
++	swap((l)->back, (r)->back);					\
++	swap((l)->size, (r)->size);					\
++	swap((l)->mask, (r)->mask);					\
++	swap((l)->data, (r)->data);					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'dest' - possible side-effects?
+#684: FILE: drivers/md/bcache/util.h:247:
++#define fifo_move(dest, src)						\
++do {									\
++	typeof(*((dest)->data)) _t;					\
++	while (!fifo_full(dest) &&					\
++	       fifo_pop(src, _t))					\
++		fifo_push(dest, _t);					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'array' - possible side-effects?
+#710: FILE: drivers/md/bcache/util.h:273:
++#define array_alloc(array)						\
++({									\
++	typeof((array)->freelist) _ret = (array)->freelist;		\
++									\
++	if (_ret)							\
++		(array)->freelist = *((typeof((array)->freelist) *) _ret);\
++									\
++	_ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'array' - possible side-effects?
+#720: FILE: drivers/md/bcache/util.h:283:
++#define array_free(array, ptr)						\
++do {									\
++	typeof((array)->freelist) _ptr = ptr;				\
++									\
++	*((typeof((array)->freelist) *) _ptr) = (array)->freelist;	\
++	(array)->freelist = _ptr;					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'array' - possible side-effects?
+#728: FILE: drivers/md/bcache/util.h:291:
++#define array_allocator_init(array)					\
++do {									\
++	BUILD_BUG_ON(sizeof((array)->data[0]) < sizeof(void *));	\
++	(array)->freelist = NULL;					\
++									\
++	for (typeof((array)->freelist) _i = (array)->data;		\
++	     _i < (array)->data + ARRAY_SIZE((array)->data);		\
++	     _i++)							\
++		array_free(array, _i);					\
++} while (0)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!freelist"
+#739: FILE: drivers/md/bcache/util.h:302:
++#define array_freelist_empty(array)	((array)->freelist == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 't' - possible side-effects?
+#741: FILE: drivers/md/bcache/util.h:304:
++#define ANYSINT_MAX(t)							\
++	((((t) 1 << (sizeof(t) * 8 - 2)) - (t) 1) * (t) 2 + (t) 1)
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const char *' should also have an identifier name
+#744: FILE: drivers/md/bcache/util.h:307:
++int strtoint_h(const char *, int *);
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'int *' should also have an identifier name
+#744: FILE: drivers/md/bcache/util.h:307:
++int strtoint_h(const char *, int *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const char *' should also have an identifier name
+#745: FILE: drivers/md/bcache/util.h:308:
++int strtouint_h(const char *, unsigned int *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned int *' should also have an identifier name
+#745: FILE: drivers/md/bcache/util.h:308:
++int strtouint_h(const char *, unsigned int *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const char *' should also have an identifier name
+#746: FILE: drivers/md/bcache/util.h:309:
++int strtoll_h(const char *, long long *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'long long *' should also have an identifier name
+#746: FILE: drivers/md/bcache/util.h:309:
++int strtoll_h(const char *, long long *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const char *' should also have an identifier name
+#747: FILE: drivers/md/bcache/util.h:310:
++int strtoull_h(const char *, unsigned long long *);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'unsigned long long *' should also have an identifier name
+#747: FILE: drivers/md/bcache/util.h:310:
++int strtoull_h(const char *, unsigned long long *);
+
+CHECK:SPACING: No space is necessary after a cast
+#752: FILE: drivers/md/bcache/util.h:315:
++	return strtoint_h(cp, (int *) res);
+
+CHECK:SPACING: No space is necessary after a cast
+#754: FILE: drivers/md/bcache/util.h:317:
++	return strtoll_h(cp, (long long *) res);
+
+CHECK:SPACING: No space is necessary after a cast
+#761: FILE: drivers/md/bcache/util.h:324:
++	return strtouint_h(cp, (unsigned int *) res);
+
+CHECK:SPACING: No space is necessary after a cast
+#763: FILE: drivers/md/bcache/util.h:326:
++	return strtoull_h(cp, (unsigned long long *) res);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'cp' - possible side-effects?
+#767: FILE: drivers/md/bcache/util.h:330:
++#define strtoi_h(cp, res)						\
++	(__builtin_types_compatible_p(typeof(*res), int)		\
++	? strtoint_h(cp, (void *) res)					\
++	:__builtin_types_compatible_p(typeof(*res), long)		\
++	? strtol_h(cp, (void *) res)					\
++	: __builtin_types_compatible_p(typeof(*res), long long)		\
++	? strtoll_h(cp, (void *) res)					\
++	: __builtin_types_compatible_p(typeof(*res), unsigned int)	\
++	? strtouint_h(cp, (void *) res)					\
++	: __builtin_types_compatible_p(typeof(*res), unsigned long)	\
++	? strtoul_h(cp, (void *) res)					\
++	: __builtin_types_compatible_p(typeof(*res), unsigned long long)\
++	? strtoull_h(cp, (void *) res) : -EINVAL)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'res' - possible side-effects?
+#767: FILE: drivers/md/bcache/util.h:330:
++#define strtoi_h(cp, res)						\
++	(__builtin_types_compatible_p(typeof(*res), int)		\
++	? strtoint_h(cp, (void *) res)					\
++	:__builtin_types_compatible_p(typeof(*res), long)		\
++	? strtol_h(cp, (void *) res)					\
++	: __builtin_types_compatible_p(typeof(*res), long long)		\
++	? strtoll_h(cp, (void *) res)					\
++	: __builtin_types_compatible_p(typeof(*res), unsigned int)	\
++	? strtouint_h(cp, (void *) res)					\
++	: __builtin_types_compatible_p(typeof(*res), unsigned long)	\
++	? strtoul_h(cp, (void *) res)					\
++	: __builtin_types_compatible_p(typeof(*res), unsigned long long)\
++	? strtoull_h(cp, (void *) res) : -EINVAL)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'res' may be better as '(res)' to avoid precedence issues
+#767: FILE: drivers/md/bcache/util.h:330:
++#define strtoi_h(cp, res)						\
++	(__builtin_types_compatible_p(typeof(*res), int)		\
++	? strtoint_h(cp, (void *) res)					\
++	:__builtin_types_compatible_p(typeof(*res), long)		\
++	? strtol_h(cp, (void *) res)					\
++	: __builtin_types_compatible_p(typeof(*res), long long)		\
++	? strtoll_h(cp, (void *) res)					\
++	: __builtin_types_compatible_p(typeof(*res), unsigned int)	\
++	? strtouint_h(cp, (void *) res)					\
++	: __builtin_types_compatible_p(typeof(*res), unsigned long)	\
++	? strtoul_h(cp, (void *) res)					\
++	: __builtin_types_compatible_p(typeof(*res), unsigned long long)\
++	? strtoull_h(cp, (void *) res) : -EINVAL)
+
+CHECK:SPACING: No space is necessary after a cast
+#769: FILE: drivers/md/bcache/util.h:332:
++	? strtoint_h(cp, (void *) res)					\
+
+ERROR:SPACING: spaces required around that ':' (ctx:ExV)
+#770: FILE: drivers/md/bcache/util.h:333:
++	:__builtin_types_compatible_p(typeof(*res), long)		\
+ 	^
+
+CHECK:SPACING: No space is necessary after a cast
+#771: FILE: drivers/md/bcache/util.h:334:
++	? strtol_h(cp, (void *) res)					\
+
+CHECK:SPACING: No space is necessary after a cast
+#773: FILE: drivers/md/bcache/util.h:336:
++	? strtoll_h(cp, (void *) res)					\
+
+CHECK:SPACING: No space is necessary after a cast
+#775: FILE: drivers/md/bcache/util.h:338:
++	? strtouint_h(cp, (void *) res)					\
+
+CHECK:SPACING: No space is necessary after a cast
+#777: FILE: drivers/md/bcache/util.h:340:
++	? strtoul_h(cp, (void *) res)					\
+
+CHECK:SPACING: No space is necessary after a cast
+#779: FILE: drivers/md/bcache/util.h:342:
++	? strtoull_h(cp, (void *) res) : -EINVAL)
+
+WARNING:CONSIDER_KSTRTO: strict_strtoul is obsolete, use kstrtoul instead
+#784: FILE: drivers/md/bcache/util.h:347:
++	int _r = strict_strtoul(cp, 10, &_v);				\
+
+WARNING:CONSIDER_KSTRTO: strict_strtoul is obsolete, use kstrtoul instead
+#793: FILE: drivers/md/bcache/util.h:356:
++	int _r = strict_strtoul(cp, 10, &_v);				\
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#803: FILE: drivers/md/bcache/util.h:366:
++		__builtin_types_compatible_p(typeof(var), unsigned)	\
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#829: FILE: drivers/md/bcache/util.h:392:
++	uint64_t	max_duration;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#830: FILE: drivers/md/bcache/util.h:393:
++	uint64_t	average_duration;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#831: FILE: drivers/md/bcache/util.h:394:
++	uint64_t	average_frequency;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#832: FILE: drivers/md/bcache/util.h:395:
++	uint64_t	last;
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'stat' may be better as '(stat)' to avoid precedence issues
+#842: FILE: drivers/md/bcache/util.h:405:
++#define __print_time_stat(stats, name, stat, units)			\
++	sysfs_print(name ## _ ## stat ## _ ## units,			\
++		    div_u64((stats)->stat >> 8, NSEC_PER_ ## units))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'stats' - possible side-effects?
+#846: FILE: drivers/md/bcache/util.h:409:
++#define sysfs_print_time_stats(stats, name,				\
++			       frequency_units,				\
++			       duration_units)				\
++do {									\
++	__print_time_stat(stats, name,					\
++			  average_frequency,	frequency_units);	\
++	__print_time_stat(stats, name,					\
++			  average_duration,	duration_units);	\
++	__print_time_stat(stats, name,					\
++			  max_duration,		duration_units);	\
++									\
++	sysfs_print(name ## _last_ ## frequency_units, (stats)->last	\
++		    ? div_s64(local_clock() - (stats)->last,		\
++			      NSEC_PER_ ## frequency_units)		\
++		    : -1LL);						\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#846: FILE: drivers/md/bcache/util.h:409:
++#define sysfs_print_time_stats(stats, name,				\
++			       frequency_units,				\
++			       duration_units)				\
++do {									\
++	__print_time_stat(stats, name,					\
++			  average_frequency,	frequency_units);	\
++	__print_time_stat(stats, name,					\
++			  average_duration,	duration_units);	\
++	__print_time_stat(stats, name,					\
++			  max_duration,		duration_units);	\
++									\
++	sysfs_print(name ## _last_ ## frequency_units, (stats)->last	\
++		    ? div_s64(local_clock() - (stats)->last,		\
++			      NSEC_PER_ ## frequency_units)		\
++		    : -1LL);						\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'duration_units' - possible side-effects?
+#846: FILE: drivers/md/bcache/util.h:409:
++#define sysfs_print_time_stats(stats, name,				\
++			       frequency_units,				\
++			       duration_units)				\
++do {									\
++	__print_time_stat(stats, name,					\
++			  average_frequency,	frequency_units);	\
++	__print_time_stat(stats, name,					\
++			  average_duration,	duration_units);	\
++	__print_time_stat(stats, name,					\
++			  max_duration,		duration_units);	\
++									\
++	sysfs_print(name ## _last_ ## frequency_units, (stats)->last	\
++		    ? div_s64(local_clock() - (stats)->last,		\
++			      NSEC_PER_ ## frequency_units)		\
++		    : -1LL);						\
++} while (0)
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#863: FILE: drivers/md/bcache/util.h:426:
++#define sysfs_time_stats_attribute(name,				\
++				   frequency_units,			\
++				   duration_units)			\
++read_attribute(name ## _average_frequency_ ## frequency_units);		\
++read_attribute(name ## _average_duration_ ## duration_units);		\
++read_attribute(name ## _max_duration_ ## duration_units);		\
++read_attribute(name ## _last_ ## frequency_units)
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#871: FILE: drivers/md/bcache/util.h:434:
++#define sysfs_time_stats_attribute_list(name,				\
++					frequency_units,		\
++					duration_units)			\
++&sysfs_ ## name ## _average_frequency_ ## frequency_units,		\
++&sysfs_ ## name ## _average_duration_ ## duration_units,		\
++&sysfs_ ## name ## _max_duration_ ## duration_units,			\
++&sysfs_ ## name ## _last_ ## frequency_units,
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ewma' - possible side-effects?
+#879: FILE: drivers/md/bcache/util.h:442:
++#define ewma_add(ewma, val, weight, factor)				\
++({									\
++	(ewma) *= (weight) - 1;						\
++	(ewma) += (val) << factor;					\
++	(ewma) /= (weight);						\
++	(ewma) >> factor;						\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'weight' - possible side-effects?
+#879: FILE: drivers/md/bcache/util.h:442:
++#define ewma_add(ewma, val, weight, factor)				\
++({									\
++	(ewma) *= (weight) - 1;						\
++	(ewma) += (val) << factor;					\
++	(ewma) /= (weight);						\
++	(ewma) >> factor;						\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'factor' - possible side-effects?
+#879: FILE: drivers/md/bcache/util.h:442:
++#define ewma_add(ewma, val, weight, factor)				\
++({									\
++	(ewma) *= (weight) - 1;						\
++	(ewma) += (val) << factor;					\
++	(ewma) /= (weight);						\
++	(ewma) >> factor;						\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'factor' may be better as '(factor)' to avoid precedence issues
+#879: FILE: drivers/md/bcache/util.h:442:
++#define ewma_add(ewma, val, weight, factor)				\
++({									\
++	(ewma) *= (weight) - 1;						\
++	(ewma) += (val) << factor;					\
++	(ewma) /= (weight);						\
++	(ewma) >> factor;						\
++})
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#888: FILE: drivers/md/bcache/util.h:451:
++	uint64_t		next;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#889: FILE: drivers/md/bcache/util.h:452:
++	unsigned		rate;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#897: FILE: drivers/md/bcache/util.h:460:
++unsigned next_delay(struct ratelimit *d, uint64_t done);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'root' - possible side-effects?
+#914: FILE: drivers/md/bcache/util.h:477:
++#define RB_INSERT(root, new, member, cmp)				\
++({									\
++	__label__ dup;							\
++	struct rb_node **n = &(root)->rb_node, *parent = NULL;		\
++	typeof(new) this;						\
++	int res, ret = -1;						\
++									\
++	while (*n) {							\
++		parent = *n;						\
++		this = container_of(*n, typeof(*(new)), member);	\
++		res = cmp(new, this);					\
++		if (!res)						\
++			goto dup;					\
++		n = res < 0						\
++			? &(*n)->rb_left				\
++			: &(*n)->rb_right;				\
++	}								\
++									\
++	rb_link_node(&(new)->member, parent, n);			\
++	rb_insert_color(&(new)->member, root);				\
++	ret = 0;							\
++dup:									\
++	ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'new' - possible side-effects?
+#914: FILE: drivers/md/bcache/util.h:477:
++#define RB_INSERT(root, new, member, cmp)				\
++({									\
++	__label__ dup;							\
++	struct rb_node **n = &(root)->rb_node, *parent = NULL;		\
++	typeof(new) this;						\
++	int res, ret = -1;						\
++									\
++	while (*n) {							\
++		parent = *n;						\
++		this = container_of(*n, typeof(*(new)), member);	\
++		res = cmp(new, this);					\
++		if (!res)						\
++			goto dup;					\
++		n = res < 0						\
++			? &(*n)->rb_left				\
++			: &(*n)->rb_right;				\
++	}								\
++									\
++	rb_link_node(&(new)->member, parent, n);			\
++	rb_insert_color(&(new)->member, root);				\
++	ret = 0;							\
++dup:									\
++	ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'member' - possible side-effects?
+#914: FILE: drivers/md/bcache/util.h:477:
++#define RB_INSERT(root, new, member, cmp)				\
++({									\
++	__label__ dup;							\
++	struct rb_node **n = &(root)->rb_node, *parent = NULL;		\
++	typeof(new) this;						\
++	int res, ret = -1;						\
++									\
++	while (*n) {							\
++		parent = *n;						\
++		this = container_of(*n, typeof(*(new)), member);	\
++		res = cmp(new, this);					\
++		if (!res)						\
++			goto dup;					\
++		n = res < 0						\
++			? &(*n)->rb_left				\
++			: &(*n)->rb_right;				\
++	}								\
++									\
++	rb_link_node(&(new)->member, parent, n);			\
++	rb_insert_color(&(new)->member, root);				\
++	ret = 0;							\
++dup:									\
++	ret;								\
++})
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#914: FILE: drivers/md/bcache/util.h:477:
++#define RB_INSERT(root, new, member, cmp)				\
++({									\
++	__label__ dup;							\
++	struct rb_node **n = &(root)->rb_node, *parent = NULL;		\
++	typeof(new) this;						\
++	int res, ret = -1;						\
++									\
++	while (*n) {							\
++		parent = *n;						\
++		this = container_of(*n, typeof(*(new)), member);	\
++		res = cmp(new, this);					\
++		if (!res)						\
++			goto dup;					\
++		n = res < 0						\
++			? &(*n)->rb_left				\
++			: &(*n)->rb_right;				\
++	}								\
++									\
++	rb_link_node(&(new)->member, parent, n);			\
++	rb_insert_color(&(new)->member, root);				\
++	ret = 0;							\
++dup:									\
++	ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'search' - possible side-effects?
+#939: FILE: drivers/md/bcache/util.h:502:
++#define RB_SEARCH(root, search, member, cmp)				\
++({									\
++	struct rb_node *n = (root)->rb_node;				\
++	typeof(&(search)) this, ret = NULL;				\
++	int res;							\
++									\
++	while (n) {							\
++		this = container_of(n, typeof(search), member);		\
++		res = cmp(&(search), this);				\
++		if (!res) {						\
++			ret = this;					\
++			break;						\
++		}							\
++		n = res < 0						\
++			? n->rb_left					\
++			: n->rb_right;					\
++	}								\
++	ret;								\
++})
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:BxV)
+#942: FILE: drivers/md/bcache/util.h:505:
++	typeof(&(search)) this, ret = NULL;				\
+ 	       ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'search' - possible side-effects?
+#959: FILE: drivers/md/bcache/util.h:522:
++#define RB_GREATER(root, search, member, cmp)				\
++({									\
++	struct rb_node *n = (root)->rb_node;				\
++	typeof(&(search)) this, ret = NULL;				\
++	int res;							\
++									\
++	while (n) {							\
++		this = container_of(n, typeof(search), member);		\
++		res = cmp(&(search), this);				\
++		if (res < 0) {						\
++			ret = this;					\
++			n = n->rb_left;					\
++		} else							\
++			n = n->rb_right;				\
++	}								\
++	ret;								\
++})
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:BxV)
+#962: FILE: drivers/md/bcache/util.h:525:
++	typeof(&(search)) this, ret = NULL;				\
+ 	       ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#983: FILE: drivers/md/bcache/util.h:546:
++#define RB_NEXT(ptr, member)						\
++	container_of_or_null(rb_next(&(ptr)->member), typeof(*ptr), member)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'member' - possible side-effects?
+#983: FILE: drivers/md/bcache/util.h:546:
++#define RB_NEXT(ptr, member)						\
++	container_of_or_null(rb_next(&(ptr)->member), typeof(*ptr), member)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'member' may be better as '(member)' to avoid precedence issues
+#983: FILE: drivers/md/bcache/util.h:546:
++#define RB_NEXT(ptr, member)						\
++	container_of_or_null(rb_next(&(ptr)->member), typeof(*ptr), member)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#986: FILE: drivers/md/bcache/util.h:549:
++#define RB_PREV(ptr, member)						\
++	container_of_or_null(rb_prev(&(ptr)->member), typeof(*ptr), member)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'member' - possible side-effects?
+#986: FILE: drivers/md/bcache/util.h:549:
++#define RB_PREV(ptr, member)						\
++	container_of_or_null(rb_prev(&(ptr)->member), typeof(*ptr), member)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'member' may be better as '(member)' to avoid precedence issues
+#986: FILE: drivers/md/bcache/util.h:549:
++#define RB_PREV(ptr, member)						\
++	container_of_or_null(rb_prev(&(ptr)->member), typeof(*ptr), member)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#990: FILE: drivers/md/bcache/util.h:553:
++static inline unsigned fract_exp_two(unsigned x, unsigned fract_bits)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#990: FILE: drivers/md/bcache/util.h:553:
++static inline unsigned fract_exp_two(unsigned x, unsigned fract_bits)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#990: FILE: drivers/md/bcache/util.h:553:
++static inline unsigned fract_exp_two(unsigned x, unsigned fract_bits)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#992: FILE: drivers/md/bcache/util.h:555:
++	unsigned fract = x & ~(~0 << fract_bits);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'bio' - possible side-effects?
+#1001: FILE: drivers/md/bcache/util.h:564:
++#define bio_end(bio)	((bio)->bi_sector + bio_sectors(bio))
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1013: FILE: drivers/md/bcache/util.h:576:
++extern unsigned latency_warn_ms;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'j' - possible side-effects?
+#1017: FILE: drivers/md/bcache/util.h:580:
++#define pr_latency(j, fmt, ...)						\
++do {									\
++	int _ms = latency_ms(j);					\
++	if (j && latency_warn_ms && (_ms) > (int) latency_warn_ms)	\
++		printk_ratelimited(KERN_DEBUG "bcache: %i ms latency "	\
++			"called from %pf for " fmt "\n", _ms,		\
++		       __builtin_return_address(0), ##__VA_ARGS__);	\
++} while (0)
+
+CHECK:SPACING: No space is necessary after a cast
+#1020: FILE: drivers/md/bcache/util.h:583:
++	if (j && latency_warn_ms && (_ms) > (int) latency_warn_ms)	\
+
+WARNING:VSPRINTF_POINTER_EXTENSION: Invalid vsprintf pointer extension '%pf' - use %ps instead
+#1020: FILE: drivers/md/bcache/util.h:583:
++	if (j && latency_warn_ms && (_ms) > (int) latency_warn_ms)	\
++		printk_ratelimited(KERN_DEBUG "bcache: %i ms latency "	\
++			"called from %pf for " fmt "\n", _ms,		\
++		       __builtin_return_address(0), ##__VA_ARGS__);	\
+
+WARNING:PREFER_PR_LEVEL: Prefer [subsystem eg: netdev]_dbg_ratelimited([subsystem]dev, ... then dev_dbg_ratelimited(dev, ... then pr_debug_ratelimited(...  to printk_ratelimited(KERN_DEBUG ...
+#1021: FILE: drivers/md/bcache/util.h:584:
++		printk_ratelimited(KERN_DEBUG "bcache: %i ms latency "	\
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'const void *' should also have an identifier name
+#1041: FILE: drivers/md/bcache/util.h:604:
++uint64_t crc64(const void *, size_t);
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'size_t' should also have an identifier name
+#1041: FILE: drivers/md/bcache/util.h:604:
++uint64_t crc64(const void *, size_t);
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000107295.commit.50c234c910ddd03a627257cc11704614c0619761 total: 3 errors, 46 warnings, 102 checks, 998 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000107295.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,240 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'locktype' - possible side-effects?
+#218: FILE: include/linux/seqlock.h:134:
++#define SEQCOUNT_LOCKTYPE(name, locktype)				\
++typedef struct seqcount_##name {					\
++	seqcount_t	seqcount;					\
++	__SEQCOUNT_LOCKDEP(locktype *lock);				\
++} seqcount_##name##_t;							\
++									\
++static __always_inline void						\
++seqcount_##name##_init(seqcount_##name##_t *s, locktype *l) 		\
++{									\
++	seqcount_init(&s->seqcount);					\
++	__SEQCOUNT_LOCKDEP(s->lock = l);				\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'locktype' may be better as '(locktype)' to avoid precedence issues
+#218: FILE: include/linux/seqlock.h:134:
++#define SEQCOUNT_LOCKTYPE(name, locktype)				\
++typedef struct seqcount_##name {					\
++	seqcount_t	seqcount;					\
++	__SEQCOUNT_LOCKDEP(locktype *lock);				\
++} seqcount_##name##_t;							\
++									\
++static __always_inline void						\
++seqcount_##name##_init(seqcount_##name##_t *s, locktype *l) 		\
++{									\
++	seqcount_init(&s->seqcount);					\
++	__SEQCOUNT_LOCKDEP(s->lock = l);				\
++}
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#219: FILE: include/linux/seqlock.h:135:
++typedef struct seqcount_##name {					\
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#221: FILE: include/linux/seqlock.h:137:
++	__SEQCOUNT_LOCKDEP(locktype *lock);				\
+ 	                            ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#225: FILE: include/linux/seqlock.h:141:
++seqcount_##name##_init(seqcount_##name##_t *s, locktype *l) ^I^I\$
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#225: FILE: include/linux/seqlock.h:141:
++seqcount_##name##_init(seqcount_##name##_t *s, locktype *l) 		\
+                                            ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#225: FILE: include/linux/seqlock.h:141:
++seqcount_##name##_init(seqcount_##name##_t *s, locktype *l) 		\
+                                                         ^
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#232: FILE: include/linux/seqlock.h:148:
++^I.seqcount = SEQCNT_ZERO(_name.seqcount), ^I^I^I\$
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#245: FILE: include/linux/seqlock.h:161:
++#define __to_seqcount_t(s)	(seqcount_t *)(s)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#256: FILE: include/linux/seqlock.h:172:
++#define __associated_lock_is_preemptible(s)				\
++({									\
++	bool ret;							\
++									\
++	if (__same_type(*(s), seqcount_t) ||				\
++	    __same_type(*(s), seqcount_raw_spinlock_t)) {		\
++		ret = false;						\
++	} else if (__same_type(*(s), seqcount_spinlock_t) ||		\
++		   __same_type(*(s), seqcount_rwlock_t)) {		\
++		ret = IS_BUILTIN(CONFIG_PREEMPT_RT);			\
++	} else if (__same_type(*(s), seqcount_mutex_t) ||		\
++		   __same_type(*(s), seqcount_ww_mutex_t)) {		\
++		ret = true;						\
++	} else								\
++		BUILD_BUG_ON_MSG(1, "Unknown seqcount type");		\
++									\
++	ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#277: FILE: include/linux/seqlock.h:193:
++#define __assert_associated_lock_held(s)				\
++do {									\
++	if (__same_type(*(s), seqcount_t))				\
++		break;							\
++									\
++	if (__same_type(*(s), seqcount_spinlock_t))			\
++		lockdep_assert_held(((seqcount_spinlock_t *)(s))->lock);\
++	else if (__same_type(*(s), seqcount_raw_spinlock_t))		\
++		lockdep_assert_held(((seqcount_raw_spinlock_t *)(s))->lock);	\
++	else if (__same_type(*(s), seqcount_rwlock_t))			\
++		lockdep_assert_held_write(((seqcount_rwlock_t *)(s))->lock);	\
++	else if (__same_type(*(s), seqcount_mutex_t))			\
++		lockdep_assert_held(((seqcount_mutex_t *)(s))->lock);	\
++	else if (__same_type(*(s), seqcount_ww_mutex_t))		\
++		lockdep_assert_held(&((seqcount_ww_mutex_t *)(s))->lock->base);	\
++	else								\
++		BUILD_BUG_ON_MSG(1, "Unknown seqcount type");		\
++} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#298: FILE: include/linux/seqlock.h:214:
++#define __assert_associated_lock_held(s)				\
++do {									\
++	(void) __to_seqcount_t(s);					\
++} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+CHECK:SPACING: No space is necessary after a cast
+#300: FILE: include/linux/seqlock.h:216:
++	(void) __to_seqcount_t(s);					\
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#321: FILE: include/linux/seqlock.h:237:
++static inline unsigned do___read_seqcount_begin(const seqcount_t *s)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#345: FILE: include/linux/seqlock.h:263:
++static inline unsigned do_raw_read_seqcount(const seqcount_t *s)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#368: FILE: include/linux/seqlock.h:282:
++static inline unsigned do_raw_read_seqcount_begin(const seqcount_t *s)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#371: FILE: include/linux/seqlock.h:284:
++	unsigned ret = do___read_seqcount_begin(s);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#393: FILE: include/linux/seqlock.h:300:
++static inline unsigned do_read_seqcount_begin(const seqcount_t *s)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#419: FILE: include/linux/seqlock.h:322:
++static inline unsigned do_raw_seqcount_begin(const seqcount_t *s)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#441: FILE: include/linux/seqlock.h:346:
++static inline int do___read_seqcount_retry(const seqcount_t *s, unsigned start)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#463: FILE: include/linux/seqlock.h:364:
++static inline int do_read_seqcount_retry(const seqcount_t *s, unsigned start)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#470: FILE: include/linux/seqlock.h:370:
++#define raw_write_seqcount_begin(s)					\
++do {									\
++	if (__associated_lock_is_preemptible(s))			\
++		preempt_disable();					\
++									\
++	do_raw_write_seqcount_begin(__to_seqcount_t(s));		\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#488: FILE: include/linux/seqlock.h:385:
++#define raw_write_seqcount_end(s)					\
++do {									\
++	do_raw_write_seqcount_end(__to_seqcount_t(s));			\
++									\
++	if (__associated_lock_is_preemptible(s))			\
++		preempt_enable();					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#685: FILE: include/linux/seqlock.h:572:
++#define write_seqcount_begin_nested(s, subclass)		\
++do {									\
++	__assert_associated_lock_held(s);				\
++									\
++	if (__associated_lock_is_preemptible(s))			\
++		preempt_disable();					\
++									\
++	do_write_seqcount_begin_nested(__to_seqcount_t(s), subclass);	\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#726: FILE: include/linux/seqlock.h:607:
++#define write_seqcount_begin(s)						\
++do {									\
++	__assert_associated_lock_held(s);				\
++									\
++	if (__associated_lock_is_preemptible(s))			\
++		preempt_disable();					\
++									\
++	do_write_seqcount_begin(__to_seqcount_t(s));			\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 's' - possible side-effects?
+#748: FILE: include/linux/seqlock.h:628:
++#define write_seqcount_end(s)						\
++do {									\
++	do_write_seqcount_end(__to_seqcount_t(s));			\
++									\
++	if (__associated_lock_is_preemptible(s))			\
++		preempt_enable();					\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sl' - possible side-effects?
+#812: FILE: include/linux/seqlock.h:684:
++#define seqlock_init(sl)				\
+ 	do {						\
++		seqcount_init(&(sl)->seqcount);		\
++		spin_lock_init(&(sl)->lock);		\
+ 	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sl' - possible side-effects?
+#826: FILE: include/linux/seqlock.h:694:
++#define DEFINE_SEQLOCK(sl) \
++		seqlock_t sl = __SEQLOCK_UNLOCKED(sl)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#844: FILE: include/linux/seqlock.h:709:
++	unsigned ret = do_read_seqcount_begin(&sl->seqcount);
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000078516.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 1 errors, 13 warnings, 15 checks, 1141 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000078516.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,219 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#32: 
+The existing CRC32c implementation uses Sarwate's algorithm to calculate the
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#92: FILE: crypto/Kconfig:311:
++choice
++	prompt "CRC32C variant"
++	default CRC32C_SLICEBY8
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#96: FILE: crypto/Kconfig:315:
++config CRC32C_SLICEBY8
++	bool "Slice by 8 bytes"
++	---help---
++	  Calculate checksum 8 bytes at a time with a clever slicing algorithm.
++	  This is the fastest algorithm, but comes with a 8KiB lookup table.
++	  Most modern processors have sufficient cache that this shouldn't be
++	  a huge problem.
++
++	  If you don't know which to choose, choose this one.
++
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#106: FILE: crypto/Kconfig:325:
++config CRC32C_SLICEBY4
++	bool "Slice by 4 bytes"
++	---help---
++	  Calculate checksum 8 bytes at a time with a clever slicing algorithm.
++	  This is reasonably fast, but has a 4KiB lookup table.
++
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#112: FILE: crypto/Kconfig:331:
++config CRC32C_SARWATE
++	bool "Sarwate's Algorithm (one byte at a time)"
++	---help---
++	  Calculate checksum a byte at a time using Sarwate's algorithm.  This
++	  is not very fast, but has a svelte 256 byte lookup table.
++
++config CRC32C_BIT
++	bool "Classic Algorithm (one bit at a time)"
++	---help---
++	  Calculate checksum one bit at a time.  This is VERY slow, but has
++	  no lookup table.  This is provided as a debugging option.
++
++endchoice
++endif
++
+ config CRYPTO_CRC32C_INTEL
+ 	tristate "CRC32c INTEL hardware acceleration"
+ 	depends on X86
+
+CHECK:SPACING: No space is necessary after a cast
+#210: FILE: crypto/crc32c.c:86:
++# define tole(x) (__force u32) __constant_cpu_to_le32(x)
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#210: FILE: crypto/crc32c.c:86:
++# define tole(x) (__force u32) __constant_cpu_to_le32(x)
+
+WARNING:CONSTANT_CONVERSION: __constant_cpu_to_le32 should be cpu_to_le32
+#210: FILE: crypto/crc32c.c:86:
++# define tole(x) (__force u32) __constant_cpu_to_le32(x)
+
+Use of __constant_<foo> form is discouraged for the following functions::
+
+  __constant_cpu_to_be[x]
+  __constant_cpu_to_le[x]
+  __constant_be[x]_to_cpu
+  __constant_le[x]_to_cpu
+  __constant_htons
+  __constant_ntohs
+
+Using any of these outside of include/uapi/ is not preferred as using the
+function without __constant_ is identical when the argument is a
+constant.
+
+In big endian systems, the macros like __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to the same expression::
+
+  #define __constant_cpu_to_be32(x) ((__force __be32)(__u32)(x))
+  #define __cpu_to_be32(x)          ((__force __be32)(__u32)(x))
+
+In little endian systems, the macros __constant_cpu_to_be32(x) and
+cpu_to_be32(x) expand to __constant_swab32 and __swab32.  __swab32
+has a __builtin_constant_p check::
+
+  #define __swab32(x)				\
+    (__builtin_constant_p((__u32)(x)) ?	\
+    ___constant_swab32(x) :			\
+    __fswab32(x))
+
+So ultimately they have a special case for constants.
+Similar is the case with all of the macros in the list.  Thus
+using the __constant_... forms are unnecessarily verbose and
+not preferred outside of include/uapi.
+
+See: https://lore.kernel.org/lkml/1400106425.12666.6.camel@joe-AO725/
+
+CHECK:SPACING: No space is necessary after a cast
+#300: FILE: crypto/crc32c.c:106:
++	crc = (__force u32) __cpu_to_le32(crc);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#304: FILE: crypto/crc32c.c:110:
++	 * 'end_bytes' odd bytes at the end */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:SPACING: No space is necessary after a cast
+#374: FILE: crypto/crc32c.c:177:
++	crc = (__force u32) __cpu_to_le32(crc);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#454: FILE: crypto/crc32c.c:257:
++	int i;
++	while (len--) {
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#485: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#490: FILE: crypto/crc32c_defs.h:1:
++#ifndef CRC32C_DEFS_H_
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#524: FILE: crypto/crc32c_defs.h:35:
++	CRC32C_BITS & CRC32C_BITS-1
+ 	                         ^
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#535: FILE: crypto/gen_crc32ctable.c:1:
++#include <stdio.h>
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#542: FILE: crypto/gen_crc32ctable.c:8:
++#define LE_TABLE_SIZE (1 << CRC32C_BITS)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#547: FILE: crypto/gen_crc32ctable.c:13:
++static uint32_t crc32c_table[8][256];
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#558: FILE: crypto/gen_crc32ctable.c:24:
++	unsigned i, j;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#559: FILE: crypto/gen_crc32ctable.c:25:
++	uint32_t crc = 1;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#577: FILE: crypto/gen_crc32ctable.c:43:
++static void output_table(uint32_t table[8][256], int len, char trans)
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#592: FILE: crypto/gen_crc32ctable.c:58:
++		if ((j+1)*8 >= CRC32C_BITS)
+ 		      ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#592: FILE: crypto/gen_crc32ctable.c:58:
++		if ((j+1)*8 >= CRC32C_BITS)
+ 		         ^
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000220613.commit.50c234c910ddd03a627257cc11704614c0619761 total: 1 errors, 12 warnings, 10 checks, 502 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000220613.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

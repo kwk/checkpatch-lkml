@@ -1,0 +1,64 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'size' - possible side-effects?
+#95: FILE: lib/test_user_copy.c:94:
++#define test_legit(size, check)						  \
++	do {								  \
++		val_##size = check;					  \
++		ret |= test(put_user(val_##size, (size __user *)usermem), \
++		    "legitimate put_user (" #size ") failed");		  \
++		val_##size = 0;						  \
++		ret |= test(get_user(val_##size, (size __user *)usermem), \
++		    "legitimate get_user (" #size ") failed");		  \
++		ret |= test(val_##size != check,			  \
++		    "legitimate get_user (" #size ") failed to do copy"); \
++		if (val_##size != check) {				  \
++			pr_info("0x%llx != 0x%llx\n",			  \
++				(unsigned long long)val_##size,		  \
++				(unsigned long long)check);		  \
++		}							  \
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'check' - possible side-effects?
+#95: FILE: lib/test_user_copy.c:94:
++#define test_legit(size, check)						  \
++	do {								  \
++		val_##size = check;					  \
++		ret |= test(put_user(val_##size, (size __user *)usermem), \
++		    "legitimate put_user (" #size ") failed");		  \
++		val_##size = 0;						  \
++		ret |= test(get_user(val_##size, (size __user *)usermem), \
++		    "legitimate get_user (" #size ") failed");		  \
++		ret |= test(val_##size != check,			  \
++		    "legitimate get_user (" #size ") failed to do copy"); \
++		if (val_##size != check) {				  \
++			pr_info("0x%llx != 0x%llx\n",			  \
++				(unsigned long long)val_##size,		  \
++				(unsigned long long)check);		  \
++		}							  \
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'size' - possible side-effects?
+#132: FILE: lib/test_user_copy.c:154:
++#define test_illegal(size, check)					    \
++	do {								    \
++		val_##size = (check);					    \
++		ret |= test(!get_user(val_##size, (size __user *)kmem),	    \
++		    "illegal get_user (" #size ") passed");		    \
++		ret |= test(val_##size != (size)0,			    \
++		    "zeroing failure for illegal get_user (" #size ")");    \
++		if (val_##size != (size)0) {				    \
++			pr_info("0x%llx != 0\n",			    \
++				(unsigned long long)val_##size);	    \
++		}							    \
++		ret |= test(!put_user(val_##size, (size __user *)kmem),	    \
++		    "illegal put_user (" #size ") passed");		    \
++	} while (0)
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000265128.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 0 warnings, 3 checks, 114 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000265128.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

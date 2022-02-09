@@ -1,0 +1,564 @@
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#188: FILE: include/kunit/mock.h:198:
++#define DECLARE_MOCK_CLIENT(name, return_type, param_types...) \
++		return_type name(PARAM_LIST_FROM_TYPES(param_types))
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#191: FILE: include/kunit/mock.h:201:
++#define DECLARE_MOCK_MASTER(name, ctrl_index, param_types...)		       \
++		struct mock_expectation *mock_master_##name(		       \
++				MATCHER_PARAM_LIST_FROM_TYPES(ctrl_index,      \
++							      param_types));
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#196: FILE: include/kunit/mock.h:206:
++#define DECLARE_MOCK_COMMON(name, handle_index, return_type, param_types...)   \
++		DECLARE_MOCK_CLIENT(name, return_type, param_types);	       \
++		DECLARE_MOCK_MASTER(name, handle_index, param_types)
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#196: FILE: include/kunit/mock.h:206:
++#define DECLARE_MOCK_COMMON(name, handle_index, return_type, param_types...)   \
++		DECLARE_MOCK_CLIENT(name, return_type, param_types);	       \
++		DECLARE_MOCK_MASTER(name, handle_index, param_types)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'struct_name' - possible side-effects?
+#200: FILE: include/kunit/mock.h:210:
++#define DECLARE_STRUCT_CLASS_MOCK_STRUCT(struct_name)			       \
++		struct MOCK(struct_name) {				       \
++			struct mock		ctrl;			       \
++			struct struct_name	trgt;			       \
++		}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'struct_name' - possible side-effects?
+#206: FILE: include/kunit/mock.h:216:
++#define DECLARE_STRUCT_CLASS_MOCK_CONVERTER(struct_name)		       \
++		static inline struct mock *from_##struct_name##_to_mock(       \
++				const struct struct_name *trgt)		       \
++		{							       \
++			return mock_get_ctrl(				       \
++					container_of(trgt,		       \
++						     struct MOCK(struct_name), \
++						     trgt));		       \
++		}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'struct_name' may be better as '(struct_name)' to avoid precedence issues
+#206: FILE: include/kunit/mock.h:216:
++#define DECLARE_STRUCT_CLASS_MOCK_CONVERTER(struct_name)		       \
++		static inline struct mock *from_##struct_name##_to_mock(       \
++				const struct struct_name *trgt)		       \
++		{							       \
++			return mock_get_ctrl(				       \
++					container_of(trgt,		       \
++						     struct MOCK(struct_name), \
++						     trgt));		       \
++		}
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#225: FILE: include/kunit/mock.h:235:
++#define DECLARE_STRUCT_CLASS_MOCK_PREREQS(struct_name)			       \
++		DECLARE_STRUCT_CLASS_MOCK_STRUCT(struct_name);		       \
++		DECLARE_STRUCT_CLASS_MOCK_CONVERTER(struct_name)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'struct_name' - possible side-effects?
+#225: FILE: include/kunit/mock.h:235:
++#define DECLARE_STRUCT_CLASS_MOCK_PREREQS(struct_name)			       \
++		DECLARE_STRUCT_CLASS_MOCK_STRUCT(struct_name);		       \
++		DECLARE_STRUCT_CLASS_MOCK_CONVERTER(struct_name)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'struct_name' - possible side-effects?
+#295: FILE: include/kunit/mock.h:305:
++#define DECLARE_STRUCT_CLASS_MOCK_INIT(struct_name)			       \
++		struct MOCK(struct_name) *MOCK_INIT_ID(struct_name)(	       \
++				struct test *test)
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#296: FILE: include/kunit/mock.h:306:
++		struct MOCK(struct_name) *MOCK_INIT_ID(struct_name)(	       \
+ 		                         ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#311: FILE: include/kunit/mock.h:321:
++#define DEFINE_MOCK_CLIENT_COMMON(name,					       \
++				  handle_index,				       \
++				  MOCK_SOURCE,				       \
++				  mock_source_ctx,			       \
++				  return_type,				       \
++				  RETURN,				       \
++				  param_types...)			       \
++		return_type name(PARAM_LIST_FROM_TYPES(param_types))	       \
++		{							       \
++			struct mock *mock = MOCK_SOURCE(mock_source_ctx,       \
++							handle_index);	       \
++			static const char * const param_type_names[] = {       \
++				TYPE_NAMES_FROM_TYPES(handle_index,	       \
++						      param_types)	       \
++			};						       \
++			const void *params[] = {			       \
++				PTR_TO_ARG_FROM_TYPES(handle_index,	       \
++						      param_types)	       \
++			};						       \
++			const void *retval;				       \
++									       \
++			retval = mock->do_expect(mock,			       \
++						 #name,			       \
++						 name,			       \
++						 param_type_names,	       \
++						 params,		       \
++						 ARRAY_SIZE(params));	       \
++			TEST_ASSERT_NOT_ERR_OR_NULL(mock->test, retval);       \
++			if (!retval) {					       \
++				test_info(mock->test,			       \
++					  "no action installed for "#name);    \
++				BUG();					       \
++			}						       \
++			RETURN(return_type, retval);			       \
++		}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#311: FILE: include/kunit/mock.h:321:
++#define DEFINE_MOCK_CLIENT_COMMON(name,					       \
++				  handle_index,				       \
++				  MOCK_SOURCE,				       \
++				  mock_source_ctx,			       \
++				  return_type,				       \
++				  RETURN,				       \
++				  param_types...)			       \
++		return_type name(PARAM_LIST_FROM_TYPES(param_types))	       \
++		{							       \
++			struct mock *mock = MOCK_SOURCE(mock_source_ctx,       \
++							handle_index);	       \
++			static const char * const param_type_names[] = {       \
++				TYPE_NAMES_FROM_TYPES(handle_index,	       \
++						      param_types)	       \
++			};						       \
++			const void *params[] = {			       \
++				PTR_TO_ARG_FROM_TYPES(handle_index,	       \
++						      param_types)	       \
++			};						       \
++			const void *retval;				       \
++									       \
++			retval = mock->do_expect(mock,			       \
++						 #name,			       \
++						 name,			       \
++						 param_type_names,	       \
++						 params,		       \
++						 ARRAY_SIZE(params));	       \
++			TEST_ASSERT_NOT_ERR_OR_NULL(mock->test, retval);       \
++			if (!retval) {					       \
++				test_info(mock->test,			       \
++					  "no action installed for "#name);    \
++				BUG();					       \
++			}						       \
++			RETURN(return_type, retval);			       \
++		}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'handle_index' - possible side-effects?
+#311: FILE: include/kunit/mock.h:321:
++#define DEFINE_MOCK_CLIENT_COMMON(name,					       \
++				  handle_index,				       \
++				  MOCK_SOURCE,				       \
++				  mock_source_ctx,			       \
++				  return_type,				       \
++				  RETURN,				       \
++				  param_types...)			       \
++		return_type name(PARAM_LIST_FROM_TYPES(param_types))	       \
++		{							       \
++			struct mock *mock = MOCK_SOURCE(mock_source_ctx,       \
++							handle_index);	       \
++			static const char * const param_type_names[] = {       \
++				TYPE_NAMES_FROM_TYPES(handle_index,	       \
++						      param_types)	       \
++			};						       \
++			const void *params[] = {			       \
++				PTR_TO_ARG_FROM_TYPES(handle_index,	       \
++						      param_types)	       \
++			};						       \
++			const void *retval;				       \
++									       \
++			retval = mock->do_expect(mock,			       \
++						 #name,			       \
++						 name,			       \
++						 param_type_names,	       \
++						 params,		       \
++						 ARRAY_SIZE(params));	       \
++			TEST_ASSERT_NOT_ERR_OR_NULL(mock->test, retval);       \
++			if (!retval) {					       \
++				test_info(mock->test,			       \
++					  "no action installed for "#name);    \
++				BUG();					       \
++			}						       \
++			RETURN(return_type, retval);			       \
++		}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'return_type' - possible side-effects?
+#311: FILE: include/kunit/mock.h:321:
++#define DEFINE_MOCK_CLIENT_COMMON(name,					       \
++				  handle_index,				       \
++				  MOCK_SOURCE,				       \
++				  mock_source_ctx,			       \
++				  return_type,				       \
++				  RETURN,				       \
++				  param_types...)			       \
++		return_type name(PARAM_LIST_FROM_TYPES(param_types))	       \
++		{							       \
++			struct mock *mock = MOCK_SOURCE(mock_source_ctx,       \
++							handle_index);	       \
++			static const char * const param_type_names[] = {       \
++				TYPE_NAMES_FROM_TYPES(handle_index,	       \
++						      param_types)	       \
++			};						       \
++			const void *params[] = {			       \
++				PTR_TO_ARG_FROM_TYPES(handle_index,	       \
++						      param_types)	       \
++			};						       \
++			const void *retval;				       \
++									       \
++			retval = mock->do_expect(mock,			       \
++						 #name,			       \
++						 name,			       \
++						 param_type_names,	       \
++						 params,		       \
++						 ARRAY_SIZE(params));	       \
++			TEST_ASSERT_NOT_ERR_OR_NULL(mock->test, retval);       \
++			if (!retval) {					       \
++				test_info(mock->test,			       \
++					  "no action installed for "#name);    \
++				BUG();					       \
++			}						       \
++			RETURN(return_type, retval);			       \
++		}
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#342: FILE: include/kunit/mock.h:352:
++				BUG();					       \
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:SPACING: No space is necessary after a cast
+#362: FILE: include/kunit/mock.h:372:
++#define CAST_AND_RETURN(return_type, retval) return *((return_type *) retval)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#362: FILE: include/kunit/mock.h:372:
++#define CAST_AND_RETURN(return_type, retval) return *((return_type *) retval)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'return_type' may be better as '(return_type)' to avoid precedence issues
+#362: FILE: include/kunit/mock.h:372:
++#define CAST_AND_RETURN(return_type, retval) return *((return_type *) retval)
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#362: FILE: include/kunit/mock.h:372:
++#define CAST_AND_RETURN(return_type, retval) return *((return_type *) retval)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ctrl_index' - possible side-effects?
+#388: FILE: include/kunit/mock.h:398:
++#define DEFINE_MOCK_MASTER_COMMON_INTERNAL(name,			       \
++					   ctrl_index,			       \
++					   MOCK_SOURCE,			       \
++					   param_types...)		       \
++		struct mock_expectation *mock_master_##name(		       \
++				MATCHER_PARAM_LIST_FROM_TYPES(ctrl_index,      \
++							      param_types))    \
++		{ \
++			struct mock_param_matcher *matchers[] = {	       \
++				ARG_NAMES_FROM_TYPES(ctrl_index, param_types)  \
++			};						       \
++									       \
++			return mock_add_matcher(MOCK_SOURCE(ctrl_index),       \
++						#name,			       \
++						(const void *) name,	       \
++						matchers,		       \
++						ARRAY_SIZE(matchers));	       \
++		}
+
+CHECK:SPACING: No space is necessary after a cast
+#402: FILE: include/kunit/mock.h:412:
++						(const void *) name,	       \
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#422: FILE: include/kunit/mock.h:432:
++#define DEFINE_MOCK_COMMON(name,					       \
++			   handle_index,				       \
++			   mock_converter,				       \
++			   return_type,					       \
++			   param_types...)				       \
++		DEFINE_MOCK_METHOD_CLIENT(name,				       \
++					  handle_index,			       \
++					  mock_converter,		       \
++					  return_type,			       \
++					  param_types);			       \
++		DEFINE_MOCK_METHOD_MASTER(name, handle_index, param_types)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#422: FILE: include/kunit/mock.h:432:
++#define DEFINE_MOCK_COMMON(name,					       \
++			   handle_index,				       \
++			   mock_converter,				       \
++			   return_type,					       \
++			   param_types...)				       \
++		DEFINE_MOCK_METHOD_CLIENT(name,				       \
++					  handle_index,			       \
++					  mock_converter,		       \
++					  return_type,			       \
++					  param_types);			       \
++		DEFINE_MOCK_METHOD_MASTER(name, handle_index, param_types)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'handle_index' - possible side-effects?
+#422: FILE: include/kunit/mock.h:432:
++#define DEFINE_MOCK_COMMON(name,					       \
++			   handle_index,				       \
++			   mock_converter,				       \
++			   return_type,					       \
++			   param_types...)				       \
++		DEFINE_MOCK_METHOD_CLIENT(name,				       \
++					  handle_index,			       \
++					  mock_converter,		       \
++					  return_type,			       \
++					  param_types);			       \
++		DEFINE_MOCK_METHOD_MASTER(name, handle_index, param_types)
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#434: FILE: include/kunit/mock.h:444:
++#define DEFINE_MOCK_COMMON_VOID_RETURN(name,				       \
++				       handle_index,			       \
++				       mock_converter,			       \
++				       param_types...)			       \
++		DEFINE_MOCK_METHOD_CLIENT_VOID_RETURN(name,		       \
++						      handle_index,	       \
++						      mock_converter,	       \
++						      param_types);	       \
++		DEFINE_MOCK_METHOD_MASTER(name, handle_index, param_types)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#434: FILE: include/kunit/mock.h:444:
++#define DEFINE_MOCK_COMMON_VOID_RETURN(name,				       \
++				       handle_index,			       \
++				       mock_converter,			       \
++				       param_types...)			       \
++		DEFINE_MOCK_METHOD_CLIENT_VOID_RETURN(name,		       \
++						      handle_index,	       \
++						      mock_converter,	       \
++						      param_types);	       \
++		DEFINE_MOCK_METHOD_MASTER(name, handle_index, param_types)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'handle_index' - possible side-effects?
+#434: FILE: include/kunit/mock.h:444:
++#define DEFINE_MOCK_COMMON_VOID_RETURN(name,				       \
++				       handle_index,			       \
++				       mock_converter,			       \
++				       param_types...)			       \
++		DEFINE_MOCK_METHOD_CLIENT_VOID_RETURN(name,		       \
++						      handle_index,	       \
++						      mock_converter,	       \
++						      param_types);	       \
++		DEFINE_MOCK_METHOD_MASTER(name, handle_index, param_types)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'struct_name' - possible side-effects?
+#529: FILE: include/kunit/mock.h:539:
++#define DEFINE_STRUCT_CLASS_MOCK_INIT(struct_name, init_func)		       \
++		struct MOCK(struct_name) *MOCK_INIT_ID(struct_name)(	       \
++				struct test *test)			       \
++		{							       \
++			struct MOCK(struct_name) *mock_obj;		       \
++									       \
++			mock_obj = test_kzalloc(test,			       \
++						sizeof(*mock_obj),	       \
++						GFP_KERNEL);		       \
++			if (!mock_obj)					       \
++				return NULL;				       \
++									       \
++			mock_init_ctrl(test, mock_get_ctrl(mock_obj));	       \
++									       \
++			if (init_func(mock_obj))			       \
++				return NULL;				       \
++									       \
++			return mock_obj;				       \
++		}
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#529: FILE: include/kunit/mock.h:539:
++#define DEFINE_STRUCT_CLASS_MOCK_INIT(struct_name, init_func)		       \
++		struct MOCK(struct_name) *MOCK_INIT_ID(struct_name)(	       \
++				struct test *test)			       \
++		{							       \
++			struct MOCK(struct_name) *mock_obj;		       \
++									       \
++			mock_obj = test_kzalloc(test,			       \
++						sizeof(*mock_obj),	       \
++						GFP_KERNEL);		       \
++			if (!mock_obj)					       \
++				return NULL;				       \
++									       \
++			mock_init_ctrl(test, mock_get_ctrl(mock_obj));	       \
++									       \
++			if (init_func(mock_obj))			       \
++				return NULL;				       \
++									       \
++			return mock_obj;				       \
++		}
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#530: FILE: include/kunit/mock.h:540:
++		struct MOCK(struct_name) *MOCK_INIT_ID(struct_name)(	       \
+ 		                         ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#533: FILE: include/kunit/mock.h:543:
++			struct MOCK(struct_name) *mock_obj;		       \
+ 			                         ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#623: FILE: kunit/example-test.c:69:
++static int example_init(struct MOCK(example) *mock_example)
+                                              ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#646: FILE: kunit/example-test.c:92:
++	struct MOCK(example) *mock_example = test->priv;
+ 	                     ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#721: FILE: kunit/mock-macro-test.c:31:
++DEFINE_STRUCT_CLASS_MOCK_HANDLE_INDEX(METHOD(non_first_slot_param),
++			 CLASS(test_struct), HANDLE_INDEX(1),
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#729: FILE: kunit/mock-macro-test.c:39:
++static int test_struct_init(struct MOCK(test_struct) *mock_test_struct)
+                                                      ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#742: FILE: kunit/mock-macro-test.c:52:
++	struct MOCK(test_struct) *mock_test_struct;
+ 	                         ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#754: FILE: kunit/mock-macro-test.c:180:
++	struct MOCK(test_struct) *mock_test_struct = ctx->mock_test_struct;
+ 	                         ^
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#763: FILE: kunit/mock-macro-test.c:189:
++	handle = TEST_EXPECT_CALL(non_first_slot_param(
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#806: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#825: FILE: kunit/mock-test.c:15:
++	struct MOCK(test)	*mock_test;
+ 	                 	^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#832: FILE: kunit/mock-test.c:22:
++	struct MOCK(test) *mock_test = ctx->mock_test;
+ 	                  ^
+
+CHECK:SPACING: No space is necessary after a cast
+#859: FILE: kunit/mock-test.c:49:
++	TEST_EXPECT_EQ(test, 5, *((int *) ret));
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#866: FILE: kunit/mock-test.c:56:
++	struct MOCK(test) *mock_test = ctx->mock_test;
+ 	                  ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#899: FILE: kunit/mock-test.c:89:
++	struct MOCK(test) *mock_test = ctx->mock_test;
+ 	                  ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#937: FILE: kunit/mock-test.c:127:
++	struct MOCK(test) *mock_test = ctx->mock_test;
+ 	                  ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#963: FILE: kunit/mock-test.c:153:
++	struct MOCK(test) *mock_test = ctx->mock_test;
+ 	                  ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#985: FILE: kunit/mock-test.c:175:
++	TEST_EXPECT_FALSE(test, mock_set_default_action(mock,
++						   "test_printk",
+
+CHECK:SPACING: No space is necessary after a cast
+#996: FILE: kunit/mock-test.c:186:
++	TEST_EXPECT_EQ(test, -4, *((int *) ret));
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#1003: FILE: kunit/mock-test.c:193:
++	struct MOCK(test) *mock_test = ctx->mock_test;
+ 	                  ^
+
+CHECK:SPACING: No space is necessary after a cast
+#1036: FILE: kunit/mock-test.c:226:
++	return (void *) &ret;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1066: FILE: kunit/mock-test.c:256:
++	mock_set_default_action(mock_get_ctrl(ctx->mock_test),
++		"fail", fail, &mocked_fail);
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#1112: FILE: kunit/test-mock.c:20:
++static int test_init(struct MOCK(test) *mock_test)
+                                        ^
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000120030.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 7 errors, 5 warnings, 41 checks, 1019 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000120030.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

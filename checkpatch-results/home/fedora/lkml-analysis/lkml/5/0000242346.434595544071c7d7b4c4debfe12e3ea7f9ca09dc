@@ -1,0 +1,215 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#29: 
+  bool try_cmpxchg(u{8,16,32,64} *ptr, u{8,16,32,64} *val, u{8,16,32,64} new);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#97: FILE: arch/x86/include/asm/cmpxchg.h:156:
+ 
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_ptr' - possible side-effects?
+#98: FILE: arch/x86/include/asm/cmpxchg.h:157:
++#define __raw_try_cmpxchg(_ptr, _pold, _new, size, lock)		\
++({									\
++	bool success;							\
++	__typeof__(_ptr) _old = (_pold);				\
++	__typeof__(*(_ptr)) __old = *_old;				\
++	__typeof__(*(_ptr)) __new = (_new);				\
++	switch (size) {							\
++	case __X86_CASE_B:						\
++	{								\
++		volatile u8 *__ptr = (volatile u8 *)(_ptr);		\
++		asm volatile(lock "cmpxchgb %[new], %[ptr]"		\
++			     CC_SET(z)					\
++			     : CC_OUT(z) (success),			\
++			       [ptr] "+m" (*__ptr),			\
++			       [old] "+a" (__old)			\
++			     : [new] "q" (__new)			\
++			     : "memory");				\
++		break;							\
++	}								\
++	case __X86_CASE_W:						\
++	{								\
++		volatile u16 *__ptr = (volatile u16 *)(_ptr);		\
++		asm volatile(lock "cmpxchgw %[new], %[ptr]"		\
++			     CC_SET(z)					\
++			     : CC_OUT(z) (success),			\
++			       [ptr] "+m" (*__ptr),			\
++			       [old] "+a" (__old)			\
++			     : [new] "r" (__new)			\
++			     : "memory");				\
++		break;							\
++	}								\
++	case __X86_CASE_L:						\
++	{								\
++		volatile u32 *__ptr = (volatile u32 *)(_ptr);		\
++		asm volatile(lock "cmpxchgl %[new], %[ptr]"		\
++			     CC_SET(z)					\
++			     : CC_OUT(z) (success),			\
++			       [ptr] "+m" (*__ptr),			\
++			       [old] "+a" (__old)			\
++			     : [new] "r" (__new)			\
++			     : "memory");				\
++		break;							\
++	}								\
++	case __X86_CASE_Q:						\
++	{								\
++		volatile u64 *__ptr = (volatile u64 *)(_ptr);		\
++		asm volatile(lock "cmpxchgq %[new], %[ptr]"		\
++			     CC_SET(z)					\
++			     : CC_OUT(z) (success),			\
++			       [ptr] "+m" (*__ptr),			\
++			       [old] "+a" (__old)			\
++			     : [new] "r" (__new)			\
++			     : "memory");				\
++		break;							\
++	}								\
++	default:							\
++		__cmpxchg_wrong_size();					\
++	}								\
++	*_old = __old;							\
++	success;							\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'lock' - possible side-effects?
+#98: FILE: arch/x86/include/asm/cmpxchg.h:157:
++#define __raw_try_cmpxchg(_ptr, _pold, _new, size, lock)		\
++({									\
++	bool success;							\
++	__typeof__(_ptr) _old = (_pold);				\
++	__typeof__(*(_ptr)) __old = *_old;				\
++	__typeof__(*(_ptr)) __new = (_new);				\
++	switch (size) {							\
++	case __X86_CASE_B:						\
++	{								\
++		volatile u8 *__ptr = (volatile u8 *)(_ptr);		\
++		asm volatile(lock "cmpxchgb %[new], %[ptr]"		\
++			     CC_SET(z)					\
++			     : CC_OUT(z) (success),			\
++			       [ptr] "+m" (*__ptr),			\
++			       [old] "+a" (__old)			\
++			     : [new] "q" (__new)			\
++			     : "memory");				\
++		break;							\
++	}								\
++	case __X86_CASE_W:						\
++	{								\
++		volatile u16 *__ptr = (volatile u16 *)(_ptr);		\
++		asm volatile(lock "cmpxchgw %[new], %[ptr]"		\
++			     CC_SET(z)					\
++			     : CC_OUT(z) (success),			\
++			       [ptr] "+m" (*__ptr),			\
++			       [old] "+a" (__old)			\
++			     : [new] "r" (__new)			\
++			     : "memory");				\
++		break;							\
++	}								\
++	case __X86_CASE_L:						\
++	{								\
++		volatile u32 *__ptr = (volatile u32 *)(_ptr);		\
++		asm volatile(lock "cmpxchgl %[new], %[ptr]"		\
++			     CC_SET(z)					\
++			     : CC_OUT(z) (success),			\
++			       [ptr] "+m" (*__ptr),			\
++			       [old] "+a" (__old)			\
++			     : [new] "r" (__new)			\
++			     : "memory");				\
++		break;							\
++	}								\
++	case __X86_CASE_Q:						\
++	{								\
++		volatile u64 *__ptr = (volatile u64 *)(_ptr);		\
++		asm volatile(lock "cmpxchgq %[new], %[ptr]"		\
++			     CC_SET(z)					\
++			     : CC_OUT(z) (success),			\
++			       [ptr] "+m" (*__ptr),			\
++			       [old] "+a" (__old)			\
++			     : [new] "r" (__new)			\
++			     : "memory");				\
++		break;							\
++	}								\
++	default:							\
++		__cmpxchg_wrong_size();					\
++	}								\
++	*_old = __old;							\
++	success;							\
++})
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#107: FILE: arch/x86/include/asm/cmpxchg.h:166:
++		volatile u8 *__ptr = (volatile u8 *)(_ptr);		\
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#119: FILE: arch/x86/include/asm/cmpxchg.h:178:
++		volatile u16 *__ptr = (volatile u16 *)(_ptr);		\
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#131: FILE: arch/x86/include/asm/cmpxchg.h:190:
++		volatile u32 *__ptr = (volatile u32 *)(_ptr);		\
+
+WARNING:VOLATILE: Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst
+#143: FILE: arch/x86/include/asm/cmpxchg.h:202:
++		volatile u64 *__ptr = (volatile u64 *)(_ptr);		\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ptr' - possible side-effects?
+#163: FILE: arch/x86/include/asm/cmpxchg.h:222:
++#define try_cmpxchg(ptr, pold, new)					\
++	__try_cmpxchg((ptr), (pold), (new), sizeof(*(ptr)))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_po' - possible side-effects?
+#177: FILE: include/linux/atomic.h:428:
++#define __atomic_try_cmpxchg(type, _p, _po, _n)				\
++({									\
++	typeof(_po) __po = (_po);					\
++	typeof(*(_po)) __o = *__po;					\
++	*__po = atomic_cmpxchg##type((_p), __o, (_n));			\
++	(*__po == __o);							\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_po' - possible side-effects?
+#205: FILE: include/linux/atomic.h:1022:
++#define __atomic64_try_cmpxchg(type, _p, _po, _n)			\
++({									\
++	typeof(_po) __po = (_po);					\
++	typeof(*(_po)) __o = *__po;					\
++	*__po = atomic64_cmpxchg##type((_p), __o, (_n));		\
++	(*__po == __o);							\
++})
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#214: FILE: include/linux/atomic.h:1031:
++#define atomic64_try_cmpxchg_relaxed(_p, _po, _n)	__atomic64_try_cmpxchg(_relaxed, _p, _po, _n)
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#215: FILE: include/linux/atomic.h:1032:
++#define atomic64_try_cmpxchg_acquire(_p, _po, _n)	__atomic64_try_cmpxchg(_acquire, _p, _po, _n)
+
+WARNING:LONG_LINE: line length of 101 exceeds 100 columns
+#216: FILE: include/linux/atomic.h:1033:
++#define atomic64_try_cmpxchg_release(_p, _po, _n)	__atomic64_try_cmpxchg(_release, _p, _po, _n)
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000242346.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 8 warnings, 6 checks, 153 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000242346.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,179 @@
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#52: FILE: arch/arm/include/asm/futex.h:42:
++	smp_mb();						\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'uaddr' - possible side-effects?
+#88: FILE: arch/arm/include/asm/futex.h:45:
++#define __futex_atomic_cmpxchg_op(ret, val, uaddr, oldval, newval)		\
++({										\
++	unsigned int __ua_flags;						\
++	smp_mb();								\
++	prefetchw(uaddr);							\
++	__ua_flags = uaccess_save_and_enable();					\
++	__asm__ __volatile__(							\
++	"1:	ldrex	%1, [%4]\n"						\
++	"	teq	%1, %2\n"						\
++	"	ite	eq	@ explicit IT needed for the 2b label\n"	\
++	"2:	strexeq	%0, %3, [%4]\n"						\
++	"	movne	%0, #0\n"						\
++	"	teq	%0, #0\n"						\
++	"	bne	1b\n"							\
++	__futex_atomic_ex_table("%5")						\
++	: "=&r" (ret), "=&r" (val)						\
++	: "r" (oldval), "r" (newval), "r" (uaddr), "Ir" (-EFAULT)		\
++	: "cc", "memory");							\
++	uaccess_restore(__ua_flags);						\
++	smp_mb();								\
++})
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#91: FILE: arch/arm/include/asm/futex.h:48:
++	smp_mb();								\
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#107: FILE: arch/arm/include/asm/futex.h:64:
++	smp_mb();								\
+
+WARNING:EMBEDDED_FUNCTION_NAME: Prefer using '"%s...", __func__' to using 'futex_atomic_cmpxchg_inatomic', this function's name, in a string
+#165: FILE: arch/arm/include/asm/futex.h:96:
++	"@futex_atomic_cmpxchg_inatomic\n"					\
+
+Embedded function names are less appropriate to use as
+refactoring can cause function renaming.  Prefer the use of
+"%s", __func__ to embedded function names.
+
+Note that this does not work with -f (--file) checkpatch option
+as it depends on patch context providing the function name.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'oldval' - possible side-effects?
+#188: FILE: arch/arm/include/asm/futex.h:111:
++#define __futex_atomic_op_inuser(op, oldval, uaddr, oparg)		\
++({									\
++	int __ret, tmp;							\
++	pagefault_disable();						\
++	switch (op) {							\
++	case FUTEX_OP_SET:						\
++		__futex_atomic_op("mov	%0, %4",			\
++				__ret, oldval, tmp, uaddr, oparg);	\
++		break;							\
++	case FUTEX_OP_ADD:						\
++		__futex_atomic_op("add	%0, %1, %4",			\
++				__ret, oldval, tmp, uaddr, oparg);	\
++		break;							\
++	case FUTEX_OP_OR:						\
++		__futex_atomic_op("orr	%0, %1, %4",			\
++				__ret, oldval, tmp, uaddr, oparg);	\
++		break;							\
++	case FUTEX_OP_ANDN:						\
++		__futex_atomic_op("and	%0, %1, %4",			\
++				__ret, oldval, tmp, uaddr, ~oparg);	\
++		break;							\
++	case FUTEX_OP_XOR:						\
++		__futex_atomic_op("eor	%0, %1, %4",			\
++				__ret, oldval, tmp, uaddr, oparg);	\
++		break;							\
++	default:							\
++		ret = -ENOSYS;						\
++	}								\
++	pagefault_enable();						\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'uaddr' - possible side-effects?
+#188: FILE: arch/arm/include/asm/futex.h:111:
++#define __futex_atomic_op_inuser(op, oldval, uaddr, oparg)		\
++({									\
++	int __ret, tmp;							\
++	pagefault_disable();						\
++	switch (op) {							\
++	case FUTEX_OP_SET:						\
++		__futex_atomic_op("mov	%0, %4",			\
++				__ret, oldval, tmp, uaddr, oparg);	\
++		break;							\
++	case FUTEX_OP_ADD:						\
++		__futex_atomic_op("add	%0, %1, %4",			\
++				__ret, oldval, tmp, uaddr, oparg);	\
++		break;							\
++	case FUTEX_OP_OR:						\
++		__futex_atomic_op("orr	%0, %1, %4",			\
++				__ret, oldval, tmp, uaddr, oparg);	\
++		break;							\
++	case FUTEX_OP_ANDN:						\
++		__futex_atomic_op("and	%0, %1, %4",			\
++				__ret, oldval, tmp, uaddr, ~oparg);	\
++		break;							\
++	case FUTEX_OP_XOR:						\
++		__futex_atomic_op("eor	%0, %1, %4",			\
++				__ret, oldval, tmp, uaddr, oparg);	\
++		break;							\
++	default:							\
++		ret = -ENOSYS;						\
++	}								\
++	pagefault_enable();						\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'oparg' - possible side-effects?
+#188: FILE: arch/arm/include/asm/futex.h:111:
++#define __futex_atomic_op_inuser(op, oldval, uaddr, oparg)		\
++({									\
++	int __ret, tmp;							\
++	pagefault_disable();						\
++	switch (op) {							\
++	case FUTEX_OP_SET:						\
++		__futex_atomic_op("mov	%0, %4",			\
++				__ret, oldval, tmp, uaddr, oparg);	\
++		break;							\
++	case FUTEX_OP_ADD:						\
++		__futex_atomic_op("add	%0, %1, %4",			\
++				__ret, oldval, tmp, uaddr, oparg);	\
++		break;							\
++	case FUTEX_OP_OR:						\
++		__futex_atomic_op("orr	%0, %1, %4",			\
++				__ret, oldval, tmp, uaddr, oparg);	\
++		break;							\
++	case FUTEX_OP_ANDN:						\
++		__futex_atomic_op("and	%0, %1, %4",			\
++				__ret, oldval, tmp, uaddr, ~oparg);	\
++		break;							\
++	case FUTEX_OP_XOR:						\
++		__futex_atomic_op("eor	%0, %1, %4",			\
++				__ret, oldval, tmp, uaddr, oparg);	\
++		break;							\
++	default:							\
++		ret = -ENOSYS;						\
++	}								\
++	pagefault_enable();						\
++	__ret;								\
++})
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#214: FILE: arch/arm/include/asm/futex.h:137:
++		ret = -ENOSYS;						\
+
+ENOSYS means that a nonexistent system call was called.
+Earlier, it was wrongly used for things like invalid operations on
+otherwise valid syscalls.  This should be avoided in new code.
+
+See: https://lore.kernel.org/lkml/5eb299021dec23c1a48fa7d9f2c8b794e967766d.1408730669.git.luto@amacapital.net/
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'uval' may be better as '(uval)' to avoid precedence issues
+#222: FILE: arch/arm/include/asm/futex.h:143:
++#define __futex_atomic_cmpxchg_inatomic(uval, uaddr, oldval, newval)	\
++({									\
++	int __ret;							\
++	u32 val;							\
++	__futex_atomic_cmpxchg_op(__ret, val, uaddr, oldval, newval);	\
++	*uval = val;							\
++	__ret;								\
++})
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000352786.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 5 warnings, 5 checks, 230 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000352786.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

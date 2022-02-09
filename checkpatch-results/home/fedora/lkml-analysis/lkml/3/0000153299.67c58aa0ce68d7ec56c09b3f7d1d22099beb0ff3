@@ -1,0 +1,399 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#56: FILE: include/linux/percpu-defs.h:287:
++extern void __bad_size_call_parameter(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#59: FILE: include/linux/percpu-defs.h:290:
++extern void __this_cpu_preempt_check(const char *op);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'variable' - possible side-effects?
+#64: FILE: include/linux/percpu-defs.h:295:
++#define __pcpu_size_call_return(stem, variable)				\
++({	typeof(variable) pscr_ret__;					\
++	__verify_pcpu_ptr(&(variable));					\
++	switch(sizeof(variable)) {					\
++	case 1: pscr_ret__ = stem##1(variable);break;			\
++	case 2: pscr_ret__ = stem##2(variable);break;			\
++	case 4: pscr_ret__ = stem##4(variable);break;			\
++	case 8: pscr_ret__ = stem##8(variable);break;			\
++	default:							\
++		__bad_size_call_parameter();break;			\
++	}								\
++	pscr_ret__;							\
++})
+
+ERROR:SPACING: space required before the open parenthesis '('
+#67: FILE: include/linux/percpu-defs.h:298:
++	switch(sizeof(variable)) {					\
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ';' (ctx:VxV)
+#68: FILE: include/linux/percpu-defs.h:299:
++	case 1: pscr_ret__ = stem##1(variable);break;			\
+ 	                                      ^
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#68: FILE: include/linux/percpu-defs.h:299:
++	case 1: pscr_ret__ = stem##1(variable);break;			\
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+ERROR:SPACING: space required after that ';' (ctx:VxV)
+#69: FILE: include/linux/percpu-defs.h:300:
++	case 2: pscr_ret__ = stem##2(variable);break;			\
+ 	                                      ^
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#69: FILE: include/linux/percpu-defs.h:300:
++	case 2: pscr_ret__ = stem##2(variable);break;			\
+
+ERROR:SPACING: space required after that ';' (ctx:VxV)
+#70: FILE: include/linux/percpu-defs.h:301:
++	case 4: pscr_ret__ = stem##4(variable);break;			\
+ 	                                      ^
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#70: FILE: include/linux/percpu-defs.h:301:
++	case 4: pscr_ret__ = stem##4(variable);break;			\
+
+ERROR:SPACING: space required after that ';' (ctx:VxV)
+#71: FILE: include/linux/percpu-defs.h:302:
++	case 8: pscr_ret__ = stem##8(variable);break;			\
+ 	                                      ^
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#71: FILE: include/linux/percpu-defs.h:302:
++	case 8: pscr_ret__ = stem##8(variable);break;			\
+
+ERROR:SPACING: space required after that ';' (ctx:VxV)
+#73: FILE: include/linux/percpu-defs.h:304:
++		__bad_size_call_parameter();break;			\
+ 		                           ^
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'variable' - possible side-effects?
+#78: FILE: include/linux/percpu-defs.h:309:
++#define __pcpu_size_call_return2(stem, variable, ...)			\
++({									\
++	typeof(variable) pscr2_ret__;					\
++	__verify_pcpu_ptr(&(variable));					\
++	switch(sizeof(variable)) {					\
++	case 1: pscr2_ret__ = stem##1(variable, __VA_ARGS__); break;	\
++	case 2: pscr2_ret__ = stem##2(variable, __VA_ARGS__); break;	\
++	case 4: pscr2_ret__ = stem##4(variable, __VA_ARGS__); break;	\
++	case 8: pscr2_ret__ = stem##8(variable, __VA_ARGS__); break;	\
++	default:							\
++		__bad_size_call_parameter(); break;			\
++	}								\
++	pscr2_ret__;							\
++})
+
+ERROR:SPACING: space required before the open parenthesis '('
+#82: FILE: include/linux/percpu-defs.h:313:
++	switch(sizeof(variable)) {					\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#83: FILE: include/linux/percpu-defs.h:314:
++	case 1: pscr2_ret__ = stem##1(variable, __VA_ARGS__); break;	\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#84: FILE: include/linux/percpu-defs.h:315:
++	case 2: pscr2_ret__ = stem##2(variable, __VA_ARGS__); break;	\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#85: FILE: include/linux/percpu-defs.h:316:
++	case 4: pscr2_ret__ = stem##4(variable, __VA_ARGS__); break;	\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#86: FILE: include/linux/percpu-defs.h:317:
++	case 8: pscr2_ret__ = stem##8(variable, __VA_ARGS__); break;	\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp1' - possible side-effects?
+#101: FILE: include/linux/percpu-defs.h:332:
++#define __pcpu_double_call_return_bool(stem, pcp1, pcp2, ...)		\
++({									\
++	bool pdcrb_ret__;						\
++	__verify_pcpu_ptr(&pcp1);					\
++	BUILD_BUG_ON(sizeof(pcp1) != sizeof(pcp2));			\
++	VM_BUG_ON((unsigned long)(&pcp1) % (2 * sizeof(pcp1)));		\
++	VM_BUG_ON((unsigned long)(&pcp2) !=				\
++		  (unsigned long)(&pcp1) + sizeof(pcp1));		\
++	switch(sizeof(pcp1)) {						\
++	case 1: pdcrb_ret__ = stem##1(pcp1, pcp2, __VA_ARGS__); break;	\
++	case 2: pdcrb_ret__ = stem##2(pcp1, pcp2, __VA_ARGS__); break;	\
++	case 4: pdcrb_ret__ = stem##4(pcp1, pcp2, __VA_ARGS__); break;	\
++	case 8: pdcrb_ret__ = stem##8(pcp1, pcp2, __VA_ARGS__); break;	\
++	default:							\
++		__bad_size_call_parameter(); break;			\
++	}								\
++	pdcrb_ret__;							\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'pcp1' may be better as '(pcp1)' to avoid precedence issues
+#101: FILE: include/linux/percpu-defs.h:332:
++#define __pcpu_double_call_return_bool(stem, pcp1, pcp2, ...)		\
++({									\
++	bool pdcrb_ret__;						\
++	__verify_pcpu_ptr(&pcp1);					\
++	BUILD_BUG_ON(sizeof(pcp1) != sizeof(pcp2));			\
++	VM_BUG_ON((unsigned long)(&pcp1) % (2 * sizeof(pcp1)));		\
++	VM_BUG_ON((unsigned long)(&pcp2) !=				\
++		  (unsigned long)(&pcp1) + sizeof(pcp1));		\
++	switch(sizeof(pcp1)) {						\
++	case 1: pdcrb_ret__ = stem##1(pcp1, pcp2, __VA_ARGS__); break;	\
++	case 2: pdcrb_ret__ = stem##2(pcp1, pcp2, __VA_ARGS__); break;	\
++	case 4: pdcrb_ret__ = stem##4(pcp1, pcp2, __VA_ARGS__); break;	\
++	case 8: pdcrb_ret__ = stem##8(pcp1, pcp2, __VA_ARGS__); break;	\
++	default:							\
++		__bad_size_call_parameter(); break;			\
++	}								\
++	pdcrb_ret__;							\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp2' - possible side-effects?
+#101: FILE: include/linux/percpu-defs.h:332:
++#define __pcpu_double_call_return_bool(stem, pcp1, pcp2, ...)		\
++({									\
++	bool pdcrb_ret__;						\
++	__verify_pcpu_ptr(&pcp1);					\
++	BUILD_BUG_ON(sizeof(pcp1) != sizeof(pcp2));			\
++	VM_BUG_ON((unsigned long)(&pcp1) % (2 * sizeof(pcp1)));		\
++	VM_BUG_ON((unsigned long)(&pcp2) !=				\
++		  (unsigned long)(&pcp1) + sizeof(pcp1));		\
++	switch(sizeof(pcp1)) {						\
++	case 1: pdcrb_ret__ = stem##1(pcp1, pcp2, __VA_ARGS__); break;	\
++	case 2: pdcrb_ret__ = stem##2(pcp1, pcp2, __VA_ARGS__); break;	\
++	case 4: pdcrb_ret__ = stem##4(pcp1, pcp2, __VA_ARGS__); break;	\
++	case 8: pdcrb_ret__ = stem##8(pcp1, pcp2, __VA_ARGS__); break;	\
++	default:							\
++		__bad_size_call_parameter(); break;			\
++	}								\
++	pdcrb_ret__;							\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'pcp2' may be better as '(pcp2)' to avoid precedence issues
+#101: FILE: include/linux/percpu-defs.h:332:
++#define __pcpu_double_call_return_bool(stem, pcp1, pcp2, ...)		\
++({									\
++	bool pdcrb_ret__;						\
++	__verify_pcpu_ptr(&pcp1);					\
++	BUILD_BUG_ON(sizeof(pcp1) != sizeof(pcp2));			\
++	VM_BUG_ON((unsigned long)(&pcp1) % (2 * sizeof(pcp1)));		\
++	VM_BUG_ON((unsigned long)(&pcp2) !=				\
++		  (unsigned long)(&pcp1) + sizeof(pcp1));		\
++	switch(sizeof(pcp1)) {						\
++	case 1: pdcrb_ret__ = stem##1(pcp1, pcp2, __VA_ARGS__); break;	\
++	case 2: pdcrb_ret__ = stem##2(pcp1, pcp2, __VA_ARGS__); break;	\
++	case 4: pdcrb_ret__ = stem##4(pcp1, pcp2, __VA_ARGS__); break;	\
++	case 8: pdcrb_ret__ = stem##8(pcp1, pcp2, __VA_ARGS__); break;	\
++	default:							\
++		__bad_size_call_parameter(); break;			\
++	}								\
++	pdcrb_ret__;							\
++})
+
+ERROR:SPACING: space required before the open parenthesis '('
+#109: FILE: include/linux/percpu-defs.h:340:
++	switch(sizeof(pcp1)) {						\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#110: FILE: include/linux/percpu-defs.h:341:
++	case 1: pdcrb_ret__ = stem##1(pcp1, pcp2, __VA_ARGS__); break;	\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#111: FILE: include/linux/percpu-defs.h:342:
++	case 2: pdcrb_ret__ = stem##2(pcp1, pcp2, __VA_ARGS__); break;	\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#112: FILE: include/linux/percpu-defs.h:343:
++	case 4: pdcrb_ret__ = stem##4(pcp1, pcp2, __VA_ARGS__); break;	\
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#113: FILE: include/linux/percpu-defs.h:344:
++	case 8: pdcrb_ret__ = stem##8(pcp1, pcp2, __VA_ARGS__); break;	\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'variable' - possible side-effects?
+#120: FILE: include/linux/percpu-defs.h:351:
++#define __pcpu_size_call(stem, variable, ...)				\
++do {									\
++	__verify_pcpu_ptr(&(variable));					\
++	switch(sizeof(variable)) {					\
++		case 1: stem##1(variable, __VA_ARGS__);break;		\
++		case 2: stem##2(variable, __VA_ARGS__);break;		\
++		case 4: stem##4(variable, __VA_ARGS__);break;		\
++		case 8: stem##8(variable, __VA_ARGS__);break;		\
++		default: 						\
++			__bad_size_call_parameter();break;		\
++	}								\
++} while (0)
+
+ERROR:SWITCH_CASE_INDENT_LEVEL: switch and case should be at the same indent
+#123: FILE: include/linux/percpu-defs.h:354:
++	switch(sizeof(variable)) {					\
++		case 1: stem##1(variable, __VA_ARGS__);break;		\
++		case 2: stem##2(variable, __VA_ARGS__);break;		\
++		case 4: stem##4(variable, __VA_ARGS__);break;		\
++		case 8: stem##8(variable, __VA_ARGS__);break;		\
++		default: 						\
+
+switch should be at the same indent as case.
+Example::
+
+  switch (suffix) {
+  case 'G':
+  case 'g':
+          mem <<= 30;
+          break;
+  case 'M':
+  case 'm':
+          mem <<= 20;
+          break;
+  case 'K':
+  case 'k':
+          mem <<= 10;
+          fallthrough;
+  default:
+          break;
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+ERROR:SPACING: space required before the open parenthesis '('
+#123: FILE: include/linux/percpu-defs.h:354:
++	switch(sizeof(variable)) {					\
+
+ERROR:SPACING: space required after that ';' (ctx:VxV)
+#124: FILE: include/linux/percpu-defs.h:355:
++		case 1: stem##1(variable, __VA_ARGS__);break;		\
+ 		                                      ^
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#124: FILE: include/linux/percpu-defs.h:355:
++		case 1: stem##1(variable, __VA_ARGS__);break;		\
+
+ERROR:SPACING: space required after that ';' (ctx:VxV)
+#125: FILE: include/linux/percpu-defs.h:356:
++		case 2: stem##2(variable, __VA_ARGS__);break;		\
+ 		                                      ^
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#125: FILE: include/linux/percpu-defs.h:356:
++		case 2: stem##2(variable, __VA_ARGS__);break;		\
+
+ERROR:SPACING: space required after that ';' (ctx:VxV)
+#126: FILE: include/linux/percpu-defs.h:357:
++		case 4: stem##4(variable, __VA_ARGS__);break;		\
+ 		                                      ^
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#126: FILE: include/linux/percpu-defs.h:357:
++		case 4: stem##4(variable, __VA_ARGS__);break;		\
+
+ERROR:SPACING: space required after that ';' (ctx:VxV)
+#127: FILE: include/linux/percpu-defs.h:358:
++		case 8: stem##8(variable, __VA_ARGS__);break;		\
+ 		                                      ^
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#127: FILE: include/linux/percpu-defs.h:358:
++		case 8: stem##8(variable, __VA_ARGS__);break;		\
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#128: FILE: include/linux/percpu-defs.h:359:
++^I^Idefault: ^I^I^I^I^I^I\$
+
+ERROR:SPACING: space required after that ';' (ctx:VxV)
+#129: FILE: include/linux/percpu-defs.h:360:
++			__bad_size_call_parameter();break;		\
+ 			                           ^
+
+WARNING:TYPO_SPELLING: 'interupts' may be misspelled - perhaps 'interrupts'?
+#155: FILE: include/linux/percpu-defs.h:386:
++ * disabling interupts then one of these RMW operations can show unexpected
+              ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:LONG_LINE: line length of 115 exceeds 100 columns
+#178: FILE: include/linux/percpu-defs.h:409:
++	__pcpu_double_call_return_bool(raw_cpu_cmpxchg_double_, (pcp1), (pcp2), (oval1), (oval2), (nval1), (nval2))
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#184: FILE: include/linux/percpu-defs.h:415:
++	(__this_cpu_preempt_check("read"),__pcpu_size_call_return(raw_cpu_read_, (pcp)))
+ 	                                 ^
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#188: FILE: include/linux/percpu-defs.h:419:
++     __pcpu_size_call(raw_cpu_write_, (pcp), (val));^I^I^I\$
+
+WARNING:LONG_LINE: line length of 104 exceeds 100 columns
+#211: FILE: include/linux/percpu-defs.h:442:
++	(__this_cpu_preempt_check("add_return"),__pcpu_size_call_return2(raw_cpu_add_return_, pcp, val))
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#211: FILE: include/linux/percpu-defs.h:442:
++	(__this_cpu_preempt_check("add_return"),__pcpu_size_call_return2(raw_cpu_add_return_, pcp, val))
+ 	                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#218: FILE: include/linux/percpu-defs.h:449:
++	(__this_cpu_preempt_check("xchg"),__pcpu_size_call_return2(raw_cpu_xchg_, (pcp), nval))
+ 	                                 ^
+
+WARNING:LONG_LINE: line length of 105 exceeds 100 columns
+#221: FILE: include/linux/percpu-defs.h:452:
++	(__this_cpu_preempt_check("cmpxchg"),__pcpu_size_call_return2(raw_cpu_cmpxchg_, pcp, oval, nval))
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#221: FILE: include/linux/percpu-defs.h:452:
++	(__this_cpu_preempt_check("cmpxchg"),__pcpu_size_call_return2(raw_cpu_cmpxchg_, pcp, oval, nval))
+ 	                                    ^
+
+WARNING:LONG_LINE: line length of 160 exceeds 100 columns
+#224: FILE: include/linux/percpu-defs.h:455:
++	(__this_cpu_preempt_check("cmpxchg_double"),__pcpu_double_call_return_bool(raw_cpu_cmpxchg_double_, (pcp1), (pcp2), (oval1), (oval2), (nval1), (nval2)))
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#224: FILE: include/linux/percpu-defs.h:455:
++	(__this_cpu_preempt_check("cmpxchg_double"),__pcpu_double_call_return_bool(raw_cpu_cmpxchg_double_, (pcp1), (pcp2), (oval1), (oval2), (nval1), (nval2)))
+ 	                                           ^
+
+WARNING:LONG_LINE: line length of 116 exceeds 100 columns
+#258: FILE: include/linux/percpu-defs.h:489:
++	__pcpu_double_call_return_bool(this_cpu_cmpxchg_double_, (pcp1), (pcp2), (oval1), (oval2), (nval1), (nval2))
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000153299.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 36 errors, 8 warnings, 9 checks, 426 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000153299.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

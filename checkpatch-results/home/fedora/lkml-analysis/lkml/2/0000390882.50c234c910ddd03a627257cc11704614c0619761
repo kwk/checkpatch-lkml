@@ -1,0 +1,148 @@
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#114: FILE: include/linux/kfifo.h:221:
++	__tmp->kfifo.reserve = __tmp->kfifo.in = __tmp->kfifo.out = 0; \
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#161: FILE: include/linux/kfifo.h:314:
++#define	kfifo_skip_len(fifo, len) \
++(void)({ \
++	typeof((fifo) + 1) __tmp = (fifo); \
++	struct __kfifo *__kfifo = &__tmp->kfifo; \
++	unsigned long __len = (len); \
++	if (__len <= __kfifo->in - __kfifo->out) \
++		__kfifo->out += __len; \
++	else \
++		__kfifo->out = __kfifo->in; \
++})
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#233: FILE: include/linux/kfifo.h:674:
++#define kfifo_commit_ptr(fifo, ptr) \
++(void)({ \
++	typeof((fifo) + 1) __tmp = (fifo); \
++	struct __kfifo *__kfifo = &__tmp->kfifo; \
++	__kfifo_commit_ptr(__kfifo, ptr); \
++})
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#248: FILE: include/linux/kfifo.h:902:
++extern void *__kfifo_reserve_continuous_ptr(struct __kfifo *fifo,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#250: FILE: include/linux/kfifo.h:904:
++extern void __kfifo_commit_ptr(struct __kfifo *fifo, void *ptr);
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#270: FILE: include/linux/kfifo.h:944:
++#define kfifo_iter_init(iter, fifo_in) \
++(void)({ \
++	struct kfifo_iter *__iter = (iter); \
++	typeof((fifo_in) + 1) __tmp = (fifo_in); \
++	struct __kfifo *__kfifo = &__tmp->kfifo; \
++	__iter->fifo = __kfifo; \
++	__iter->pos = __kfifo->out; \
++})
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#304: FILE: include/linux/kfifo.h:978:
++	unsigned int pos = iter->pos;
++	if (pos == fifo->in)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#362: FILE: kernel/kfifo.c:198:
++static int __kfifo_reserve_continuous(struct __kfifo *fifo,
++	unsigned int *rlen, unsigned int *ppos)
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#373: FILE: kernel/kfifo.c:209:
++		if (to_end < len) {
+[...]
++		} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#377: FILE: kernel/kfifo.c:213:
++		} else
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#388: FILE: kernel/kfifo.c:224:
++void *__kfifo_reserve_continuous_ptr(struct __kfifo *fifo,
++	unsigned int *len)
+
+WARNING:TYPO_SPELLING: 'nin' may be misspelled - perhaps 'inn'?
+#401: FILE: kernel/kfifo.c:237:
++	unsigned int in, nin, reserve;
+ 	                 ^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:TYPO_SPELLING: 'nin' may be misspelled - perhaps 'inn'?
+#419: FILE: kernel/kfifo.c:255:
++			nin = cmpxchg(&fifo->in, in, reserve);
+ 			^^^
+
+WARNING:TYPO_SPELLING: 'nin' may be misspelled - perhaps 'inn'?
+#425: FILE: kernel/kfifo.c:261:
++		} while (reserve != fifo->reserve || in != nin);
+ 		                                           ^^^
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#434: FILE: kernel/kfifo.c:270:
++	BUG_ON(pos > fifo->mask);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#518: FILE: kernel/kfifo_sample.c:1:
++/* kfifo_sample.c */
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000390882.commit.50c234c910ddd03a627257cc11704614c0619761 total: 3 errors, 6 warnings, 7 checks, 510 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000390882.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

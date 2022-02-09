@@ -1,0 +1,2682 @@
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#63: FILE: drivers/tty/serial/Kconfig:1600:
++config SERIAL_PRUSS_SUART
++	depends on ARCH_DAVINCI && ARCH_DAVINCI_DA850
++	select SERIAL_CORE
++	tristate "PRUSS based SoftUART emulation on DA8XX"
++	---help---
++	This driver emulates up to eight different UARTs on the PRUSS.
++	You may modify the NR_SUARTS macro in the driver to emulate
++	less number of UARTS as per your requirement.
++	If not sure, mark No
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#96: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#101: FILE: drivers/tty/serial/pruss_suart.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#149: FILE: drivers/tty/serial/pruss_suart.c:49:
++module_param(suart_timeout, short, S_IRUGO);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#196: FILE: drivers/tty/serial/pruss_suart.c:96:
++	suart_intr_clrmask(dev, soft_uart->suart_hdl[uart_no].uart_num,
++				PRU_TX_INTR, CHN_TXRX_IE_MASK_CMPLT);
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_HALF_TX>
+#215: FILE: drivers/tty/serial/pruss_suart.c:115:
++	if (!(suart_get_duplex(soft_uart, uart_no) & ePRU_SUART_HALF_TX))
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#219: FILE: drivers/tty/serial/pruss_suart.c:119:
++	if (uart_circ_empty(xmit) ||
++			uart_tx_stopped(&soft_uart->port[uart_no])) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#241: FILE: drivers/tty/serial/pruss_suart.c:141:
++	if (pru_softuart_write(dev,
++		&soft_uart->suart_hdl[uart_no],
+
+WARNING:IF_0: Consider removing the code enclosed by this #if 0 and its #endif
+#250: FILE: drivers/tty/serial/pruss_suart.c:150:
++#if 0
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_HALF_RX>
+#275: FILE: drivers/tty/serial/pruss_suart.c:175:
++	if (!(suart_get_duplex(soft_uart, uart_no) & ePRU_SUART_HALF_RX))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#280: FILE: drivers/tty/serial/pruss_suart.c:180:
++	rx_status = pru_softuart_get_rx_status(dev,
++			&soft_uart->suart_hdl[uart_no]);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#283: FILE: drivers/tty/serial/pruss_suart.c:183:
++	pru_softuart_read_data(dev, &soft_uart->suart_hdl[uart_no],
++			suart_data, data_len + 1, &data_len_read);
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'soft_uart->port[uart_no].read_status_mask'
+#299: FILE: drivers/tty/serial/pruss_suart.c:199:
++			rx_status &= soft_uart->port[uart_no].
++						read_status_mask;
+
+A single dereferencing identifier spanned on multiple lines like::
+
+  struct_identifier->member[index].
+  member = <foo>;
+
+is generally hard to follow. It can easily lead to typos and so makes
+the code vulnerable to bugs.
+
+If fixing the multiple line dereferencing leads to an 80 column
+violation, then either rewrite the code in a more simple way or if the
+starting part of the dereferencing identifier is the same and used at
+multiple places then store it in a temporary variable, and use that
+temporary variable only at all the places. For example, if there are
+two dereferencing identifiers::
+
+  member1->member2->member3.foo1;
+  member1->member2->member3.foo2;
+
+then store the member1->member2->member3 part in a temporary variable.
+It not only helps to avoid the 80 column violation but also reduces
+the program size by removing the unnecessary dereferences.
+
+But if none of the above methods work then ignore the 80 column
+violation because it is much easier to read a dereferencing identifier
+on a single line.
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#344: FILE: drivers/tty/serial/pruss_suart.c:244:
++			dev_err(dev, "suart%d: failed to get interrupt, ret:"
++				" 0x%X txrx_flag 0x%X\n",
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#354: FILE: drivers/tty/serial/pruss_suart.c:254:
++				pru_softuart_clr_rx_status(dev,
++					&soft_uart->suart_hdl
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#394: FILE: drivers/tty/serial/pruss_suart.c:294:
++	struct device *dev = soft_uart->dev;
++	dev_err(dev, "modem control timer not supported\n");
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#421: FILE: drivers/tty/serial/pruss_suart.c:321:
++	return (pru_softuart_get_tx_status(dev,
++		&soft_uart->suart_hdl[port->line])
+
+WARNING:ENOTSUPP: ENOTSUPP is not a SUSV4 error code, prefer EOPNOTSUPP
+#427: FILE: drivers/tty/serial/pruss_suart.c:327:
++	return -ENOTSUPP;
+
+ENOTSUPP is not a standard error code and should be avoided in new patches.
+EOPNOTSUPP should be used instead.
+
+See: https://lore.kernel.org/netdev/20200510182252.GA411829@lunn.ch/
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#435: FILE: drivers/tty/serial/pruss_suart.c:335:
++	struct device *dev = soft_uart->dev;
++	dev_dbg(dev, "modem control not supported\n");
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#449: FILE: drivers/tty/serial/pruss_suart.c:349:
++		suart_intr_clrmask(dev,
++			soft_uart->suart_hdl[port->line].uart_num,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#453: FILE: drivers/tty/serial/pruss_suart.c:353:
++		suart_intr_setmask(dev,
++			soft_uart->suart_hdl[port->line].uart_num,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#460: FILE: drivers/tty/serial/pruss_suart.c:360:
++static void pruss_suart_set_termios(struct uart_port *port,
++				  struct ktermios *termios,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_DATA_BITS6>
+#481: FILE: drivers/tty/serial/pruss_suart.c:381:
++		cval = ePRU_SUART_DATA_BITS6;
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_DATA_BITS7>
+#484: FILE: drivers/tty/serial/pruss_suart.c:384:
++		cval = ePRU_SUART_DATA_BITS7;
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_DATA_BITS8>
+#488: FILE: drivers/tty/serial/pruss_suart.c:388:
++		cval = ePRU_SUART_DATA_BITS8;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#506: FILE: drivers/tty/serial/pruss_suart.c:406:
++	baud = uart_get_baud_rate(port, termios, old,
++			  port->uartclk / 16 / 0xffff,
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#529: FILE: drivers/tty/serial/pruss_suart.c:429:
++	if (termios->c_iflag & INPCK) {	/* Input parity check not supported,
++					just enabled FE */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#529: FILE: drivers/tty/serial/pruss_suart.c:429:
++					just enabled FE */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#532: FILE: drivers/tty/serial/pruss_suart.c:432:
++		suart_intr_setmask(dev,
++			soft_uart->suart_hdl[port->line].uart_num,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#538: FILE: drivers/tty/serial/pruss_suart.c:438:
++		suart_intr_setmask(dev,
++			soft_uart->suart_hdl[port->line].uart_num,
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'soft_uart->suart_hdl[port->line].uart_num'
+#559: FILE: drivers/tty/serial/pruss_suart.c:459:
++			suart_intr_clrmask(dev, soft_uart->
++					   suart_hdl[port->line].uart_num,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#563: FILE: drivers/tty/serial/pruss_suart.c:463:
++		suart_intr_clrmask(dev,
++			soft_uart->suart_hdl[port->line].uart_num,
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments should align the * on each line
+#574: FILE: drivers/tty/serial/pruss_suart.c:474:
++	/*
++	* update the per port timeout
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'soft_uart->suart_hdl[port->line].uart_num'
+#640: FILE: drivers/tty/serial/pruss_suart.c:540:
++		suart_pru_to_host_intr_enable(dev, soft_uart->
++			suart_hdl[port->line].uart_num, PRU_TX_INTR, true);
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'soft_uart->suart_hdl[port->line].uart_num'
+#646: FILE: drivers/tty/serial/pruss_suart.c:546:
++		suart_pru_to_host_intr_enable(dev, soft_uart->
++			suart_hdl[port->line].uart_num, PRU_RX_INTR, true);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#648: FILE: drivers/tty/serial/pruss_suart.c:548:
++		pru_softuart_read(dev, &soft_uart->suart_hdl[port->line],
++			(u32 *)&soft_uart->suart_fifo_addr[port->line].
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'soft_uart->suart_fifo_addr[port->line].fifo_phys_addr_rx'
+#649: FILE: drivers/tty/serial/pruss_suart.c:549:
++			(u32 *)&soft_uart->suart_fifo_addr[port->line].
++			fifo_phys_addr_rx, SUART_FIFO_LEN);
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#722: FILE: drivers/tty/serial/pruss_suart.c:622:
++	if (0 != pru_softuart_close(&soft_uart->suart_hdl[port->line]))
+
+Comparisons with a constant or upper case identifier on the left
+side of the test should be avoided.
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#726: FILE: drivers/tty/serial/pruss_suart.c:626:
++	return;
++}
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!soft_uart"
+#750: FILE: drivers/tty/serial/pruss_suart.c:650:
++	if (soft_uart == NULL) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#763: FILE: drivers/tty/serial/pruss_suart.c:663:
++	if (SUART_FIFO_TIMEOUT_MIN > suart_timeout) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#765: FILE: drivers/tty/serial/pruss_suart.c:665:
++		dev_err(&pdev->dev, "fifo timeout less than %d ms not supported\n",
++			    SUART_FIFO_TIMEOUT_MIN);
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#767: FILE: drivers/tty/serial/pruss_suart.c:667:
++	} else if (SUART_FIFO_TIMEOUT_MAX < suart_timeout) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#769: FILE: drivers/tty/serial/pruss_suart.c:669:
++		dev_err(&pdev->dev, "fifo timeout more than %d ms not supported\n",
++			    SUART_FIFO_TIMEOUT_MAX);
+
+WARNING:ENOTSUPP: ENOTSUPP is not a SUSV4 error code, prefer EOPNOTSUPP
+#809: FILE: drivers/tty/serial/pruss_suart.c:709:
++		return -ENOTSUPP;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#820: FILE: drivers/tty/serial/pruss_suart.c:720:
++	if (pru_softuart_setconfig(dev, &soft_uart->suart_hdl[port->line],
++			&pru_suart_config) != 0) {
+
+WARNING:TYPO_SPELLING: 'ser' may be misspelled - perhaps 'set'?
+#859: FILE: drivers/tty/serial/pruss_suart.c:759:
++				 struct serial_struct *ser)
+ 				                       ^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#859: FILE: drivers/tty/serial/pruss_suart.c:759:
++static s32 pruss_suart_verify_port(struct uart_port *port,
++				 struct serial_struct *ser)
+
+WARNING:CONST_STRUCT: struct uart_ops should normally be const
+#880: FILE: drivers/tty/serial/pruss_suart.c:780:
++static struct uart_ops pruss_suart_ops = {
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#914: FILE: drivers/tty/serial/pruss_suart.c:814:
++static s32 __devinit pruss_suart_probe(struct platform_device *pdev)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around function pointer (pdata->setup)
+#929: FILE: drivers/tty/serial/pruss_suart.c:829:
++	(pdata->setup)();
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*soft_uart)...) over kzalloc(sizeof(struct omapl_pru_suart)...)
+#931: FILE: drivers/tty/serial/pruss_suart.c:831:
++	soft_uart = kzalloc(sizeof(struct omapl_pru_suart), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#942: FILE: drivers/tty/serial/pruss_suart.c:842:
++	if (!request_mem_region(res->start,
++			resource_size(res),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#950: FILE: drivers/tty/serial/pruss_suart.c:850:
++	soft_uart->suart_iomap.mcasp_io_addr = ioremap(res->start,
++					resource_size(res));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#959: FILE: drivers/tty/serial/pruss_suart.c:859:
++	sram_alloc(SUART_CNTX_SZ * NR_SUART * 2,
++	(dma_addr_t *) &soft_uart->suart_iomap.p_fifo_buff_phys_base);
+
+CHECK:SPACING: No space is necessary after a cast
+#959: FILE: drivers/tty/serial/pruss_suart.c:859:
++	(dma_addr_t *) &soft_uart->suart_iomap.p_fifo_buff_phys_base);
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#994: FILE: drivers/tty/serial/pruss_suart.c:894:
++	err = pru_softuart_init(dev, &init_params, fw->data, fw->size,
++					soft_uart->clk_freq_pru / 1000000,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1045: FILE: drivers/tty/serial/pruss_suart.c:945:
++		tasklet_init(&soft_uart->tx_task[i], suart_tx_task,
++				(unsigned long)&soft_uart->port[i]);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1050: FILE: drivers/tty/serial/pruss_suart.c:950:
++	dev_info(&pdev->dev,
++		"%s device registered (pru_clk=%d, asp_clk=%d)\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1062: FILE: drivers/tty/serial/pruss_suart.c:962:
++	sram_free(soft_uart->suart_iomap.p_fifo_buff_virt_base,
++	SUART_CNTX_SZ * NR_SUART * 2);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1067: FILE: drivers/tty/serial/pruss_suart.c:967:
++	release_mem_region(res->start,
++		resource_size(res));
+
+WARNING:HOTPLUG_SECTION: Using __devexit is unnecessary
+#1073: FILE: drivers/tty/serial/pruss_suart.c:973:
++static s32 __devexit pruss_suart_remove(struct platform_device *pdev)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1096: FILE: drivers/tty/serial/pruss_suart.c:996:
++			uart_remove_one_port(&pruss_suart_reg,
++			&soft_uart->port[i]);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1101: FILE: drivers/tty/serial/pruss_suart.c:1001:
++	sram_free(soft_uart->suart_iomap.p_fifo_buff_virt_base,
++		SUART_CNTX_SZ * NR_SUART * 2);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1108: FILE: drivers/tty/serial/pruss_suart.c:1008:
++		release_mem_region(res->start,
++			resource_size(res));
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#1168: FILE: drivers/tty/serial/pruss_suart.h:1:
++/*
+
+CHECK:CAMELCASE: Avoid CamelCase: <PRU_SUART_UARTx_INVALID>
+#1222: FILE: drivers/tty/serial/pruss_suart.h:55:
++#define PRU_SUART_UARTx_INVALID		(9u)
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#1855: FILE: drivers/tty/serial/pruss_suart.h:688:
++	OMAPL_MCASP_PDIR_AFSR_OUTPUT<<OMAPL_MCASP_PDIR_AFSR_SHIFT | \
+ 	                            ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#1856: FILE: drivers/tty/serial/pruss_suart.h:689:
++	OMAPL_MCASP_PDIR_AHCLKR_OUTPUT<<OMAPL_MCASP_PDIR_AHCLKR_SHIFT | \
+ 	                              ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#1857: FILE: drivers/tty/serial/pruss_suart.h:690:
++	OMAPL_MCASP_PDIR_ACLKR_OUTPUT<<OMAPL_MCASP_PDIR_ACLKR_SHIFT | \
+ 	                             ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#1858: FILE: drivers/tty/serial/pruss_suart.h:691:
++	OMAPL_MCASP_PDIR_AFSX_OUTPUT<<OMAPL_MCASP_PDIR_AFSX_SHIFT | \
+ 	                            ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#1859: FILE: drivers/tty/serial/pruss_suart.h:692:
++	OMAPL_MCASP_PDIR_AHCLKX_OUTPUT<<OMAPL_MCASP_PDIR_AHCLKX_SHIFT | \
+ 	                              ^
+
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#1860: FILE: drivers/tty/serial/pruss_suart.h:693:
++	OMAPL_MCASP_PDIR_ACLKX_OUTPUT<<OMAPL_MCASP_PDIR_ACLKX_SHIFT)
+ 	                             ^
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_DATA_BITS9>
+#1883: FILE: drivers/tty/serial/pruss_suart.h:716:
++	ePRU_SUART_DATA_BITS9,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_DATA_BITS10>
+#1884: FILE: drivers/tty/serial/pruss_suart.h:717:
++	ePRU_SUART_DATA_BITS10,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_DATA_BITS11>
+#1885: FILE: drivers/tty/serial/pruss_suart.h:718:
++	ePRU_SUART_DATA_BITS11,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_DATA_BITS12>
+#1886: FILE: drivers/tty/serial/pruss_suart.h:719:
++	ePRU_SUART_DATA_BITS12
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_NUM_1>
+#1890: FILE: drivers/tty/serial/pruss_suart.h:723:
++	ePRU_SUART_NUM_1 = 1,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_NUM_2>
+#1891: FILE: drivers/tty/serial/pruss_suart.h:724:
++	ePRU_SUART_NUM_2,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_NUM_3>
+#1892: FILE: drivers/tty/serial/pruss_suart.h:725:
++	ePRU_SUART_NUM_3,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_NUM_4>
+#1893: FILE: drivers/tty/serial/pruss_suart.h:726:
++	ePRU_SUART_NUM_4,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_NUM_5>
+#1894: FILE: drivers/tty/serial/pruss_suart.h:727:
++	ePRU_SUART_NUM_5,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_NUM_6>
+#1895: FILE: drivers/tty/serial/pruss_suart.h:728:
++	ePRU_SUART_NUM_6,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_NUM_7>
+#1896: FILE: drivers/tty/serial/pruss_suart.h:729:
++	ePRU_SUART_NUM_7,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_NUM_8>
+#1897: FILE: drivers/tty/serial/pruss_suart.h:730:
++	ePRU_SUART_NUM_8
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_FULL_TX_RX>
+#1903: FILE: drivers/tty/serial/pruss_suart.h:736:
++	ePRU_SUART_FULL_TX_RX,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_HALF_TX_DISABLED>
+#1904: FILE: drivers/tty/serial/pruss_suart.h:737:
++	ePRU_SUART_HALF_TX_DISABLED = 4,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_HALF_RX_DISABLED>
+#1905: FILE: drivers/tty/serial/pruss_suart.h:738:
++	ePRU_SUART_HALF_RX_DISABLED = 8
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_TX_CH0>
+#1909: FILE: drivers/tty/serial/pruss_suart.h:742:
++	ePRU_SUART_TX_CH0 = 0,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_TX_CH1>
+#1910: FILE: drivers/tty/serial/pruss_suart.h:743:
++	ePRU_SUART_TX_CH1,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_TX_CH2>
+#1911: FILE: drivers/tty/serial/pruss_suart.h:744:
++	ePRU_SUART_TX_CH2,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_TX_CH3>
+#1912: FILE: drivers/tty/serial/pruss_suart.h:745:
++	ePRU_SUART_TX_CH3,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_TX_CH4>
+#1913: FILE: drivers/tty/serial/pruss_suart.h:746:
++	ePRU_SUART_TX_CH4,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_TX_CH5>
+#1914: FILE: drivers/tty/serial/pruss_suart.h:747:
++	ePRU_SUART_TX_CH5,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_TX_CH6>
+#1915: FILE: drivers/tty/serial/pruss_suart.h:748:
++	ePRU_SUART_TX_CH6,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_TX_CH7>
+#1916: FILE: drivers/tty/serial/pruss_suart.h:749:
++	ePRU_SUART_TX_CH7
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_RX_CH0>
+#1920: FILE: drivers/tty/serial/pruss_suart.h:753:
++	ePRU_SUART_RX_CH0 = 0,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_RX_CH1>
+#1921: FILE: drivers/tty/serial/pruss_suart.h:754:
++	ePRU_SUART_RX_CH1,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_RX_CH2>
+#1922: FILE: drivers/tty/serial/pruss_suart.h:755:
++	ePRU_SUART_RX_CH2,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_RX_CH3>
+#1923: FILE: drivers/tty/serial/pruss_suart.h:756:
++	ePRU_SUART_RX_CH3,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_RX_CH4>
+#1924: FILE: drivers/tty/serial/pruss_suart.h:757:
++	ePRU_SUART_RX_CH4,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_RX_CH5>
+#1925: FILE: drivers/tty/serial/pruss_suart.h:758:
++	ePRU_SUART_RX_CH5,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_RX_CH6>
+#1926: FILE: drivers/tty/serial/pruss_suart.h:759:
++	ePRU_SUART_RX_CH6,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_RX_CH7>
+#1927: FILE: drivers/tty/serial/pruss_suart.h:760:
++	ePRU_SUART_RX_CH7
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_UART_FREE>
+#1931: FILE: drivers/tty/serial/pruss_suart.h:764:
++	ePRU_SUART_UART_FREE = 0,
+
+CHECK:CAMELCASE: Avoid CamelCase: <ePRU_SUART_UART_IN_USE>
+#1932: FILE: drivers/tty/serial/pruss_suart.h:765:
++	ePRU_SUART_UART_IN_USE
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2101: FILE: drivers/tty/serial/pruss_suart.h:934:
++extern s32 pru_softuart_init(struct device *dev,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:FUNCTION_ARGUMENTS: function definition argument 'struct pruss_suart_initparams *' should also have an identifier name
+#2101: FILE: drivers/tty/serial/pruss_suart.h:934:
++extern s32 pru_softuart_init(struct device *dev,
+
+This warning is emitted due to any of the following reasons:
+
+  1. Arguments for the function declaration do not follow
+     the identifier name.  Example::
+
+       void foo
+       (int bar, int baz)
+
+     This should be corrected to::
+
+       void foo(int bar, int baz)
+
+  2. Some arguments for the function definition do not
+     have an identifier name.  Example::
+
+       void foo(int)
+
+     All arguments should have identifier names.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2102: FILE: drivers/tty/serial/pruss_suart.h:935:
++extern s32 pru_softuart_init(struct device *dev,
++			struct pruss_suart_initparams *,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2107: FILE: drivers/tty/serial/pruss_suart.h:940:
++extern s32 pru_softuart_open(struct suart_handle *h_suart);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2109: FILE: drivers/tty/serial/pruss_suart.h:942:
++extern s32 pru_softuart_close(struct suart_handle *h_uart);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2111: FILE: drivers/tty/serial/pruss_suart.h:944:
++extern s32 pru_softuart_setbaud(struct device *dev,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2112: FILE: drivers/tty/serial/pruss_suart.h:945:
++extern s32 pru_softuart_setbaud(struct device *dev,
++			struct suart_handle *h_uart,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2115: FILE: drivers/tty/serial/pruss_suart.h:948:
++extern s32 pru_softuart_setdatabits(struct device *dev,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2116: FILE: drivers/tty/serial/pruss_suart.h:949:
++extern s32 pru_softuart_setdatabits(struct device *dev,
++			struct suart_handle *h_uart,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2119: FILE: drivers/tty/serial/pruss_suart.h:952:
++extern s32 pru_softuart_setconfig(struct device *dev,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2120: FILE: drivers/tty/serial/pruss_suart.h:953:
++extern s32 pru_softuart_setconfig(struct device *dev,
++			struct suart_handle *h_uart,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2123: FILE: drivers/tty/serial/pruss_suart.h:956:
++extern s32 pru_softuart_getconfig(struct device *dev,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2124: FILE: drivers/tty/serial/pruss_suart.h:957:
++extern s32 pru_softuart_getconfig(struct device *dev,
++			struct suart_handle *h_uart,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2127: FILE: drivers/tty/serial/pruss_suart.h:960:
++extern s32 pru_softuart_pending_tx_request(struct device *dev);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2129: FILE: drivers/tty/serial/pruss_suart.h:962:
++extern s32 pru_softuart_write(struct device *dev,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2130: FILE: drivers/tty/serial/pruss_suart.h:963:
++extern s32 pru_softuart_write(struct device *dev,
++			struct suart_handle *h_uart,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2133: FILE: drivers/tty/serial/pruss_suart.h:966:
++extern s32 pru_softuart_read(struct device *dev,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2134: FILE: drivers/tty/serial/pruss_suart.h:967:
++extern s32 pru_softuart_read(struct device *dev,
++			struct suart_handle *h_uart,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2137: FILE: drivers/tty/serial/pruss_suart.h:970:
++extern s32 suart_intr_clrmask(struct device *dev, u16 uart_num,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2138: FILE: drivers/tty/serial/pruss_suart.h:971:
++extern s32 suart_intr_clrmask(struct device *dev, u16 uart_num,
++						u32 txrxmode,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2141: FILE: drivers/tty/serial/pruss_suart.h:974:
++extern s32 pru_softuart_clr_tx_status(struct device *dev,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2142: FILE: drivers/tty/serial/pruss_suart.h:975:
++extern s32 pru_softuart_clr_tx_status(struct device *dev,
++				struct suart_handle *h_uart);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2144: FILE: drivers/tty/serial/pruss_suart.h:977:
++extern s32 pru_softuart_get_tx_status(struct device *dev,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2145: FILE: drivers/tty/serial/pruss_suart.h:978:
++extern s32 pru_softuart_get_tx_status(struct device *dev,
++				struct suart_handle *h_uart);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2147: FILE: drivers/tty/serial/pruss_suart.h:980:
++extern s32 pru_softuart_clr_rx_status(struct device *dev,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2148: FILE: drivers/tty/serial/pruss_suart.h:981:
++extern s32 pru_softuart_clr_rx_status(struct device *dev,
++				struct suart_handle *h_uart);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2150: FILE: drivers/tty/serial/pruss_suart.h:983:
++extern s32 pru_softuart_get_rx_status(struct device *dev,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2151: FILE: drivers/tty/serial/pruss_suart.h:984:
++extern s32 pru_softuart_get_rx_status(struct device *dev,
++				struct suart_handle *h_uart);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2153: FILE: drivers/tty/serial/pruss_suart.h:986:
++extern s32 pru_softuart_get_isrstatus(struct device *dev, u16 uart_num,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2154: FILE: drivers/tty/serial/pruss_suart.h:987:
++extern s32 pru_softuart_get_isrstatus(struct device *dev, u16 uart_num,
++			u16 *txrx_flag);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2156: FILE: drivers/tty/serial/pruss_suart.h:989:
++extern s32 pru_intr_clr_isrstatus(struct device *dev, u16 uart_num,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2157: FILE: drivers/tty/serial/pruss_suart.h:990:
++extern s32 pru_intr_clr_isrstatus(struct device *dev, u16 uart_num,
++							u32 txrxmode);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2159: FILE: drivers/tty/serial/pruss_suart.h:992:
++extern s32 suart_intr_getmask(struct device *dev, u16 uart_num,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2160: FILE: drivers/tty/serial/pruss_suart.h:993:
++extern s32 suart_intr_getmask(struct device *dev, u16 uart_num,
++						u32 txrxmode,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2163: FILE: drivers/tty/serial/pruss_suart.h:996:
++extern s32 suart_intr_setmask(struct device *dev, u16 uart_num,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2164: FILE: drivers/tty/serial/pruss_suart.h:997:
++extern s32 suart_intr_setmask(struct device *dev, u16 uart_num,
++			u32 txrxmode, u32 intrmask);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2166: FILE: drivers/tty/serial/pruss_suart.h:999:
++extern s32 pru_softuart_get_tx_data_len(struct device *dev,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2167: FILE: drivers/tty/serial/pruss_suart.h:1000:
++extern s32 pru_softuart_get_tx_data_len(struct device *dev,
++				struct suart_handle *h_uart);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2169: FILE: drivers/tty/serial/pruss_suart.h:1002:
++extern s32 pru_softuart_get_rx_data_len(struct device *dev,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2170: FILE: drivers/tty/serial/pruss_suart.h:1003:
++extern s32 pru_softuart_get_rx_data_len(struct device *dev,
++				struct suart_handle *h_uart);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2172: FILE: drivers/tty/serial/pruss_suart.h:1005:
++extern s32 suart_arm_to_pru_intr(struct device *dev, u16 uart_num);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2174: FILE: drivers/tty/serial/pruss_suart.h:1007:
++extern void pru_mcasp_deinit(void);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2176: FILE: drivers/tty/serial/pruss_suart.h:1009:
++extern s32 pru_softuart_read_data(struct device *dev,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2177: FILE: drivers/tty/serial/pruss_suart.h:1010:
++extern s32 pru_softuart_read_data(struct device *dev,
++			struct suart_handle *h_uart,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2181: FILE: drivers/tty/serial/pruss_suart.h:1014:
++extern s32 pru_softuart_stop_receive(struct device *dev,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2182: FILE: drivers/tty/serial/pruss_suart.h:1015:
++extern s32 pru_softuart_stop_receive(struct device *dev,
++				struct suart_handle *h_uart);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2184: FILE: drivers/tty/serial/pruss_suart.h:1017:
++extern s32 suart_pru_to_host_intr_enable(struct device *dev,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2185: FILE: drivers/tty/serial/pruss_suart.h:1018:
++extern s32 suart_pru_to_host_intr_enable(struct device *dev,
++					u16 uart_num,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2188: FILE: drivers/tty/serial/pruss_suart.h:1021:
++extern void pru_set_fifo_timeout(struct device *dev, s16 timeout);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2190: FILE: drivers/tty/serial/pruss_suart.h:1023:
++extern void suart_mcasp_config(u32 tx_baud_value,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2191: FILE: drivers/tty/serial/pruss_suart.h:1024:
++extern void suart_mcasp_config(u32 tx_baud_value,
++			u32 rx_baud_value, u32 oversampling,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2194: FILE: drivers/tty/serial/pruss_suart.h:1027:
++extern void suart_mcasp_reset(struct pruss_suart_iomap *pruss_ioaddr);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2196: FILE: drivers/tty/serial/pruss_suart.h:1029:
++extern short suart_asp_baud_set(u32 tx_baud_value,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2197: FILE: drivers/tty/serial/pruss_suart.h:1030:
++extern short suart_asp_baud_set(u32 tx_baud_value,
++			u32 rx_baud_value, u32 oversampling,
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2200: FILE: drivers/tty/serial/pruss_suart.h:1033:
++extern short suart_asp_serializer_deactivate(u16 sr_num,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2201: FILE: drivers/tty/serial/pruss_suart.h:1034:
++extern short suart_asp_serializer_deactivate(u16 sr_num,
++			struct pruss_suart_iomap *pruss_ioaddr);
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2203: FILE: drivers/tty/serial/pruss_suart.h:1036:
++extern void suart_mcasp_tx_serialzier_set(u32 serializer_num,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2204: FILE: drivers/tty/serial/pruss_suart.h:1037:
++extern void suart_mcasp_tx_serialzier_set(u32 serializer_num,
++			struct pruss_suart_iomap *pruss_ioaddr);
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#2212: FILE: drivers/tty/serial/pruss_suart_api.c:1:
++/*
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2249: FILE: drivers/tty/serial/pruss_suart_api.c:38:
++static  s32 pru_softuart_clr_rx_fifo(struct device *dev,
++				struct suart_handle *h_uart);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2254: FILE: drivers/tty/serial/pruss_suart_api.c:43:
++static void pru_set_ram_data(struct device *dev,
++			struct pruss_suart_iomap *pruss_ioaddr)
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'pruss_ioaddr->mcasp_io_addr'
+#2260: FILE: drivers/tty/serial/pruss_suart_api.c:49:
++	u32 __iomem *p_sr_ctl_addr = (u32 __iomem *)(pruss_ioaddr->
++						mcasp_io_addr + 0x180);
+
+WARNING:TYPO_SPELLING: 'Chanel' may be misspelled - perhaps 'Channel'?
+#2264: FILE: drivers/tty/serial/pruss_suart_api.c:53:
++	/* RX PRU - 0 Chanel 0-7 context information */
+ 	              ^^^^^^
+
+CHECK:SPACING: No space is necessary after a cast
+#2266: FILE: drivers/tty/serial/pruss_suart_api.c:55:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2267: FILE: drivers/tty/serial/pruss_suart_api.c:56:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
++						0x3, SUART_CHN_RX);
+
+CHECK:SPACING: No space is necessary after a cast
+#2268: FILE: drivers/tty/serial/pruss_suart_api.c:57:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2269: FILE: drivers/tty/serial/pruss_suart_api.c:58:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
++				(0xF << SERIALIZER_OFFSET),
+
+CHECK:SPACING: No space is necessary after a cast
+#2271: FILE: drivers/tty/serial/pruss_suart_api.c:60:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2272: FILE: drivers/tty/serial/pruss_suart_api.c:61:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
++				(0x3 << SUART_DEFAULT_OVRSMPL_OFFSET),
+
+CHECK:SPACING: No space is necessary after a cast
+#2275: FILE: drivers/tty/serial/pruss_suart_api.c:64:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_config2_txrx_status,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2276: FILE: drivers/tty/serial/pruss_suart_api.c:65:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_config2_txrx_status,
++								0xF, 8);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2280: FILE: drivers/tty/serial/pruss_suart_api.c:69:
++			pruss_rmwl(dev,
++				(u32) &pru_suart_regs->ch_config2_txrx_status,
+
+CHECK:SPACING: No space is necessary after a cast
+#2280: FILE: drivers/tty/serial/pruss_suart_api.c:69:
++				(u32) &pru_suart_regs->ch_config2_txrx_status,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2285: FILE: drivers/tty/serial/pruss_suart_api.c:74:
++			pruss_rmwl(dev,
++				(u32) &pru_suart_regs->ch_config2_txrx_status,
+
+CHECK:SPACING: No space is necessary after a cast
+#2285: FILE: drivers/tty/serial/pruss_suart_api.c:74:
++				(u32) &pru_suart_regs->ch_config2_txrx_status,
+
+CHECK:SPACING: No space is necessary after a cast
+#2295: FILE: drivers/tty/serial/pruss_suart_api.c:84:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_txrx_data,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2296: FILE: drivers/tty/serial/pruss_suart_api.c:85:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_txrx_data,
++				0xFFFF, RX_DEFAULT_DATA_DUMP_ADDR);
+
+CHECK:SPACING: No space is necessary after a cast
+#2297: FILE: drivers/tty/serial/pruss_suart_api.c:86:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->reserved1, 0xFFFF, 0);
+
+CHECK:SPACING: No space is necessary after a cast
+#2302: FILE: drivers/tty/serial/pruss_suart_api.c:91:
++		pruss_writel(dev, (u32) &pru_suart_rx_priv->asp_rbuf_base,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2303: FILE: drivers/tty/serial/pruss_suart_api.c:92:
++		pruss_writel(dev, (u32) &pru_suart_rx_priv->asp_rbuf_base,
++							datatowrite);
+
+CHECK:SPACING: No space is necessary after a cast
+#2305: FILE: drivers/tty/serial/pruss_suart_api.c:94:
++		pruss_writel(dev, (u32) &pru_suart_rx_priv->asp_rsrctl_base,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2306: FILE: drivers/tty/serial/pruss_suart_api.c:95:
++		pruss_writel(dev, (u32) &pru_suart_rx_priv->asp_rsrctl_base,
++							datatowrite);
+
+CHECK:SPACING: No space is necessary after a cast
+#2310: FILE: drivers/tty/serial/pruss_suart_api.c:99:
++	pru_suart_regs = (struct pru_suart_regs_ovly *) PRU1_DATARAM_OFFSET;
+
+CHECK:SPACING: No space is necessary after a cast
+#2315: FILE: drivers/tty/serial/pruss_suart_api.c:104:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2316: FILE: drivers/tty/serial/pruss_suart_api.c:105:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
++						0x3, SUART_CHN_TX);
+
+CHECK:SPACING: No space is necessary after a cast
+#2317: FILE: drivers/tty/serial/pruss_suart_api.c:106:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2318: FILE: drivers/tty/serial/pruss_suart_api.c:107:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
++				(0xF << SERIALIZER_OFFSET),
+
+CHECK:SPACING: No space is necessary after a cast
+#2320: FILE: drivers/tty/serial/pruss_suart_api.c:109:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2321: FILE: drivers/tty/serial/pruss_suart_api.c:110:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
++				(0x3 << SUART_DEFAULT_OVRSMPL_OFFSET),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2325: FILE: drivers/tty/serial/pruss_suart_api.c:114:
++		pruss_rmwl(dev,
++			(u32) &pru_suart_regs->ch_config2_txrx_status, 0xF, 8);
+
+CHECK:SPACING: No space is necessary after a cast
+#2325: FILE: drivers/tty/serial/pruss_suart_api.c:114:
++			(u32) &pru_suart_regs->ch_config2_txrx_status, 0xF, 8);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2335: FILE: drivers/tty/serial/pruss_suart_api.c:124:
++			pruss_rmwl(dev,
++				(u32) &pru_suart_regs->ch_config2_txrx_status,
+
+CHECK:SPACING: No space is necessary after a cast
+#2335: FILE: drivers/tty/serial/pruss_suart_api.c:124:
++				(u32) &pru_suart_regs->ch_config2_txrx_status,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2339: FILE: drivers/tty/serial/pruss_suart_api.c:128:
++			iowrite32(MCASP_SRCTL_TX_MODE,
++				p_sr_ctl_addr + uart_tx[i]);
+
+CHECK:SPACING: No space is necessary after a cast
+#2341: FILE: drivers/tty/serial/pruss_suart_api.c:130:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->reserved1, 0xFFFF, 1);
+
+CHECK:SPACING: No space is necessary after a cast
+#2347: FILE: drivers/tty/serial/pruss_suart_api.c:136:
++		pruss_writel(dev, (u32) &pru_suart_tx_priv->asp_xsrctl_base,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2348: FILE: drivers/tty/serial/pruss_suart_api.c:137:
++		pruss_writel(dev, (u32) &pru_suart_tx_priv->asp_xsrctl_base,
++							datatowrite);
+
+CHECK:SPACING: No space is necessary after a cast
+#2350: FILE: drivers/tty/serial/pruss_suart_api.c:139:
++		pruss_writel(dev, (u32) &pru_suart_tx_priv->asp_xbuf_base,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2351: FILE: drivers/tty/serial/pruss_suart_api.c:140:
++		pruss_writel(dev, (u32) &pru_suart_tx_priv->asp_xbuf_base,
++							datatowrite);
+
+CHECK:SPACING: No space is necessary after a cast
+#2354: FILE: drivers/tty/serial/pruss_suart_api.c:143:
++		pruss_writel(dev, (u32) &pru_suart_tx_priv->buff_addr,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2355: FILE: drivers/tty/serial/pruss_suart_api.c:144:
++		pruss_writel(dev, (u32) &pru_suart_tx_priv->buff_addr,
++							datatowrite);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2360: FILE: drivers/tty/serial/pruss_suart_api.c:149:
++static void pru_set_ram_data(struct device *dev,
++			struct pruss_suart_iomap *pruss_ioaddr)
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#2362: FILE: drivers/tty/serial/pruss_suart_api.c:151:
++{
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#2372: FILE: drivers/tty/serial/pruss_suart_api.c:161:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2373: FILE: drivers/tty/serial/pruss_suart_api.c:162:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
++						0x3, SUART_CHN_TX);
+
+CHECK:SPACING: No space is necessary after a cast
+#2374: FILE: drivers/tty/serial/pruss_suart_api.c:163:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2375: FILE: drivers/tty/serial/pruss_suart_api.c:164:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
++						(0xF << SERIALIZER_OFFSET),
+
+CHECK:SPACING: No space is necessary after a cast
+#2377: FILE: drivers/tty/serial/pruss_suart_api.c:166:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2378: FILE: drivers/tty/serial/pruss_suart_api.c:167:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
++				(0x3 << SUART_DEFAULT_OVRSMPL_OFFSET),
+
+CHECK:SPACING: No space is necessary after a cast
+#2381: FILE: drivers/tty/serial/pruss_suart_api.c:170:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_config2_txrx_status,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2382: FILE: drivers/tty/serial/pruss_suart_api.c:171:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_config2_txrx_status,
++								0xF, 8);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2391: FILE: drivers/tty/serial/pruss_suart_api.c:180:
++			pruss_rmwl(dev,
++				(u32) &pru_suart_regs->ch_config2_txrx_status,
+
+CHECK:SPACING: No space is necessary after a cast
+#2391: FILE: drivers/tty/serial/pruss_suart_api.c:180:
++				(u32) &pru_suart_regs->ch_config2_txrx_status,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2395: FILE: drivers/tty/serial/pruss_suart_api.c:184:
++			iowrite32(MCASP_SRCTL_TX_MODE,
++						p_sr_ctl_addr + uart_tx[i]);
+
+CHECK:SPACING: No space is necessary after a cast
+#2397: FILE: drivers/tty/serial/pruss_suart_api.c:186:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->reserved1, 0xFFFF, 1);
+
+CHECK:SPACING: No space is necessary after a cast
+#2402: FILE: drivers/tty/serial/pruss_suart_api.c:191:
++		pruss_writel(dev, (u32) &pru_suart_tx_priv->asp_xsrctl_base,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2403: FILE: drivers/tty/serial/pruss_suart_api.c:192:
++		pruss_writel(dev, (u32) &pru_suart_tx_priv->asp_xsrctl_base,
++				(MCASP_SRCTL_BASE_ADDR + (uart_tx[i] << 2)));
+
+CHECK:SPACING: No space is necessary after a cast
+#2404: FILE: drivers/tty/serial/pruss_suart_api.c:193:
++		pruss_writel(dev, (u32) &pru_suart_tx_priv->asp_xbuf_base,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2405: FILE: drivers/tty/serial/pruss_suart_api.c:194:
++		pruss_writel(dev, (u32) &pru_suart_tx_priv->asp_xbuf_base,
++				(MCASP_XBUF_BASE_ADDR + (uart_tx[i] << 2)));
+
+CHECK:SPACING: No space is necessary after a cast
+#2407: FILE: drivers/tty/serial/pruss_suart_api.c:196:
++		pruss_writel(dev, (u32) &pru_suart_tx_priv->buff_addr,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2408: FILE: drivers/tty/serial/pruss_suart_api.c:197:
++		pruss_writel(dev, (u32) &pru_suart_tx_priv->buff_addr,
++					(0x0090 + (i * 0x050)));
+
+CHECK:SPACING: No space is necessary after a cast
+#2412: FILE: drivers/tty/serial/pruss_suart_api.c:201:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2413: FILE: drivers/tty/serial/pruss_suart_api.c:202:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
++							0x3, SUART_CHN_RX);
+
+CHECK:SPACING: No space is necessary after a cast
+#2414: FILE: drivers/tty/serial/pruss_suart_api.c:203:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2415: FILE: drivers/tty/serial/pruss_suart_api.c:204:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
++						(0xF << SERIALIZER_OFFSET),
+
+CHECK:SPACING: No space is necessary after a cast
+#2417: FILE: drivers/tty/serial/pruss_suart_api.c:206:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2418: FILE: drivers/tty/serial/pruss_suart_api.c:207:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_ctrl_config1,
++				(0x3 << SUART_DEFAULT_OVRSMPL_OFFSET),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2422: FILE: drivers/tty/serial/pruss_suart_api.c:211:
++		pruss_rmwl(dev,
++			(u32) &pru_suart_regs->ch_config2_txrx_status, 0xF, 8);
+
+CHECK:SPACING: No space is necessary after a cast
+#2422: FILE: drivers/tty/serial/pruss_suart_api.c:211:
++			(u32) &pru_suart_regs->ch_config2_txrx_status, 0xF, 8);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2427: FILE: drivers/tty/serial/pruss_suart_api.c:216:
++			pruss_rmwl(dev,
++				(u32) &pru_suart_regs->ch_config2_txrx_status,
+
+CHECK:SPACING: No space is necessary after a cast
+#2427: FILE: drivers/tty/serial/pruss_suart_api.c:216:
++				(u32) &pru_suart_regs->ch_config2_txrx_status,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2432: FILE: drivers/tty/serial/pruss_suart_api.c:221:
++			pruss_rmwl(dev,
++				(u32) &pru_suart_regs->ch_config2_txrx_status,
+
+CHECK:SPACING: No space is necessary after a cast
+#2432: FILE: drivers/tty/serial/pruss_suart_api.c:221:
++				(u32) &pru_suart_regs->ch_config2_txrx_status,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2436: FILE: drivers/tty/serial/pruss_suart_api.c:225:
++			iowrite32(MCASP_SRCTL_RX_MODE,
++					p_sr_ctl_addr + uart_rx[i]);
+
+CHECK:SPACING: No space is necessary after a cast
+#2442: FILE: drivers/tty/serial/pruss_suart_api.c:231:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_txrx_data,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2443: FILE: drivers/tty/serial/pruss_suart_api.c:232:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->ch_txrx_data,
++				0xFFFF, RX_DEFAULT_DATA_DUMP_ADDR);
+
+CHECK:SPACING: No space is necessary after a cast
+#2444: FILE: drivers/tty/serial/pruss_suart_api.c:233:
++		pruss_rmwl(dev, (u32) &pru_suart_regs->reserved1, 0xFFFF, 0);
+
+CHECK:SPACING: No space is necessary after a cast
+#2448: FILE: drivers/tty/serial/pruss_suart_api.c:237:
++		pruss_writel(dev, (u32) &pru_suart_rx_priv->asp_rbuf_base,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2449: FILE: drivers/tty/serial/pruss_suart_api.c:238:
++		pruss_writel(dev, (u32) &pru_suart_rx_priv->asp_rbuf_base,
++				(MCASP_RBUF_BASE_ADDR + (uart_rx[i] << 2)));
+
+CHECK:SPACING: No space is necessary after a cast
+#2450: FILE: drivers/tty/serial/pruss_suart_api.c:239:
++		pruss_writel(dev, (u32) &pru_suart_rx_priv->asp_rsrctl_base,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2451: FILE: drivers/tty/serial/pruss_suart_api.c:240:
++		pruss_writel(dev, (u32) &pru_suart_rx_priv->asp_rsrctl_base,
++				(MCASP_SRCTL_BASE_ADDR + (uart_rx[i] << 2)));
+
+CHECK:SPACING: No space is necessary after a cast
+#2466: FILE: drivers/tty/serial/pruss_suart_api.c:255:
++	pruss_writeb(dev, pru_offset, (u8) pru_mode);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2482: FILE: drivers/tty/serial/pruss_suart_api.c:271:
++	pruss_writeb(dev, PRU_SUART_PRU0_DELAY_OFFSET,
++		(u8) delay_cnt);
+
+CHECK:SPACING: No space is necessary after a cast
+#2482: FILE: drivers/tty/serial/pruss_suart_api.c:271:
++		(u8) delay_cnt);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2486: FILE: drivers/tty/serial/pruss_suart_api.c:275:
++	pruss_writeb(dev, PRU_SUART_PRU1_DELAY_OFFSET,
++		(u8) delay_cnt);
+
+CHECK:SPACING: No space is necessary after a cast
+#2486: FILE: drivers/tty/serial/pruss_suart_api.c:275:
++		(u8) delay_cnt);
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#2494: FILE: drivers/tty/serial/pruss_suart_api.c:283:
++	if (PRUSS_NUM0 == pru_no)
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#2496: FILE: drivers/tty/serial/pruss_suart_api.c:285:
++	else if (PRUSS_NUM1 == pru_no)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2511: FILE: drivers/tty/serial/pruss_suart_api.c:300:
++s32 pru_softuart_init(struct device *dev,
++			struct pruss_suart_initparams *init_params,
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU0_MODE == PRU_MODE_RX_TX_BOTH'
+#2522: FILE: drivers/tty/serial/pruss_suart_api.c:311:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH) &&
++				(PRU1_MODE == PRU_MODE_RX_TX_BOTH))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU1_MODE == PRU_MODE_RX_TX_BOTH'
+#2522: FILE: drivers/tty/serial/pruss_suart_api.c:311:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH) &&
++				(PRU1_MODE == PRU_MODE_RX_TX_BOTH))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2523: FILE: drivers/tty/serial/pruss_suart_api.c:312:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH) &&
++				(PRU1_MODE == PRU_MODE_RX_TX_BOTH))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2533: FILE: drivers/tty/serial/pruss_suart_api.c:322:
++	suart_mcasp_config(init_params->tx_baud_value,
++				init_params->rx_baud_value,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2543: FILE: drivers/tty/serial/pruss_suart_api.c:332:
++		pruss_writel(dev, (PRU0_DATARAM_OFFSET + (i * sizeof(int))),
++							datatowrite[i]);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2551: FILE: drivers/tty/serial/pruss_suart_api.c:340:
++	pruss_load(dev, PRUSS_NUM0, (u32 *)pru_suart_emu_code,
++					(fw_size / sizeof(u32)));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2554: FILE: drivers/tty/serial/pruss_suart_api.c:343:
++		pruss_load(dev, PRUSS_NUM1, (u32 *)pru_suart_emu_code,
++					(fw_size / sizeof(u32)));
+
+CHECK:SPACING: No space is necessary after a cast
+#2583: FILE: drivers/tty/serial/pruss_suart_api.c:372:
++	pruss_writew(dev, PRU_SUART_PRU0_IDLE_TIMEOUT_OFFSET, (u16) timeout);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2586: FILE: drivers/tty/serial/pruss_suart_api.c:375:
++		pruss_writew(dev, PRU_SUART_PRU1_IDLE_TIMEOUT_OFFSET,
++						(u16) timeout);
+
+CHECK:SPACING: No space is necessary after a cast
+#2586: FILE: drivers/tty/serial/pruss_suart_api.c:375:
++						(u16) timeout);
+
+WARNING:UNNECESSARY_ELSE: else is not generally useful after a break or return
+#2603: FILE: drivers/tty/serial/pruss_suart_api.c:392:
++		return -EUSERS;
++	} else {
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!h_uart"
+#2619: FILE: drivers/tty/serial/pruss_suart_api.c:408:
++	if (h_uart == NULL) {
+
+WARNING:UNNECESSARY_ELSE: else is not generally useful after a break or return
+#2622: FILE: drivers/tty/serial/pruss_suart_api.c:411:
++		return -EINVAL;
++	} else {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU0_MODE == PRU_MODE_RX_TX_BOTH'
+#2634: FILE: drivers/tty/serial/pruss_suart_api.c:423:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++		|| (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU1_MODE == PRU_MODE_RX_TX_BOTH'
+#2634: FILE: drivers/tty/serial/pruss_suart_api.c:423:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++		|| (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2635: FILE: drivers/tty/serial/pruss_suart_api.c:424:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++		|| (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 24)
+#2644: FILE: drivers/tty/serial/pruss_suart_api.c:433:
++	} else if (mode == 1) {
++			if (PRU0_MODE == PRU_MODE_TX_ONLY)
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 24)
+#2649: FILE: drivers/tty/serial/pruss_suart_api.c:438:
++	} else if (mode == 2) {
++			if (PRU0_MODE == PRU_MODE_RX_ONLY)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2662: FILE: drivers/tty/serial/pruss_suart_api.c:451:
++s32 pru_softuart_setbaud(struct device *dev, struct suart_handle *h_uart,
++		u16 tx_clk_divisor, u16 rx_clk_divisor)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!h_uart"
+#2670: FILE: drivers/tty/serial/pruss_suart_api.c:459:
++	if (h_uart == NULL) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'tx_clk_divisor > 385'
+#2676: FILE: drivers/tty/serial/pruss_suart_api.c:465:
++	if ((tx_clk_divisor > 385) || (tx_clk_divisor == 0))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'tx_clk_divisor == 0'
+#2676: FILE: drivers/tty/serial/pruss_suart_api.c:465:
++	if ((tx_clk_divisor > 385) || (tx_clk_divisor == 0))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rx_clk_divisor > 385'
+#2678: FILE: drivers/tty/serial/pruss_suart_api.c:467:
++	if ((rx_clk_divisor > 385) || (rx_clk_divisor == 0))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rx_clk_divisor == 0'
+#2678: FILE: drivers/tty/serial/pruss_suart_api.c:467:
++	if ((rx_clk_divisor > 385) || (rx_clk_divisor == 0))
+
+CHECK:SPACING: No space is necessary after a cast
+#2686: FILE: drivers/tty/serial/pruss_suart_api.c:475:
++		pruss_readw(dev, offset, (u16 *) &regval);
+
+CHECK:SPACING: No space is necessary after a cast
+#2706: FILE: drivers/tty/serial/pruss_suart_api.c:495:
++		pruss_readw(dev, offset, (u16 *) &regval);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2718: FILE: drivers/tty/serial/pruss_suart_api.c:507:
++s32 pru_softuart_setdatabits(struct device *dev, struct suart_handle *h_uart,
++		u16 tx_data_bits, u16 rx_data_bits)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!h_uart"
+#2726: FILE: drivers/tty/serial/pruss_suart_api.c:515:
++	if (h_uart == NULL) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'tx_data_bits < ePRU_SUART_DATA_BITS6'
+#2736: FILE: drivers/tty/serial/pruss_suart_api.c:525:
++	if ((tx_data_bits < ePRU_SUART_DATA_BITS6)
++			|| (tx_data_bits > ePRU_SUART_DATA_BITS12))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'tx_data_bits > ePRU_SUART_DATA_BITS12'
+#2736: FILE: drivers/tty/serial/pruss_suart_api.c:525:
++	if ((tx_data_bits < ePRU_SUART_DATA_BITS6)
++			|| (tx_data_bits > ePRU_SUART_DATA_BITS12))
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2737: FILE: drivers/tty/serial/pruss_suart_api.c:526:
++	if ((tx_data_bits < ePRU_SUART_DATA_BITS6)
++			|| (tx_data_bits > ePRU_SUART_DATA_BITS12))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rx_data_bits < ePRU_SUART_DATA_BITS6'
+#2740: FILE: drivers/tty/serial/pruss_suart_api.c:529:
++	if ((rx_data_bits < ePRU_SUART_DATA_BITS6)
++			|| (rx_data_bits > ePRU_SUART_DATA_BITS12))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'rx_data_bits > ePRU_SUART_DATA_BITS12'
+#2740: FILE: drivers/tty/serial/pruss_suart_api.c:529:
++	if ((rx_data_bits < ePRU_SUART_DATA_BITS6)
++			|| (rx_data_bits > ePRU_SUART_DATA_BITS12))
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2741: FILE: drivers/tty/serial/pruss_suart_api.c:530:
++	if ((rx_data_bits < ePRU_SUART_DATA_BITS6)
++			|| (rx_data_bits > ePRU_SUART_DATA_BITS12))
+
+CHECK:SPACING: No space is necessary after a cast
+#2749: FILE: drivers/tty/serial/pruss_suart_api.c:538:
++		pruss_readb(dev, offset, (u8 *) &reg_val);
+
+CHECK:SPACING: No space is necessary after a cast
+#2752: FILE: drivers/tty/serial/pruss_suart_api.c:541:
++		pruss_writeb(dev, offset, (u8) reg_val);
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2759: FILE: drivers/tty/serial/pruss_suart_api.c:548:
++	} else if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++			|| (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:SPACING: No space is necessary after a cast
+#2768: FILE: drivers/tty/serial/pruss_suart_api.c:557:
++		pruss_readb(dev, offset, (u8 *) &reg_val);
+
+CHECK:SPACING: No space is necessary after a cast
+#2771: FILE: drivers/tty/serial/pruss_suart_api.c:560:
++		pruss_writeb(dev, offset, (u8) rx_data_bits);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2781: FILE: drivers/tty/serial/pruss_suart_api.c:570:
++s32 pru_softuart_setconfig(struct device *dev, struct suart_handle *h_uart,
++				struct suart_config *config_uart)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!h_uart"
+#2789: FILE: drivers/tty/serial/pruss_suart_api.c:578:
++	if (h_uart == NULL) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'config_uart->tx_clk_divisor > 384'
+#2799: FILE: drivers/tty/serial/pruss_suart_api.c:588:
++	if ((config_uart->tx_clk_divisor > 384)
++			|| (config_uart->rx_clk_divisor > 384)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'config_uart->rx_clk_divisor > 384'
+#2799: FILE: drivers/tty/serial/pruss_suart_api.c:588:
++	if ((config_uart->tx_clk_divisor > 384)
++			|| (config_uart->rx_clk_divisor > 384)) {
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2800: FILE: drivers/tty/serial/pruss_suart_api.c:589:
++	if ((config_uart->tx_clk_divisor > 384)
++			|| (config_uart->rx_clk_divisor > 384)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'config_uart->tx_bits_per_char < 8'
+#2803: FILE: drivers/tty/serial/pruss_suart_api.c:592:
++	if ((config_uart->tx_bits_per_char < 8)
++			|| (config_uart->tx_bits_per_char > 14)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'config_uart->tx_bits_per_char > 14'
+#2803: FILE: drivers/tty/serial/pruss_suart_api.c:592:
++	if ((config_uart->tx_bits_per_char < 8)
++			|| (config_uart->tx_bits_per_char > 14)) {
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2804: FILE: drivers/tty/serial/pruss_suart_api.c:593:
++	if ((config_uart->tx_bits_per_char < 8)
++			|| (config_uart->tx_bits_per_char > 14)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'config_uart->rx_bits_per_char < 8'
+#2807: FILE: drivers/tty/serial/pruss_suart_api.c:596:
++	if ((config_uart->rx_bits_per_char < 8)
++			|| (config_uart->rx_bits_per_char > 14)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'config_uart->rx_bits_per_char > 14'
+#2807: FILE: drivers/tty/serial/pruss_suart_api.c:596:
++	if ((config_uart->rx_bits_per_char < 8)
++			|| (config_uart->rx_bits_per_char > 14)) {
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2808: FILE: drivers/tty/serial/pruss_suart_api.c:597:
++	if ((config_uart->rx_bits_per_char < 8)
++			|| (config_uart->rx_bits_per_char > 14)) {
+
+WARNING:TYPO_SPELLING: 'regsiter' may be misspelled - perhaps 'register'?
+#2816: FILE: drivers/tty/serial/pruss_suart_api.c:605:
++	 * corresponding to tx serializer in PFUNC regsiter ie already set
+ 	                                           ^^^^^^^^
+
+CHECK:SPACING: No space is necessary after a cast
+#2831: FILE: drivers/tty/serial/pruss_suart_api.c:620:
++		pruss_readw(dev, offset, (u16 *) &reg_val);
+
+CHECK:SPACING: No space is necessary after a cast
+#2838: FILE: drivers/tty/serial/pruss_suart_api.c:627:
++		pruss_readw(dev, offset, (u16 *) &reg_val);
+
+CHECK:SPACING: No space is necessary after a cast
+#2845: FILE: drivers/tty/serial/pruss_suart_api.c:634:
++		pruss_readw(dev, offset, (u16 *) &reg_val);
+
+CHECK:SPACING: No space is necessary after a cast
+#2868: FILE: drivers/tty/serial/pruss_suart_api.c:657:
++		pruss_readw(dev, offset, (u16 *) &reg_val);
+
+CHECK:SPACING: No space is necessary after a cast
+#2877: FILE: drivers/tty/serial/pruss_suart_api.c:666:
++		pruss_readw(dev, offset, (u16 *) &reg_val);
+
+CHECK:SPACING: No space is necessary after a cast
+#2887: FILE: drivers/tty/serial/pruss_suart_api.c:676:
++		pruss_readw(dev, offset, (u16 *) &reg_val);
+
+WARNING:TYPO_SPELLING: 'transfered' may be misspelled - perhaps 'transferred'?
+#2896: FILE: drivers/tty/serial/pruss_suart_api.c:685:
++ * suart routine for getting the number of bytes transfered
+                                                  ^^^^^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2899: FILE: drivers/tty/serial/pruss_suart_api.c:688:
++s32 pru_softuart_get_tx_data_len(struct device *dev,
++					struct suart_handle *h_uart)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!h_uart"
+#2906: FILE: drivers/tty/serial/pruss_suart_api.c:695:
++	if (h_uart == NULL) {
+
+CHECK:SPACING: No space is necessary after a cast
+#2915: FILE: drivers/tty/serial/pruss_suart_api.c:704:
++	pruss_readw(dev, offset, (u16 *) &read_value);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2925: FILE: drivers/tty/serial/pruss_suart_api.c:714:
++s32 pru_softuart_get_rx_data_len(struct device *dev,
++					struct suart_handle *h_uart)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!h_uart"
+#2932: FILE: drivers/tty/serial/pruss_suart_api.c:721:
++	if (h_uart == NULL) {
+
+CHECK:SPACING: No space is necessary after a cast
+#2941: FILE: drivers/tty/serial/pruss_suart_api.c:730:
++	pruss_readw(dev, offset, (u16 *) &read_value);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2951: FILE: drivers/tty/serial/pruss_suart_api.c:740:
++s32 pru_softuart_getconfig(struct device *dev,
++			 struct suart_handle *h_uart,
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!h_uart"
+#2960: FILE: drivers/tty/serial/pruss_suart_api.c:749:
++	if (h_uart == NULL) {
+
+CHECK:SPACING: No space is necessary after a cast
+#2976: FILE: drivers/tty/serial/pruss_suart_api.c:765:
++	pruss_readw(dev, offset, (u16 *) &reg_val);
+
+CHECK:SPACING: No space is necessary after a cast
+#2982: FILE: drivers/tty/serial/pruss_suart_api.c:771:
++	pruss_readw(dev, offset, (u16 *) &reg_val);
+
+CHECK:SPACING: No space is necessary after a cast
+#2990: FILE: drivers/tty/serial/pruss_suart_api.c:779:
++	pruss_readw(dev, offset, (u16 *) &reg_val);
+
+CHECK:SPACING: No space is necessary after a cast
+#3009: FILE: drivers/tty/serial/pruss_suart_api.c:798:
++	pruss_readw(dev, offset, (u16 *) &reg_val);
+
+CHECK:SPACING: No space is necessary after a cast
+#3016: FILE: drivers/tty/serial/pruss_suart_api.c:805:
++	pruss_readw(dev, offset, (u16 *) &reg_val);
+
+CHECK:SPACING: No space is necessary after a cast
+#3027: FILE: drivers/tty/serial/pruss_suart_api.c:816:
++	pruss_readw(dev, offset, (u16 *) &reg_val);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU0_MODE == PRU_MODE_RX_TX_BOTH'
+#3040: FILE: drivers/tty/serial/pruss_suart_api.c:829:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU1_MODE == PRU_MODE_RX_TX_BOTH'
+#3040: FILE: drivers/tty/serial/pruss_suart_api.c:829:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3041: FILE: drivers/tty/serial/pruss_suart_api.c:830:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:SPACING: No space is necessary after a cast
+#3045: FILE: drivers/tty/serial/pruss_suart_api.c:834:
++		offset = (u32) (PRUSS_INTC_STATCLRINT1 & 0xFFFF);
+
+CHECK:SPACING: No space is necessary after a cast
+#3051: FILE: drivers/tty/serial/pruss_suart_api.c:840:
++		offset = (u32) (PRUSS_INTC_STATCLRINT1 & 0xFFFF);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3066: FILE: drivers/tty/serial/pruss_suart_api.c:855:
++s32 pru_softuart_write(struct device *dev, struct suart_handle *h_uart,
++		u32 *pt_tx_data_buf, u16 data_len)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!h_uart"
+#3075: FILE: drivers/tty/serial/pruss_suart_api.c:864:
++	if (h_uart == NULL) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU0_MODE == PRU_MODE_RX_TX_BOTH'
+#3080: FILE: drivers/tty/serial/pruss_suart_api.c:869:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH) ||
++				(PRU1_MODE == PRU_MODE_RX_TX_BOTH))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU1_MODE == PRU_MODE_RX_TX_BOTH'
+#3080: FILE: drivers/tty/serial/pruss_suart_api.c:869:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH) ||
++				(PRU1_MODE == PRU_MODE_RX_TX_BOTH))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3081: FILE: drivers/tty/serial/pruss_suart_api.c:870:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH) ||
++				(PRU1_MODE == PRU_MODE_RX_TX_BOTH))
+
+CHECK:SPACING: No space is necessary after a cast
+#3093: FILE: drivers/tty/serial/pruss_suart_api.c:882:
++	pruss_readw(dev, offset, (u16 *) &reg_val);
+
+CHECK:SPACING: No space is necessary after a cast
+#3101: FILE: drivers/tty/serial/pruss_suart_api.c:890:
++	pruss_writel(dev, offset, (u32) *pt_tx_data_buf);
+
+CHECK:SPACING: No space is necessary after a cast
+#3106: FILE: drivers/tty/serial/pruss_suart_api.c:895:
++	pruss_readw(dev, offset, (u16 *) &reg_val);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3124: FILE: drivers/tty/serial/pruss_suart_api.c:913:
++s32 pru_softuart_read(struct device *dev, struct suart_handle *h_uart,
++		u32 *ptDataBuf, u16 data_len)
+
+CHECK:CAMELCASE: Avoid CamelCase: <ptDataBuf>
+#3124: FILE: drivers/tty/serial/pruss_suart_api.c:913:
++		u32 *ptDataBuf, u16 data_len)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!h_uart"
+#3133: FILE: drivers/tty/serial/pruss_suart_api.c:922:
++	if (h_uart == NULL) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU0_MODE == PRU_MODE_RX_TX_BOTH'
+#3138: FILE: drivers/tty/serial/pruss_suart_api.c:927:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH) ||
++			 (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU1_MODE == PRU_MODE_RX_TX_BOTH'
+#3138: FILE: drivers/tty/serial/pruss_suart_api.c:927:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH) ||
++			 (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3139: FILE: drivers/tty/serial/pruss_suart_api.c:928:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH) ||
++			 (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:SPACING: No space is necessary after a cast
+#3154: FILE: drivers/tty/serial/pruss_suart_api.c:943:
++	pruss_readw(dev, offset, (u16 *) &reg_val);
+
+CHECK:SPACING: No space is necessary after a cast
+#3162: FILE: drivers/tty/serial/pruss_suart_api.c:951:
++	pruss_writel(dev, offset, (u32) *ptDataBuf);
+
+CHECK:SPACING: No space is necessary after a cast
+#3167: FILE: drivers/tty/serial/pruss_suart_api.c:956:
++	pruss_readw(dev, offset, (u16 *) &reg_val);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3177: FILE: drivers/tty/serial/pruss_suart_api.c:966:
++	suart_intr_setmask(dev, h_uart->uart_num, PRU_RX_INTR,
++		CHN_TXRX_IE_MASK_TIMEOUT);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3189: FILE: drivers/tty/serial/pruss_suart_api.c:978:
++s32 pru_softuart_read_data(struct device *dev, struct suart_handle *h_uart,
++				u8 *p_data_buffer, s32 max_len,
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!h_uart"
+#3202: FILE: drivers/tty/serial/pruss_suart_api.c:991:
++	if (h_uart == NULL) {
+
+CHECK:SPACING: No space is necessary after a cast
+#3211: FILE: drivers/tty/serial/pruss_suart_api.c:1000:
++	pruss_readb_multi(dev, offset, (u8 *) &psrc_addr, 4);
+
+CHECK:SPACING: No space is necessary after a cast
+#3216: FILE: drivers/tty/serial/pruss_suart_api.c:1005:
++	pruss_readw(dev, offset, (u16 *) &data_len);
+
+WARNING:TYPO_SPELLING: 'occured' may be misspelled - perhaps 'occurred'?
+#3230: FILE: drivers/tty/serial/pruss_suart_api.c:1019:
++	/* Check if the time-out had occured. If, yes, then we need to find the
+ 	                             ^^^^^^^
+
+CHECK:SPACING: No space is necessary after a cast
+#3236: FILE: drivers/tty/serial/pruss_suart_api.c:1025:
++	pruss_readb(dev, offset, (u8 *) &status);
+
+CHECK:SPACING: No space is necessary after a cast
+#3241: FILE: drivers/tty/serial/pruss_suart_api.c:1030:
++		pruss_readb(dev, offset, (u8 *) &data_read);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#3244: FILE: drivers/tty/serial/pruss_suart_api.c:1033:
++		/* if the character length is greater than 8,
++				then the size doubles */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#3244: FILE: drivers/tty/serial/pruss_suart_api.c:1033:
++				then the size doubles */
+
+CHECK:SPACING: No space is necessary after a cast
+#3276: FILE: drivers/tty/serial/pruss_suart_api.c:1065:
++	psrc_addr = (u8 *)((u32) psrc_addr -
+
+CHECK:SPACING: No space is necessary after a cast
+#3277: FILE: drivers/tty/serial/pruss_suart_api.c:1066:
++		(u32) suart_iomap.p_fifo_buff_phys_base +
+
+CHECK:SPACING: No space is necessary after a cast
+#3278: FILE: drivers/tty/serial/pruss_suart_api.c:1067:
++		(u32) suart_iomap.p_fifo_buff_virt_base);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!h_uart"
+#3303: FILE: drivers/tty/serial/pruss_suart_api.c:1092:
++	if (h_uart == NULL) {
+
+CHECK:SPACING: No space is necessary after a cast
+#3312: FILE: drivers/tty/serial/pruss_suart_api.c:1101:
++	pruss_readb(dev, offset, (u8 *) &status);
+
+CHECK:SPACING: No space is necessary after a cast
+#3316: FILE: drivers/tty/serial/pruss_suart_api.c:1105:
++	pruss_writeb(dev, offset, (u8) status);
+
+CHECK:SPACING: No space is necessary after a cast
+#3321: FILE: drivers/tty/serial/pruss_suart_api.c:1110:
++	pruss_readw(dev, offset, (u16 *) &status);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!h_uart"
+#3341: FILE: drivers/tty/serial/pruss_suart_api.c:1130:
++	if (h_uart == NULL) {
+
+CHECK:SPACING: No space is necessary after a cast
+#3348: FILE: drivers/tty/serial/pruss_suart_api.c:1137:
++	pruss_readb(dev, offset, (u8 *) &status);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!h_uart"
+#3359: FILE: drivers/tty/serial/pruss_suart_api.c:1148:
++	if (h_uart == NULL) {
+
+CHECK:SPACING: No space is necessary after a cast
+#3367: FILE: drivers/tty/serial/pruss_suart_api.c:1156:
++	pruss_readb(dev, offset, (u8 *) &status);
+
+CHECK:SPACING: No space is necessary after a cast
+#3369: FILE: drivers/tty/serial/pruss_suart_api.c:1158:
++	pruss_writeb(dev, offset, (u8) status);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!h_uart"
+#3383: FILE: drivers/tty/serial/pruss_suart_api.c:1172:
++	if (h_uart == NULL) {
+
+CHECK:SPACING: No space is necessary after a cast
+#3391: FILE: drivers/tty/serial/pruss_suart_api.c:1180:
++	pruss_readb(dev, offset, (u8 *) &status);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3396: FILE: drivers/tty/serial/pruss_suart_api.c:1185:
++static s32 pru_softuart_clr_rx_fifo(struct device *dev,
++				struct suart_handle *h_uart)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!h_uart"
+#3405: FILE: drivers/tty/serial/pruss_suart_api.c:1194:
++	if (h_uart == NULL) {
+
+CHECK:SPACING: No space is necessary after a cast
+#3419: FILE: drivers/tty/serial/pruss_suart_api.c:1208:
++		pruss_readw(dev, offset, (u16 *) &reg_val);
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#3423: FILE: drivers/tty/serial/pruss_suart_api.c:1212:
++
++
+
+CHECK:SPACING: No space is necessary after a cast
+#3427: FILE: drivers/tty/serial/pruss_suart_api.c:1216:
++	pruss_readw(dev, offset, (u16 *) &reg_val);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3433: FILE: drivers/tty/serial/pruss_suart_api.c:1222:
++	suart_intr_setmask(dev, h_uart->uart_num, PRU_RX_INTR,
++						CHN_TXRX_IE_MASK_TIMEOUT);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!h_uart"
+#3448: FILE: drivers/tty/serial/pruss_suart_api.c:1237:
++	if (h_uart == NULL) {
+
+CHECK:SPACING: No space is necessary after a cast
+#3456: FILE: drivers/tty/serial/pruss_suart_api.c:1245:
++	pruss_readb(dev, offset, (u8 *) &status);
+
+CHECK:SPACING: No space is necessary after a cast
+#3458: FILE: drivers/tty/serial/pruss_suart_api.c:1247:
++	pruss_writeb(dev, offset, (u8) status);
+
+CHECK:SPACING: No space is necessary after a cast
+#3481: FILE: drivers/tty/serial/pruss_suart_api.c:1270:
++	stat_inx_clr_regoffset = (u32) (PRUSS_INTC_STATIDXCLR & 0xFFFF);
+
+CHECK:SPACING: No space is necessary after a cast
+#3484: FILE: drivers/tty/serial/pruss_suart_api.c:1273:
++	intc_offset = (u32) (PRUSS_INTC_STATCLRINT1 & 0xFFFF);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU0_MODE == PRU_MODE_RX_TX_BOTH'
+#3487: FILE: drivers/tty/serial/pruss_suart_api.c:1276:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++		|| (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU1_MODE == PRU_MODE_RX_TX_BOTH'
+#3487: FILE: drivers/tty/serial/pruss_suart_api.c:1276:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++		|| (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3488: FILE: drivers/tty/serial/pruss_suart_api.c:1277:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++		|| (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+WARNING:TYPO_SPELLING: 'occured' may be misspelled - perhaps 'occurred'?
+#3489: FILE: drivers/tty/serial/pruss_suart_api.c:1278:
++		/* Check if the interrupt occured for Tx */
+ 		                          ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'interupt' may be misspelled - perhaps 'interrupt'?
+#3493: FILE: drivers/tty/serial/pruss_suart_api.c:1282:
++			/* interupt occured for TX */
+ 			   ^^^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3498: FILE: drivers/tty/serial/pruss_suart_api.c:1287:
++			pruss_writel(dev, stat_inx_clr_regoffset,
++					ack_reg_val);
+
+WARNING:TYPO_SPELLING: 'occured' may be misspelled - perhaps 'occurred'?
+#3501: FILE: drivers/tty/serial/pruss_suart_api.c:1290:
++		/* Check if the interrupt occured for Rx */
+ 		                          ^^^^^^^
+
+WARNING:TYPO_SPELLING: 'interupt' may be misspelled - perhaps 'interrupt'?
+#3505: FILE: drivers/tty/serial/pruss_suart_api.c:1294:
++			/* interupt occured for RX */
+ 			   ^^^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3512: FILE: drivers/tty/serial/pruss_suart_api.c:1301:
++			pruss_writel(dev, stat_inx_clr_regoffset,
++						ack_reg_val);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3522: FILE: drivers/tty/serial/pruss_suart_api.c:1311:
++				pruss_writel(dev, stat_inx_clr_regoffset,
++					ack_reg_val);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3533: FILE: drivers/tty/serial/pruss_suart_api.c:1322:
++				pruss_writel(dev, stat_inx_clr_regoffset,
++					ack_reg_val);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU0_MODE == PRU_MODE_RX_TX_BOTH'
+#3548: FILE: drivers/tty/serial/pruss_suart_api.c:1337:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU1_MODE == PRU_MODE_RX_TX_BOTH'
+#3548: FILE: drivers/tty/serial/pruss_suart_api.c:1337:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3549: FILE: drivers/tty/serial/pruss_suart_api.c:1338:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3561: FILE: drivers/tty/serial/pruss_suart_api.c:1350:
++		if (2 == txrxmode)
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3563: FILE: drivers/tty/serial/pruss_suart_api.c:1352:
++	} else if (PRU0_MODE == txrxmode) {
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3565: FILE: drivers/tty/serial/pruss_suart_api.c:1354:
++	} else if (PRU1_MODE == txrxmode) {
+
+CHECK:SPACING: No space is necessary after a cast
+#3571: FILE: drivers/tty/serial/pruss_suart_api.c:1360:
++	pruss_readb(dev, offset, (u8 *) &txrx_flag);
+
+CHECK:SPACING: No space is necessary after a cast
+#3573: FILE: drivers/tty/serial/pruss_suart_api.c:1362:
++	pruss_writeb(dev, offset, (u8) txrx_flag);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU0_MODE == PRU_MODE_RX_TX_BOTH'
+#3582: FILE: drivers/tty/serial/pruss_suart_api.c:1371:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU1_MODE == PRU_MODE_RX_TX_BOTH'
+#3582: FILE: drivers/tty/serial/pruss_suart_api.c:1371:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3583: FILE: drivers/tty/serial/pruss_suart_api.c:1372:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'uart_num > 0'
+#3584: FILE: drivers/tty/serial/pruss_suart_api.c:1373:
++		if ((uart_num > 0) && (uart_num <= 4))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'uart_num <= 4'
+#3584: FILE: drivers/tty/serial/pruss_suart_api.c:1373:
++		if ((uart_num > 0) && (uart_num <= 4))
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU0_MODE == PRU_MODE_RX_ONLY'
+#3591: FILE: drivers/tty/serial/pruss_suart_api.c:1380:
++	if ((PRU0_MODE == PRU_MODE_RX_ONLY)
++				|| (PRU1_MODE == PRU_MODE_RX_ONLY)
++				|| (PRU0_MODE == PRU_MODE_TX_ONLY)
++				|| (PRU1_MODE == PRU_MODE_TX_ONLY)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU1_MODE == PRU_MODE_RX_ONLY'
+#3591: FILE: drivers/tty/serial/pruss_suart_api.c:1380:
++	if ((PRU0_MODE == PRU_MODE_RX_ONLY)
++				|| (PRU1_MODE == PRU_MODE_RX_ONLY)
++				|| (PRU0_MODE == PRU_MODE_TX_ONLY)
++				|| (PRU1_MODE == PRU_MODE_TX_ONLY)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU0_MODE == PRU_MODE_TX_ONLY'
+#3591: FILE: drivers/tty/serial/pruss_suart_api.c:1380:
++	if ((PRU0_MODE == PRU_MODE_RX_ONLY)
++				|| (PRU1_MODE == PRU_MODE_RX_ONLY)
++				|| (PRU0_MODE == PRU_MODE_TX_ONLY)
++				|| (PRU1_MODE == PRU_MODE_TX_ONLY)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU1_MODE == PRU_MODE_TX_ONLY'
+#3591: FILE: drivers/tty/serial/pruss_suart_api.c:1380:
++	if ((PRU0_MODE == PRU_MODE_RX_ONLY)
++				|| (PRU1_MODE == PRU_MODE_RX_ONLY)
++				|| (PRU0_MODE == PRU_MODE_TX_ONLY)
++				|| (PRU1_MODE == PRU_MODE_TX_ONLY)) {
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3592: FILE: drivers/tty/serial/pruss_suart_api.c:1381:
++	if ((PRU0_MODE == PRU_MODE_RX_ONLY)
++				|| (PRU1_MODE == PRU_MODE_RX_ONLY)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3593: FILE: drivers/tty/serial/pruss_suart_api.c:1382:
++				|| (PRU1_MODE == PRU_MODE_RX_ONLY)
++				|| (PRU0_MODE == PRU_MODE_TX_ONLY)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3594: FILE: drivers/tty/serial/pruss_suart_api.c:1383:
++				|| (PRU0_MODE == PRU_MODE_TX_ONLY)
++				|| (PRU1_MODE == PRU_MODE_TX_ONLY)) {
+
+CHECK:SPACING: No space is necessary after a cast
+#3616: FILE: drivers/tty/serial/pruss_suart_api.c:1405:
++	pruss_rmwl(dev, (u32) (PRUSS_INTC_GLBLEN & 0xFFFF), 0, 1);
+
+CHECK:SPACING: No space is necessary after a cast
+#3621: FILE: drivers/tty/serial/pruss_suart_api.c:1410:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_HSTINTENIDXSET & 0xFFFF),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3622: FILE: drivers/tty/serial/pruss_suart_api.c:1411:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_HSTINTENIDXSET & 0xFFFF),
++								0, int_offset);
+
+CHECK:SPACING: No space is necessary after a cast
+#3623: FILE: drivers/tty/serial/pruss_suart_api.c:1412:
++	pruss_rmwl(dev, (u32) (PRUSS_INTC_HOSTMAP0 & 0xFFFF),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3624: FILE: drivers/tty/serial/pruss_suart_api.c:1413:
++	pruss_rmwl(dev, (u32) (PRUSS_INTC_HOSTMAP0 & 0xFFFF),
++				PRU_INTC_REGMAP_MASK, PRU_INTC_HOSTMAP0_CHAN);
+
+CHECK:SPACING: No space is necessary after a cast
+#3625: FILE: drivers/tty/serial/pruss_suart_api.c:1414:
++	pruss_rmwl(dev, (u32) (PRUSS_INTC_HOSTMAP1 & 0xFFFF),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3626: FILE: drivers/tty/serial/pruss_suart_api.c:1415:
++	pruss_rmwl(dev, (u32) (PRUSS_INTC_HOSTMAP1 & 0xFFFF),
++				PRU_INTC_REGMAP_MASK, PRU_INTC_HOSTMAP1_CHAN);
+
+CHECK:SPACING: No space is necessary after a cast
+#3627: FILE: drivers/tty/serial/pruss_suart_api.c:1416:
++	pruss_rmwl(dev, (u32) (PRUSS_INTC_HOSTMAP2 & 0xFFFF),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3628: FILE: drivers/tty/serial/pruss_suart_api.c:1417:
++	pruss_rmwl(dev, (u32) (PRUSS_INTC_HOSTMAP2 & 0xFFFF),
++				PRU_INTC_REGMAP_MASK, PRU_INTC_HOSTMAP2_CHAN);
+
+CHECK:SPACING: No space is necessary after a cast
+#3631: FILE: drivers/tty/serial/pruss_suart_api.c:1420:
++	pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP7 & 0xFFFF),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3632: FILE: drivers/tty/serial/pruss_suart_api.c:1421:
++	pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP7 & 0xFFFF),
++			PRU_INTC_REGMAP_MASK, PRU_INTC_CHANMAP7_SYS_EVT31);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU0_MODE == PRU_MODE_RX_TX_BOTH'
+#3634: FILE: drivers/tty/serial/pruss_suart_api.c:1423:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU1_MODE == PRU_MODE_RX_TX_BOTH'
+#3634: FILE: drivers/tty/serial/pruss_suart_api.c:1423:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3635: FILE: drivers/tty/serial/pruss_suart_api.c:1424:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:SPACING: No space is necessary after a cast
+#3637: FILE: drivers/tty/serial/pruss_suart_api.c:1426:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP8 & 0xFFFF),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3638: FILE: drivers/tty/serial/pruss_suart_api.c:1427:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP8 & 0xFFFF),
++				PRU_INTC_REGMAP_MASK, PRU_INTC_CHANMAP8_FULL);
+
+CHECK:SPACING: No space is necessary after a cast
+#3639: FILE: drivers/tty/serial/pruss_suart_api.c:1428:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP9 & 0xFFFF),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3640: FILE: drivers/tty/serial/pruss_suart_api.c:1429:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP9 & 0xFFFF),
++				PRU_INTC_REGMAP_MASK, PRU_INTC_CHANMAP9_FULL);
+
+CHECK:SPACING: No space is necessary after a cast
+#3641: FILE: drivers/tty/serial/pruss_suart_api.c:1430:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP10 & 0xFFFF),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3642: FILE: drivers/tty/serial/pruss_suart_api.c:1431:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP10 & 0xFFFF),
++				PRU_INTC_REGMAP_MASK, PRU_INTC_CHANMAP10_FULL);
+
+CHECK:SPACING: No space is necessary after a cast
+#3643: FILE: drivers/tty/serial/pruss_suart_api.c:1432:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP11 & 0xFFFF),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3644: FILE: drivers/tty/serial/pruss_suart_api.c:1433:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP11 & 0xFFFF),
++				PRU_INTC_REGMAP_MASK, PRU_INTC_CHANMAP11_FULL);
+
+CHECK:SPACING: No space is necessary after a cast
+#3645: FILE: drivers/tty/serial/pruss_suart_api.c:1434:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP12 & 0xFFFF),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3646: FILE: drivers/tty/serial/pruss_suart_api.c:1435:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP12 & 0xFFFF),
++				PRU_INTC_REGMAP_MASK, PRU_INTC_CHANMAP12_FULL);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU0_MODE == PRU_MODE_RX_ONLY'
+#3648: FILE: drivers/tty/serial/pruss_suart_api.c:1437:
++	if ((PRU0_MODE == PRU_MODE_RX_ONLY)
++			|| (PRU1_MODE == PRU_MODE_RX_ONLY)
++			|| (PRU0_MODE == PRU_MODE_TX_ONLY)
++			|| (PRU1_MODE == PRU_MODE_TX_ONLY)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU1_MODE == PRU_MODE_RX_ONLY'
+#3648: FILE: drivers/tty/serial/pruss_suart_api.c:1437:
++	if ((PRU0_MODE == PRU_MODE_RX_ONLY)
++			|| (PRU1_MODE == PRU_MODE_RX_ONLY)
++			|| (PRU0_MODE == PRU_MODE_TX_ONLY)
++			|| (PRU1_MODE == PRU_MODE_TX_ONLY)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU0_MODE == PRU_MODE_TX_ONLY'
+#3648: FILE: drivers/tty/serial/pruss_suart_api.c:1437:
++	if ((PRU0_MODE == PRU_MODE_RX_ONLY)
++			|| (PRU1_MODE == PRU_MODE_RX_ONLY)
++			|| (PRU0_MODE == PRU_MODE_TX_ONLY)
++			|| (PRU1_MODE == PRU_MODE_TX_ONLY)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU1_MODE == PRU_MODE_TX_ONLY'
+#3648: FILE: drivers/tty/serial/pruss_suart_api.c:1437:
++	if ((PRU0_MODE == PRU_MODE_RX_ONLY)
++			|| (PRU1_MODE == PRU_MODE_RX_ONLY)
++			|| (PRU0_MODE == PRU_MODE_TX_ONLY)
++			|| (PRU1_MODE == PRU_MODE_TX_ONLY)) {
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3649: FILE: drivers/tty/serial/pruss_suart_api.c:1438:
++	if ((PRU0_MODE == PRU_MODE_RX_ONLY)
++			|| (PRU1_MODE == PRU_MODE_RX_ONLY)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3650: FILE: drivers/tty/serial/pruss_suart_api.c:1439:
++			|| (PRU1_MODE == PRU_MODE_RX_ONLY)
++			|| (PRU0_MODE == PRU_MODE_TX_ONLY)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3651: FILE: drivers/tty/serial/pruss_suart_api.c:1440:
++			|| (PRU0_MODE == PRU_MODE_TX_ONLY)
++			|| (PRU1_MODE == PRU_MODE_TX_ONLY)) {
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#3652: FILE: drivers/tty/serial/pruss_suart_api.c:1441:
++			|| (PRU1_MODE == PRU_MODE_TX_ONLY)) {
++
+
+CHECK:SPACING: No space is necessary after a cast
+#3654: FILE: drivers/tty/serial/pruss_suart_api.c:1443:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP8 & 0xFFFF),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3655: FILE: drivers/tty/serial/pruss_suart_api.c:1444:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP8 & 0xFFFF),
++				PRU_INTC_REGMAP_MASK, PRU_INTC_CHANMAP8_HALF);
+
+CHECK:SPACING: No space is necessary after a cast
+#3656: FILE: drivers/tty/serial/pruss_suart_api.c:1445:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP9 & 0xFFFF),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3657: FILE: drivers/tty/serial/pruss_suart_api.c:1446:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP9 & 0xFFFF),
++				PRU_INTC_REGMAP_MASK, PRU_INTC_CHANMAP9_HALF);
+
+CHECK:SPACING: No space is necessary after a cast
+#3658: FILE: drivers/tty/serial/pruss_suart_api.c:1447:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP10 & 0xFFFF),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3659: FILE: drivers/tty/serial/pruss_suart_api.c:1448:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP10 & 0xFFFF),
++				PRU_INTC_REGMAP_MASK, PRU_INTC_CHANMAP10_HALF);
+
+CHECK:SPACING: No space is necessary after a cast
+#3660: FILE: drivers/tty/serial/pruss_suart_api.c:1449:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP11 & 0xFFFF),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3661: FILE: drivers/tty/serial/pruss_suart_api.c:1450:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP11 & 0xFFFF),
++				PRU_INTC_REGMAP_MASK, PRU_INTC_CHANMAP11_HALF);
+
+CHECK:SPACING: No space is necessary after a cast
+#3662: FILE: drivers/tty/serial/pruss_suart_api.c:1451:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP12 & 0xFFFF),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3663: FILE: drivers/tty/serial/pruss_suart_api.c:1452:
++		pruss_rmwl(dev, (u32) (PRUSS_INTC_CHANMAP12 & 0xFFFF),
++				PRU_INTC_REGMAP_MASK, PRU_INTC_CHANMAP12_HALF);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments should align the * on each line
+#3667: FILE: drivers/tty/serial/pruss_suart_api.c:1456:
++	/* Clear required set of system events
++	* and enable them using indexed register
+
+CHECK:SPACING: No space is necessary after a cast
+#3681: FILE: drivers/tty/serial/pruss_suart_api.c:1470:
++	pruss_rmwl(dev, (u32) (PRUSS_INTC_GLBLEN & 0xFFFF), 0, 1);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3692: FILE: drivers/tty/serial/pruss_suart_api.c:1481:
++s32 suart_pru_to_host_intr_enable(struct device *dev, u16 uart_num,
++		u32 txrxmode, s32 flag)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU0_MODE == PRU_MODE_RX_TX_BOTH'
+#3702: FILE: drivers/tty/serial/pruss_suart_api.c:1491:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH) ||
++		(PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU1_MODE == PRU_MODE_RX_TX_BOTH'
+#3702: FILE: drivers/tty/serial/pruss_suart_api.c:1491:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH) ||
++		(PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#3702: FILE: drivers/tty/serial/pruss_suart_api.c:1491:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH) ||
+[...]
++	} else if ((PRU_MODE_RX_ONLY == txrxmode)
+[...]
++	else if ((PRU_MODE_RX_ONLY == txrxmode)
+[...]
++	else if ((PRU_MODE_TX_ONLY == txrxmode)
+[...]
++	else if ((PRU_MODE_TX_ONLY == txrxmode)
+[...]
++	else
+[...]
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3703: FILE: drivers/tty/serial/pruss_suart_api.c:1492:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH) ||
++		(PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3705: FILE: drivers/tty/serial/pruss_suart_api.c:1494:
++		if (2 == txrxmode)	/* Rx mode */
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3708: FILE: drivers/tty/serial/pruss_suart_api.c:1497:
++	} else if ((PRU_MODE_RX_ONLY == txrxmode)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3709: FILE: drivers/tty/serial/pruss_suart_api.c:1498:
++	} else if ((PRU_MODE_RX_ONLY == txrxmode)
++		&& (PRU0_MODE == PRU_MODE_RX_ONLY))
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3711: FILE: drivers/tty/serial/pruss_suart_api.c:1500:
++	else if ((PRU_MODE_RX_ONLY == txrxmode)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3712: FILE: drivers/tty/serial/pruss_suart_api.c:1501:
++	else if ((PRU_MODE_RX_ONLY == txrxmode)
++		&& (PRU1_MODE == PRU_MODE_RX_ONLY))
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3714: FILE: drivers/tty/serial/pruss_suart_api.c:1503:
++	else if ((PRU_MODE_TX_ONLY == txrxmode)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3715: FILE: drivers/tty/serial/pruss_suart_api.c:1504:
++	else if ((PRU_MODE_TX_ONLY == txrxmode)
++		&& (PRU0_MODE == PRU_MODE_TX_ONLY))
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3717: FILE: drivers/tty/serial/pruss_suart_api.c:1506:
++	else if ((PRU_MODE_TX_ONLY == txrxmode)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3718: FILE: drivers/tty/serial/pruss_suart_api.c:1507:
++	else if ((PRU_MODE_TX_ONLY == txrxmode)
++		&& (PRU1_MODE == PRU_MODE_TX_ONLY))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3729: FILE: drivers/tty/serial/pruss_suart_api.c:1518:
++s32 suart_intr_setmask(struct device *dev, u16 uart_num,
++		u32 txrxmode, u32 rmask)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU0_MODE == PRU_MODE_RX_TX_BOTH'
+#3736: FILE: drivers/tty/serial/pruss_suart_api.c:1525:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU1_MODE == PRU_MODE_RX_TX_BOTH'
+#3736: FILE: drivers/tty/serial/pruss_suart_api.c:1525:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#3736: FILE: drivers/tty/serial/pruss_suart_api.c:1525:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
+[...]
++	} else if (PRU0_MODE == txrxmode) {
+[...]
++	} else if (PRU1_MODE == txrxmode) {
+[...]
++	} else
+[...]
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3737: FILE: drivers/tty/serial/pruss_suart_api.c:1526:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'uart_num > 0'
+#3741: FILE: drivers/tty/serial/pruss_suart_api.c:1530:
++		if ((uart_num > 0) && (uart_num <= 4)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'uart_num <= 4'
+#3741: FILE: drivers/tty/serial/pruss_suart_api.c:1530:
++		if ((uart_num > 0) && (uart_num <= 4)) {
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3751: FILE: drivers/tty/serial/pruss_suart_api.c:1540:
++		if (2 == txrxmode)
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3753: FILE: drivers/tty/serial/pruss_suart_api.c:1542:
++	} else if (PRU0_MODE == txrxmode) {
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3756: FILE: drivers/tty/serial/pruss_suart_api.c:1545:
++	} else if (PRU1_MODE == txrxmode) {
+
+CHECK:BRACES: Unbalanced braces around else statement
+#3759: FILE: drivers/tty/serial/pruss_suart_api.c:1548:
++	} else
+
+CHECK:SPACING: No space is necessary after a cast
+#3778: FILE: drivers/tty/serial/pruss_suart_api.c:1567:
++		pruss_readw(dev, offset, (u16 *) &regval);
+
+CHECK:SPACING: No space is necessary after a cast
+#3781: FILE: drivers/tty/serial/pruss_suart_api.c:1570:
++		pruss_writew(dev, offset, (u16) regval);
+
+CHECK:SPACING: No space is necessary after a cast
+#3787: FILE: drivers/tty/serial/pruss_suart_api.c:1576:
++		pruss_readw(dev, offset, (u16 *) &regval);
+
+CHECK:SPACING: No space is necessary after a cast
+#3790: FILE: drivers/tty/serial/pruss_suart_api.c:1579:
++		pruss_writew(dev, offset, (u16) regval);
+
+CHECK:SPACING: No space is necessary after a cast
+#3797: FILE: drivers/tty/serial/pruss_suart_api.c:1586:
++		pruss_readw(dev, offset, (u16 *) &regval);
+
+CHECK:SPACING: No space is necessary after a cast
+#3800: FILE: drivers/tty/serial/pruss_suart_api.c:1589:
++		pruss_writew(dev, offset, (u16) regval);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3806: FILE: drivers/tty/serial/pruss_suart_api.c:1595:
++s32 suart_intr_clrmask(struct device *dev, u16 uart_num,
++		u32 txrxmode, u32 rmask)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU0_MODE == PRU_MODE_RX_TX_BOTH'
+#3814: FILE: drivers/tty/serial/pruss_suart_api.c:1603:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU1_MODE == PRU_MODE_RX_TX_BOTH'
+#3814: FILE: drivers/tty/serial/pruss_suart_api.c:1603:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#3814: FILE: drivers/tty/serial/pruss_suart_api.c:1603:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
+[...]
++	} else if (PRU0_MODE == txrxmode) {
+[...]
++	} else if (PRU1_MODE == txrxmode) {
+[...]
++	} else
+[...]
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3815: FILE: drivers/tty/serial/pruss_suart_api.c:1604:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'uart_num > 0'
+#3818: FILE: drivers/tty/serial/pruss_suart_api.c:1607:
++		if ((uart_num > 0) && (uart_num <= 4)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'uart_num <= 4'
+#3818: FILE: drivers/tty/serial/pruss_suart_api.c:1607:
++		if ((uart_num > 0) && (uart_num <= 4)) {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#3818: FILE: drivers/tty/serial/pruss_suart_api.c:1607:
++		if ((uart_num > 0) && (uart_num <= 4)) {
+[...]
++		} else if ((uart_num > 4) && (uart_num <= 8)) {
+[...]
++		} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#3827: FILE: drivers/tty/serial/pruss_suart_api.c:1616:
++		} else
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3829: FILE: drivers/tty/serial/pruss_suart_api.c:1618:
++		if (2 == txrxmode)
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3831: FILE: drivers/tty/serial/pruss_suart_api.c:1620:
++	} else if (PRU0_MODE == txrxmode) {
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3834: FILE: drivers/tty/serial/pruss_suart_api.c:1623:
++	} else if (PRU1_MODE == txrxmode) {
+
+CHECK:BRACES: Unbalanced braces around else statement
+#3837: FILE: drivers/tty/serial/pruss_suart_api.c:1626:
++	} else
+
+CHECK:SPACING: No space is necessary after a cast
+#3854: FILE: drivers/tty/serial/pruss_suart_api.c:1643:
++		pruss_readw(dev, offset, (u16 *) &regval);
+
+CHECK:SPACING: No space is necessary after a cast
+#3862: FILE: drivers/tty/serial/pruss_suart_api.c:1651:
++		pruss_readw(dev, offset, (u16 *) &regval);
+
+CHECK:SPACING: No space is necessary after a cast
+#3871: FILE: drivers/tty/serial/pruss_suart_api.c:1660:
++		pruss_readw(dev, offset, (u16 *) &regval);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3879: FILE: drivers/tty/serial/pruss_suart_api.c:1668:
++s32 suart_intr_getmask(struct device *dev, u16 uart_num,
++				u32 txrxmode, u32 rmask)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU0_MODE == PRU_MODE_RX_TX_BOTH'
+#3887: FILE: drivers/tty/serial/pruss_suart_api.c:1676:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'PRU1_MODE == PRU_MODE_RX_TX_BOTH'
+#3887: FILE: drivers/tty/serial/pruss_suart_api.c:1676:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#3887: FILE: drivers/tty/serial/pruss_suart_api.c:1676:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
+[...]
++	} else if (PRU0_MODE == txrxmode)
+[...]
++	else if (PRU1_MODE == txrxmode)
+[...]
++	else
+[...]
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#3888: FILE: drivers/tty/serial/pruss_suart_api.c:1677:
++	if ((PRU0_MODE == PRU_MODE_RX_TX_BOTH)
++	    || (PRU1_MODE == PRU_MODE_RX_TX_BOTH)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'uart_num > 0'
+#3892: FILE: drivers/tty/serial/pruss_suart_api.c:1681:
++		if ((uart_num > 0) && (uart_num <= 4)) {
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'uart_num <= 4'
+#3892: FILE: drivers/tty/serial/pruss_suart_api.c:1681:
++		if ((uart_num > 0) && (uart_num <= 4)) {
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#3892: FILE: drivers/tty/serial/pruss_suart_api.c:1681:
++		if ((uart_num > 0) && (uart_num <= 4)) {
+[...]
++		} else if ((uart_num > 4) && (uart_num <= 8)) {
+[...]
++		} else
+[...]
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#3893: FILE: drivers/tty/serial/pruss_suart_api.c:1682:
++		if ((uart_num > 0) && (uart_num <= 4)) {
++
+
+CHECK:BRACES: Unbalanced braces around else statement
+#3900: FILE: drivers/tty/serial/pruss_suart_api.c:1689:
++		} else
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3903: FILE: drivers/tty/serial/pruss_suart_api.c:1692:
++		if (2 == txrxmode)
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3906: FILE: drivers/tty/serial/pruss_suart_api.c:1695:
++	} else if (PRU0_MODE == txrxmode)
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#3908: FILE: drivers/tty/serial/pruss_suart_api.c:1697:
++	else if (PRU1_MODE == txrxmode)
+
+CHECK:SPACING: No space is necessary after a cast
+#3914: FILE: drivers/tty/serial/pruss_suart_api.c:1703:
++	pruss_readw(dev, offset, (u16 *) &txrx_flag);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'txrx_flag == regval'
+#3917: FILE: drivers/tty/serial/pruss_suart_api.c:1706:
++	if ((rmask && (txrx_flag == regval)) || (!rmask && !txrx_flag))
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#3928: FILE: drivers/tty/serial/pruss_suart_utils.c:1:
++/*
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#3942: FILE: drivers/tty/serial/pruss_suart_utils.c:15:
++
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3949: FILE: drivers/tty/serial/pruss_suart_utils.c:22:
++static s16 suart_mcasp_tx_baud_set(u32 tx_baud_value,
++			struct pruss_suart_iomap *pruss_ioaddr);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3951: FILE: drivers/tty/serial/pruss_suart_utils.c:24:
++static s16 suart_mcasp_rx_baud_set(u32 rx_baud_value, u32 oversampling,
++			struct pruss_suart_iomap *pruss_ioaddr);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'SUART_8X_OVRSMPL == oversampling'
+#4071: FILE: drivers/tty/serial/pruss_suart_utils.c:144:
++	if ((SUART_8X_OVRSMPL == oversampling) || (0 == oversampling)) {
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#4071: FILE: drivers/tty/serial/pruss_suart_utils.c:144:
++	if ((SUART_8X_OVRSMPL == oversampling) || (0 == oversampling)) {
+
+WARNING:CONSTANT_COMPARISON: Comparisons should place the constant on the right side of the test
+#4075: FILE: drivers/tty/serial/pruss_suart_utils.c:148:
++	if (SUART_16X_OVRSMPL == oversampling) {
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#4079: FILE: drivers/tty/serial/pruss_suart_utils.c:152:
++
++	}
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4158: FILE: drivers/tty/serial/pruss_suart_utils.c:231:
++void suart_mcasp_tx_serialzier_set(u32 serializer_num,
++		struct pruss_suart_iomap *pruss_ioaddr)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#4163: FILE: drivers/tty/serial/pruss_suart_utils.c:236:
++	u32 temp_reg;
++	temp_reg = ioread32(&mcasp0_regs->pfunc);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4172: FILE: drivers/tty/serial/pruss_suart_utils.c:245:
++static s16 suart_mcasp_tx_baud_set(u32 tx_baud_value,
++		struct pruss_suart_iomap *pruss_ioaddr)
+
+CHECK:BOOL_COMPARISON: Using comparison to true is error prone
+#4191: FILE: drivers/tty/serial/pruss_suart_utils.c:264:
++	if (found_val == true) {
+
+Comparisons of A to true and false are better written
+as A and !A.
+
+See: https://lore.kernel.org/lkml/1365563834.27174.12.camel@joe-AO722/
+
+WARNING:SPACING: space prohibited before semicolon
+#4203: FILE: drivers/tty/serial/pruss_suart_utils.c:276:
++		return -EINVAL ;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4212: FILE: drivers/tty/serial/pruss_suart_utils.c:285:
++static s16 suart_mcasp_rx_baud_set(u32 rx_baud_value,
++	u32 oversampling, struct pruss_suart_iomap *pruss_ioaddr)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4294: FILE: drivers/tty/serial/pruss_suart_utils.c:367:
++s16 suart_asp_baud_set(u32 tx_baud_value, u32 rx_baud_value, u32 oversampling,
++					struct pruss_suart_iomap *pruss_ioaddr)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4300: FILE: drivers/tty/serial/pruss_suart_utils.c:373:
++	status = suart_mcasp_rx_baud_set(rx_baud_value, oversampling,
++					pruss_ioaddr);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#4309: FILE: drivers/tty/serial/pruss_suart_utils.c:382:
++s16 suart_asp_serializer_deactivate(u16 sr_num,
++		struct pruss_suart_iomap *pruss_ioaddr)
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000288075.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 69 warnings, 469 checks, 4241 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000288075.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,148 @@
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#90: FILE: drivers/virtio/virtio_mmio.c:504:
++static int vm_cmdline_set(const char *device,
++		const struct kernel_param *kp)
+
+WARNING:UNNECESSARY_INT: Prefer 'long long' over 'long long int' as the int is unnecessary
+#95: FILE: drivers/virtio/virtio_mmio.c:509:
++	long long int base;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#105: FILE: drivers/virtio/virtio_mmio.c:519:
++	processed = sscanf(str, "@%lli:%u%n:%d%n",
++			&base, &resources[1].start, &consumed,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#125: FILE: drivers/virtio/virtio_mmio.c:539:
++	pr_info("Registering device virtio-mmio.%d at 0x%llx-0x%llx, IRQ %d.\n",
++		       vm_cmdline_id++,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#131: FILE: drivers/virtio/virtio_mmio.c:545:
++	pdev = platform_device_register_resndata(&vm_cmdline_parent,
++			"virtio-mmio", vm_cmdline_id++,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#146: FILE: drivers/virtio/virtio_mmio.c:560:
++	snprintf(buffer + len, PAGE_SIZE - len, "0x%llx@0x%llx:%llu:%d\n",
++			pdev->resource[0].end - pdev->resource[0].start + 1ULL,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#157: FILE: drivers/virtio/virtio_mmio.c:571:
++	device_for_each_child(&vm_cmdline_parent, buffer,
++			vm_cmdline_get_device);
+
+WARNING:CONST_STRUCT: struct kernel_param_ops should normally be const
+#161: FILE: drivers/virtio/virtio_mmio.c:575:
++static struct kernel_param_ops vm_cmdline_param_ops = {
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR' are not preferred. Consider using octal permissions '0400'.
+#166: FILE: drivers/virtio/virtio_mmio.c:580:
++module_param_cb_late(device, &vm_cmdline_param_ops, NULL, S_IRUSR);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#169: FILE: drivers/virtio/virtio_mmio.c:583:
++static int vm_unregister_cmdline_device(struct device *dev,
++		void *data)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#180: FILE: drivers/virtio/virtio_mmio.c:594:
++		device_for_each_child(&vm_cmdline_parent, NULL,
++				vm_unregister_cmdline_device);
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#214: FILE: include/linux/moduleparam.h:51:
++#define KPARAM_ISBOOL		(1 << 1)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#215: FILE: include/linux/moduleparam.h:52:
++#define KPARAM_LATE		(1 << 2)
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#224: FILE: include/linux/moduleparam.h:136:
++^I^I^I    name, ops, arg, ^I^I^I^I      \$
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arg' - possible side-effects?
+#227: FILE: include/linux/moduleparam.h:139:
++#define module_param_cb_late(name, ops, arg, perm)			      \
++	__module_param_call(MODULE_PARAM_PREFIX,			      \
++			    name, ops, arg,				      \
++			    __same_type((arg), bool *), 1, perm)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'perm' - possible side-effects?
+#239: FILE: include/linux/moduleparam.h:156:
++#define __module_param_call(prefix, name, ops, arg, isbool, late, perm)	\
+ 	/* Default value instead of permissions? */			\
+ 	static int __param_perm_check_##name __attribute__((unused)) =	\
+ 	BUILD_BUG_ON_ZERO((perm) < 0 || (perm) > 0777 || ((perm) & 2))	\
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#248: FILE: include/linux/moduleparam.h:165:
++^I= { __param_str_##name, ops, perm, ^I^I^I^I\$
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#248: FILE: include/linux/moduleparam.h:165:
+     __attribute__ ((unused,__section__ ("__param"),aligned(sizeof(void *)))) \
++	= { __param_str_##name, ops, perm, 				\
+
+Assignment operators should not be written at the start of a
+line but should follow the operand at the previous line.
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#330: FILE: init/main.c:747:
++	extern const struct kernel_param __start___param[], __stop___param[];
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#393: FILE: kernel/params.c:205:
++^I^I^I        flags_mask, flags, unknown);$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#393: FILE: kernel/params.c:205:
++		ret = parse_one(param, val, params, num,
++			        flags_mask, flags, unknown);
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000196578.commit.50c234c910ddd03a627257cc11704614c0619761 total: 1 errors, 6 warnings, 14 checks, 288 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000196578.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,53 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pbuf' - possible side-effects?
+#55: FILE: include/linux/kfifo.h:803:
++#define kfifo_out_prepare(fifo, pbuf) \
++__kfifo_uint_must_check_helper( \
++({ \
++	typeof((fifo) + 1) __tmp = (fifo);  \
++	typeof((*pbuf) + 1) * __pbuf = (pbuf); \
++	struct __kfifo *__kfifo = &__tmp->kfifo; \
++	unsigned int size = __kfifo->mask + 1; \
++	unsigned int off = __kfifo->out & __kfifo->mask; \
++	*__pbuf = (__is_kfifo_ptr(__tmp) ? \
++		((typeof(__tmp->type))__kfifo->data) : \
++		(__tmp->buf)) + off; \
++	min(size - off, __kfifo->in - __kfifo->out); \
++}) \
++)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'pbuf' may be better as '(pbuf)' to avoid precedence issues
+#55: FILE: include/linux/kfifo.h:803:
++#define kfifo_out_prepare(fifo, pbuf) \
++__kfifo_uint_must_check_helper( \
++({ \
++	typeof((fifo) + 1) __tmp = (fifo);  \
++	typeof((*pbuf) + 1) * __pbuf = (pbuf); \
++	struct __kfifo *__kfifo = &__tmp->kfifo; \
++	unsigned int size = __kfifo->mask + 1; \
++	unsigned int off = __kfifo->out & __kfifo->mask; \
++	*__pbuf = (__is_kfifo_ptr(__tmp) ? \
++		((typeof(__tmp->type))__kfifo->data) : \
++		(__tmp->buf)) + off; \
++	min(size - off, __kfifo->in - __kfifo->out); \
++}) \
++)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#82: FILE: include/linux/kfifo.h:830:
++#define kfifo_out_finish(fifo, len) \
++(void)({ \
++	typeof((fifo) + 1) __tmp = (fifo);  \
++	struct __kfifo *__kfifo = &__tmp->kfifo; \
++	unsigned int __len = (len); \
++	__kfifo->out += __len; \
++})
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000332029.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 1 errors, 0 warnings, 2 checks, 54 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000332029.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

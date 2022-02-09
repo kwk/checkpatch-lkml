@@ -1,0 +1,102 @@
+WARNING:UNKNOWN_COMMIT_ID: Unknown commit id 'd6e2cc564775', maybe rebased or not pulled?
+#84: 
+This is a riscv port of commit d6e2cc564775("arm64: extable: add `type`
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#120: FILE: arch/riscv/include/asm/asm-extable.h:11:
++#define __ASM_EXTABLE_RAW(insn, fixup, type, data)	\
++	.pushsection	__ex_table, "a";		\
++	.balign		4;				\
++	.long		((insn) - .);			\
++	.long		((fixup) - .);			\
++	.short		(type);				\
++	.short		(data);				\
+ 	.popsection;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'a' - possible side-effects?
+#167: FILE: arch/riscv/include/asm/extable.h:25:
++#define swap_ex_entry_fixup(a, b, tmp, delta)		\
++do {							\
++	(a)->fixup = (b)->fixup + (delta);		\
++	(b)->fixup = (tmp).fixup - (delta);		\
++	(a)->type = (b)->type;				\
++	(b)->type = (tmp).type;				\
++	(a)->data = (b)->data;				\
++	(b)->data = (tmp).data;				\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'b' - possible side-effects?
+#167: FILE: arch/riscv/include/asm/extable.h:25:
++#define swap_ex_entry_fixup(a, b, tmp, delta)		\
++do {							\
++	(a)->fixup = (b)->fixup + (delta);		\
++	(b)->fixup = (tmp).fixup - (delta);		\
++	(a)->type = (b)->type;				\
++	(b)->type = (tmp).type;				\
++	(a)->data = (b)->data;				\
++	(b)->data = (tmp).data;				\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'tmp' - possible side-effects?
+#167: FILE: arch/riscv/include/asm/extable.h:25:
++#define swap_ex_entry_fixup(a, b, tmp, delta)		\
++do {							\
++	(a)->fixup = (b)->fixup + (delta);		\
++	(b)->fixup = (tmp).fixup - (delta);		\
++	(a)->type = (b)->type;				\
++	(b)->type = (tmp).type;				\
++	(a)->data = (b)->data;				\
++	(b)->data = (tmp).data;				\
++} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'delta' - possible side-effects?
+#167: FILE: arch/riscv/include/asm/extable.h:25:
++#define swap_ex_entry_fixup(a, b, tmp, delta)		\
++do {							\
++	(a)->fixup = (b)->fixup + (delta);		\
++	(b)->fixup = (tmp).fixup - (delta);		\
++	(a)->type = (b)->type;				\
++	(b)->type = (tmp).type;				\
++	(a)->data = (b)->data;				\
++	(b)->data = (tmp).data;				\
++} while (0)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#244: FILE: arch/riscv/mm/extable.c:43:
++	BUG();
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+./tmp.3ThM2397W7//home/fedora/lkml-analysis/lkml/10/patch.offset.0000047789.commit.177e463923b18590e622117af373596d2a8f7dbd total: 0 errors, 3 warnings, 4 checks, 153 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.3ThM2397W7//home/fedora/lkml-analysis/lkml/10/patch.offset.0000047789.commit.177e463923b18590e622117af373596d2a8f7dbd has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

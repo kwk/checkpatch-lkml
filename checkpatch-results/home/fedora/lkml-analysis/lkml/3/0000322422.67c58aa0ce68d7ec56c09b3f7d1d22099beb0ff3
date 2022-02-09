@@ -1,0 +1,100 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#26: 
+This is useful for journald (systemd logging daemon) to get additional context
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#53: FILE: include/linux/socket.h:135:
++#define SCM_PROCINFO	0x05	/* rw: comm + cmdline (NULL terminated
++					   array of char *) */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#53: FILE: include/linux/socket.h:135:
++					   array of char *) */
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#116: FILE: include/net/scm.h:54:
++extern int scm_get_current_procinfo(char **procinfo);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#165: FILE: include/net/scm.h:174:
++		put_cmsg(msg, SOL_SOCKET, SCM_PROCINFO, scm->procinfo.len,
++				 scm->procinfo.procinfo);
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#208: FILE: net/core/scm.c:373:
++	if (res > 0 && buffer[res-1] != '\0' && len < PAGE_SIZE) {
+ 	                         ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#217: FILE: net/core/scm.c:382:
++						 buffer+res, len, 0);
+ 						       ^
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*scm)...) over kmalloc(sizeof(struct unix_skb_parms_scm)...)
+#266: FILE: net/unix/af_unix.c:1399:
++		UNIXCB(skb).scm = kmalloc(sizeof(struct unix_skb_parms_scm),
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#287: FILE: net/unix/af_unix.c:1418:
++		UNIXSCM(skb).procinfo = kmemdup(scm->procinfo.procinfo,
++					scm->procinfo.len, GFP_KERNEL);
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#303: FILE: net/unix/af_unix.c:1444:
++		UNIXSCM(skb).procinfo_len = scm_get_current_procinfo(
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#339: FILE: net/unix/af_unix.c:2040:
++					scm_set_procinfo(siocb->scm,
++						kmemdup(UNIXSCM(skb).procinfo,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#340: FILE: net/unix/af_unix.c:2041:
++						kmemdup(UNIXSCM(skb).procinfo,
++						UNIXSCM(skb).procinfo_len,
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000322422.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 3 warnings, 9 checks, 269 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000322422.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

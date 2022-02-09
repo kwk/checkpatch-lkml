@@ -1,0 +1,180 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#27: 
+    dbus-daem   652          dbus    6u     sock ... 17812 can't identify protocol
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#122: FILE: include/net/sock.h:959:
++	/* Set non-zero value if this protocol manages its
++	   own /proc/net/PROTOCOL entry and the entry has inode column. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#122: FILE: include/net/sock.h:959:
++	   own /proc/net/PROTOCOL entry and the entry has inode column. */
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#123: FILE: include/net/sock.h:960:
++        int has_own_proc_entry;$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#123: FILE: include/net/sock.h:960:
++        int has_own_proc_entry;$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#281: FILE: net/socket.c:3450:
++       __releases(&proc_sockfs_lock)$
+
+WARNING:LONG_LINE_STRING: line length of 114 exceeds 100 columns
+#288: FILE: net/socket.c:3457:
++	return seq_printf(seq, "Inode                name     state family type protocol socket           net\n");
+
+A string starts before but extends beyond the maximum line length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+WARNING:PREFER_SEQ_PUTS: Prefer seq_puts to seq_printf
+#288: FILE: net/socket.c:3457:
++	return seq_printf(seq, "Inode                name     state family type protocol socket           net\n");
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#297: FILE: net/socket.c:3466:
++	BUG_ON(sk == NULL);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!sk"
+#297: FILE: net/socket.c:3466:
++	BUG_ON(sk == NULL);
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!name"
+#300: FILE: net/socket.c:3469:
++	if (name == NULL || name[0] == '\0')
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#311: FILE: net/socket.c:3480:
++^I^I          sock_net(sk));$
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#316: FILE: net/socket.c:3485:
++	if (v == &proc_sockfs_list)
+[...]
++	else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#318: FILE: net/socket.c:3487:
++	else {
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#320: FILE: net/socket.c:3489:
++		struct socket *sock = list_entry(v, struct socket, proc_sockfs_list);
++		proc_sockfs_seq_show_socket(seq, sock);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#348: FILE: net/socket.c:3517:
++	if (!proc_net_fops_create(net, "sockfs", S_IRUGO, &proc_sockfs_seq_fops))
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:MISPLACED_INIT: __net_initdata should be placed after proc_sockfs_ops
+#358: FILE: net/socket.c:3527:
++static __net_initdata struct pernet_operations proc_sockfs_ops = {
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#372: FILE: net/socket.c:3541:
++}
++static void proc_sockfs_add(struct socket *sock)
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#375: FILE: net/socket.c:3544:
++}
++static void proc_sockfs_remove(struct socket *sock)
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000077803.commit.50c234c910ddd03a627257cc11704614c0619761 total: 2 errors, 11 warnings, 6 checks, 272 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000077803.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

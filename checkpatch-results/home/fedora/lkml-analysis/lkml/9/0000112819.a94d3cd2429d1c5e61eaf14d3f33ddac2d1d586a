@@ -1,0 +1,174 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#121: 
+https://github.com/Amanieu/linux/commit/b4783002afb027ae702da8f56e43e45c7332d226
+
+WARNING:TYPO_SPELLING: 'impelementation' may be misspelled - perhaps 'implementation'?
+#158: 
+0x8000'0000 from a syscall number impelementation.
+                                  ^^^^^^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#304: FILE: arch/arm64/Kconfig:1150:
++config ARM_COMPAT_DISPATCH
++	bool "32bit syscall dispatch table"
++	depends on COMPAT && ARM64
++	default y
++	help
++	  Kernel support for exposing the 32-bit syscall dispatch table to
++	  userspace.
++	  For dynamically translating 32-bit applications to a 64-bit process.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#313: FILE: arch/arm64/Kconfig:1159:
++config TANGO_BT
++	bool "Tango binary translator support"
++	depends on ARM_COMPAT_DISPATCH
++	select CHECKPOINT_RESTORE
++	select BINFMT_MISC
++	default y
++	help
++	  Kernel support for the Tango binary translator which dynamically
++	  translates 32-bit ARM binaries into 64-bit code.
++
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#367: FILE: arch/arm64/include/asm/compat.h:216:
++}
++static inline int is_tango_compat_thread(struct thread_info *thread)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#408: FILE: arch/arm64/include/asm/mmu.h:86:
++extern void process_init_compat_mmap(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'tsk' - possible side-effects?
+#455: FILE: arch/arm64/include/asm/processor.h:260:
++#define KSTK_EIP(tsk)                                           \
++({                                                              \
++	unsigned long __out;                                      \
++	if (is_tango_compat_thread(task_thread_info(tsk)))        \
++		__out = (unsigned long)task_pt_regs(tsk)->regs[15]; \
++	else                                                      \
++		__out = (unsigned long)task_pt_regs(tsk)->pc;       \
++	__out;                                                    \
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'tsk' - possible side-effects?
+#464: FILE: arch/arm64/include/asm/processor.h:269:
++#define KSTK_ESP(tsk)                                           \
++({                                                              \
++	unsigned long __out;                                      \
++	if (is_tango_compat_thread(task_thread_info(tsk)))        \
++		__out = (unsigned long)task_pt_regs(tsk)->regs[13]; \
++	else                                                      \
++		__out = user_stack_pointer(task_pt_regs(tsk));      \
++	__out;                                                    \
++})
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#502: FILE: arch/arm64/include/asm/thread_info.h:116:
++#define _TIF_COMPAT_32BITSYSCALL (1 << TIF_COMPAT_32BITSYSCALL)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#503: FILE: arch/arm64/include/asm/thread_info.h:117:
++#define _TIF_COMPAT_TANGOSYSCALL (1 << TIF_COMPAT_TANGOSYSCALL)
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#517: FILE: arch/arm64/kernel/asm-offsets.c:38:
++  DEFINE(TI_COMPAT_SYSCALL,^Ioffsetof(struct task_struct, thread_info.compat_syscall_flags));$
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#767: FILE: arch/arm64/mm/mmap.c:79:
++#define COMPAT_MAX_GAP			(COMPAT_STACK_TOP/6*5)
+                       			                 ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#767: FILE: arch/arm64/mm/mmap.c:79:
++#define COMPAT_MAX_GAP			(COMPAT_STACK_TOP/6*5)
+                       			                   ^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#841: FILE: arch/arm64/mm/mmap.c:153:
++arch_get_unmapped_area(struct file *filp, unsigned long addr,
+                                     ^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#842: FILE: arch/arm64/mm/mmap.c:154:
++arch_get_unmapped_area(struct file *filp, unsigned long addr,
++		unsigned long len, unsigned long pgoff, unsigned long flags)
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#890: FILE: arch/arm64/mm/mmap.c:202:
++arch_get_unmapped_area_topdown(struct file *filp, unsigned long addr,
+                                             ^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#891: FILE: arch/arm64/mm/mmap.c:203:
++arch_get_unmapped_area_topdown(struct file *filp, unsigned long addr,
++			  unsigned long len, unsigned long pgoff,
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#894: FILE: arch/arm64/mm/mmap.c:206:
++{
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#920: FILE: arch/arm64/mm/mmap.c:232:
++		if (mmap_end - len >= addr && addr >= mmap_min_addr &&
++				(!vma || addr + len <= vm_start_gap(vma)) &&
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#959: FILE: arch/arm64/mm/mmap.c:271:
++hugetlb_get_unmapped_area(struct file *file, unsigned long addr,
++		unsigned long len, unsigned long pgoff, unsigned long flags)
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000112819.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a total: 0 errors, 7 warnings, 13 checks, 614 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000112819.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

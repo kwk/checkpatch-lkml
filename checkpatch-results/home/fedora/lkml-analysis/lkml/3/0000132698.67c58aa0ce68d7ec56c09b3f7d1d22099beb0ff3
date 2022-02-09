@@ -1,0 +1,198 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#27: 
+I have tried to make use of defines in order to keep a single driver for the two
+
+ERROR:DIFF_IN_COMMIT_MSG: Avoid using diff content in the commit message - patch(1) might not work
+#41: 
+--- a/drivers/crypto/talitos.c
+
+Avoid having diff content in commit message.
+This causes problems when one tries to apply a file containing both
+the changelog and the diff because patch(1) tries to apply the diff
+which it found in the changelog.
+
+See: https://lore.kernel.org/lkml/20150611134006.9df79a893e3636019ad2759e@linux-foundation.org/
+
+ERROR:TRAILING_STATEMENTS: trailing statements should be on next line
+#93: FILE: drivers/crypto/talitos.c:121:
++	while ((in_be32(priv->chan[ch].reg + TALITOS_CCCR_LO) & TALITOS_CCCR_LO_RESET)
+[...]
+ 		cpu_relax();
+
+Trailing statements (for example after any conditional) should be
+on the next line.
+Statements, such as::
+
+  if (x == y) break;
+
+should be::
+
+  if (x == y)
+          break;
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ch_done_mask' may be better as '(ch_done_mask)' to avoid precedence issues
+#169: FILE: drivers/crypto/talitos.c:368:
++#define DEF_TALITOS_DONE(name, ch_done_mask)				\
++static void talitos_done_##name(unsigned long data)			\
++{									\
++	struct device *dev = (struct device *)data;			\
++	struct talitos_private *priv = dev_get_drvdata(dev);		\
++	unsigned long flags;						\
++									\
+ 	if (ch_done_mask & 1)						\
+ 		flush_channel(dev, 0, 0, 0);				\
+ 	if (priv->num_channels == 1)					\
+
+WARNING:TYPO_SPELLING: 'pointeur' may be misspelled - perhaps 'pointer'?
+#220: FILE: drivers/crypto/talitos.c:531:
++			dev_err(dev, "pointeur not complete error\n");
+ 			              ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#276: FILE: drivers/crypto/talitos.c:604:
++			dev_err(dev, "done overflow, internal time out, or rngu error: "
++				"ISR 0x%08x_%08x\n", isr, isr_lo);
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ch_done_mask' may be better as '(ch_done_mask)' to avoid precedence issues
+#310: FILE: drivers/crypto/talitos.c:648:
++#define DEF_TALITOS_INTERRUPT(name, ch_done_mask, ch_err_mask, tlet)	       \
++static irqreturn_t talitos_interrupt_##name(int irq, void *data)	       \
++{									       \
++	struct device *dev = data;					       \
++	struct talitos_private *priv = dev_get_drvdata(dev);		       \
++	u32 isr, isr_lo;						       \
++	unsigned long flags;						       \
++									       \
++	spin_lock_irqsave(&priv->reg_lock, flags);			       \
++	isr = in_be32(priv->reg + TALITOS_ISR);				       \
++	isr_lo = in_be32(priv->reg + TALITOS_ISR_LO);			       \
++	/* Acknowledge interrupt */					       \
++	out_be32(priv->reg + TALITOS_ICR, isr & (ch_done_mask | ch_err_mask)); \
++	out_be32(priv->reg + TALITOS_ICR_LO, isr_lo);			       \
++									       \
+ 	if (unlikely(isr & ch_err_mask || isr_lo)) {			       \
+ 		spin_unlock_irqrestore(&priv->reg_lock, flags);		       \
+ 		talitos_error(dev, isr & ch_err_mask, isr_lo);		       \
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ch_err_mask' - possible side-effects?
+#310: FILE: drivers/crypto/talitos.c:648:
++#define DEF_TALITOS_INTERRUPT(name, ch_done_mask, ch_err_mask, tlet)	       \
++static irqreturn_t talitos_interrupt_##name(int irq, void *data)	       \
++{									       \
++	struct device *dev = data;					       \
++	struct talitos_private *priv = dev_get_drvdata(dev);		       \
++	u32 isr, isr_lo;						       \
++	unsigned long flags;						       \
++									       \
++	spin_lock_irqsave(&priv->reg_lock, flags);			       \
++	isr = in_be32(priv->reg + TALITOS_ISR);				       \
++	isr_lo = in_be32(priv->reg + TALITOS_ISR_LO);			       \
++	/* Acknowledge interrupt */					       \
++	out_be32(priv->reg + TALITOS_ICR, isr & (ch_done_mask | ch_err_mask)); \
++	out_be32(priv->reg + TALITOS_ICR_LO, isr_lo);			       \
++									       \
+ 	if (unlikely(isr & ch_err_mask || isr_lo)) {			       \
+ 		spin_unlock_irqrestore(&priv->reg_lock, flags);		       \
+ 		talitos_error(dev, isr & ch_err_mask, isr_lo);		       \
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ch_err_mask' may be better as '(ch_err_mask)' to avoid precedence issues
+#310: FILE: drivers/crypto/talitos.c:648:
++#define DEF_TALITOS_INTERRUPT(name, ch_done_mask, ch_err_mask, tlet)	       \
++static irqreturn_t talitos_interrupt_##name(int irq, void *data)	       \
++{									       \
++	struct device *dev = data;					       \
++	struct talitos_private *priv = dev_get_drvdata(dev);		       \
++	u32 isr, isr_lo;						       \
++	unsigned long flags;						       \
++									       \
++	spin_lock_irqsave(&priv->reg_lock, flags);			       \
++	isr = in_be32(priv->reg + TALITOS_ISR);				       \
++	isr_lo = in_be32(priv->reg + TALITOS_ISR_LO);			       \
++	/* Acknowledge interrupt */					       \
++	out_be32(priv->reg + TALITOS_ICR, isr & (ch_done_mask | ch_err_mask)); \
++	out_be32(priv->reg + TALITOS_ICR_LO, isr_lo);			       \
++									       \
+ 	if (unlikely(isr & ch_err_mask || isr_lo)) {			       \
+ 		spin_unlock_irqrestore(&priv->reg_lock, flags);		       \
+ 		talitos_error(dev, isr & ch_err_mask, isr_lo);		       \
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#467: FILE: drivers/crypto/talitos.c:1576:
++		map_single_talitos_ptr(dev, &desc->ptr[3], cryptlen,
++			       (char *)ctx->ptr_in, 0, DMA_TO_DEVICE);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#502: FILE: drivers/crypto/talitos.c:1616:
++		map_single_talitos_ptr(dev, &desc->ptr[4], cryptlen,
++			       (char *)ctx->ptr_out, 0, DMA_FROM_DEVICE);
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#533: FILE: drivers/crypto/talitos.c:1775:
++	if (ctx->keylen) {
+[...]
+ 	else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#605: FILE: drivers/crypto/talitos.c:1951:
++	if ((nents = sg_count(areq->src, nbytes, &chained)) > 1 || req_ctx->nbuf) {
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#607: FILE: drivers/crypto/talitos.c:1953:
++		sg_copy_to_buffer(areq->src, nents,
++			req_ctx->buf + req_ctx->nbuf,
+
+CHECK:BRACES: Unbalanced braces around else statement
+#611: FILE: drivers/crypto/talitos.c:1957:
++	} else
+
+WARNING:TYPO_SPELLING: 'pointeur' may be misspelled - perhaps 'pointer'?
+#824: FILE: drivers/crypto/talitos.h:253:
++#define   TALITOS_CCPSR_LO_PNC		0x1000 /* pointeur not complete error */
+                               		          ^^^^^^^^
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000132698.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 3 errors, 4 warnings, 9 checks, 766 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000132698.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

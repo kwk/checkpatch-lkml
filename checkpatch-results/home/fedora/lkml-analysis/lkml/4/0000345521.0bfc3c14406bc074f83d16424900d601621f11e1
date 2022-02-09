@@ -1,0 +1,142 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#34: 
+* they do not detect overflow (can be fixed, but no one bothered since ~0.99.11),
+
+WARNING:TYPO_SPELLING: 'characted' may be misspelled - perhaps 'character'?
+#49: 
+strtonum() also doesn't report number of characted consumed.
+                                         ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#159: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#164: FILE: include/linux/parse-integer.h:1:
++#ifndef _PARSE_INTEGER_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'val' - possible side-effects?
+#187: FILE: include/linux/parse-integer.h:24:
++#define parse_integer(s, base, val)	\
++({					\
++	const char *_s = (s);		\
++	unsigned int _base = (base);	\
++	typeof(&(val)[0]) _val = (val);	\
++					\
++	__builtin_choose_expr(						\
++	__builtin_types_compatible_p(typeof(_val), signed char *),	\
++	_parse_integer_sc(_s, _base, (void *)_val),			\
++	__builtin_choose_expr(						\
++	__builtin_types_compatible_p(typeof(_val), unsigned char *),	\
++	_parse_integer_uc(_s, _base, (void *)_val),			\
++	__builtin_choose_expr(						\
++	__builtin_types_compatible_p(typeof(_val), short *),		\
++	_parse_integer_s(_s, _base, (void *)_val),			\
++	__builtin_choose_expr(						\
++	__builtin_types_compatible_p(typeof(_val), unsigned short *),	\
++	_parse_integer_us(_s, _base, (void *)_val),			\
++	__builtin_choose_expr(						\
++	__builtin_types_compatible_p(typeof(_val), int *),		\
++	_parse_integer_i(_s, _base, (void *)_val),			\
++	__builtin_choose_expr(						\
++	__builtin_types_compatible_p(typeof(_val), unsigned int *),	\
++	_parse_integer_u(_s, _base, (void *)_val),			\
++	__builtin_choose_expr(						\
++	__builtin_types_compatible_p(typeof(_val), long *) && sizeof(long) == 4,\
++	_parse_integer_i(_s, _base, (void *)_val),			\
++	__builtin_choose_expr(						\
++	__builtin_types_compatible_p(typeof(_val), long *) && sizeof(long) == 8,\
++	_parse_integer_ll(_s, _base, (void *)_val),			\
++	__builtin_choose_expr(						\
++	__builtin_types_compatible_p(typeof(_val), unsigned long *) && sizeof(unsigned long) == 4,\
++	_parse_integer_u(_s, _base, (void *)_val),			\
++	__builtin_choose_expr(						\
++	__builtin_types_compatible_p(typeof(_val), unsigned long *) && sizeof(unsigned long) == 8,\
++	_parse_integer_ull(_s, _base, (void *)_val),			\
++	__builtin_choose_expr(						\
++	__builtin_types_compatible_p(typeof(_val), long long *),	\
++	_parse_integer_ll(_s, _base, (void *)_val),			\
++	__builtin_choose_expr(						\
++	__builtin_types_compatible_p(typeof(_val), unsigned long long *),\
++	_parse_integer_ull(_s, _base, (void *)_val),			\
++	_parse_integer_link_time_error()))))))))))));	\
++})
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#384: FILE: lib/parse-integer.c:1:
++/*
+
+WARNING:INCLUDE_LINUX: Use #include <linux/bug.h> instead of <asm/bug.h>
+#398: FILE: lib/parse-integer.c:15:
++#include <asm/bug.h>
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#403: FILE: lib/parse-integer.c:20:
++		if (s[0] == '0') {
+[...]
++		} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#408: FILE: lib/parse-integer.c:25:
++		} else
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#413: FILE: lib/parse-integer.c:30:
++	BUG_ON(*base < 2 || *base > 16);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#422: FILE: lib/parse-integer.c:39:
++	s = sd = _parse_integer_fixup_radix(s0, &base);
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000345521.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 7 warnings, 4 checks, 413 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000345521.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

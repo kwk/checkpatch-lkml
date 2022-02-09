@@ -1,0 +1,472 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#111: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#126: FILE: arch/s390/include/asm/syscall_wrapper.h:11:
++#define __SC_COMPAT_TYPE(t, a) \
++	__typeof(__builtin_choose_expr(sizeof(t) > 4, 0L, (t)0)) a
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 't' - possible side-effects?
+#129: FILE: arch/s390/include/asm/syscall_wrapper.h:14:
++#define __SC_COMPAT_CAST(t, a)						\
++({									\
++	long __ReS = a;							\
++									\
++	BUILD_BUG_ON((sizeof(t) > 4) && !__TYPE_IS_L(t) &&		\
++		     !__TYPE_IS_UL(t) && !__TYPE_IS_PTR(t) &&		\
++		     !__TYPE_IS_LL(t));					\
++	if (__TYPE_IS_L(t))						\
++		__ReS = (s32)a;						\
++	if (__TYPE_IS_UL(t))						\
++		__ReS = (u32)a;						\
++	if (__TYPE_IS_PTR(t))						\
++		__ReS = a & 0x7fffffff;					\
++	if (__TYPE_IS_LL(t))						\
++		return -ENOSYS;						\
++	(t)__ReS;							\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'a' - possible side-effects?
+#129: FILE: arch/s390/include/asm/syscall_wrapper.h:14:
++#define __SC_COMPAT_CAST(t, a)						\
++({									\
++	long __ReS = a;							\
++									\
++	BUILD_BUG_ON((sizeof(t) > 4) && !__TYPE_IS_L(t) &&		\
++		     !__TYPE_IS_UL(t) && !__TYPE_IS_PTR(t) &&		\
++		     !__TYPE_IS_LL(t));					\
++	if (__TYPE_IS_L(t))						\
++		__ReS = (s32)a;						\
++	if (__TYPE_IS_UL(t))						\
++		__ReS = (u32)a;						\
++	if (__TYPE_IS_PTR(t))						\
++		__ReS = a & 0x7fffffff;					\
++	if (__TYPE_IS_LL(t))						\
++		return -ENOSYS;						\
++	(t)__ReS;							\
++})
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#129: FILE: arch/s390/include/asm/syscall_wrapper.h:14:
++#define __SC_COMPAT_CAST(t, a)						\
++({									\
++	long __ReS = a;							\
++									\
++	BUILD_BUG_ON((sizeof(t) > 4) && !__TYPE_IS_L(t) &&		\
++		     !__TYPE_IS_UL(t) && !__TYPE_IS_PTR(t) &&		\
++		     !__TYPE_IS_LL(t));					\
++	if (__TYPE_IS_L(t))						\
++		__ReS = (s32)a;						\
++	if (__TYPE_IS_UL(t))						\
++		__ReS = (u32)a;						\
++	if (__TYPE_IS_PTR(t))						\
++		__ReS = a & 0x7fffffff;					\
++	if (__TYPE_IS_LL(t))						\
++		return -ENOSYS;						\
++	(t)__ReS;							\
++})
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#143: FILE: arch/s390/include/asm/syscall_wrapper.h:28:
++		return -ENOSYS;						\
+
+ENOSYS means that a nonexistent system call was called.
+Earlier, it was wrongly used for things like invalid operations on
+otherwise valid syscalls.  This should be avoided in new code.
+
+See: https://lore.kernel.org/lkml/5eb299021dec23c1a48fa7d9f2c8b794e967766d.1408730669.git.luto@amacapital.net/
+
+CHECK:CAMELCASE: Avoid CamelCase: <__S390_SYS_STUBx>
+#147: FILE: arch/s390/include/asm/syscall_wrapper.h:32:
++#define __S390_SYS_STUBx(x, name, ...)					\
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#147: FILE: arch/s390/include/asm/syscall_wrapper.h:32:
++#define __S390_SYS_STUBx(x, name, ...)					\
++	asmlinkage long __s390_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__))\
++	ALLOW_ERROR_INJECTION(__s390_sys##name, ERRNO);			\
++	asmlinkage long __s390_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__))\
++	{								\
++		long ret = __s390x_sys##name(__MAP(x,__SC_COMPAT_CAST,__VA_ARGS__));\
++		__MAP(x,__SC_TEST,__VA_ARGS__);				\
++		return ret;						\
++	}
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#148: FILE: arch/s390/include/asm/syscall_wrapper.h:33:
++	asmlinkage long __s390_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__))\
+ 	                                        ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#148: FILE: arch/s390/include/asm/syscall_wrapper.h:33:
++	asmlinkage long __s390_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__))\
+ 	                                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#150: FILE: arch/s390/include/asm/syscall_wrapper.h:35:
++	asmlinkage long __s390_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__))\
+ 	                                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#150: FILE: arch/s390/include/asm/syscall_wrapper.h:35:
++	asmlinkage long __s390_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__))\
+ 	                                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#152: FILE: arch/s390/include/asm/syscall_wrapper.h:37:
++		long ret = __s390x_sys##name(__MAP(x,__SC_COMPAT_CAST,__VA_ARGS__));\
+ 		                                    ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#152: FILE: arch/s390/include/asm/syscall_wrapper.h:37:
++		long ret = __s390x_sys##name(__MAP(x,__SC_COMPAT_CAST,__VA_ARGS__));\
+ 		                                                     ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#153: FILE: arch/s390/include/asm/syscall_wrapper.h:38:
++		__MAP(x,__SC_TEST,__VA_ARGS__);				\
+ 		       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#153: FILE: arch/s390/include/asm/syscall_wrapper.h:38:
++		__MAP(x,__SC_TEST,__VA_ARGS__);				\
+ 		                 ^
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __alias(__stringify(__s390x_sys_##sname)) over __attribute__((alias(__stringify(__s390x_sys_##sname))))
+#172: FILE: arch/s390/include/asm/syscall_wrapper.h:57:
++		__attribute__((alias(__stringify(__s390x_sys_##sname)))); \
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#175: FILE: arch/s390/include/asm/syscall_wrapper.h:60:
++#define COND_SYSCALL(name)						\
++	cond_syscall(__s390x_sys_##name);				\
++	cond_syscall(__s390_sys_##name)
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#179: FILE: arch/s390/include/asm/syscall_wrapper.h:64:
++#define SYS_NI(name)							\
++	SYSCALL_ALIAS(__s390x_sys_##name, sys_ni_posix_timers);		\
++	SYSCALL_ALIAS(__s390_sys_##name, sys_ni_posix_timers)
+
+CHECK:CAMELCASE: Avoid CamelCase: <COMPAT_SYSCALL_DEFINEx>
+#183: FILE: arch/s390/include/asm/syscall_wrapper.h:68:
++#define COMPAT_SYSCALL_DEFINEx(x, name, ...)					\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#183: FILE: arch/s390/include/asm/syscall_wrapper.h:68:
++#define COMPAT_SYSCALL_DEFINEx(x, name, ...)					\
++	__diag_push();								\
++	__diag_ignore(GCC, 8, "-Wattribute-alias",				\
++		      "Type aliasing is used to sanitize syscall arguments");\
++	asmlinkage long __s390_compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__));	\
++	asmlinkage long __s390_compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))	\
++		__attribute__((alias(__stringify(__se_compat_sys##name))));	\
++	ALLOW_ERROR_INJECTION(compat_sys##name, ERRNO);				\
++	static inline long __do_compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__));\
++	asmlinkage long __se_compat_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__));	\
++	asmlinkage long __se_compat_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__))	\
++	{									\
++		long ret = __do_compat_sys##name(__MAP(x,__SC_DELOUSE,__VA_ARGS__));\
++		__MAP(x,__SC_TEST,__VA_ARGS__);					\
++		return ret;							\
++	}									\
++	__diag_pop();								\
++	static inline long __do_compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#187: FILE: arch/s390/include/asm/syscall_wrapper.h:72:
++	asmlinkage long __s390_compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__));	\
+ 	                                               ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#187: FILE: arch/s390/include/asm/syscall_wrapper.h:72:
++	asmlinkage long __s390_compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__));	\
+ 	                                                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#188: FILE: arch/s390/include/asm/syscall_wrapper.h:73:
++	asmlinkage long __s390_compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))	\
+ 	                                               ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#188: FILE: arch/s390/include/asm/syscall_wrapper.h:73:
++	asmlinkage long __s390_compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))	\
+ 	                                                         ^
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __alias(__stringify(__se_compat_sys##name)) over __attribute__((alias(__stringify(__se_compat_sys##name))))
+#189: FILE: arch/s390/include/asm/syscall_wrapper.h:74:
++		__attribute__((alias(__stringify(__se_compat_sys##name))));	\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#191: FILE: arch/s390/include/asm/syscall_wrapper.h:76:
++	static inline long __do_compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__));\
+ 	                                                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#191: FILE: arch/s390/include/asm/syscall_wrapper.h:76:
++	static inline long __do_compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__));\
+ 	                                                          ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#192: FILE: arch/s390/include/asm/syscall_wrapper.h:77:
++	asmlinkage long __se_compat_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__));	\
+ 	                                             ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#192: FILE: arch/s390/include/asm/syscall_wrapper.h:77:
++	asmlinkage long __se_compat_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__));	\
+ 	                                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#193: FILE: arch/s390/include/asm/syscall_wrapper.h:78:
++	asmlinkage long __se_compat_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__))	\
+ 	                                             ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#193: FILE: arch/s390/include/asm/syscall_wrapper.h:78:
++	asmlinkage long __se_compat_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__))	\
+ 	                                                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#195: FILE: arch/s390/include/asm/syscall_wrapper.h:80:
++		long ret = __do_compat_sys##name(__MAP(x,__SC_DELOUSE,__VA_ARGS__));\
+ 		                                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#195: FILE: arch/s390/include/asm/syscall_wrapper.h:80:
++		long ret = __do_compat_sys##name(__MAP(x,__SC_DELOUSE,__VA_ARGS__));\
+ 		                                                     ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#196: FILE: arch/s390/include/asm/syscall_wrapper.h:81:
++		__MAP(x,__SC_TEST,__VA_ARGS__);					\
+ 		       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#196: FILE: arch/s390/include/asm/syscall_wrapper.h:81:
++		__MAP(x,__SC_TEST,__VA_ARGS__);					\
+ 		                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#200: FILE: arch/s390/include/asm/syscall_wrapper.h:85:
++	static inline long __do_compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))
+ 	                                                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#200: FILE: arch/s390/include/asm/syscall_wrapper.h:85:
++	static inline long __do_compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))
+ 	                                                          ^
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#207: FILE: arch/s390/include/asm/syscall_wrapper.h:92:
++#define COND_SYSCALL_COMPAT(name) ^I^I^I^I^I\$
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#223: FILE: arch/s390/include/asm/syscall_wrapper.h:108:
++#define COND_SYSCALL(name)						\
++	cond_syscall(__s390x_sys_##name)				\
++	cond_syscall(__s390_sys_##name)
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#227: FILE: arch/s390/include/asm/syscall_wrapper.h:112:
++#define SYS_NI(name)							\
++	SYSCALL_ALIAS(__s390_sys_##name, sys_ni_posix_timers);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:CAMELCASE: Avoid CamelCase: <__SYSCALL_DEFINEx>
+#232: FILE: arch/s390/include/asm/syscall_wrapper.h:117:
++#define __SYSCALL_DEFINEx(x, name, ...)						\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#232: FILE: arch/s390/include/asm/syscall_wrapper.h:117:
++#define __SYSCALL_DEFINEx(x, name, ...)						\
++	__diag_push();								\
++	__diag_ignore(GCC, 8, "-Wattribute-alias",				\
++		      "Type aliasing is used to sanitize syscall arguments");\
++	asmlinkage long __s390x_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))	\
++		__attribute__((alias(__stringify(__se_sys##name))));		\
++	ALLOW_ERROR_INJECTION(__s390x_sys##name, ERRNO);				\
++	static long __se_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__));		\
++	static inline long __do_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__));	\
++	__S390_SYS_STUBx(x, name, __VA_ARGS__)					\
++	asmlinkage long __se_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__))		\
++	{									\
++		long ret = __do_sys##name(__MAP(x,__SC_CAST,__VA_ARGS__));	\
++		__MAP(x,__SC_TEST,__VA_ARGS__);					\
++		return ret;							\
++	}									\
++	__diag_pop();								\
++	static inline long __do_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#236: FILE: arch/s390/include/asm/syscall_wrapper.h:121:
++	asmlinkage long __s390x_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))	\
+ 	                                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#236: FILE: arch/s390/include/asm/syscall_wrapper.h:121:
++	asmlinkage long __s390x_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))	\
+ 	                                                   ^
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __alias(__stringify(__se_sys##name)) over __attribute__((alias(__stringify(__se_sys##name))))
+#237: FILE: arch/s390/include/asm/syscall_wrapper.h:122:
++		__attribute__((alias(__stringify(__se_sys##name))));		\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#239: FILE: arch/s390/include/asm/syscall_wrapper.h:124:
++	static long __se_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__));		\
+ 	                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#239: FILE: arch/s390/include/asm/syscall_wrapper.h:124:
++	static long __se_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__));		\
+ 	                                            ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#240: FILE: arch/s390/include/asm/syscall_wrapper.h:125:
++	static inline long __do_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__));	\
+ 	                                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#240: FILE: arch/s390/include/asm/syscall_wrapper.h:125:
++	static inline long __do_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__));	\
+ 	                                                   ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#242: FILE: arch/s390/include/asm/syscall_wrapper.h:127:
++	asmlinkage long __se_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__))		\
+ 	                                      ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#242: FILE: arch/s390/include/asm/syscall_wrapper.h:127:
++	asmlinkage long __se_sys##name(__MAP(x,__SC_LONG,__VA_ARGS__))		\
+ 	                                                ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#244: FILE: arch/s390/include/asm/syscall_wrapper.h:129:
++		long ret = __do_sys##name(__MAP(x,__SC_CAST,__VA_ARGS__));	\
+ 		                                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#244: FILE: arch/s390/include/asm/syscall_wrapper.h:129:
++		long ret = __do_sys##name(__MAP(x,__SC_CAST,__VA_ARGS__));	\
+ 		                                           ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#245: FILE: arch/s390/include/asm/syscall_wrapper.h:130:
++		__MAP(x,__SC_TEST,__VA_ARGS__);					\
+ 		       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#245: FILE: arch/s390/include/asm/syscall_wrapper.h:130:
++		__MAP(x,__SC_TEST,__VA_ARGS__);					\
+ 		                 ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#249: FILE: arch/s390/include/asm/syscall_wrapper.h:134:
++	static inline long __do_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))
+ 	                                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#249: FILE: arch/s390/include/asm/syscall_wrapper.h:134:
++	static inline long __do_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))
+ 	                                                   ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#285: FILE: arch/s390/kernel/compat_wrapper.c:41:
++asmlinkage long __s390_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__));		\
+                                         ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#285: FILE: arch/s390/kernel/compat_wrapper.c:41:
++asmlinkage long __s390_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__));		\
+                                                   ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#286: FILE: arch/s390/kernel/compat_wrapper.c:42:
++asmlinkage long notrace __s390_compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__));\
+                                                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#286: FILE: arch/s390/kernel/compat_wrapper.c:42:
++asmlinkage long notrace __s390_compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__));\
+                                                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#287: FILE: arch/s390/kernel/compat_wrapper.c:43:
++asmlinkage long notrace __s390_compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))	\
+                                                        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#287: FILE: arch/s390/kernel/compat_wrapper.c:43:
++asmlinkage long notrace __s390_compat_sys##name(__MAP(x,__SC_DECL,__VA_ARGS__))	\
+                                                                  ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#290: FILE: arch/s390/kernel/compat_wrapper.c:45:
++	return __s390_sys##name(__MAP(x,__SC_ARGS,__VA_ARGS__));		\
+ 	                               ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#290: FILE: arch/s390/kernel/compat_wrapper.c:45:
++	return __s390_sys##name(__MAP(x,__SC_ARGS,__VA_ARGS__));		\
+ 	                                         ^
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#327: FILE: arch/s390/kernel/sys_s390.c:99:
++	return -ENOSYS;
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000042225.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 50 errors, 9 warnings, 8 checks, 203 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000042225.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

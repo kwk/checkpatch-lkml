@@ -1,0 +1,81 @@
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#70: FILE: drivers/net/ethernet/broadcom/bnx2x/bnx2x.h:82:
++		pr_cont(fmt, ##__VA_ARGS__);			\
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#88: FILE: drivers/net/ethernet/broadcom/bnx2x/bnx2x.h:96:
++#define BNX2X_ERR(fmt, ...)					\
+ do {								\
++	pr_err("[%s:%d(%s)]" fmt,				\
+ 	       __func__, __LINE__,				\
+ 	       bp->dev ? (bp->dev->name) : "?",			\
++	       ##__VA_ARGS__);					\
++} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#333: FILE: drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c:800:
++	pr_cont("igu_sb_id(0x%x)  igu_seg_id(0x%x) pf_id(0x%x)  vnic_id(0x%x)  vf_id(0x%x)  vf_valid (0x%x) state(0x%x)\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#334: FILE: drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c:801:
++	pr_cont("igu_sb_id(0x%x)  igu_seg_id(0x%x) pf_id(0x%x)  vnic_id(0x%x)  vf_id(0x%x)  vf_valid (0x%x) state(0x%x)\n",
+ 	       sp_sb_data.igu_sb_id,
+
+WARNING:LOGGING_CONTINUATION: Avoid logging continuation uses where feasible
+#344: FILE: drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c:3721:
++	pr_cont("%s%s", idx ? ", " : "", blk);
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'qstats->total_unicast_packets_received_hi'
+#393: FILE: drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.c:1205:
++				 bnx2x_hilo(&qstats->
++					    total_unicast_packets_received_hi),
+
+A single dereferencing identifier spanned on multiple lines like::
+
+  struct_identifier->member[index].
+  member = <foo>;
+
+is generally hard to follow. It can easily lead to typos and so makes
+the code vulnerable to bugs.
+
+If fixing the multiple line dereferencing leads to an 80 column
+violation, then either rewrite the code in a more simple way or if the
+starting part of the dereferencing identifier is the same and used at
+multiple places then store it in a temporary variable, and use that
+temporary variable only at all the places. For example, if there are
+two dereferencing identifiers::
+
+  member1->member2->member3.foo1;
+  member1->member2->member3.foo2;
+
+then store the member1->member2->member3 part in a temporary variable.
+It not only helps to avoid the 80 column violation but also reduces
+the program size by removing the unnecessary dereferences.
+
+But if none of the above methods work then ignore the 80 column
+violation because it is much easier to read a dereferencing identifier
+on a single line.
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#408: FILE: drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.c:1217:
++				 bnx2x_hilo(
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000238966.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 5 warnings, 2 checks, 349 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000238966.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

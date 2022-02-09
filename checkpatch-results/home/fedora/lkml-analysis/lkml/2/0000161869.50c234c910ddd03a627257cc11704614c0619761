@@ -1,0 +1,344 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#55: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#60: FILE: arch/x86/platform/efi/efi-xen.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:ARCH_INCLUDE_LINUX: Consider using #include <linux/cacheflush.h> instead of <asm/cacheflush.h>
+#104: FILE: arch/x86/platform/efi/efi-xen.c:45:
++#include <asm/cacheflush.h>
+
+Whenever asm/file.h is included and linux/file.h exists, a
+conversion can be made when linux/file.h includes asm/file.h.
+However this is not always the case (See signal.h).
+This message type is emitted only for includes from arch/.
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#227: FILE: arch/x86/platform/efi/efi-xen.c:168:
++	DECLARE_CALL(get_next_variable_name);
++	if (efi.runtime_version < EFI_2_00_SYSTEM_TABLE_REVISION)
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:MULTILINE_DEREFERENCE: Avoid multiple line dereference - prefer 'call.u.query_capsule_capabilities.capsule_header_array'
+#330: FILE: arch/x86/platform/efi/efi-xen.c:271:
++	set_xen_guest_handle(call.u.query_capsule_capabilities.
++		capsule_header_array, capsules);
+
+A single dereferencing identifier spanned on multiple lines like::
+
+  struct_identifier->member[index].
+  member = <foo>;
+
+is generally hard to follow. It can easily lead to typos and so makes
+the code vulnerable to bugs.
+
+If fixing the multiple line dereferencing leads to an 80 column
+violation, then either rewrite the code in a more simple way or if the
+starting part of the dereferencing identifier is the same and used at
+multiple places then store it in a temporary variable, and use that
+temporary variable only at all the places. For example, if there are
+two dereferencing identifiers::
+
+  member1->member2->member3.foo1;
+  member1->member2->member3.foo2;
+
+then store the member1->member2->member3 part in a temporary variable.
+It not only helps to avoid the 80 column violation but also reduces
+the program size by removing the unnecessary dereferences.
+
+But if none of the above methods work then ignore the 80 column
+violation because it is much easier to read a dereferencing identifier
+on a single line.
+
+WARNING:MISPLACED_INIT: __initdata should be placed after op
+#371: FILE: arch/x86/platform/efi/efi-xen.c:312:
++	static struct xen_platform_op __initdata op = {
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#386: FILE: arch/x86/platform/efi/efi-xen.c:327:
++
++
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#407: FILE: arch/x86/platform/efi/efi-xen.c:348:
++	if (!ret) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#411: FILE: arch/x86/platform/efi/efi-xen.c:352:
++	} else
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#418: FILE: arch/x86/platform/efi/efi-xen.c:359:
++		pr_info("EFI v%u.%.02u by %s\n",
++		       info->version >> 16,
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#435: FILE: arch/x86/platform/efi/efi-xen.c:376:
++		BUG();
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#436: FILE: arch/x86/platform/efi/efi-xen.c:377:
++	config_tables = early_ioremap(
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!config_tables"
+#439: FILE: arch/x86/platform/efi/efi-xen.c:380:
++	if (config_tables == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#445: FILE: arch/x86/platform/efi/efi-xen.c:386:
++	early_iounmap(config_tables,
++		info->cfg.nent * sizeof(efi_config_table_t));
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#500: FILE: include/linux/efi.h:480:
++extern void xen_efi_probe(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#526: FILE: include/xen/interface/platform.h:125:
++	uint32_t function;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#532: FILE: include/xen/interface/platform.h:131:
++	uint32_t misc;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u16' over 'uint16_t'
+#538: FILE: include/xen/interface/platform.h:137:
++			uint16_t year;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#539: FILE: include/xen/interface/platform.h:138:
++			uint8_t month;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#540: FILE: include/xen/interface/platform.h:139:
++			uint8_t day;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#541: FILE: include/xen/interface/platform.h:140:
++			uint8_t hour;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#542: FILE: include/xen/interface/platform.h:141:
++			uint8_t min;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#543: FILE: include/xen/interface/platform.h:142:
++			uint8_t sec;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#544: FILE: include/xen/interface/platform.h:143:
++			uint32_t ns;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 's16' over 'int16_t'
+#545: FILE: include/xen/interface/platform.h:144:
++			int16_t tz;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#546: FILE: include/xen/interface/platform.h:145:
++			uint8_t daylight;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#548: FILE: include/xen/interface/platform.h:147:
++		uint32_t resolution;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#549: FILE: include/xen/interface/platform.h:148:
++		uint32_t accuracy;
+
+CHECK:SPACING: No space is necessary after a cast
+#566: FILE: include/xen/interface/platform.h:165:
++		GUEST_HANDLE(void) name;  /* UCS-2/UTF-16 string */
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#568: FILE: include/xen/interface/platform.h:167:
++		GUEST_HANDLE(void) data;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#568: FILE: include/xen/interface/platform.h:167:
++		unsigned long size;
++		GUEST_HANDLE(void) data;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#570: FILE: include/xen/interface/platform.h:169:
++			uint32_t data1;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u16' over 'uint16_t'
+#571: FILE: include/xen/interface/platform.h:170:
++			uint16_t data2;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u16' over 'uint16_t'
+#572: FILE: include/xen/interface/platform.h:171:
++			uint16_t data3;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#573: FILE: include/xen/interface/platform.h:172:
++			uint8_t data4[8];
+
+CHECK:SPACING: No space is necessary after a cast
+#579: FILE: include/xen/interface/platform.h:178:
++		GUEST_HANDLE(void) name;  /* UCS-2/UTF-16 string */
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#579: FILE: include/xen/interface/platform.h:178:
++		unsigned long size;
++		GUEST_HANDLE(void) name;  /* UCS-2/UTF-16 string */
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#584: FILE: include/xen/interface/platform.h:183:
++		uint32_t attr;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#585: FILE: include/xen/interface/platform.h:184:
++		uint64_t max_store_size;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#586: FILE: include/xen/interface/platform.h:185:
++		uint64_t remain_store_size;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#587: FILE: include/xen/interface/platform.h:186:
++		uint64_t max_size;
+
+CHECK:SPACING: No space is necessary after a cast
+#591: FILE: include/xen/interface/platform.h:190:
++		GUEST_HANDLE(void) capsule_header_array;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#593: FILE: include/xen/interface/platform.h:192:
++		uint64_t max_capsule_size;
+
+CHECK:SPACING: No space is necessary after a cast
+#598: FILE: include/xen/interface/platform.h:197:
++		GUEST_HANDLE(void) capsule_header_array;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#600: FILE: include/xen/interface/platform.h:199:
++		uint64_t sg_list; /* machine address */
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#604: FILE: include/xen/interface/platform.h:203:
++};
++DEFINE_GUEST_HANDLE_STRUCT(xenpf_efi_runtime_call);
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#626: FILE: include/xen/interface/platform.h:248:
++			uint32_t version;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#628: FILE: include/xen/interface/platform.h:250:
++				uint64_t addr;   /* EFI_CONFIGURATION_TABLE */
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#629: FILE: include/xen/interface/platform.h:251:
++				uint32_t nent;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#632: FILE: include/xen/interface/platform.h:254:
++				uint32_t revision;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#633: FILE: include/xen/interface/platform.h:255:
++				uint32_t bufsz;  /* input, in bytes */
+
+CHECK:SPACING: No space is necessary after a cast
+#634: FILE: include/xen/interface/platform.h:256:
++				GUEST_HANDLE(void) name;
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#634: FILE: include/xen/interface/platform.h:256:
++				uint32_t bufsz;  /* input, in bytes */
++				GUEST_HANDLE(void) name;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#638: FILE: include/xen/interface/platform.h:260:
++				uint64_t addr;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#639: FILE: include/xen/interface/platform.h:261:
++				uint64_t size;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u64' over 'uint64_t'
+#640: FILE: include/xen/interface/platform.h:262:
++				uint64_t attr;
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u32' over 'uint32_t'
+#641: FILE: include/xen/interface/platform.h:263:
++				uint32_t type;
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000161869.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 9 warnings, 48 checks, 587 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000161869.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,940 @@
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*mfd_regulators)...) over kzalloc(sizeof(struct mfd_cell)...)
+#93: FILE: drivers/mfd/pm8921-core.c:168:
++		mfd_regulators = kzalloc(sizeof(struct mfd_cell)
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:OOM_MESSAGE: Possible unnecessary 'out of memory' message
+#96: FILE: drivers/mfd/pm8921-core.c:171:
++		if (!mfd_regulators) {
++			pr_err("Cannot allocate %d bytes for pm8921 regulator "
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#97: FILE: drivers/mfd/pm8921-core.c:172:
++			pr_err("Cannot allocate %d bytes for pm8921 regulator "
++				"mfd cells\n", sizeof(struct mfd_cell)
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around pdata->regulator_pdatas[i]
+#106: FILE: drivers/mfd/pm8921-core.c:181:
++				&(pdata->regulator_pdatas[i]);
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#111: FILE: drivers/mfd/pm8921-core.c:186:
++		ret = mfd_add_devices(pmic->dev, 0, mfd_regulators,
++				pdata->num_regulators, NULL, irq_base);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#114: FILE: drivers/mfd/pm8921-core.c:189:
++			pr_err("Failed to add regulator subdevices ret=%d\n",
++				ret);
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#164: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#169: FILE: drivers/regulator/pm8921-regulator.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#265: FILE: drivers/regulator/pm8921-regulator.c:97:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'vreg' may be better as '(vreg)' to avoid precedence issues
+#358: FILE: drivers/regulator/pm8921-regulator.c:190:
++#define NLDO1200_IN_ADVANCED_MODE(vreg) \
++	((vreg->test_reg[2] & NLDO1200_ADVANCED_MODE_MASK) \
++	 == NLDO1200_ADVANCED_MODE)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'vreg' may be better as '(vreg)' to avoid precedence issues
+#445: FILE: drivers/regulator/pm8921-regulator.c:277:
++#define SMPS_IN_ADVANCED_MODE(vreg) \
++	((vreg->test_reg[7] & SMPS_ADVANCED_MODE_MASK) == SMPS_ADVANCED_MODE)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'id' - possible side-effects?
+#558: FILE: drivers/regulator/pm8921-regulator.c:390:
++#define IS_REAL_REGULATOR(id)		((id) >= 0 && \
++					 (id) < PM8921_VREG_ID_L1_PC)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'vreg' may be better as '(vreg)' to avoid precedence issues
+#591: FILE: drivers/regulator/pm8921-regulator.c:423:
++#define vreg_err(vreg, fmt, ...) \
++	pr_err("%s: " fmt, vreg->name, ##__VA_ARGS__)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#720: FILE: drivers/regulator/pm8921-regulator.c:552:
++static int pm8921_vreg_masked_write(struct pm8921_vreg *vreg, u16 addr, u8 val,
++		u8 mask, u8 *reg_save)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#744: FILE: drivers/regulator/pm8921-regulator.c:576:
++static int pm8921_vreg_masked_write_forced(struct pm8921_vreg *vreg, u16 addr,
++		u8 val, u8 mask, u8 *reg_save)
+
+WARNING:PREFER_FALLTHROUGH: Prefer 'fallthrough;' over fallthrough comment
+#825: FILE: drivers/regulator/pm8921-regulator.c:657:
++		/* Fall through for legacy mode SMPS. */
+
+Use the `fallthrough;` pseudo keyword instead of
+`/* fallthrough */` like comments.
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#845: FILE: drivers/regulator/pm8921-regulator.c:677:
++	if (vreg->type == REGULATOR_TYPE_LDO
++	    || vreg->type == REGULATOR_TYPE_SMPS
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#846: FILE: drivers/regulator/pm8921-regulator.c:678:
++	    || vreg->type == REGULATOR_TYPE_SMPS
++	    || vreg->type == REGULATOR_TYPE_VS) {
+
+WARNING:TYPO_SPELLING: 'controlable' may be misspelled - perhaps 'controllable'?
+#852: FILE: drivers/regulator/pm8921-regulator.c:684:
++		/* Not pin controlable */
+ 		           ^^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#894: FILE: drivers/regulator/pm8921-regulator.c:726:
++				    unsigned selector)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int *' to bare use of 'unsigned *'
+#915: FILE: drivers/regulator/pm8921-regulator.c:747:
++				   int max_uV, unsigned *selector)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#920: FILE: drivers/regulator/pm8921-regulator.c:752:
++	unsigned vprog, fine_step;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#929: FILE: drivers/regulator/pm8921-regulator.c:761:
++		vreg_err(vreg,
++			"request v=[%d, %d] is outside possible v=[%d, %d]\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#958: FILE: drivers/regulator/pm8921-regulator.c:790:
++		vreg_err(vreg,
++			"request v=[%d, %d] cannot be met by any set point\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#968: FILE: drivers/regulator/pm8921-regulator.c:800:
++	rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++			fine_step_reg | range_sel | REGULATOR_BANK_SEL(2)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#981: FILE: drivers/regulator/pm8921-regulator.c:813:
++	rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++			range_ext | REGULATOR_BANK_SEL(4)
+
+WARNING:TYPO_SPELLING: 'neccessary' may be misspelled - perhaps 'necessary'?
+#994: FILE: drivers/regulator/pm8921-regulator.c:826:
++		 * This is neccessary because range select, range extension, and
+ 		           ^^^^^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#999: FILE: drivers/regulator/pm8921-regulator.c:831:
++		rc = pm8921_vreg_masked_write_forced(vreg, vreg->ctrl_addr,
++			vprog, LDO_CTRL_VPROG_MASK, &vreg->ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1003: FILE: drivers/regulator/pm8921-regulator.c:835:
++		rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr, vprog,
++			LDO_CTRL_VPROG_MASK, &vreg->ctrl_reg);
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1032: FILE: drivers/regulator/pm8921-regulator.c:864:
++				    unsigned selector)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int *' to bare use of 'unsigned *'
+#1041: FILE: drivers/regulator/pm8921-regulator.c:873:
++				   int max_uV, unsigned *selector)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1044: FILE: drivers/regulator/pm8921-regulator.c:876:
++	unsigned vprog, fine_step_reg, prev_reg;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1053: FILE: drivers/regulator/pm8921-regulator.c:885:
++		vreg_err(vreg,
++			"request v=[%d, %d] is outside possible v=[%d, %d]\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1065: FILE: drivers/regulator/pm8921-regulator.c:897:
++		vreg_err(vreg,
++			"request v=[%d, %d] cannot be met by any set point\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1075: FILE: drivers/regulator/pm8921-regulator.c:907:
++	rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++			fine_step_reg | REGULATOR_BANK_SEL(2)
+
+WARNING:TYPO_SPELLING: 'neccessary' may be misspelled - perhaps 'necessary'?
+#1087: FILE: drivers/regulator/pm8921-regulator.c:919:
++		 * This is neccessary because fine step will not update until a
+ 		           ^^^^^^^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1091: FILE: drivers/regulator/pm8921-regulator.c:923:
++		rc = pm8921_vreg_masked_write_forced(vreg, vreg->ctrl_addr,
++			vprog, LDO_CTRL_VPROG_MASK, &vreg->ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1095: FILE: drivers/regulator/pm8921-regulator.c:927:
++		rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr, vprog,
++			LDO_CTRL_VPROG_MASK, &vreg->ctrl_reg);
+
+CHECK:CAMELCASE: Avoid CamelCase: <save_uV>
+#1114: FILE: drivers/regulator/pm8921-regulator.c:946:
++		return vreg->save_uV;
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1136: FILE: drivers/regulator/pm8921-regulator.c:968:
++					unsigned selector)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1154: FILE: drivers/regulator/pm8921-regulator.c:986:
++static int _pm8921_nldo1200_set_voltage(struct pm8921_vreg *vreg, int min_uV,
++		int max_uV)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1165: FILE: drivers/regulator/pm8921-regulator.c:997:
++		vreg_err(vreg,
++			"request v=[%d, %d] is outside possible v=[%d, %d]\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1186: FILE: drivers/regulator/pm8921-regulator.c:1018:
++		vreg_err(vreg,
++			"request v=[%d, %d] cannot be met by any set point\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1193: FILE: drivers/regulator/pm8921-regulator.c:1025:
++	rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++		NLDO1200_ADVANCED_MODE | REGULATOR_BANK_SEL(2)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1201: FILE: drivers/regulator/pm8921-regulator.c:1033:
++	rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr, vprog | range,
++			NLDO1200_CTRL_VPROG_MASK | NLDO1200_CTRL_RANGE_MASK,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1216: FILE: drivers/regulator/pm8921-regulator.c:1048:
++static int pm8921_nldo1200_set_voltage(struct regulator_dev *rdev, int min_uV,
++				   int max_uV, unsigned *selector)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int *' to bare use of 'unsigned *'
+#1216: FILE: drivers/regulator/pm8921-regulator.c:1048:
++				   int max_uV, unsigned *selector)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1277: FILE: drivers/regulator/pm8921-regulator.c:1109:
++				    unsigned selector)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1310: FILE: drivers/regulator/pm8921-regulator.c:1142:
++static int pm8921_smps_set_voltage_advanced(struct pm8921_vreg *vreg,
++					   int min_uV, int max_uV, int force_on)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1321: FILE: drivers/regulator/pm8921-regulator.c:1153:
++		vreg_err(vreg,
++			"request v=[%d, %d] is outside possible v=[%d, %d]\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1345: FILE: drivers/regulator/pm8921-regulator.c:1177:
++		vreg_err(vreg,
++			"request v=[%d, %d] cannot be met by any set point\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1364: FILE: drivers/regulator/pm8921-regulator.c:1196:
++	rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr, band | vprog,
++			SMPS_ADVANCED_BAND_MASK | SMPS_ADVANCED_VPROG_MASK,
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#1385: FILE: drivers/regulator/pm8921-regulator.c:1217:
++
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1391: FILE: drivers/regulator/pm8921-regulator.c:1223:
++		vreg_err(vreg,
++			"request v=[%d, %d] is outside possible v=[%d, %d]\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1418: FILE: drivers/regulator/pm8921-regulator.c:1250:
++		vreg_err(vreg,
++			"request v=[%d, %d] cannot be met by any set point\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1425: FILE: drivers/regulator/pm8921-regulator.c:1257:
++	rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++		vlow | REGULATOR_BANK_WRITE | REGULATOR_BANK_SEL(1),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1444: FILE: drivers/regulator/pm8921-regulator.c:1276:
++	rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr,
++		en | pd | vref | vprog,
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int *' to bare use of 'unsigned *'
+#1459: FILE: drivers/regulator/pm8921-regulator.c:1291:
++				   int max_uV, unsigned *selector)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1516: FILE: drivers/regulator/pm8921-regulator.c:1348:
++				      unsigned selector)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1549: FILE: drivers/regulator/pm8921-regulator.c:1381:
++		vreg_err(vreg,
++			"request v=[%d, %d] is outside possible v=[%d, %d]\n",
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1559: FILE: drivers/regulator/pm8921-regulator.c:1391:
++	else if (uV > FTSMPS_BAND2_UV_MAX
++			&& uV < FTSMPS_BAND3_UV_SET_POINT_MIN)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1583: FILE: drivers/regulator/pm8921-regulator.c:1415:
++		vreg_err(vreg,
++			"request v=[%d, %d] cannot be met by any set point\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1594: FILE: drivers/regulator/pm8921-regulator.c:1426:
++		rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr,
++			band | vprog,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1602: FILE: drivers/regulator/pm8921-regulator.c:1434:
++		rc = pm8921_vreg_masked_write(vreg, vreg->pfm_ctrl_addr, 0x00,
++			FTSMPS_VCTRL_BAND_MASK | FTSMPS_VCTRL_VPROG_MASK,
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int *' to bare use of 'unsigned *'
+#1618: FILE: drivers/regulator/pm8921-regulator.c:1450:
++				     int max_uV, unsigned *selector)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#1636: FILE: drivers/regulator/pm8921-regulator.c:1468:
++				   unsigned selector)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int *' to bare use of 'unsigned *'
+#1645: FILE: drivers/regulator/pm8921-regulator.c:1477:
++				  int max_uV, unsigned *selector)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1657: FILE: drivers/regulator/pm8921-regulator.c:1489:
++		vreg_err(vreg,
++			"request v=[%d, %d] is outside possible v=[%d, %d]\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1667: FILE: drivers/regulator/pm8921-regulator.c:1499:
++		vreg_err(vreg,
++			"request v=[%d, %d] cannot be met by any set point\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1674: FILE: drivers/regulator/pm8921-regulator.c:1506:
++	rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr, val,
++			NCP_VPROG_MASK, &vreg->ctrl_reg);
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1706: FILE: drivers/regulator/pm8921-regulator.c:1538:
++	if (mode == REGULATOR_MODE_NORMAL
++	    || (vreg->is_enabled_pc
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1707: FILE: drivers/regulator/pm8921-regulator.c:1539:
++	    || (vreg->is_enabled_pc
++		&& vreg->pdata.pin_fn == PM8921_VREG_PIN_FN_ENABLE)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1710: FILE: drivers/regulator/pm8921-regulator.c:1542:
++		rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr,
++			LDO_CTRL_PM_HPM, LDO_CTRL_PM_MASK, &vreg->ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1714: FILE: drivers/regulator/pm8921-regulator.c:1546:
++		rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr,
++			LDO_CTRL_PM_LPM, LDO_CTRL_PM_MASK, &vreg->ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1719: FILE: drivers/regulator/pm8921-regulator.c:1551:
++		rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++			LDO_TEST_LPM_SEL_CTRL | REGULATOR_BANK_WRITE
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1778: FILE: drivers/regulator/pm8921-regulator.c:1610:
++		rc = _pm8921_nldo1200_set_voltage(vreg, vreg->save_uV,
++			vreg->save_uV);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1786: FILE: drivers/regulator/pm8921-regulator.c:1618:
++		rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++			NLDO1200_ADVANCED_PM_HPM | REGULATOR_BANK_WRITE
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1792: FILE: drivers/regulator/pm8921-regulator.c:1624:
++		rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++			NLDO1200_ADVANCED_PM_LPM | REGULATOR_BANK_WRITE
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1829: FILE: drivers/regulator/pm8921-regulator.c:1661:
++	if (mode == REGULATOR_MODE_NORMAL
++	    || (vreg->is_enabled_pc
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1830: FILE: drivers/regulator/pm8921-regulator.c:1662:
++	    || (vreg->is_enabled_pc
++		&& vreg->pdata.pin_fn == PM8921_VREG_PIN_FN_ENABLE)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1833: FILE: drivers/regulator/pm8921-regulator.c:1665:
++		rc = pm8921_vreg_masked_write(vreg, vreg->clk_ctrl_addr,
++				       SMPS_CLK_CTRL_PWM, SMPS_CLK_CTRL_MASK,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1838: FILE: drivers/regulator/pm8921-regulator.c:1670:
++		rc = pm8921_vreg_masked_write(vreg, vreg->clk_ctrl_addr,
++				       SMPS_CLK_CTRL_PFM, SMPS_CLK_CTRL_MASK,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1874: FILE: drivers/regulator/pm8921-regulator.c:1706:
++		rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++				FTSMPS_CNFG1_PM_PWM | REGULATOR_BANK_WRITE
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1880: FILE: drivers/regulator/pm8921-regulator.c:1712:
++		rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++				FTSMPS_CNFG1_PM_PFM | REGULATOR_BANK_WRITE
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1895: FILE: drivers/regulator/pm8921-regulator.c:1727:
++static unsigned int pm8921_vreg_get_optimum_mode(struct regulator_dev *rdev,
++		int input_uV, int output_uV, int load_uA)
+
+CHECK:CAMELCASE: Avoid CamelCase: <system_uA>
+#1900: FILE: drivers/regulator/pm8921-regulator.c:1732:
++	if (load_uA + vreg->pdata.system_uA >= vreg->hpm_min_load)
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1921: FILE: drivers/regulator/pm8921-regulator.c:1753:
++	if (vreg->mode == REGULATOR_MODE_NORMAL
++		|| (vreg->is_enabled_pc
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1922: FILE: drivers/regulator/pm8921-regulator.c:1754:
++		|| (vreg->is_enabled_pc
++			&& vreg->pdata.pin_fn == PM8921_VREG_PIN_FN_ENABLE))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1926: FILE: drivers/regulator/pm8921-regulator.c:1758:
++	rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr, val | LDO_ENABLE,
++		LDO_ENABLE_MASK | LDO_CTRL_PM_MASK, &vreg->ctrl_reg);
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1951: FILE: drivers/regulator/pm8921-regulator.c:1783:
++	if (!vreg->is_enabled_pc
++	    || vreg->pdata.pin_fn != PM8921_VREG_PIN_FN_MODE) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1953: FILE: drivers/regulator/pm8921-regulator.c:1785:
++		rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr,
++			LDO_DISABLE, LDO_ENABLE_MASK, &vreg->ctrl_reg);
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#1960: FILE: drivers/regulator/pm8921-regulator.c:1792:
++	if (vreg->is_enabled_pc
++	    && vreg->pdata.pin_fn == PM8921_VREG_PIN_FN_MODE) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1962: FILE: drivers/regulator/pm8921-regulator.c:1794:
++		rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr,
++			LDO_CTRL_PM_LPM, LDO_CTRL_PM_MASK, &vreg->ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1967: FILE: drivers/regulator/pm8921-regulator.c:1799:
++		rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++			LDO_TEST_LPM_SEL_CTRL | REGULATOR_BANK_WRITE
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1990: FILE: drivers/regulator/pm8921-regulator.c:1822:
++	rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr, NLDO1200_ENABLE,
++		NLDO1200_ENABLE_MASK, &vreg->ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2004: FILE: drivers/regulator/pm8921-regulator.c:1836:
++	rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr, NLDO1200_DISABLE,
++		NLDO1200_ENABLE_MASK, &vreg->ctrl_reg);
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2021: FILE: drivers/regulator/pm8921-regulator.c:1853:
++	if (SMPS_IN_ADVANCED_MODE(vreg)
++	     || !pm8921_vreg_is_pin_controlled(vreg)) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2024: FILE: drivers/regulator/pm8921-regulator.c:1856:
++		rc = pm8921_smps_set_voltage_advanced(vreg, vreg->save_uV,
++			vreg->save_uV, 1);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2027: FILE: drivers/regulator/pm8921-regulator.c:1859:
++		rc = pm8921_smps_set_voltage_legacy(vreg, vreg->save_uV,
++			vreg->save_uV);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2032: FILE: drivers/regulator/pm8921-regulator.c:1864:
++		rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr,
++			SMPS_LEGACY_ENABLE, SMPS_LEGACY_ENABLE_MASK,
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2042: FILE: drivers/regulator/pm8921-regulator.c:1874:
++	if (vreg->mode == REGULATOR_MODE_NORMAL
++		|| (vreg->is_enabled_pc
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2043: FILE: drivers/regulator/pm8921-regulator.c:1875:
++		|| (vreg->is_enabled_pc
++			&& vreg->pdata.pin_fn == PM8921_VREG_PIN_FN_ENABLE))
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2047: FILE: drivers/regulator/pm8921-regulator.c:1879:
++	rc = pm8921_vreg_masked_write(vreg, vreg->clk_ctrl_addr, val,
++			SMPS_CLK_CTRL_MASK, &vreg->clk_ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2070: FILE: drivers/regulator/pm8921-regulator.c:1902:
++		rc = pm8921_smps_set_voltage_legacy(vreg, vreg->save_uV,
++				vreg->save_uV);
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2080: FILE: drivers/regulator/pm8921-regulator.c:1912:
++	if (!vreg->is_enabled_pc
++	    || vreg->pdata.pin_fn != PM8921_VREG_PIN_FN_MODE) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2082: FILE: drivers/regulator/pm8921-regulator.c:1914:
++		rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr,
++			SMPS_LEGACY_DISABLE, SMPS_LEGACY_ENABLE_MASK,
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2090: FILE: drivers/regulator/pm8921-regulator.c:1922:
++	if (vreg->is_enabled_pc
++	    && vreg->pdata.pin_fn == PM8921_VREG_PIN_FN_MODE)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2092: FILE: drivers/regulator/pm8921-regulator.c:1924:
++		rc = pm8921_vreg_masked_write(vreg, vreg->clk_ctrl_addr,
++		       SMPS_CLK_CTRL_PFM, SMPS_CLK_CTRL_MASK,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2126: FILE: drivers/regulator/pm8921-regulator.c:1958:
++	rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr,
++		FTSMPS_VCTRL_BAND_OFF, FTSMPS_VCTRL_BAND_MASK, &vreg->ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2131: FILE: drivers/regulator/pm8921-regulator.c:1963:
++	rc = pm8921_vreg_masked_write(vreg, vreg->pfm_ctrl_addr,
++		FTSMPS_VCTRL_BAND_OFF, FTSMPS_VCTRL_BAND_MASK,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2148: FILE: drivers/regulator/pm8921-regulator.c:1980:
++	rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr, VS_ENABLE,
++		VS_ENABLE_MASK, &vreg->ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2169: FILE: drivers/regulator/pm8921-regulator.c:2001:
++	rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr, VS_DISABLE,
++		VS_ENABLE_MASK, &vreg->ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2188: FILE: drivers/regulator/pm8921-regulator.c:2020:
++	rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr, VS300_CTRL_ENABLE,
++		VS300_CTRL_ENABLE_MASK, &vreg->ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2202: FILE: drivers/regulator/pm8921-regulator.c:2034:
++	rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr, VS300_CTRL_DISABLE,
++		VS300_CTRL_ENABLE_MASK, &vreg->ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2216: FILE: drivers/regulator/pm8921-regulator.c:2048:
++	rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr, NCP_ENABLE,
++		NCP_ENABLE_MASK, &vreg->ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2230: FILE: drivers/regulator/pm8921-regulator.c:2062:
++	rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr, NCP_DISABLE,
++		NCP_ENABLE_MASK, &vreg->ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2259: FILE: drivers/regulator/pm8921-regulator.c:2091:
++	rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++		val | REGULATOR_BANK_SEL(bank) | REGULATOR_BANK_WRITE,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2268: FILE: drivers/regulator/pm8921-regulator.c:2100:
++	rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++		REGULATOR_BANK_SEL(bank) | REGULATOR_BANK_WRITE,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2278: FILE: drivers/regulator/pm8921-regulator.c:2110:
++	rc = pm8921_vreg_masked_write(vreg, vreg->test_addr, val, mask,
++		&vreg->test_reg[0]);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2288: FILE: drivers/regulator/pm8921-regulator.c:2120:
++		rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr, val,
++			LDO_ENABLE_MASK | LDO_CTRL_PM_MASK, &vreg->ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2298: FILE: drivers/regulator/pm8921-regulator.c:2130:
++		rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr, val,
++			LDO_ENABLE_MASK | LDO_CTRL_PM_MASK, &vreg->ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2323: FILE: drivers/regulator/pm8921-regulator.c:2155:
++	rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++			REGULATOR_BANK_SEL(5) | REGULATOR_BANK_WRITE,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2330: FILE: drivers/regulator/pm8921-regulator.c:2162:
++	rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++			REGULATOR_BANK_SEL(6) | REGULATOR_BANK_WRITE,
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2339: FILE: drivers/regulator/pm8921-regulator.c:2171:
++	if ((vreg->ctrl_reg & LDO_ENABLE_MASK) == LDO_ENABLE
++	    && !vreg->is_enabled) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2341: FILE: drivers/regulator/pm8921-regulator.c:2173:
++		rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr,
++			LDO_DISABLE, LDO_ENABLE_MASK, &vreg->ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2349: FILE: drivers/regulator/pm8921-regulator.c:2181:
++		rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr,
++			LDO_CTRL_PM_LPM, LDO_CTRL_PM_MASK, &vreg->ctrl_reg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2354: FILE: drivers/regulator/pm8921-regulator.c:2186:
++		rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++			LDO_TEST_LPM_SEL_CTRL | REGULATOR_BANK_WRITE
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2409: FILE: drivers/regulator/pm8921-regulator.c:2241:
++	rc = pm8921_vreg_masked_write(vreg, vreg->sleep_ctrl_addr, val,
++			SMPS_PIN_CTRL_MASK | SMPS_PIN_CTRL_LPM_MASK,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2419: FILE: drivers/regulator/pm8921-regulator.c:2251:
++	rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr,
++		((vreg->pdata.pin_fn == PM8921_VREG_PIN_FN_MODE
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2420: FILE: drivers/regulator/pm8921-regulator.c:2252:
++		((vreg->pdata.pin_fn == PM8921_VREG_PIN_FN_MODE
++		  || vreg->is_enabled) ?
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2431: FILE: drivers/regulator/pm8921-regulator.c:2263:
++	rc = pm8921_vreg_masked_write(vreg, vreg->clk_ctrl_addr,
++			(vreg->pdata.pin_fn == PM8921_VREG_PIN_FN_ENABLE
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2432: FILE: drivers/regulator/pm8921-regulator.c:2264:
++			(vreg->pdata.pin_fn == PM8921_VREG_PIN_FN_ENABLE
++			 || (vreg->is_enabled
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2433: FILE: drivers/regulator/pm8921-regulator.c:2265:
++			 || (vreg->is_enabled
++			     && vreg->mode == REGULATOR_MODE_NORMAL)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2457: FILE: drivers/regulator/pm8921-regulator.c:2289:
++	rc = pm8921_vreg_masked_write(vreg, vreg->sleep_ctrl_addr, 0,
++			SMPS_PIN_CTRL_MASK | SMPS_PIN_CTRL_LPM_MASK,
+
+CHECK:LOGICAL_CONTINUATIONS: Logical continuations should be on the previous line
+#2467: FILE: drivers/regulator/pm8921-regulator.c:2299:
++	if ((vreg->ctrl_reg & SMPS_LEGACY_ENABLE_MASK) == SMPS_LEGACY_ENABLE
++	    && vreg->is_enabled == false) {
+
+CHECK:BOOL_COMPARISON: Using comparison to false is error prone
+#2467: FILE: drivers/regulator/pm8921-regulator.c:2299:
++	    && vreg->is_enabled == false) {
+
+Comparisons of A to true and false are better written
+as A and !A.
+
+See: https://lore.kernel.org/lkml/1365563834.27174.12.camel@joe-AO722/
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2469: FILE: drivers/regulator/pm8921-regulator.c:2301:
++		rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr,
++			SMPS_LEGACY_DISABLE, SMPS_LEGACY_ENABLE_MASK,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2478: FILE: drivers/regulator/pm8921-regulator.c:2310:
++		rc = pm8921_vreg_masked_write(vreg, vreg->clk_ctrl_addr,
++		       SMPS_CLK_CTRL_PFM, SMPS_CLK_CTRL_MASK,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2485: FILE: drivers/regulator/pm8921-regulator.c:2317:
++	rc = pm8921_smps_set_voltage_advanced(vreg, vreg->save_uV,
++			vreg->save_uV, 0);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2517: FILE: drivers/regulator/pm8921-regulator.c:2349:
++	rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr, val,
++			VS_PIN_CTRL_MASK | VS_ENABLE_MASK, &vreg->ctrl_reg);
+
+WARNING:CONST_STRUCT: struct regulator_ops should normally be const
+#2552: FILE: drivers/regulator/pm8921-regulator.c:2384:
++static struct regulator_ops pm8921_pldo_ops = {
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+WARNING:CONST_STRUCT: struct regulator_ops should normally be const
+#2564: FILE: drivers/regulator/pm8921-regulator.c:2396:
++static struct regulator_ops pm8921_nldo_ops = {
+
+WARNING:CONST_STRUCT: struct regulator_ops should normally be const
+#2576: FILE: drivers/regulator/pm8921-regulator.c:2408:
++static struct regulator_ops pm8921_nldo1200_ops = {
+
+WARNING:CONST_STRUCT: struct regulator_ops should normally be const
+#2588: FILE: drivers/regulator/pm8921-regulator.c:2420:
++static struct regulator_ops pm8921_smps_ops = {
+
+WARNING:CONST_STRUCT: struct regulator_ops should normally be const
+#2600: FILE: drivers/regulator/pm8921-regulator.c:2432:
++static struct regulator_ops pm8921_ftsmps_ops = {
+
+WARNING:CONST_STRUCT: struct regulator_ops should normally be const
+#2612: FILE: drivers/regulator/pm8921-regulator.c:2444:
++static struct regulator_ops pm8921_vs_ops = {
+
+WARNING:CONST_STRUCT: struct regulator_ops should normally be const
+#2618: FILE: drivers/regulator/pm8921-regulator.c:2450:
++static struct regulator_ops pm8921_vs300_ops = {
+
+WARNING:CONST_STRUCT: struct regulator_ops should normally be const
+#2624: FILE: drivers/regulator/pm8921-regulator.c:2456:
++static struct regulator_ops pm8921_ncp_ops = {
+
+WARNING:CONST_STRUCT: struct regulator_ops should normally be const
+#2634: FILE: drivers/regulator/pm8921-regulator.c:2466:
++static struct regulator_ops pm8921_ldo_pc_ops = {
+
+WARNING:CONST_STRUCT: struct regulator_ops should normally be const
+#2640: FILE: drivers/regulator/pm8921-regulator.c:2472:
++static struct regulator_ops pm8921_smps_pc_ops = {
+
+WARNING:CONST_STRUCT: struct regulator_ops should normally be const
+#2646: FILE: drivers/regulator/pm8921-regulator.c:2478:
++static struct regulator_ops pm8921_vs_pc_ops = {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2776: FILE: drivers/regulator/pm8921-regulator.c:2608:
++		rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr,
++		      (vreg->pdata.pull_down_enable ? LDO_PULL_DOWN_ENABLE : 0),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2821: FILE: drivers/regulator/pm8921-regulator.c:2653:
++	rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++		 (vreg->pdata.pull_down_enable ? NLDO1200_PULL_DOWN_ENABLE : 0)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2875: FILE: drivers/regulator/pm8921-regulator.c:2707:
++		rc = pm8921_vreg_masked_write(vreg, vreg->test_addr,
++			(vreg->pdata.pull_down_enable
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2893: FILE: drivers/regulator/pm8921-regulator.c:2725:
++		rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr,
++			(vreg->pdata.pull_down_enable
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2946: FILE: drivers/regulator/pm8921-regulator.c:2778:
++	rc = pm8921_vreg_masked_write(vreg, vreg->pwr_cnfg_addr,
++		(vreg->pdata.pull_down_enable ? FTSMPS_PULL_DOWN_ENABLE : 0),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2970: FILE: drivers/regulator/pm8921-regulator.c:2802:
++		rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr,
++		       (vreg->pdata.pull_down_enable ? VS_PULL_DOWN_ENABLE : 0),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2975: FILE: drivers/regulator/pm8921-regulator.c:2807:
++			vreg_err(vreg,
++				"pm8921_vreg_masked_write failed, rc=%d\n", rc);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2996: FILE: drivers/regulator/pm8921-regulator.c:2828:
++	rc = pm8921_vreg_masked_write(vreg, vreg->ctrl_addr,
++		    (vreg->pdata.pull_down_enable ? VS300_PULL_DOWN_ENABLE : 0),
+
+WARNING:HOTPLUG_SECTION: Using __devinit is unnecessary
+#3035: FILE: drivers/regulator/pm8921-regulator.c:2867:
++static int __devinit pm8921_vreg_probe(struct platform_device *pdev)
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#3042: FILE: drivers/regulator/pm8921-regulator.c:2874:
++	unsigned pin_ctrl;
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!pdev"
+#3045: FILE: drivers/regulator/pm8921-regulator.c:2877:
++	if (pdev == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around vreg->pdata
+#3066: FILE: drivers/regulator/pm8921-regulator.c:2898:
++			memcpy(&(vreg->pdata), pdata,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3067: FILE: drivers/regulator/pm8921-regulator.c:2899:
++			memcpy(&(vreg->pdata), pdata,
++				sizeof(struct pm8921_regulator_platform_data));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3079: FILE: drivers/regulator/pm8921-regulator.c:2911:
++				pr_err("%s: no pin control input specified\n",
++					reg_name);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3102: FILE: drivers/regulator/pm8921-regulator.c:2934:
++			rc = pm8921_init_smps(vreg,
++						IS_REAL_REGULATOR(pdev->id));
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3125: FILE: drivers/regulator/pm8921-regulator.c:2957:
++			vreg->rdev = regulator_register(rdesc, &pdev->dev,
++					&(pdata->init_data), vreg);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around pdata->init_data
+#3125: FILE: drivers/regulator/pm8921-regulator.c:2957:
++					&(pdata->init_data), vreg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3130: FILE: drivers/regulator/pm8921-regulator.c:2962:
++				pr_err("regulator_register failed: %s, rc=%d\n",
++					reg_name, rc);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3134: FILE: drivers/regulator/pm8921-regulator.c:2966:
++			vreg->rdev_pc = regulator_register(rdesc, &pdev->dev,
++					&(pdata->init_data), vreg);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around pdata->init_data
+#3134: FILE: drivers/regulator/pm8921-regulator.c:2966:
++					&(pdata->init_data), vreg);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#3139: FILE: drivers/regulator/pm8921-regulator.c:2971:
++				pr_err("regulator_register failed: %s, rc=%d\n",
++					reg_name, rc);
+
+WARNING:HOTPLUG_SECTION: Using __devexit is unnecessary
+#3153: FILE: drivers/regulator/pm8921-regulator.c:2985:
++static int __devexit pm8921_vreg_remove(struct platform_device *pdev)
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#3158: FILE: drivers/regulator/pm8921-regulator.c:2990:
++		regulator_unregister(
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#3221: FILE: include/linux/regulator/pm8921-regulator.h:1:
++/* Copyright (c) 2011, Code Aurora Forum. All rights reserved.
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#3369: FILE: include/linux/regulator/pm8921-regulator.h:149:
++	unsigned			pull_down_enable;
+
+WARNING:UNSPECIFIED_INT: Prefer 'unsigned int' to bare use of 'unsigned'
+#3370: FILE: include/linux/regulator/pm8921-regulator.h:150:
++	unsigned			pin_ctrl;
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000284641.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 39 warnings, 138 checks, 3274 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000284641.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

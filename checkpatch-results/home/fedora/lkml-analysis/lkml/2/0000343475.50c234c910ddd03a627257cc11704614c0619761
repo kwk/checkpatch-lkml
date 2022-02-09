@@ -1,0 +1,85 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp' - possible side-effects?
+#62: FILE: include/linux/percpu.h:325:
++#define __this_cpu_generic_xchg(pcp, nval)				\
++({	typeof(pcp) ret__;						\
++	ret__ = __this_cpu_read(pcp);					\
++	__this_cpu_write(pcp, nval);					\
++	ret__;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp' - possible side-effects?
+#85: FILE: include/linux/percpu.h:348:
++#define _this_cpu_generic_xchg(pcp, nval)				\
++({	typeof(pcp) ret__;						\
++	preempt_disable();						\
++	ret__ = __this_cpu_read(pcp);					\
++	__this_cpu_write(pcp, nval);					\
++	preempt_enable();						\
++	ret__;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp' - possible side-effects?
+#110: FILE: include/linux/percpu.h:373:
++#define _this_cpu_generic_cmpxchg(pcp, oval, nval)			\
++({	typeof(pcp) ret__;						\
++	preempt_disable();						\
++	ret__ = __this_cpu_read(pcp);					\
++	if (ret__ == (oval))						\
++		__this_cpu_write(pcp, nval);				\
++	preempt_enable();						\
++	ret__;								\
++})
+
+WARNING:LONG_LINE: line length of 110 exceeds 100 columns
+#133: FILE: include/linux/percpu.h:396:
++# define this_cpu_cmpxchg(pcp, oval, nval)	__pcpu_size_call_return2(this_cpu_cmpxchg_, (pcp), oval, nval)
+
+The line has exceeded the specified maximum length.
+To use a different maximum line length, the --max-line-length=n option
+may be added while invoking checkpatch.
+
+Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
+("checkpatch/coding-style: deprecate 80-column warning") increased the
+limit to 100 columns.  This is not a hard limit either and it's
+preferable to stay within 80 columns whenever possible.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp' - possible side-effects?
+#136: FILE: include/linux/percpu.h:399:
++#define __this_cpu_generic_cmpxchg(pcp, oval, nval)			\
++({									\
++	typeof(pcp) ret__;						\
++	ret__ = __this_cpu_read(pcp);					\
++	if (ret__ == (oval))						\
++		__this_cpu_write(pcp, nval);				\
++	ret__;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pcp' - possible side-effects?
+#178: FILE: include/linux/percpu.h:800:
++#define irqsafe_cpu_generic_cmpxchg(pcp, oval, nval)			\
++({									\
++	typeof(pcp) ret__;						\
++	unsigned long flags;						\
++	local_irq_save(flags);						\
++	ret__ = __this_cpu_read(pcp);					\
++	if (ret__ == (oval))						\
++		__this_cpu_write(pcp, nval);				\
++	local_irq_restore(flags);					\
++	ret__;								\
++})
+
+WARNING:LONG_LINE: line length of 113 exceeds 100 columns
+#203: FILE: include/linux/percpu.h:825:
++# define irqsafe_cpu_cmpxchg(pcp, oval, nval)	__pcpu_size_call_return2(irqsafe_cpu_cmpxchg_, (pcp), oval, nval)
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000343475.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 2 warnings, 5 checks, 146 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000343475.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

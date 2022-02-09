@@ -1,0 +1,442 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#138: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#181: FILE: tools/include/linux/interval_tree_generic.h:3:
++/*
++  Interval Trees
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#184: FILE: tools/include/linux/interval_tree_generic.h:6:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ITSTRUCT' - possible side-effects?
+#206: FILE: tools/include/linux/interval_tree_generic.h:28:
++#define INTERVAL_TREE_DEFINE(ITSTRUCT, ITRB, ITTYPE, ITSUBTREE,		      \
++			     ITSTART, ITLAST, ITSTATIC, ITPREFIX)	      \
++									      \
++/* Callbacks for augmented rbtree insert and remove */			      \
++									      \
++RB_DECLARE_CALLBACKS_MAX(static, ITPREFIX ## _augment,			      \
++			 ITSTRUCT, ITRB, ITTYPE, ITSUBTREE, ITLAST)	      \
++									      \
++/* Insert / remove interval nodes from the tree */			      \
++									      \
++ITSTATIC void ITPREFIX ## _insert(ITSTRUCT *node,			      \
++				  struct rb_root_cached *root)	 	      \
++{									      \
++	struct rb_node **link = &root->rb_root.rb_node, *rb_parent = NULL;    \
++	ITTYPE start = ITSTART(node), last = ITLAST(node);		      \
++	ITSTRUCT *parent;						      \
++	bool leftmost = true;						      \
++									      \
++	while (*link) {							      \
++		rb_parent = *link;					      \
++		parent = rb_entry(rb_parent, ITSTRUCT, ITRB);		      \
++		if (parent->ITSUBTREE < last)				      \
++			parent->ITSUBTREE = last;			      \
++		if (start < ITSTART(parent))				      \
++			link = &parent->ITRB.rb_left;			      \
++		else {							      \
++			link = &parent->ITRB.rb_right;			      \
++			leftmost = false;				      \
++		}							      \
++	}								      \
++									      \
++	node->ITSUBTREE = last;						      \
++	rb_link_node(&node->ITRB, rb_parent, link);			      \
++	rb_insert_augmented_cached(&node->ITRB, root,			      \
++				   leftmost, &ITPREFIX ## _augment);	      \
++}									      \
++									      \
++ITSTATIC void ITPREFIX ## _remove(ITSTRUCT *node,			      \
++				  struct rb_root_cached *root)		      \
++{									      \
++	rb_erase_augmented_cached(&node->ITRB, root, &ITPREFIX ## _augment);  \
++}									      \
++									      \
++/*									      \
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ITRB' - possible side-effects?
+#206: FILE: tools/include/linux/interval_tree_generic.h:28:
++#define INTERVAL_TREE_DEFINE(ITSTRUCT, ITRB, ITTYPE, ITSUBTREE,		      \
++			     ITSTART, ITLAST, ITSTATIC, ITPREFIX)	      \
++									      \
++/* Callbacks for augmented rbtree insert and remove */			      \
++									      \
++RB_DECLARE_CALLBACKS_MAX(static, ITPREFIX ## _augment,			      \
++			 ITSTRUCT, ITRB, ITTYPE, ITSUBTREE, ITLAST)	      \
++									      \
++/* Insert / remove interval nodes from the tree */			      \
++									      \
++ITSTATIC void ITPREFIX ## _insert(ITSTRUCT *node,			      \
++				  struct rb_root_cached *root)	 	      \
++{									      \
++	struct rb_node **link = &root->rb_root.rb_node, *rb_parent = NULL;    \
++	ITTYPE start = ITSTART(node), last = ITLAST(node);		      \
++	ITSTRUCT *parent;						      \
++	bool leftmost = true;						      \
++									      \
++	while (*link) {							      \
++		rb_parent = *link;					      \
++		parent = rb_entry(rb_parent, ITSTRUCT, ITRB);		      \
++		if (parent->ITSUBTREE < last)				      \
++			parent->ITSUBTREE = last;			      \
++		if (start < ITSTART(parent))				      \
++			link = &parent->ITRB.rb_left;			      \
++		else {							      \
++			link = &parent->ITRB.rb_right;			      \
++			leftmost = false;				      \
++		}							      \
++	}								      \
++									      \
++	node->ITSUBTREE = last;						      \
++	rb_link_node(&node->ITRB, rb_parent, link);			      \
++	rb_insert_augmented_cached(&node->ITRB, root,			      \
++				   leftmost, &ITPREFIX ## _augment);	      \
++}									      \
++									      \
++ITSTATIC void ITPREFIX ## _remove(ITSTRUCT *node,			      \
++				  struct rb_root_cached *root)		      \
++{									      \
++	rb_erase_augmented_cached(&node->ITRB, root, &ITPREFIX ## _augment);  \
++}									      \
++									      \
++/*									      \
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ITTYPE' - possible side-effects?
+#206: FILE: tools/include/linux/interval_tree_generic.h:28:
++#define INTERVAL_TREE_DEFINE(ITSTRUCT, ITRB, ITTYPE, ITSUBTREE,		      \
++			     ITSTART, ITLAST, ITSTATIC, ITPREFIX)	      \
++									      \
++/* Callbacks for augmented rbtree insert and remove */			      \
++									      \
++RB_DECLARE_CALLBACKS_MAX(static, ITPREFIX ## _augment,			      \
++			 ITSTRUCT, ITRB, ITTYPE, ITSUBTREE, ITLAST)	      \
++									      \
++/* Insert / remove interval nodes from the tree */			      \
++									      \
++ITSTATIC void ITPREFIX ## _insert(ITSTRUCT *node,			      \
++				  struct rb_root_cached *root)	 	      \
++{									      \
++	struct rb_node **link = &root->rb_root.rb_node, *rb_parent = NULL;    \
++	ITTYPE start = ITSTART(node), last = ITLAST(node);		      \
++	ITSTRUCT *parent;						      \
++	bool leftmost = true;						      \
++									      \
++	while (*link) {							      \
++		rb_parent = *link;					      \
++		parent = rb_entry(rb_parent, ITSTRUCT, ITRB);		      \
++		if (parent->ITSUBTREE < last)				      \
++			parent->ITSUBTREE = last;			      \
++		if (start < ITSTART(parent))				      \
++			link = &parent->ITRB.rb_left;			      \
++		else {							      \
++			link = &parent->ITRB.rb_right;			      \
++			leftmost = false;				      \
++		}							      \
++	}								      \
++									      \
++	node->ITSUBTREE = last;						      \
++	rb_link_node(&node->ITRB, rb_parent, link);			      \
++	rb_insert_augmented_cached(&node->ITRB, root,			      \
++				   leftmost, &ITPREFIX ## _augment);	      \
++}									      \
++									      \
++ITSTATIC void ITPREFIX ## _remove(ITSTRUCT *node,			      \
++				  struct rb_root_cached *root)		      \
++{									      \
++	rb_erase_augmented_cached(&node->ITRB, root, &ITPREFIX ## _augment);  \
++}									      \
++									      \
++/*									      \
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ITSUBTREE' - possible side-effects?
+#206: FILE: tools/include/linux/interval_tree_generic.h:28:
++#define INTERVAL_TREE_DEFINE(ITSTRUCT, ITRB, ITTYPE, ITSUBTREE,		      \
++			     ITSTART, ITLAST, ITSTATIC, ITPREFIX)	      \
++									      \
++/* Callbacks for augmented rbtree insert and remove */			      \
++									      \
++RB_DECLARE_CALLBACKS_MAX(static, ITPREFIX ## _augment,			      \
++			 ITSTRUCT, ITRB, ITTYPE, ITSUBTREE, ITLAST)	      \
++									      \
++/* Insert / remove interval nodes from the tree */			      \
++									      \
++ITSTATIC void ITPREFIX ## _insert(ITSTRUCT *node,			      \
++				  struct rb_root_cached *root)	 	      \
++{									      \
++	struct rb_node **link = &root->rb_root.rb_node, *rb_parent = NULL;    \
++	ITTYPE start = ITSTART(node), last = ITLAST(node);		      \
++	ITSTRUCT *parent;						      \
++	bool leftmost = true;						      \
++									      \
++	while (*link) {							      \
++		rb_parent = *link;					      \
++		parent = rb_entry(rb_parent, ITSTRUCT, ITRB);		      \
++		if (parent->ITSUBTREE < last)				      \
++			parent->ITSUBTREE = last;			      \
++		if (start < ITSTART(parent))				      \
++			link = &parent->ITRB.rb_left;			      \
++		else {							      \
++			link = &parent->ITRB.rb_right;			      \
++			leftmost = false;				      \
++		}							      \
++	}								      \
++									      \
++	node->ITSUBTREE = last;						      \
++	rb_link_node(&node->ITRB, rb_parent, link);			      \
++	rb_insert_augmented_cached(&node->ITRB, root,			      \
++				   leftmost, &ITPREFIX ## _augment);	      \
++}									      \
++									      \
++ITSTATIC void ITPREFIX ## _remove(ITSTRUCT *node,			      \
++				  struct rb_root_cached *root)		      \
++{									      \
++	rb_erase_augmented_cached(&node->ITRB, root, &ITPREFIX ## _augment);  \
++}									      \
++									      \
++/*									      \
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ITSTART' - possible side-effects?
+#206: FILE: tools/include/linux/interval_tree_generic.h:28:
++#define INTERVAL_TREE_DEFINE(ITSTRUCT, ITRB, ITTYPE, ITSUBTREE,		      \
++			     ITSTART, ITLAST, ITSTATIC, ITPREFIX)	      \
++									      \
++/* Callbacks for augmented rbtree insert and remove */			      \
++									      \
++RB_DECLARE_CALLBACKS_MAX(static, ITPREFIX ## _augment,			      \
++			 ITSTRUCT, ITRB, ITTYPE, ITSUBTREE, ITLAST)	      \
++									      \
++/* Insert / remove interval nodes from the tree */			      \
++									      \
++ITSTATIC void ITPREFIX ## _insert(ITSTRUCT *node,			      \
++				  struct rb_root_cached *root)	 	      \
++{									      \
++	struct rb_node **link = &root->rb_root.rb_node, *rb_parent = NULL;    \
++	ITTYPE start = ITSTART(node), last = ITLAST(node);		      \
++	ITSTRUCT *parent;						      \
++	bool leftmost = true;						      \
++									      \
++	while (*link) {							      \
++		rb_parent = *link;					      \
++		parent = rb_entry(rb_parent, ITSTRUCT, ITRB);		      \
++		if (parent->ITSUBTREE < last)				      \
++			parent->ITSUBTREE = last;			      \
++		if (start < ITSTART(parent))				      \
++			link = &parent->ITRB.rb_left;			      \
++		else {							      \
++			link = &parent->ITRB.rb_right;			      \
++			leftmost = false;				      \
++		}							      \
++	}								      \
++									      \
++	node->ITSUBTREE = last;						      \
++	rb_link_node(&node->ITRB, rb_parent, link);			      \
++	rb_insert_augmented_cached(&node->ITRB, root,			      \
++				   leftmost, &ITPREFIX ## _augment);	      \
++}									      \
++									      \
++ITSTATIC void ITPREFIX ## _remove(ITSTRUCT *node,			      \
++				  struct rb_root_cached *root)		      \
++{									      \
++	rb_erase_augmented_cached(&node->ITRB, root, &ITPREFIX ## _augment);  \
++}									      \
++									      \
++/*									      \
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ITLAST' - possible side-effects?
+#206: FILE: tools/include/linux/interval_tree_generic.h:28:
++#define INTERVAL_TREE_DEFINE(ITSTRUCT, ITRB, ITTYPE, ITSUBTREE,		      \
++			     ITSTART, ITLAST, ITSTATIC, ITPREFIX)	      \
++									      \
++/* Callbacks for augmented rbtree insert and remove */			      \
++									      \
++RB_DECLARE_CALLBACKS_MAX(static, ITPREFIX ## _augment,			      \
++			 ITSTRUCT, ITRB, ITTYPE, ITSUBTREE, ITLAST)	      \
++									      \
++/* Insert / remove interval nodes from the tree */			      \
++									      \
++ITSTATIC void ITPREFIX ## _insert(ITSTRUCT *node,			      \
++				  struct rb_root_cached *root)	 	      \
++{									      \
++	struct rb_node **link = &root->rb_root.rb_node, *rb_parent = NULL;    \
++	ITTYPE start = ITSTART(node), last = ITLAST(node);		      \
++	ITSTRUCT *parent;						      \
++	bool leftmost = true;						      \
++									      \
++	while (*link) {							      \
++		rb_parent = *link;					      \
++		parent = rb_entry(rb_parent, ITSTRUCT, ITRB);		      \
++		if (parent->ITSUBTREE < last)				      \
++			parent->ITSUBTREE = last;			      \
++		if (start < ITSTART(parent))				      \
++			link = &parent->ITRB.rb_left;			      \
++		else {							      \
++			link = &parent->ITRB.rb_right;			      \
++			leftmost = false;				      \
++		}							      \
++	}								      \
++									      \
++	node->ITSUBTREE = last;						      \
++	rb_link_node(&node->ITRB, rb_parent, link);			      \
++	rb_insert_augmented_cached(&node->ITRB, root,			      \
++				   leftmost, &ITPREFIX ## _augment);	      \
++}									      \
++									      \
++ITSTATIC void ITPREFIX ## _remove(ITSTRUCT *node,			      \
++				  struct rb_root_cached *root)		      \
++{									      \
++	rb_erase_augmented_cached(&node->ITRB, root, &ITPREFIX ## _augment);  \
++}									      \
++									      \
++/*									      \
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ITSTATIC' - possible side-effects?
+#206: FILE: tools/include/linux/interval_tree_generic.h:28:
++#define INTERVAL_TREE_DEFINE(ITSTRUCT, ITRB, ITTYPE, ITSUBTREE,		      \
++			     ITSTART, ITLAST, ITSTATIC, ITPREFIX)	      \
++									      \
++/* Callbacks for augmented rbtree insert and remove */			      \
++									      \
++RB_DECLARE_CALLBACKS_MAX(static, ITPREFIX ## _augment,			      \
++			 ITSTRUCT, ITRB, ITTYPE, ITSUBTREE, ITLAST)	      \
++									      \
++/* Insert / remove interval nodes from the tree */			      \
++									      \
++ITSTATIC void ITPREFIX ## _insert(ITSTRUCT *node,			      \
++				  struct rb_root_cached *root)	 	      \
++{									      \
++	struct rb_node **link = &root->rb_root.rb_node, *rb_parent = NULL;    \
++	ITTYPE start = ITSTART(node), last = ITLAST(node);		      \
++	ITSTRUCT *parent;						      \
++	bool leftmost = true;						      \
++									      \
++	while (*link) {							      \
++		rb_parent = *link;					      \
++		parent = rb_entry(rb_parent, ITSTRUCT, ITRB);		      \
++		if (parent->ITSUBTREE < last)				      \
++			parent->ITSUBTREE = last;			      \
++		if (start < ITSTART(parent))				      \
++			link = &parent->ITRB.rb_left;			      \
++		else {							      \
++			link = &parent->ITRB.rb_right;			      \
++			leftmost = false;				      \
++		}							      \
++	}								      \
++									      \
++	node->ITSUBTREE = last;						      \
++	rb_link_node(&node->ITRB, rb_parent, link);			      \
++	rb_insert_augmented_cached(&node->ITRB, root,			      \
++				   leftmost, &ITPREFIX ## _augment);	      \
++}									      \
++									      \
++ITSTATIC void ITPREFIX ## _remove(ITSTRUCT *node,			      \
++				  struct rb_root_cached *root)		      \
++{									      \
++	rb_erase_augmented_cached(&node->ITRB, root, &ITPREFIX ## _augment);  \
++}									      \
++									      \
++/*									      \
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#216: FILE: tools/include/linux/interval_tree_generic.h:38:
++ITSTATIC void ITPREFIX ## _insert(ITSTRUCT *node,			      \
+                                            ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#217: FILE: tools/include/linux/interval_tree_generic.h:39:
++^I^I^I^I  struct rb_root_cached *root)^I ^I      \$
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#256: FILE: tools/include/linux/interval_tree_generic.h:78:
++ */									      \
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#265: FILE: tools/include/linux/interval_tree_generic.h:87:
++		 */							      \
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#277: FILE: tools/include/linux/interval_tree_generic.h:99:
++				 */					      \
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#317: FILE: tools/include/linux/interval_tree_generic.h:139:
++	 */								      \
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#341: FILE: tools/include/linux/interval_tree_generic.h:163:
++		 */							      \
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#383: FILE: tools/lib/interval_tree.c:12:
++		     START, LAST,, interval_tree)
+ 		                ^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#452: FILE: tools/perf/tests/free-object-cache.c:26:
++	struct ordered_event *objs = ptr;
++	return &objs[index];
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!e"
+#468: FILE: tools/perf/tests/free-object-cache.c:42:
++	TEST_ASSERT_VAL("got object from empty cache", e == NULL);
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "e"
+#477: FILE: tools/perf/tests/free-object-cache.c:51:
++		TEST_ASSERT_VAL("ran out of objects", e != NULL);
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!e"
+#481: FILE: tools/perf/tests/free-object-cache.c:55:
++	TEST_ASSERT_VAL("got object from empty cache after put", e == NULL);
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#526: FILE: tools/perf/tests/free-object-cache.c:100:
++	for (i = num_objs-1; i >= 0; i--) {
+ 	                 ^
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000141492.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 1 errors, 9 warnings, 13 checks, 680 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000141492.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

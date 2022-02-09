@@ -1,0 +1,126 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#48: FILE: include/linux/workqueue.h:129:
++#define __WORK_INITIALIZER(n, f) {					\
++	.data = WORK_DATA_STATIC_INIT(),				\
++	.entry	= { &(n).entry, &(n).entry },				\
++	.func = (f),							\
++	__WORK_INIT_LOCKDEP_MAP(#n, &(n))				\
+ 	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#59: FILE: include/linux/workqueue.h:136:
++#define __DELAYED_WORK_INITIALIZER(n, f) {				\
++	.work = __WORK_INITIALIZER((n).work, (f)),			\
++	.timer = TIMER_INITIALIZER(delayed_work_timer_fn,		\
++				0, (unsigned long)&(n)),		\
+ 	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#69: FILE: include/linux/workqueue.h:142:
++#define __DEFERRED_WORK_INITIALIZER(n, f) {				\
++	.work = __WORK_INITIALIZER((n).work, (f)),			\
++	.timer = TIMER_DEFERRED_INITIALIZER(delayed_work_timer_fn,	\
++				0, (unsigned long)&(n)),		\
+ 	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#76: FILE: include/linux/workqueue.h:148:
++#define DECLARE_WORK(n, f)						\
+ 	struct work_struct n = __WORK_INITIALIZER(n, f)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#80: FILE: include/linux/workqueue.h:151:
++#define DECLARE_DELAYED_WORK(n, f)					\
+ 	struct delayed_work n = __DELAYED_WORK_INITIALIZER(n, f)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'n' - possible side-effects?
+#84: FILE: include/linux/workqueue.h:154:
++#define DECLARE_DEFERRED_WORK(n, f)					\
+ 	struct delayed_work n = __DEFERRED_WORK_INITIALIZER(n, f)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#93: FILE: include/linux/workqueue.h:160:
++#define PREPARE_WORK(_work, _func)					\
++	do {								\
++		(_work)->func = (_func);				\
+ 	} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#119: FILE: include/linux/workqueue.h:209:
++#define INIT_WORK(_work, _func)						\
++	do {								\
++		__INIT_WORK((_work), (_func), 0);			\
+ 	} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#127: FILE: include/linux/workqueue.h:214:
++#define INIT_WORK_ONSTACK(_work, _func)					\
++	do {								\
++		__INIT_WORK((_work), (_func), 1);			\
+ 	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_work' - possible side-effects?
+#138: FILE: include/linux/workqueue.h:219:
++#define INIT_DELAYED_WORK(_work, _func)					\
++	do {								\
++		INIT_WORK(&(_work)->work, (_func));			\
++		init_timer(&(_work)->timer);				\
++		(_work)->timer.function = delayed_work_timer_fn;	\
++		(_work)->timer.data = (unsigned long)(_work);		\
+ 	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_work' - possible side-effects?
+#152: FILE: include/linux/workqueue.h:227:
++#define INIT_DELAYED_WORK_ONSTACK(_work, _func)				\
++	do {								\
++		INIT_WORK_ONSTACK(&(_work)->work, (_func));		\
++		init_timer_on_stack(&(_work)->timer);			\
++		(_work)->timer.function = delayed_work_timer_fn;	\
++		(_work)->timer.data = (unsigned long)(_work);		\
+ 	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_work' - possible side-effects?
+#166: FILE: include/linux/workqueue.h:235:
++#define INIT_DELAYED_WORK_DEFERRABLE(_work, _func)			\
++	do {								\
++		INIT_WORK(&(_work)->work, (_func));			\
++		init_timer_deferrable(&(_work)->timer);			\
++		(_work)->timer.function = delayed_work_timer_fn;	\
++		(_work)->timer.data = (unsigned long)(_work);		\
+ 	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fmt' - possible side-effects?
+#191: FILE: include/linux/workqueue.h:343:
++#define alloc_workqueue(fmt, flags, max_active, args...)		\
++({									\
++	static struct lock_class_key __key;				\
++	const char *__lock_name;					\
++									\
++	if (__builtin_constant_p(fmt))					\
++		__lock_name = (fmt);					\
++	else								\
++		__lock_name = #fmt;					\
++									\
++	__alloc_workqueue_key((fmt), (flags), (max_active),		\
++			      &__key, __lock_name, ##args);		\
+ })
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000079093.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 3 warnings, 10 checks, 187 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000079093.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

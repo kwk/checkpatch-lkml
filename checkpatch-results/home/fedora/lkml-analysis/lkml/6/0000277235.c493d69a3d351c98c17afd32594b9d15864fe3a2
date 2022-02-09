@@ -1,0 +1,314 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'HEAD' - possible side-effects?
+#93: FILE: include/linux/lsm_hooks.h:1995:
++#define LSM_HOOK_INIT_MUTABLE(HEAD, HOOK) \
++	{							\
++		.head = &security_hook_heads_mutable.HEAD,	\
++		.hook = { .HEAD = HOOK },			\
++		.owner = THIS_MODULE,				\
++	}
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#122: FILE: include/linux/lsm_hooks.h:2014:
++extern void security_delete_hooks(struct security_hook_list *hooks, int count);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#183: FILE: security/security.c:62:
+ }
++#define FOR_EACH_SECURITY_HOOK(ITERATOR, HEAD) \
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#225: FILE: security/security.c:104:
++static int allow_unload_hooks_set(const char *val,
++					const struct kernel_param *kp)
+
+WARNING:CONST_STRUCT: struct kernel_param_ops should normally be const
+#263: FILE: security/security.c:142:
++static struct kernel_param_ops allow_unload_hooks_param_ops = {
+
+Using const is generally a good idea.  Checkpatch reads
+a list of frequently used structs that are always or
+almost always constant.
+
+The existing structs list can be viewed from
+`scripts/const_structs.checkpatch`.
+
+See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#306: FILE: security/security.c:185:
++#define FOR_EACH_SECURITY_HOOK_MUTABLE(ITERATOR, HEAD)	while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'LABEL' - possible side-effects?
+#366: FILE: security/security.c:344:
++#define call_int_hook2(LABEL, FUNC, IRC, ...) ({		\
+ 	int RC = IRC;						\
++								\
+ 	do {							\
+ 		struct security_hook_list *P;			\
++		int srcu_idx;					\
+ 								\
++		FOR_EACH_SECURITY_HOOK(P, FUNC) {		\
++			RC = P->hook.FUNC(__VA_ARGS__);		\
++			if (RC != 0)				\
++				goto LABEL;			\
++		}						\
++		srcu_idx = lock_lsm();				\
++		FOR_EACH_SECURITY_HOOK_MUTABLE(P, FUNC) {	\
+ 			RC = P->hook.FUNC(__VA_ARGS__);		\
+ 			if (RC != 0)				\
+ 				break;				\
+ 		}						\
++		unlock_lsm(srcu_idx);				\
+ 	} while (0);						\
++LABEL:								\
+ 	RC;							\
+ })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'FUNC' - possible side-effects?
+#366: FILE: security/security.c:344:
++#define call_int_hook2(LABEL, FUNC, IRC, ...) ({		\
+ 	int RC = IRC;						\
++								\
+ 	do {							\
+ 		struct security_hook_list *P;			\
++		int srcu_idx;					\
+ 								\
++		FOR_EACH_SECURITY_HOOK(P, FUNC) {		\
++			RC = P->hook.FUNC(__VA_ARGS__);		\
++			if (RC != 0)				\
++				goto LABEL;			\
++		}						\
++		srcu_idx = lock_lsm();				\
++		FOR_EACH_SECURITY_HOOK_MUTABLE(P, FUNC) {	\
+ 			RC = P->hook.FUNC(__VA_ARGS__);		\
+ 			if (RC != 0)				\
+ 				break;				\
+ 		}						\
++		unlock_lsm(srcu_idx);				\
+ 	} while (0);						\
++LABEL:								\
+ 	RC;							\
+ })
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#366: FILE: security/security.c:344:
++#define call_int_hook2(LABEL, FUNC, IRC, ...) ({		\
+ 	int RC = IRC;						\
++								\
+ 	do {							\
+ 		struct security_hook_list *P;			\
++		int srcu_idx;					\
+ 								\
++		FOR_EACH_SECURITY_HOOK(P, FUNC) {		\
++			RC = P->hook.FUNC(__VA_ARGS__);		\
++			if (RC != 0)				\
++				goto LABEL;			\
++		}						\
++		srcu_idx = lock_lsm();				\
++		FOR_EACH_SECURITY_HOOK_MUTABLE(P, FUNC) {	\
+ 			RC = P->hook.FUNC(__VA_ARGS__);		\
+ 			if (RC != 0)				\
+ 				break;				\
+ 		}						\
++		unlock_lsm(srcu_idx);				\
+ 	} while (0);						\
++LABEL:								\
+ 	RC;							\
+ })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'FUNC' - possible side-effects?
+#395: FILE: security/security.c:372:
++#define call_int_hook(FUNC, IRC, ...)	\
++	call_int_hook2(__UNIQUE_ID(FUNC), FUNC, IRC, __VA_ARGS__)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#398: FILE: security/security.c:375:
++
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#478: FILE: security/security.c:996:
++int security_inode_setsecurity(struct inode *inode, const char *name,
++				const void *value, size_t size, int flags)
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#515: FILE: security/security.c:1028:
+ 
++
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#532: FILE: security/security.c:1325:
++
++
+
+WARNING:ENOSYS: ENOSYS means 'invalid syscall nr' and nothing else
+#535: FILE: security/security.c:1328:
++		if (thisrc != -ENOSYS) {
+
+ENOSYS means that a nonexistent system call was called.
+Earlier, it was wrongly used for things like invalid operations on
+otherwise valid syscalls.  This should be avoided in new code.
+
+See: https://lore.kernel.org/lkml/5eb299021dec23c1a48fa7d9f2c8b794e967766d.1408730669.git.luto@amacapital.net/
+
+CHECK:BRACES: Blank lines aren't necessary before a close brace '}'
+#541: FILE: security/security.c:1334:
++
++	}
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#580: FILE: security/security.c:1845:
++
++
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#727: FILE: security/selinux/hooks.c:6409:
++	SELINUX_HOOK_INIT(binder_set_context_mgr,
++				selinux_binder_set_context_mgr),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#730: FILE: security/selinux/hooks.c:6412:
++	SELINUX_HOOK_INIT(binder_transfer_binder,
++				selinux_binder_transfer_binder),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#764: FILE: security/selinux/hooks.c:6446:
++	SELINUX_HOOK_INIT(dentry_create_files_as,
++				selinux_dentry_create_files_as),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#816: FILE: security/selinux/hooks.c:6498:
++	SELINUX_HOOK_INIT(kernel_create_files_as,
++				selinux_kernel_create_files_as),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#838: FILE: security/selinux/hooks.c:6520:
++	SELINUX_HOOK_INIT(msg_msg_alloc_security,
++				selinux_msg_msg_alloc_security),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#840: FILE: security/selinux/hooks.c:6522:
++	SELINUX_HOOK_INIT(msg_msg_free_security,
++				selinux_msg_msg_free_security),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#843: FILE: security/selinux/hooks.c:6525:
++	SELINUX_HOOK_INIT(msg_queue_alloc_security,
+ 			selinux_msg_queue_alloc_security),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#895: FILE: security/selinux/hooks.c:6527:
++	SELINUX_HOOK_INIT(msg_queue_free_security,
++				selinux_msg_queue_free_security),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#923: FILE: security/selinux/hooks.c:6555:
++	SELINUX_HOOK_INIT(inode_invalidate_secctx,
++				selinux_inode_invalidate_secctx),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#929: FILE: security/selinux/hooks.c:6561:
++	SELINUX_HOOK_INIT(unix_stream_connect,
++				selinux_socket_unix_stream_connect),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#947: FILE: security/selinux/hooks.c:6579:
++	SELINUX_HOOK_INIT(socket_getpeersec_stream,
+ 			selinux_socket_getpeersec_stream),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#968: FILE: security/selinux/hooks.c:6581:
++	SELINUX_HOOK_INIT(socket_getpeersec_dgram,
++				selinux_socket_getpeersec_dgram),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#977: FILE: security/selinux/hooks.c:6590:
++	SELINUX_HOOK_INIT(inet_conn_established,
++				selinux_inet_conn_established),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#979: FILE: security/selinux/hooks.c:6592:
++	SELINUX_HOOK_INIT(secmark_relabel_packet,
++				selinux_secmark_relabel_packet),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#984: FILE: security/selinux/hooks.c:6597:
++	SELINUX_HOOK_INIT(tun_dev_alloc_security,
++				selinux_tun_dev_alloc_security),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#995: FILE: security/selinux/hooks.c:6606:
++	SELINUX_HOOK_INIT(ib_endport_manage_subnet,
+ 		      selinux_ib_endport_manage_subnet),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1009: FILE: security/selinux/hooks.c:6612:
++	SELINUX_HOOK_INIT(xfrm_policy_alloc_security,
++				selinux_xfrm_policy_alloc),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1011: FILE: security/selinux/hooks.c:6614:
++	SELINUX_HOOK_INIT(xfrm_policy_clone_security,
++				selinux_xfrm_policy_clone),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1013: FILE: security/selinux/hooks.c:6616:
++	SELINUX_HOOK_INIT(xfrm_policy_free_security,
++				selinux_xfrm_policy_free),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1015: FILE: security/selinux/hooks.c:6618:
++	SELINUX_HOOK_INIT(xfrm_policy_delete_security,
++				selinux_xfrm_policy_delete),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1018: FILE: security/selinux/hooks.c:6621:
++	SELINUX_HOOK_INIT(xfrm_state_alloc_acquire,
+ 			selinux_xfrm_state_alloc_acquire),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1025: FILE: security/selinux/hooks.c:6624:
++	SELINUX_HOOK_INIT(xfrm_state_delete_security,
++				selinux_xfrm_state_delete),
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1028: FILE: security/selinux/hooks.c:6627:
++	SELINUX_HOOK_INIT(xfrm_state_pol_flow_match,
+ 			selinux_xfrm_state_pol_flow_match),
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000277235.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 1 errors, 3 warnings, 36 checks, 986 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000277235.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

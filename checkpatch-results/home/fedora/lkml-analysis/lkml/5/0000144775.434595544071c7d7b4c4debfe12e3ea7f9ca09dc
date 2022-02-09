@@ -1,0 +1,223 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#40: 
+Gitweb:     http://git.kernel.org/tip/ee9f8fce99640811b2b8e79d0d1dbe8bab69ba67
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#102: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#292: FILE: arch/um/include/asm/unwind.h:1:
++#ifndef _ASM_UML_UNWIND_H
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#320: FILE: arch/x86/Kconfig.debug:358:
++config ORC_UNWINDER
++	bool "ORC unwinder"
++	depends on X86_64
++	select STACK_VALIDATION
++	---help---
++	  This option enables the ORC (Oops Rewind Capability) unwinder for
++	  unwinding kernel stack traces.  It uses a custom data format which is
++	  a simplified version of the DWARF Call Frame Information standard.
++
++	  This unwinder is more accurate across interrupt entry frames than the
++	  frame pointer unwinder.  It can also enable a 5-10% performance
++	  improvement across the entire kernel if CONFIG_FRAME_POINTER is
++	  disabled.
++
++	  Enabling this option will increase the kernel's runtime memory usage
++	  by roughly 2-4MB, depending on your kernel config.
++
++config FRAME_POINTER_UNWINDER
++	def_bool y
++	depends on !ORC_UNWINDER && FRAME_POINTER
++
++config GUESS_UNWINDER
++	def_bool y
++	depends on !ORC_UNWINDER && !FRAME_POINTER
++
+ endmenu
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#372: FILE: arch/x86/include/asm/orc_lookup.h:1:
++/*
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#405: FILE: arch/x86/include/asm/orc_lookup.h:34:
++#define LOOKUP_BLOCK_SIZE	(1 << LOOKUP_BLOCK_ORDER)
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#412: FILE: arch/x86/include/asm/orc_lookup.h:41:
++#define LOOKUP_START_IP		(unsigned long)_stext
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#413: FILE: arch/x86/include/asm/orc_lookup.h:42:
++#define LOOKUP_STOP_IP		(unsigned long)_etext
+
+ERROR:OPEN_BRACE: open brace '{' following function definitions go on the next line
+#525: FILE: arch/x86/include/asm/unwind.h:75:
++void unwind_module_init(struct module *mod, void *orc_ip, size_t orc_ip_size,
++			void *orc, size_t orc_size) {}
+
+The opening brace should be following the function definitions on the
+next line.  For any non-functional block it should be on the same line
+as the last construct.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'task' may be better as '(task)' to avoid precedence issues
+#534: FILE: arch/x86/include/asm/unwind.h:84:
++#define READ_ONCE_TASK_STACK(task, x)			\
++({							\
++	unsigned long val;				\
++	if (task == current)				\
++		val = READ_ONCE(x);			\
++	else						\
++		val = READ_ONCE_NOCHECK(x);		\
++	val;						\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#534: FILE: arch/x86/include/asm/unwind.h:84:
++#define READ_ONCE_TASK_STACK(task, x)			\
++({							\
++	unsigned long val;				\
++	if (task == current)				\
++		val = READ_ONCE(x);			\
++	else						\
++		val = READ_ONCE_NOCHECK(x);		\
++	val;						\
++})
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#719: FILE: arch/x86/kernel/unwind_orc.c:1:
++#include <linux/module.h>
+
+WARNING:UNNECESSARY_KERN_LEVEL: Possible unnecessary KERN_WARNING
+#729: FILE: arch/x86/kernel/unwind_orc.c:11:
++	printk_deferred_once(KERN_WARNING pr_fmt("WARNING: " fmt), ##__VA_ARGS__)
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#731: FILE: arch/x86/kernel/unwind_orc.c:13:
++extern int __start_orc_unwind_ip[];
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#732: FILE: arch/x86/kernel/unwind_orc.c:14:
++extern int __stop_orc_unwind_ip[];
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#733: FILE: arch/x86/kernel/unwind_orc.c:15:
++extern struct orc_entry __start_orc_unwind[];
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#734: FILE: arch/x86/kernel/unwind_orc.c:16:
++extern struct orc_entry __stop_orc_unwind[];
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#767: FILE: arch/x86/kernel/unwind_orc.c:49:
++		if (orc_ip(mid) <= ip) {
+[...]
++		} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#770: FILE: arch/x86/kernel/unwind_orc.c:52:
++		} else
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#806: FILE: arch/x86/kernel/unwind_orc.c:88:
++		if (unlikely((idx >= lookup_num_blocks-1))) {
+ 		                                      ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#927: FILE: arch/x86/kernel/unwind_orc.c:209:
++	for (i = 0; i < lookup_num_blocks-1; i++) {
+ 	                                 ^
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#946: FILE: arch/x86/kernel/unwind_orc.c:228:
++	orc_lookup[lookup_num_blocks-1] = orc - __start_orc_unwind;
+ 	                            ^
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1031: FILE: arch/x86/kernel/unwind_orc.c:313:
++	if (user_mode(regs)) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1037: FILE: arch/x86/kernel/unwind_orc.c:319:
++	} else
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#1175: FILE: arch/x86/kernel/unwind_orc.c:457:
++		if ((unsigned long)ptregs >= prev_sp &&
+[...]
++		} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#1179: FILE: arch/x86/kernel/unwind_orc.c:461:
++		} else
+
+WARNING:RETURN_VOID: void function return statements are not generally useful
+#1299: FILE: arch/x86/kernel/unwind_orc.c:581:
++	return;
++}
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000144775.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 3 errors, 12 warnings, 12 checks, 1225 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000144775.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

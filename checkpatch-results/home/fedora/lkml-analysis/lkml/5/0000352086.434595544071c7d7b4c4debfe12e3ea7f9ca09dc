@@ -1,0 +1,184 @@
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#99: FILE: include/linux/compat.h:47:
++#define COMPAT_SYSCALL_TRACE_ENTER_EVENT(sname)				\
++	static struct syscall_metadata __syscall_meta_compat_##sname;		\
++	static struct trace_event_call __used				\
++	  event_enter_compat_##sname = {					\
++		.class			= &event_class_syscall_enter,	\
++		{							\
++			.name                   = "compat_sys_enter"#sname,	\
++		},							\
++		.event.funcs            = &enter_syscall_print_funcs,	\
++		.data			= (void *)&__syscall_meta_compat_##sname,\
++		.flags                  = TRACE_EVENT_FL_CAP_ANY,	\
++	};								\
++	static struct trace_event_call __used				\
++	  __attribute__((section("_ftrace_events")))			\
++	 *__event_enter_compat_##sname = &event_enter_compat_##sname;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("_ftrace_events") over __attribute__((section("_ftrace_events")))
+#112: FILE: include/linux/compat.h:60:
++	  __attribute__((section("_ftrace_events")))			\
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#115: FILE: include/linux/compat.h:63:
++#define COMPAT_SYSCALL_TRACE_EXIT_EVENT(sname)					\
++	static struct syscall_metadata __syscall_meta_compat_##sname;		\
++	static struct trace_event_call __used				\
++	  event_exit_compat_##sname = {					\
++		.class			= &event_class_syscall_exit,	\
++		{							\
++			.name                   = "compat_sys_exit"#sname,	\
++		},							\
++		.event.funcs		= &exit_syscall_print_funcs,	\
++		.data			= (void *)&__syscall_meta_compat_##sname,\
++		.flags                  = TRACE_EVENT_FL_CAP_ANY,	\
++	};								\
++	static struct trace_event_call __used				\
++	  __attribute__((section("_ftrace_events")))			\
++	*__event_exit_compat_##sname = &event_exit_compat_##sname;
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("_ftrace_events") over __attribute__((section("_ftrace_events")))
+#128: FILE: include/linux/compat.h:76:
++	  __attribute__((section("_ftrace_events")))			\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sname' - possible side-effects?
+#131: FILE: include/linux/compat.h:79:
++#define COMPAT_SYSCALL_METADATA(sname, nb, ...)			\
++	static const char *types_compat_##sname[] = {			\
++		__MAP(nb,__SC_STR_TDECL,__VA_ARGS__)		\
++	};							\
++	static const char *args_compat_##sname[] = {			\
++		__MAP(nb,__SC_STR_ADECL,__VA_ARGS__)		\
++	};							\
++	COMPAT_SYSCALL_TRACE_ENTER_EVENT(sname);			\
++	COMPAT_SYSCALL_TRACE_EXIT_EVENT(sname);			\
++	static struct syscall_metadata __used			\
++	  __syscall_meta_compat_##sname = {				\
++		.name 		= "compat_sys"#sname,			\
++		.nb_args 	= nb,				\
++		.types		= nb ? types_compat_##sname : NULL,	\
++		.args		= nb ? args_compat_##sname : NULL,	\
++		.enter_event	= &event_enter_compat_##sname,		\
++		.exit_event	= &event_exit_compat_##sname,		\
++		.enter_fields	= LIST_HEAD_INIT(__syscall_meta_compat_##sname.enter_fields), \
++	};							\
++	static struct syscall_metadata __used			\
++	  __attribute__((section("__syscalls_metadata")))	\
++	 *__p_syscall_meta_compat_##sname = &__syscall_meta_compat_##sname;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'nb' - possible side-effects?
+#131: FILE: include/linux/compat.h:79:
++#define COMPAT_SYSCALL_METADATA(sname, nb, ...)			\
++	static const char *types_compat_##sname[] = {			\
++		__MAP(nb,__SC_STR_TDECL,__VA_ARGS__)		\
++	};							\
++	static const char *args_compat_##sname[] = {			\
++		__MAP(nb,__SC_STR_ADECL,__VA_ARGS__)		\
++	};							\
++	COMPAT_SYSCALL_TRACE_ENTER_EVENT(sname);			\
++	COMPAT_SYSCALL_TRACE_EXIT_EVENT(sname);			\
++	static struct syscall_metadata __used			\
++	  __syscall_meta_compat_##sname = {				\
++		.name 		= "compat_sys"#sname,			\
++		.nb_args 	= nb,				\
++		.types		= nb ? types_compat_##sname : NULL,	\
++		.args		= nb ? args_compat_##sname : NULL,	\
++		.enter_event	= &event_enter_compat_##sname,		\
++		.exit_event	= &event_exit_compat_##sname,		\
++		.enter_fields	= LIST_HEAD_INIT(__syscall_meta_compat_##sname.enter_fields), \
++	};							\
++	static struct syscall_metadata __used			\
++	  __attribute__((section("__syscalls_metadata")))	\
++	 *__p_syscall_meta_compat_##sname = &__syscall_meta_compat_##sname;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#131: FILE: include/linux/compat.h:79:
++#define COMPAT_SYSCALL_METADATA(sname, nb, ...)			\
++	static const char *types_compat_##sname[] = {			\
++		__MAP(nb,__SC_STR_TDECL,__VA_ARGS__)		\
++	};							\
++	static const char *args_compat_##sname[] = {			\
++		__MAP(nb,__SC_STR_ADECL,__VA_ARGS__)		\
++	};							\
++	COMPAT_SYSCALL_TRACE_ENTER_EVENT(sname);			\
++	COMPAT_SYSCALL_TRACE_EXIT_EVENT(sname);			\
++	static struct syscall_metadata __used			\
++	  __syscall_meta_compat_##sname = {				\
++		.name 		= "compat_sys"#sname,			\
++		.nb_args 	= nb,				\
++		.types		= nb ? types_compat_##sname : NULL,	\
++		.args		= nb ? args_compat_##sname : NULL,	\
++		.enter_event	= &event_enter_compat_##sname,		\
++		.exit_event	= &event_exit_compat_##sname,		\
++		.enter_fields	= LIST_HEAD_INIT(__syscall_meta_compat_##sname.enter_fields), \
++	};							\
++	static struct syscall_metadata __used			\
++	  __attribute__((section("__syscalls_metadata")))	\
++	 *__p_syscall_meta_compat_##sname = &__syscall_meta_compat_##sname;
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#133: FILE: include/linux/compat.h:81:
++		__MAP(nb,__SC_STR_TDECL,__VA_ARGS__)		\
+ 		        ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#133: FILE: include/linux/compat.h:81:
++		__MAP(nb,__SC_STR_TDECL,__VA_ARGS__)		\
+ 		                       ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#136: FILE: include/linux/compat.h:84:
++		__MAP(nb,__SC_STR_ADECL,__VA_ARGS__)		\
+ 		        ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#136: FILE: include/linux/compat.h:84:
++		__MAP(nb,__SC_STR_ADECL,__VA_ARGS__)		\
+ 		                       ^
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#142: FILE: include/linux/compat.h:90:
++^I^I.name ^I^I= "compat_sys"#sname,^I^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#143: FILE: include/linux/compat.h:91:
++^I^I.nb_args ^I= nb,^I^I^I^I\$
+
+WARNING:PREFER_DEFINED_ATTRIBUTE_MACRO: Prefer __section("__syscalls_metadata") over __attribute__((section("__syscalls_metadata")))
+#151: FILE: include/linux/compat.h:99:
++	  __attribute__((section("__syscalls_metadata")))	\
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000352086.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 4 errors, 8 warnings, 2 checks, 127 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000352086.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

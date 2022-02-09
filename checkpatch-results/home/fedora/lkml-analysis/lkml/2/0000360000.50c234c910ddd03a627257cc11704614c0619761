@@ -1,0 +1,239 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__vma' - possible side-effects?
+#61: FILE: include/asm-generic/pgtable.h:30:
++#define pmdp_set_access_flags(__vma, __address, __pmdp, __entry, __dirty) \
++	({								\
++		int __changed = !pmd_same(*(__pmdp), __entry);		\
++		VM_BUG_ON((__address) & ~HPAGE_PMD_MASK);		\
++		if (__changed) {					\
++			set_pmd_at((__vma)->vm_mm, __address, __pmdp,	\
++				   __entry);				\
++			flush_tlb_range(__vma, __address,		\
++					(__address) + HPAGE_PMD_SIZE);	\
++		}							\
++		__changed;						\
++	})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__address' - possible side-effects?
+#61: FILE: include/asm-generic/pgtable.h:30:
++#define pmdp_set_access_flags(__vma, __address, __pmdp, __entry, __dirty) \
++	({								\
++		int __changed = !pmd_same(*(__pmdp), __entry);		\
++		VM_BUG_ON((__address) & ~HPAGE_PMD_MASK);		\
++		if (__changed) {					\
++			set_pmd_at((__vma)->vm_mm, __address, __pmdp,	\
++				   __entry);				\
++			flush_tlb_range(__vma, __address,		\
++					(__address) + HPAGE_PMD_SIZE);	\
++		}							\
++		__changed;						\
++	})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__pmdp' - possible side-effects?
+#61: FILE: include/asm-generic/pgtable.h:30:
++#define pmdp_set_access_flags(__vma, __address, __pmdp, __entry, __dirty) \
++	({								\
++		int __changed = !pmd_same(*(__pmdp), __entry);		\
++		VM_BUG_ON((__address) & ~HPAGE_PMD_MASK);		\
++		if (__changed) {					\
++			set_pmd_at((__vma)->vm_mm, __address, __pmdp,	\
++				   __entry);				\
++			flush_tlb_range(__vma, __address,		\
++					(__address) + HPAGE_PMD_SIZE);	\
++		}							\
++		__changed;						\
++	})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__entry' - possible side-effects?
+#61: FILE: include/asm-generic/pgtable.h:30:
++#define pmdp_set_access_flags(__vma, __address, __pmdp, __entry, __dirty) \
++	({								\
++		int __changed = !pmd_same(*(__pmdp), __entry);		\
++		VM_BUG_ON((__address) & ~HPAGE_PMD_MASK);		\
++		if (__changed) {					\
++			set_pmd_at((__vma)->vm_mm, __address, __pmdp,	\
++				   __entry);				\
++			flush_tlb_range(__vma, __address,		\
++					(__address) + HPAGE_PMD_SIZE);	\
++		}							\
++		__changed;						\
++	})
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#75: FILE: include/asm-generic/pgtable.h:44:
++	({ BUG(); 0; })
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__pmdp' - possible side-effects?
+#88: FILE: include/asm-generic/pgtable.h:64:
++#define pmdp_test_and_clear_young(__vma, __address, __pmdp)		\
++({									\
++	pmd_t __pmd = *(__pmdp);					\
++	int r = 1;							\
++	if (!pmd_young(__pmd))						\
++		r = 0;							\
++	else								\
++		set_pmd_at((__vma)->vm_mm, (__address),			\
++			   (__pmdp), pmd_mkold(__pmd));			\
++	r;								\
++})
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#101: FILE: include/asm-generic/pgtable.h:77:
++	({ BUG(); 0; })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__vma' - possible side-effects?
+#114: FILE: include/asm-generic/pgtable.h:94:
++#define pmdp_clear_flush_young(__vma, __address, __pmdp)		\
++({									\
++	int __young;							\
++	VM_BUG_ON((__address) & ~HPAGE_PMD_MASK);			\
++	__young = pmdp_test_and_clear_young(__vma, __address, __pmdp);	\
++	if (__young)							\
++		flush_tlb_range(__vma, __address,			\
++				(__address) + HPAGE_PMD_SIZE);		\
++	__young;							\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__address' - possible side-effects?
+#114: FILE: include/asm-generic/pgtable.h:94:
++#define pmdp_clear_flush_young(__vma, __address, __pmdp)		\
++({									\
++	int __young;							\
++	VM_BUG_ON((__address) & ~HPAGE_PMD_MASK);			\
++	__young = pmdp_test_and_clear_young(__vma, __address, __pmdp);	\
++	if (__young)							\
++		flush_tlb_range(__vma, __address,			\
++				(__address) + HPAGE_PMD_SIZE);		\
++	__young;							\
++})
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#126: FILE: include/asm-generic/pgtable.h:106:
++	({ BUG(); 0; })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__pmdp' - possible side-effects?
+#139: FILE: include/asm-generic/pgtable.h:121:
++#define pmdp_get_and_clear(__mm, __address, __pmdp)			\
++({									\
++	pmd_t __pmd = *(__pmdp);					\
++	pmd_clear((__mm), (__address), (__pmdp));			\
++	__pmd;								\
++})
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#147: FILE: include/asm-generic/pgtable.h:129:
++	({ BUG(); 0; })
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__vma' - possible side-effects?
+#160: FILE: include/asm-generic/pgtable.h:166:
++#define pmdp_clear_flush(__vma, __address, __pmdp)			\
++({									\
++	pmd_t __pmd;							\
++	VM_BUG_ON((__address) & ~HPAGE_PMD_MASK);			\
++	__pmd = pmdp_get_and_clear((__vma)->vm_mm, __address, __pmdp);	\
++	flush_tlb_range(__vma, __address, (__address) + HPAGE_PMD_SIZE);\
++	__pmd;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__address' - possible side-effects?
+#160: FILE: include/asm-generic/pgtable.h:166:
++#define pmdp_clear_flush(__vma, __address, __pmdp)			\
++({									\
++	pmd_t __pmd;							\
++	VM_BUG_ON((__address) & ~HPAGE_PMD_MASK);			\
++	__pmd = pmdp_get_and_clear((__vma)->vm_mm, __address, __pmdp);	\
++	flush_tlb_range(__vma, __address, (__address) + HPAGE_PMD_SIZE);\
++	__pmd;								\
++})
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#170: FILE: include/asm-generic/pgtable.h:176:
++	({ BUG(); 0; })
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#186: FILE: include/asm-generic/pgtable.h:194:
++	pmd_t old_pmd = *pmdp;
++	set_pmd_at(mm, address, pmdp, pmd_wrprotect(old_pmd));
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#189: FILE: include/asm-generic/pgtable.h:197:
++#define pmdp_set_wrprotect(mm, address, pmdp) BUG()
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__vma' - possible side-effects?
+#195: FILE: include/asm-generic/pgtable.h:203:
++#define pmdp_splitting_flush(__vma, __address, __pmdp)			\
++({									\
++	pmd_t __pmd = pmd_mksplitting(*(__pmdp));			\
++	VM_BUG_ON((__address) & ~HPAGE_PMD_MASK);			\
++	set_pmd_at((__vma)->vm_mm, __address, __pmdp, __pmd);		\
++	/* tlb flush only to serialize against gup-fast */		\
++	flush_tlb_range(__vma, __address, (__address) + HPAGE_PMD_SIZE);\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__address' - possible side-effects?
+#195: FILE: include/asm-generic/pgtable.h:203:
++#define pmdp_splitting_flush(__vma, __address, __pmdp)			\
++({									\
++	pmd_t __pmd = pmd_mksplitting(*(__pmdp));			\
++	VM_BUG_ON((__address) & ~HPAGE_PMD_MASK);			\
++	set_pmd_at((__vma)->vm_mm, __address, __pmdp, __pmd);		\
++	/* tlb flush only to serialize against gup-fast */		\
++	flush_tlb_range(__vma, __address, (__address) + HPAGE_PMD_SIZE);\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '__pmdp' - possible side-effects?
+#195: FILE: include/asm-generic/pgtable.h:203:
++#define pmdp_splitting_flush(__vma, __address, __pmdp)			\
++({									\
++	pmd_t __pmd = pmd_mksplitting(*(__pmdp));			\
++	VM_BUG_ON((__address) & ~HPAGE_PMD_MASK);			\
++	set_pmd_at((__vma)->vm_mm, __address, __pmdp, __pmd);		\
++	/* tlb flush only to serialize against gup-fast */		\
++	flush_tlb_range(__vma, __address, (__address) + HPAGE_PMD_SIZE);\
++})
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#204: FILE: include/asm-generic/pgtable.h:212:
++#define pmdp_splitting_flush(__vma, __address, __pmdp) BUG()
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#214: FILE: include/asm-generic/pgtable.h:222:
++#define pmd_same(A,B)	(pmd_val(A) == pmd_val(B))
+                   ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#216: FILE: include/asm-generic/pgtable.h:224:
++#define pmd_same(A,B)	({ BUG(); 0; })
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#216: FILE: include/asm-generic/pgtable.h:224:
++#define pmd_same(A,B)	({ BUG(); 0; })
+                   ^
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#228: FILE: include/asm-generic/pgtable.h:477:
++#define pmd_write(pmd)	({ BUG(); 0; })
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000360000.commit.50c234c910ddd03a627257cc11704614c0619761 total: 2 errors, 10 warnings, 13 checks, 171 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000360000.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

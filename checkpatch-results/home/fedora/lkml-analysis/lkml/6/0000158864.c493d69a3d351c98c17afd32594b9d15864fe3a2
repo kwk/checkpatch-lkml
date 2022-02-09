@@ -1,0 +1,158 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#227: FILE: arch/mips/include/asm/processor.h:146:
++typedef unsigned long dspreg_t;
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*fbdefio)...) over kzalloc(sizeof(struct fb_deferred_io)...)
+#329: FILE: drivers/gpu/drm/udl/udl_fb.c:344:
++		fbdefio = kzalloc(sizeof(struct fb_deferred_io), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:CONSIDER_COMPLETION: consider using a completion
+#374: FILE: drivers/gpu/drm/udl/udl_main.c:185:
++	sema_init(&udl->urbs.limit_sem, 0);
+
+CHECK:SPACING: No space is necessary after a cast
+#415: FILE: drivers/gpu/drm/udl/udl_main.c:230:
++	DRM_DEBUG("allocated %d %d byte urbs\n", udl->urbs.count, (int) size);
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#619: FILE: drivers/net/wan/lmc/lmc_main.c:1387:
++            case 0x002:$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#619: FILE: drivers/net/wan/lmc/lmc_main.c:1387:
++            case 0x002:$
+
+WARNING:INCLUDE_LINUX: Use #include <linux/cacheflush.h> instead of <asm/cacheflush.h>
+#814: FILE: drivers/staging/media/omap4iss/iss_video.c:24:
++#include <asm/cacheflush.h>
+
+CHECK:CAMELCASE: Avoid CamelCase: <dCUR>
+#828: FILE: drivers/usb/gadget/function/f_uac2.c:944:
++	__le32	dCUR;
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:CAMELCASE: Avoid CamelCase: <wNumSubRanges>
+#836: FILE: drivers/usb/gadget/function/f_uac2.c:948:
++	__le16	wNumSubRanges;
+
+CHECK:CAMELCASE: Avoid CamelCase: <dMIN>
+#837: FILE: drivers/usb/gadget/function/f_uac2.c:949:
++	__le32	dMIN;
+
+CHECK:CAMELCASE: Avoid CamelCase: <dMAX>
+#838: FILE: drivers/usb/gadget/function/f_uac2.c:950:
++	__le32	dMAX;
+
+CHECK:CAMELCASE: Avoid CamelCase: <dRES>
+#839: FILE: drivers/usb/gadget/function/f_uac2.c:951:
++	__le32	dRES;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#927: FILE: drivers/usb/phy/phy-fsl-usb.c:1016:
++static ssize_t show_fsl_usb2_otg_state(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1161: FILE: kernel/kprobes.c:2429:
++	file = debugfs_create_file("list", 0400, dir, NULL,
+ 				&debugfs_kprobes_operations);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1170: FILE: kernel/kprobes.c:2439:
++	file = debugfs_create_file("blacklist", 0400, dir, NULL,
+ 				&debugfs_kprobe_blacklist_ops);
+
+WARNING:DUPLICATED_SYSCTL_CONST: duplicated sysctl range checking value 'one', consider using the shared one in include/linux/sysctl.h
+#1183: FILE: kernel/sysctl.c:345:
++		.extra1		= &one,
+
+Commit d91bff3011cf ("proc/sysctl: add shared variables for range
+check") added some shared const variables to be used instead of a local
+copy in each source file.
+
+Consider replacing the sysctl range checking value with the shared
+one in include/linux/sysctl.h.  The following conversion scheme may
+be used::
+
+  &zero     ->  SYSCTL_ZERO
+  &one      ->  SYSCTL_ONE
+  &int_max  ->  SYSCTL_INT_MAX
+
+See:
+
+  1. https://lore.kernel.org/lkml/20190430180111.10688-1-mcroce@redhat.com/
+  2. https://lore.kernel.org/lkml/20190531131422.14970-1-mcroce@redhat.com/
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#1367: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 2
+#1373: FILE: tools/testing/selftests/ftrace/test.d/00basic/snapshot.tc:2:
++# description: Snapshot and tracing setting
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#1420: FILE: tools/usb/ffs-test.c:57:
++#define cpu_to_le16(x)  ((((x) >> 8) & 0xffu) | (((x) & 0xffu) << 8))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'x' - possible side-effects?
+#1421: FILE: tools/usb/ffs-test.c:58:
++#define cpu_to_le32(x)  \
++	((((x) & 0xff000000u) >> 24) | (((x) & 0x00ff0000u) >>  8) | \
++	(((x) & 0x0000ff00u) <<  8) | (((x) & 0x000000ffu) << 24))
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000158864.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 1 errors, 8 warnings, 12 checks, 1077 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000158864.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

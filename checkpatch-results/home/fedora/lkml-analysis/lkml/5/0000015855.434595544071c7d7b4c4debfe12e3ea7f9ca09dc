@@ -1,0 +1,93 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'path' - possible side-effects?
+#90: FILE: drivers/rpmsg/rpmsg_core.c:336:
++#define rpmsg_string_attr(field, path)					\
++static ssize_t								\
++field##_store(struct device *dev,					\
++	      struct device_attribute *attr, const char *buf, size_t sz)\
++{									\
++	struct rpmsg_device *rpdev = to_rpmsg_device(dev);		\
++	char *new, *old, *cp;						\
++									\
++	new = kstrndup(buf, sz, GFP_KERNEL);				\
++	if (!new)							\
++		return -ENOMEM;						\
++									\
++	cp = strchr(new, '\n');						\
++	if (cp)								\
++		*cp = '\0';						\
++									\
++	device_lock(dev);						\
++	old = rpdev->path;						\
++	if (strlen(new)) {						\
++		rpdev->path = new;					\
++	} else {							\
++		kfree(new);						\
++		rpdev->path = NULL;					\
++	}								\
++	device_unlock(dev);						\
++									\
++	kfree(old);							\
++									\
++	return sz;							\
++}									\
++static ssize_t								\
++field##_show(struct device *dev,					\
++	     struct device_attribute *attr, char *buf)			\
++{									\
++	struct rpmsg_device *rpdev = to_rpmsg_device(dev);		\
++									\
++	return sprintf(buf, "%s\n", rpdev->path);			\
++}									\
++static DEVICE_ATTR_RW(field)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'path' may be better as '(path)' to avoid precedence issues
+#90: FILE: drivers/rpmsg/rpmsg_core.c:336:
++#define rpmsg_string_attr(field, path)					\
++static ssize_t								\
++field##_store(struct device *dev,					\
++	      struct device_attribute *attr, const char *buf, size_t sz)\
++{									\
++	struct rpmsg_device *rpdev = to_rpmsg_device(dev);		\
++	char *new, *old, *cp;						\
++									\
++	new = kstrndup(buf, sz, GFP_KERNEL);				\
++	if (!new)							\
++		return -ENOMEM;						\
++									\
++	cp = strchr(new, '\n');						\
++	if (cp)								\
++		*cp = '\0';						\
++									\
++	device_lock(dev);						\
++	old = rpdev->path;						\
++	if (strlen(new)) {						\
++		rpdev->path = new;					\
++	} else {							\
++		kfree(new);						\
++		rpdev->path = NULL;					\
++	}								\
++	device_unlock(dev);						\
++									\
++	kfree(old);							\
++									\
++	return sz;							\
++}									\
++static ssize_t								\
++field##_show(struct device *dev,					\
++	     struct device_attribute *attr, char *buf)			\
++{									\
++	struct rpmsg_device *rpdev = to_rpmsg_device(dev);		\
++									\
++	return sprintf(buf, "%s\n", rpdev->path);			\
++}									\
++static DEVICE_ATTR_RW(field)
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000015855.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 0 warnings, 2 checks, 95 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000015855.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,73 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'inode' - possible side-effects?
+#117: FILE: include/linux/fs.h:693:
++#define VFS_INODE_SET_XTIME(xtime, inode, ts64)			\
++	do {								\
++		struct inode_timespec __ts = (ts64);			\
++		(inode)->xtime##_sec = __ts.tv_sec;			\
++		(inode)->xtime##_nsec = __ts.tv_nsec;			\
++	} while (0)
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#124: FILE: include/linux/fs.h:700:
++#define VFS_INODE_GET_XTIME(xtime, inode)			\
++	(struct timespec64){.tv_sec = (inode)->xtime##_sec,	\
++			    .tv_nsec = (inode)->xtime##_nsec}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'inode' - possible side-effects?
+#124: FILE: include/linux/fs.h:700:
++#define VFS_INODE_GET_XTIME(xtime, inode)			\
++	(struct timespec64){.tv_sec = (inode)->xtime##_sec,	\
++			    .tv_nsec = (inode)->xtime##_nsec}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'xtime' may be better as '(xtime)' to avoid precedence issues
+#130: FILE: include/linux/fs.h:706:
++#define VFS_INODE_SET_XTIME(xtime, inode, ts)			\
++	((inode)->xtime = (ts))
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'xtime' may be better as '(xtime)' to avoid precedence issues
+#133: FILE: include/linux/fs.h:709:
++#define VFS_INODE_GET_XTIME(xtime, inode)       \
++	((inode)->xtime)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'xtime' - possible side-effects?
+#138: FILE: include/linux/fs.h:714:
++#define VFS_INODE_SWAP_XTIME(xtime, inode1, inode2)		\
++	do {							\
++		struct inode_timespec __ts =			\
++			VFS_INODE_GET_XTIME(xtime, inode1);	\
++		VFS_INODE_SET_XTIME(xtime, inode1,		\
++			VFS_INODE_GET_XTIME(xtime, inode2));	\
++		VFS_INODE_SET_XTIME(xtime, inode2, __ts);	\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'inode1' - possible side-effects?
+#138: FILE: include/linux/fs.h:714:
++#define VFS_INODE_SWAP_XTIME(xtime, inode1, inode2)		\
++	do {							\
++		struct inode_timespec __ts =			\
++			VFS_INODE_GET_XTIME(xtime, inode1);	\
++		VFS_INODE_SET_XTIME(xtime, inode1,		\
++			VFS_INODE_GET_XTIME(xtime, inode2));	\
++		VFS_INODE_SET_XTIME(xtime, inode2, __ts);	\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'inode2' - possible side-effects?
+#138: FILE: include/linux/fs.h:714:
++#define VFS_INODE_SWAP_XTIME(xtime, inode1, inode2)		\
++	do {							\
++		struct inode_timespec __ts =			\
++			VFS_INODE_GET_XTIME(xtime, inode1);	\
++		VFS_INODE_SET_XTIME(xtime, inode1,		\
++			VFS_INODE_GET_XTIME(xtime, inode2));	\
++		VFS_INODE_SET_XTIME(xtime, inode2, __ts);	\
++	} while (0)
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000175254.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 1 errors, 0 warnings, 7 checks, 115 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000175254.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

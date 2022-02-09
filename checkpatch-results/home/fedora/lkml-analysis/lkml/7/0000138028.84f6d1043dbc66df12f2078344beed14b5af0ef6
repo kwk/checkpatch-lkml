@@ -1,0 +1,63 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#88: 
+> > > > Or is the idea to time the kfree_rcu() loop separately?  (I don't see
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*alloc_ptr)...) over kmalloc(sizeof(struct kfree_obj)...)
+#167: FILE: kernel/rcu/rcuperf.c:644:
++			alloc_ptr = kmalloc(sizeof(struct kfree_obj), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around alloc_ptr->rh
+#181: FILE: kernel/rcu/rcuperf.c:654:
++				kfree_call_rcu_nobatch(&(alloc_ptr->rh), cb);
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000138028.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 total: 0 errors, 1 warnings, 2 checks, 49 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.VFioCCiwS7//home/fedora/lkml-analysis/lkml/7/patch.offset.0000138028.commit.84f6d1043dbc66df12f2078344beed14b5af0ef6 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,217 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#136: FILE: include/linux/mmzone.h:842:
++extern unsigned long free_page_count(struct zone *zone, int order, int mt);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#137: FILE: include/linux/mmzone.h:843:
++extern bool free_area_empty(int order, struct free_area *area, int mt);
+
+WARNING:AVOID_EXTERNS: externs should be avoided in .c files
+#172: FILE: kernel/sysctl.c:117:
++extern int tree_free_order_sysctl_handler(struct ctl_table *table, int write,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#173: FILE: kernel/sysctl.c:118:
++extern int tree_free_order_sysctl_handler(struct ctl_table *table, int write,
++		void __user *buffer, size_t *length, loff_t *ppos);
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#182: FILE: kernel/sysctl.c:141:
++static int max_order_minus_one = MAX_ORDER-1;
+                                           ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:GLOBAL_INITIALISERS: do not initialise globals to 0
+#294: FILE: mm/page_alloc.c:801:
++u64 pfn_cache_colors = 0;
+
+Global variables should not be initialized explicitly to
+0 (or NULL, false, etc.).  Your compiler (or rather your
+loader, which is responsible for zeroing out the relevant
+sections) automatically does it for you.
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUSR | S_IWUSR' are not preferred. Consider using octal permissions '0600'.
+#304: FILE: mm/page_alloc.c:811:
++	umode_t mode = S_IFREG | S_IRUSR | S_IWUSR;
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+WARNING:BRACES: braces {} are not necessary for any arm of this statement
+#359: FILE: mm/page_alloc.c:866:
++	if (tree_free_order(order)) {
+[...]
++	} else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:BRACES: braces {} are not necessary for any arm of this statement
+#375: FILE: mm/page_alloc.c:882:
++	if (tree_free_order(order)) {
+[...]
++	} else {
+[...]
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#470: FILE: mm/page_alloc.c:977:
++			 * Dead end, color not found.  Return something: */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:TRACE_PRINTK: Do not use trace_printk() in production code (this can be ignored if built only with a debug config option)
+#482: FILE: mm/page_alloc.c:989:
++		trace_printk("rb_color search: %ld result color: %ld colors: %ld\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#483: FILE: mm/page_alloc.c:990:
++		trace_printk("rb_color search: %ld result color: %ld colors: %ld\n",
++				*rb_color,
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#506: FILE: mm/page_alloc.c:1013:
++	unsigned long *rb_color = &area->free_pages[migratetype].rb_color;
++	if (tree_free_order(order)) {
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:UNNECESSARY_ELSE: else is not generally useful after a break or return
+#514: FILE: mm/page_alloc.c:1021:
++		return page;
++	} else {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#516: FILE: mm/page_alloc.c:1023:
++		page = list_first_entry_or_null(&area->free_pages[migratetype].list,
++					struct page, lru);
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#543: FILE: mm/page_alloc.c:1050:
++		struct rb_root *root = &area->free_pages[migratetype].rb_root;
++		return RB_EMPTY_ROOT(root);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around zone->free_area[order]
+#577: FILE: mm/page_alloc.c:1084:
++	struct free_area *area = &(zone->free_area[order]);
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around zone->free_area[order]
+#605: FILE: mm/page_alloc.c:1112:
++	struct free_area *area = &(zone->free_area[order]);
+
+WARNING:BRACES: braces {} are not necessary for single statement blocks
+#608: FILE: mm/page_alloc.c:1115:
++	for (i = 0; i < MIGRATE_TYPES; i++) {
++		__list_to_tree(zone, order, area, i);
++	}
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around zone->free_area[order]
+#692: FILE: mm/page_alloc.c:1199:
++	struct free_area *area = &(zone->free_area[order]);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#831: FILE: mm/page_alloc.c:2963:
++			list_for_each_entry(page,
++				&zone->free_area[order].free_pages[t].list, lru)
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#896: FILE: mm/page_alloc.c:8138:
++		BUG_ON(1); // FIXME
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#918: FILE: mm/vmstat.c:1184:
++			seq_printf(m, "%6lu ",
++					free_page_count(zone, order, mtype));
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000122630.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 1 errors, 11 warnings, 11 checks, 790 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000122630.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

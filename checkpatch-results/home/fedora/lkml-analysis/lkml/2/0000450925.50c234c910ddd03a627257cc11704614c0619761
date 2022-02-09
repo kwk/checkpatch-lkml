@@ -1,0 +1,201 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#35: 
+I have made a new patch which uses seqlock to protect mems_allowed and mempolicy.
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#123: FILE: include/linux/cpuset.h:56:
++extern int cpuset_mems_allowed_intersects(struct task_struct *tsk1,
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'p' may be better as '(p)' to avoid precedence issues
+#151: FILE: include/linux/cpuset.h:112:
++#define mems_fastpath_lock_irqsave(p, flags)				\
++	({								\
++		read_seqbegin_irqsave(&p->mems_seqlock, flags);		\
++	})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'p' may be better as '(p)' to avoid precedence issues
+#156: FILE: include/linux/cpuset.h:117:
++#define mems_fastpath_unlock_irqrestore(p, seq, flags)			\
++	({								\
++		read_seqretry_irqrestore(&p->mems_seqlock, seq, flags);	\
++	})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'p' may be better as '(p)' to avoid precedence issues
+#161: FILE: include/linux/cpuset.h:122:
++#define mems_slowpath_lock_irqsave(p, flags)				\
++	do {								\
++		write_seqlock_irqsave(&p->mems_seqlock, flags);		\
++	} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#161: FILE: include/linux/cpuset.h:122:
++#define mems_slowpath_lock_irqsave(p, flags)				\
++	do {								\
++		write_seqlock_irqsave(&p->mems_seqlock, flags);		\
++	} while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'p' may be better as '(p)' to avoid precedence issues
+#166: FILE: include/linux/cpuset.h:127:
++#define mems_slowpath_unlock_irqrestore(p, flags)			\
++	do {								\
++		write_sequnlock_irqrestore(&p->mems_seqlock, flags);	\
++	} while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#166: FILE: include/linux/cpuset.h:127:
++#define mems_slowpath_unlock_irqrestore(p, flags)			\
++	do {								\
++		write_sequnlock_irqrestore(&p->mems_seqlock, flags);	\
++	} while (0)
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#191: FILE: include/linux/cpuset.h:152:
++	unsigned long flags;
++	mems_slowpath_lock_irqsave(current, flags);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#218: FILE: include/linux/cpuset.h:261:
++#define mems_slowpath_lock_irqsave(p, flags)				\
++	do { (void)(flags); } while (0)
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#221: FILE: include/linux/cpuset.h:264:
++#define mems_slowpath_unlock_irqrestore(p, flags)			\
++	do { (void)(flags); } while (0)
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#265: FILE: include/linux/sched.h:1361:
++ * Or we use other seqlock - mems_seqlock to protect them. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#279: FILE: include/linux/sched.h:1434:
++	 * else Protected by mems_seqlock */
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#290: FILE: include/linux/sched.h:1459:
++	 * else Protected by mems_seqlock */
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#763: FILE: mm/mempolicy.c:1610:
++		zl = node_zonelist(interleave_nid(pol, vma, addr,
+ 				huge_page_shift(hstate_vma(vma))), gfp_flags);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#822: FILE: mm/mempolicy.c:1783:
++		page =  __alloc_pages_nodemask(gfp, 0, zl,
++					policy_nodemask(gfp, pol));
+
+CHECK:BRACES: Unbalanced braces around else statement
+#855: FILE: mm/mempolicy.c:1819:
++	else {
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#874: FILE: mm/mempolicy.c:1835:
++		page =  __alloc_pages_nodemask(gfp, order,
++					policy_zonelist(gfp, pol),
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around current->mempolicy
+#969: FILE: mm/slab.c:3297:
++			mpol = *(current->mempolicy);
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around current->mempolicy
+#991: FILE: mm/slab.c:3333:
++		mpol = *(current->mempolicy);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around current->mempolicy
+#1019: FILE: mm/slub.c:1375:
++		mpol = *(current->mempolicy);
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000450925.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 9 warnings, 12 checks, 816 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000450925.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

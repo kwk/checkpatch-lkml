@@ -1,0 +1,85 @@
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'synctype' may be better as '(synctype)' to avoid precedence issues
+#92: FILE: drivers/irqchip/irq-gic-v3-its.c:487:
++#define __its_send_single_cmd(name, buildtype, synctype, buildfn)	\
++void name(struct its_node *its,						\
++	  buildtype builder,						\
++	  struct its_cmd_desc *desc)					\
++{									\
++	struct its_cmd_block *cmd, *sync_cmd, *next_cmd;		\
++	synctype *sync_obj;						\
++	unsigned long flags;						\
++									\
++	raw_spin_lock_irqsave(&its->lock, flags);			\
++									\
++	cmd = its_allocate_entry(its);					\
++	if (!cmd) {		/* We're soooooo screewed... */		\
++		raw_spin_unlock_irqrestore(&its->lock, flags);		\
++		return;							\
++	}								\
++	sync_obj = builder(cmd, desc);					\
++	its_flush_cmd(its, cmd);					\
++									\
++	if (sync_obj) {							\
++		sync_cmd = its_allocate_entry(its);			\
++		if (!sync_cmd)						\
++			goto post;					\
++									\
++		buildfn(sync_cmd, sync_obj);				\
++		its_fixup_cmd(sync_cmd);				\
++		its_flush_cmd(its, sync_cmd);				\
++	}								\
++									\
++post:									\
++	next_cmd = its_post_commands(its);				\
++	raw_spin_unlock_irqrestore(&its->lock, flags);			\
++									\
++	its_wait_for_range_completion(its, cmd, next_cmd);		\
++}
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#92: FILE: drivers/irqchip/irq-gic-v3-its.c:487:
++#define __its_send_single_cmd(name, buildtype, synctype, buildfn)	\
++void name(struct its_node *its,						\
++	  buildtype builder,						\
++	  struct its_cmd_desc *desc)					\
++{									\
++	struct its_cmd_block *cmd, *sync_cmd, *next_cmd;		\
++	synctype *sync_obj;						\
++	unsigned long flags;						\
++									\
++	raw_spin_lock_irqsave(&its->lock, flags);			\
++									\
++	cmd = its_allocate_entry(its);					\
++	if (!cmd) {		/* We're soooooo screewed... */		\
++		raw_spin_unlock_irqrestore(&its->lock, flags);		\
++		return;							\
++	}								\
++	sync_obj = builder(cmd, desc);					\
++	its_flush_cmd(its, cmd);					\
++									\
++	if (sync_obj) {							\
++		sync_cmd = its_allocate_entry(its);			\
++		if (!sync_cmd)						\
++			goto post;					\
++									\
++		buildfn(sync_cmd, sync_obj);				\
++		its_fixup_cmd(sync_cmd);				\
++		its_flush_cmd(its, sync_cmd);				\
++	}								\
++									\
++post:									\
++	next_cmd = its_post_commands(its);				\
++	raw_spin_unlock_irqrestore(&its->lock, flags);			\
++									\
++	its_wait_for_range_completion(its, cmd, next_cmd);		\
++}
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000287321.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 1 warnings, 1 checks, 88 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000287321.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

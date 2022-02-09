@@ -1,0 +1,136 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#480: FILE: drivers/base/node.c:160:
++#define ACCESS_ATTR(name)						\
++static ssize_t name##_show(struct device *dev,				\
++			   struct device_attribute *attr,		\
++			   char *buf)					\
++{									\
++	return sysfs_emit(buf, "%u\n",					\
++			  to_access_nodes(dev)->hmem_attrs.name);	\
++}									\
+ static DEVICE_ATTR_RO(name);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#480: FILE: drivers/base/node.c:160:
++#define ACCESS_ATTR(name)						\
++static ssize_t name##_show(struct device *dev,				\
++			   struct device_attribute *attr,		\
++			   char *buf)					\
++{									\
++	return sysfs_emit(buf, "%u\n",					\
++			  to_access_nodes(dev)->hmem_attrs.name);	\
++}									\
+ static DEVICE_ATTR_RO(name);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'soc_info_show' to 'machine_show'
+#1203: FILE: drivers/base/soc.c:34:
++static DEVICE_ATTR(machine,		0444, soc_info_show,  NULL);
+
+The function names used in DEVICE_ATTR is unusual.
+Typically, the store and show functions are used with <attr>_store and
+<attr>_show, where <attr> is a named attribute variable of the device.
+
+Consider the following examples::
+
+  static DEVICE_ATTR(type, 0444, type_show, NULL);
+  static DEVICE_ATTR(power, 0644, power_show, power_store);
+
+The function names should preferably follow the above pattern.
+
+See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'soc_info_show' to 'family_show'
+#1204: FILE: drivers/base/soc.c:35:
++static DEVICE_ATTR(family,		0444, soc_info_show,  NULL);
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'soc_info_show' to 'serial_number_show'
+#1205: FILE: drivers/base/soc.c:36:
++static DEVICE_ATTR(serial_number,	0444, soc_info_show,  NULL);
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'soc_info_show' to 'soc_id_show'
+#1206: FILE: drivers/base/soc.c:37:
++static DEVICE_ATTR(soc_id,		0444, soc_info_show,  NULL);
+
+WARNING:DEVICE_ATTR_FUNCTIONS: Consider renaming function(s) 'soc_info_show' to 'revision_show'
+#1207: FILE: drivers/base/soc.c:38:
++static DEVICE_ATTR(revision,		0444, soc_info_show,  NULL);
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'attr == &dev_attr_machine.attr'
+#1217: FILE: drivers/base/soc.c:52:
++	if ((attr == &dev_attr_machine.attr) && soc_dev->attr->machine)
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'attr == &dev_attr_family.attr'
+#1221: FILE: drivers/base/soc.c:54:
++	if ((attr == &dev_attr_family.attr) && soc_dev->attr->family)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'attr == &dev_attr_revision.attr'
+#1225: FILE: drivers/base/soc.c:56:
++	if ((attr == &dev_attr_revision.attr) && soc_dev->attr->revision)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'attr == &dev_attr_serial_number.attr'
+#1229: FILE: drivers/base/soc.c:58:
++	if ((attr == &dev_attr_serial_number.attr) && soc_dev->attr->serial_number)
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'attr == &dev_attr_soc_id.attr'
+#1233: FILE: drivers/base/soc.c:60:
++	if ((attr == &dev_attr_soc_id.attr) && soc_dev->attr->soc_id)
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000266788.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a total: 0 errors, 6 warnings, 6 checks, 1087 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000266788.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

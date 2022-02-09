@@ -1,0 +1,179 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'value' - possible side-effects?
+#47: FILE: drivers/staging/frontier/tranzport.c:177:
++#define show_int(value)	\
++	static ssize_t show_##value(struct device *dev,	\
+ 			      struct device_attribute *attr, char *buf)	\
++	{	\
++		struct usb_interface *intf = to_usb_interface(dev);	\
++		struct usb_tranzport *t = usb_get_intfdata(intf);	\
++		return sprintf(buf, "%d\n", t->value);	\
++	}	\
++	static DEVICE_ATTR(value, S_IRUGO, show_##value, NULL);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'value' may be better as '(value)' to avoid precedence issues
+#47: FILE: drivers/staging/frontier/tranzport.c:177:
++#define show_int(value)	\
++	static ssize_t show_##value(struct device *dev,	\
+ 			      struct device_attribute *attr, char *buf)	\
++	{	\
++		struct usb_interface *intf = to_usb_interface(dev);	\
++		struct usb_tranzport *t = usb_get_intfdata(intf);	\
++		return sprintf(buf, "%d\n", t->value);	\
++	}	\
++	static DEVICE_ATTR(value, S_IRUGO, show_##value, NULL);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#47: FILE: drivers/staging/frontier/tranzport.c:177:
++#define show_int(value)	\
++	static ssize_t show_##value(struct device *dev,	\
+ 			      struct device_attribute *attr, char *buf)	\
++	{	\
++		struct usb_interface *intf = to_usb_interface(dev);	\
++		struct usb_tranzport *t = usb_get_intfdata(intf);	\
++		return sprintf(buf, "%d\n", t->value);	\
++	}	\
++	static DEVICE_ATTR(value, S_IRUGO, show_##value, NULL);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IRUGO' are not preferred. Consider using octal permissions '0444'.
+#64: FILE: drivers/staging/frontier/tranzport.c:185:
++	static DEVICE_ATTR(value, S_IRUGO, show_##value, NULL);
+
+Permission bits in the octal form are more readable and easier to
+understand than their symbolic counterparts because many command-line
+tools use this notation. Experienced kernel developers have been using
+these traditional Unix permission bits for decades and so they find it
+easier to understand the octal notation than the symbolic macros.
+For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
+obscures the developer's intent rather than clarifying it.
+
+See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'value' - possible side-effects?
+#66: FILE: drivers/staging/frontier/tranzport.c:187:
++#define show_set_int(value)	\
++	static ssize_t show_##value(struct device *dev,	\
+ 			      struct device_attribute *attr, char *buf)	\
++	{	\
++		struct usb_interface *intf = to_usb_interface(dev);	\
++		struct usb_tranzport *t = usb_get_intfdata(intf);	\
++		return sprintf(buf, "%d\n", t->value);	\
++	}	\
++	static ssize_t set_##value(struct device *dev,	\
+ 			     struct device_attribute *attr,		\
+ 			     const char *buf, size_t count)		\
++	{	\
++		struct usb_interface *intf = to_usb_interface(dev);	\
++		struct usb_tranzport *t = usb_get_intfdata(intf);	\
++		unsigned long temp;	\
++		if (strict_strtoul(buf, 10, &temp))	\
++			return -EINVAL;	\
++		t->value = temp;	\
++		return count;	\
++	}	\
++	static DEVICE_ATTR(value, S_IWUGO | S_IRUGO, show_##value, set_##value);
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'value' may be better as '(value)' to avoid precedence issues
+#66: FILE: drivers/staging/frontier/tranzport.c:187:
++#define show_set_int(value)	\
++	static ssize_t show_##value(struct device *dev,	\
+ 			      struct device_attribute *attr, char *buf)	\
++	{	\
++		struct usb_interface *intf = to_usb_interface(dev);	\
++		struct usb_tranzport *t = usb_get_intfdata(intf);	\
++		return sprintf(buf, "%d\n", t->value);	\
++	}	\
++	static ssize_t set_##value(struct device *dev,	\
+ 			     struct device_attribute *attr,		\
+ 			     const char *buf, size_t count)		\
++	{	\
++		struct usb_interface *intf = to_usb_interface(dev);	\
++		struct usb_tranzport *t = usb_get_intfdata(intf);	\
++		unsigned long temp;	\
++		if (strict_strtoul(buf, 10, &temp))	\
++			return -EINVAL;	\
++		t->value = temp;	\
++		return count;	\
++	}	\
++	static DEVICE_ATTR(value, S_IWUGO | S_IRUGO, show_##value, set_##value);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#66: FILE: drivers/staging/frontier/tranzport.c:187:
++#define show_set_int(value)	\
++	static ssize_t show_##value(struct device *dev,	\
+ 			      struct device_attribute *attr, char *buf)	\
++	{	\
++		struct usb_interface *intf = to_usb_interface(dev);	\
++		struct usb_tranzport *t = usb_get_intfdata(intf);	\
++		return sprintf(buf, "%d\n", t->value);	\
++	}	\
++	static ssize_t set_##value(struct device *dev,	\
+ 			     struct device_attribute *attr,		\
+ 			     const char *buf, size_t count)		\
++	{	\
++		struct usb_interface *intf = to_usb_interface(dev);	\
++		struct usb_tranzport *t = usb_get_intfdata(intf);	\
++		unsigned long temp;	\
++		if (strict_strtoul(buf, 10, &temp))	\
++			return -EINVAL;	\
++		t->value = temp;	\
++		return count;	\
++	}	\
++	static DEVICE_ATTR(value, S_IWUGO | S_IRUGO, show_##value, set_##value);
+
+WARNING:CONSIDER_KSTRTO: strict_strtoul is obsolete, use kstrtoul instead
+#97: FILE: drivers/staging/frontier/tranzport.c:202:
++		if (strict_strtoul(buf, 10, &temp))	\
+
+The simple_strtol(), simple_strtoll(), simple_strtoul(), and
+simple_strtoull() functions explicitly ignore overflows, which
+may lead to unexpected results in callers.  The respective kstrtol(),
+kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
+correct replacements.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
+
+WARNING:EXPORTED_WORLD_WRITABLE: Exporting world writable files is usually an error. Consider more restrictive permissions.
+#102: FILE: drivers/staging/frontier/tranzport.c:207:
++	static DEVICE_ATTR(value, S_IWUGO | S_IRUGO, show_##value, set_##value);
+
+Exporting world writable sysfs/debugfs files is usually a bad thing.
+When done arbitrarily they can introduce serious security bugs.
+In the past, some of the debugfs vulnerabilities would seemingly allow
+any local user to write arbitrary values into device registers - a
+situation from which little good can be expected to emerge.
+
+See: https://lore.kernel.org/linux-arm-kernel/cover.1296818921.git.segoon@openwall.com/
+
+WARNING:SYMBOLIC_PERMS: Symbolic permissions 'S_IWUGO | S_IRUGO' are not preferred. Consider using octal permissions '0666'.
+#102: FILE: drivers/staging/frontier/tranzport.c:207:
++	static DEVICE_ATTR(value, S_IWUGO | S_IRUGO, show_##value, set_##value);
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000366985.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 6 warnings, 4 checks, 64 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000366985.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

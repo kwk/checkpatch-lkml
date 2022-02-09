@@ -1,0 +1,199 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#216: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#221: FILE: include/asm-generic/qspinlock.h:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:INCLUDE_LINUX: Use #include <linux/processor.h> instead of <asm/processor.h>
+#245: FILE: include/asm-generic/qspinlock.h:25:
++#include <asm/processor.h>
+
+WARNING:NEW_TYPEDEFS: do not add new typedefs
+#257: FILE: include/asm-generic/qspinlock.h:37:
++typedef struct qspinlock {
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#280: FILE: include/asm-generic/qspinlock.h:60:
++extern void queue_spin_lock_slowpath(struct qspinlock *lock);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#311: FILE: include/asm-generic/qspinlock.h:91:
++}
++/**
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#319: FILE: include/asm-generic/qspinlock.h:99:
++	if (!ACCESS_ONCE(lock->qlcode) &&
++	   (cmpxchg(&lock->qlcode, 0, _QSPINLOCK_LOCKED) == 0))
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#351: FILE: include/asm-generic/qspinlock.h:131:
++	if (__native_word(lock->locked))
+[...]
++	else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:MEMORY_BARRIER: memory barrier without comment
+#352: FILE: include/asm-generic/qspinlock.h:132:
++		smp_store_release(&lock->locked, 0);
+
+CHECK:BRACES: Unbalanced braces around else statement
+#353: FILE: include/asm-generic/qspinlock.h:133:
++	else {
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#407: FILE: kernel/locking/qspinlock.c:1:
++/*
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#467: FILE: kernel/locking/qspinlock.c:61:
++/*
++#ifndef CONFIG_DEBUG_SPINLOCK
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:TYPO_SPELLING: 'processs' may be misspelled - perhaps 'process'?
+#475: FILE: kernel/locking/qspinlock.c:69:
++ * The used flag is used for synchronization between processs and interrupt
+                                                      ^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:ASSIGNMENT_CONTINUATIONS: Assignment operator '=' should be on the previous line
+#508: FILE: kernel/locking/qspinlock.c:102:
++static DEFINE_PER_CPU(struct qnode [MAX_QNODES], qnodes) ____cacheline_aligned
++	= { { 0 } };
+
+Assignment operators should not be written at the start of a
+line but should follow the operand at the previous line.
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#527: FILE: kernel/locking/qspinlock.c:121:
++#define	ASSERT(cond)		BUG_ON(!(cond))
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+WARNING:SINGLE_STATEMENT_DO_WHILE_MACRO: Single statement macros should not use a do {} while (0) loop
+#528: FILE: kernel/locking/qspinlock.c:122:
++#define	SET_NODE(var, val)	do { node->(var) = (val); } while (0)
+
+For the multi-statement macros, it is necessary to use the do-while
+loop to avoid unpredictable code paths. The do-while loop helps to
+group the multiple statements into a single one so that a
+function-like macro can be used as a function only.
+
+But for the single statement macros, it is unnecessary to use the
+do-while loop. Although the code is syntactically correct but using
+the do-while loop is redundant. So remove the do-while loop for single
+statement macros.
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#545: FILE: kernel/locking/qspinlock.c:139:
++
++
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!prev->next"
+#558: FILE: kernel/locking/qspinlock.c:152:
++	ASSERT(prev->next == NULL);
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 24)
+#582: FILE: kernel/locking/qspinlock.c:176:
++	} else if (cmpxchg(&lock->qlcode, qlcode, qlcode|_QSPINLOCK_LOCKED)
+[...]
++			return 1;
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#582: FILE: kernel/locking/qspinlock.c:176:
++	} else if (cmpxchg(&lock->qlcode, qlcode, qlcode|_QSPINLOCK_LOCKED)
+ 	                                                ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:OPEN_ENDED_LINE: Lines should not end with a '('
+#662: FILE: kernel/locking/qspinlock.c:256:
++			printk_sched(
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#699: FILE: kernel/locking/qspinlock.c:293:
++	if (unlikely(!(prev_qcode & _QSPINLOCK_LOCKED))) {
+[...]
++	} else
+[...]
+
+CHECK:BRACES: Unbalanced braces around else statement
+#720: FILE: kernel/locking/qspinlock.c:314:
++	} else
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000239475.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 11 warnings, 12 checks, 568 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000239475.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

@@ -1,0 +1,221 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#81: 
+  https://lkml.kernel.org/r/20181005081333.15018-1-ard.biesheuvel@linaro.org
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#183: FILE: include/linux/static_call.h:67:
++extern void arch_static_call_transform(void *site, void *tramp, void *func);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#185: FILE: include/linux/static_call.h:69:
++#define STATIC_CALL_TRAMP_ADDR(name) &STATIC_CALL_TRAMP(name)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#192: FILE: include/linux/static_call.h:76:
++#define __static_call(name)						\
++({									\
++	__ADDRESSABLE(STATIC_CALL_KEY(name));				\
++	&STATIC_CALL_TRAMP(name);					\
++})
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#202: FILE: include/linux/static_call.h:86:
++
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#203: FILE: include/linux/static_call.h:87:
++#define DECLARE_STATIC_CALL(name, func)					\
++	extern struct static_call_key STATIC_CALL_KEY(name);		\
++	extern typeof(func) STATIC_CALL_TRAMP(name);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#203: FILE: include/linux/static_call.h:87:
++#define DECLARE_STATIC_CALL(name, func)					\
++	extern struct static_call_key STATIC_CALL_KEY(name);		\
++	extern typeof(func) STATIC_CALL_TRAMP(name);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#204: FILE: include/linux/static_call.h:88:
++	extern struct static_call_key STATIC_CALL_KEY(name);		\
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#205: FILE: include/linux/static_call.h:89:
++	extern typeof(func) STATIC_CALL_TRAMP(name);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#207: FILE: include/linux/static_call.h:91:
++#define static_call_update(name, func)					\
++({									\
++	BUILD_BUG_ON(!__same_type(*(func), STATIC_CALL_TRAMP(name)));	\
++	__static_call_update(&STATIC_CALL_KEY(name),			\
++			     STATIC_CALL_TRAMP_ADDR(name), func);	\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'func' - possible side-effects?
+#207: FILE: include/linux/static_call.h:91:
++#define static_call_update(name, func)					\
++({									\
++	BUILD_BUG_ON(!__same_type(*(func), STATIC_CALL_TRAMP(name)));	\
++	__static_call_update(&STATIC_CALL_KEY(name),			\
++			     STATIC_CALL_TRAMP_ADDR(name), func);	\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#220: FILE: include/linux/static_call.h:104:
++#define DEFINE_STATIC_CALL(name, _func)					\
++	DECLARE_STATIC_CALL(name, _func);				\
++	struct static_call_key STATIC_CALL_KEY(name) = {		\
++		.func = _func,						\
++	};								\
++	ARCH_DEFINE_STATIC_CALL_TRAMP(name, _func)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_func' - possible side-effects?
+#220: FILE: include/linux/static_call.h:104:
++#define DEFINE_STATIC_CALL(name, _func)					\
++	DECLARE_STATIC_CALL(name, _func);				\
++	struct static_call_key STATIC_CALL_KEY(name) = {		\
++		.func = _func,						\
++	};								\
++	ARCH_DEFINE_STATIC_CALL_TRAMP(name, _func)
+
+CHECK:SPACING: No space is necessary after a cast
+#227: FILE: include/linux/static_call.h:111:
++#define static_call(name)	__static_call(name)
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#238: FILE: include/linux/static_call.h:122:
++#define EXPORT_STATIC_CALL(name)					\
++	EXPORT_SYMBOL(STATIC_CALL_KEY(name));				\
++	EXPORT_SYMBOL(STATIC_CALL_TRAMP(name))
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#238: FILE: include/linux/static_call.h:122:
++#define EXPORT_STATIC_CALL(name)					\
++	EXPORT_SYMBOL(STATIC_CALL_KEY(name));				\
++	EXPORT_SYMBOL(STATIC_CALL_TRAMP(name))
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#239: FILE: include/linux/static_call.h:123:
++	EXPORT_SYMBOL(STATIC_CALL_KEY(name));				\
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#242: FILE: include/linux/static_call.h:126:
++#define EXPORT_STATIC_CALL_GPL(name)					\
++	EXPORT_SYMBOL_GPL(STATIC_CALL_KEY(name));			\
++	EXPORT_SYMBOL_GPL(STATIC_CALL_TRAMP(name))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#242: FILE: include/linux/static_call.h:126:
++#define EXPORT_STATIC_CALL_GPL(name)					\
++	EXPORT_SYMBOL_GPL(STATIC_CALL_KEY(name));			\
++	EXPORT_SYMBOL_GPL(STATIC_CALL_TRAMP(name))
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#243: FILE: include/linux/static_call.h:127:
++	EXPORT_SYMBOL_GPL(STATIC_CALL_KEY(name));			\
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#252: FILE: include/linux/static_call.h:136:
++#define DEFINE_STATIC_CALL(name, _func)					\
++	DECLARE_STATIC_CALL(name, _func);				\
++	struct static_call_key STATIC_CALL_KEY(name) = {		\
++		.func = _func,						\
++	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_func' - possible side-effects?
+#252: FILE: include/linux/static_call.h:136:
++#define DEFINE_STATIC_CALL(name, _func)					\
++	DECLARE_STATIC_CALL(name, _func);				\
++	struct static_call_key STATIC_CALL_KEY(name) = {		\
++		.func = _func,						\
++	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'name' - possible side-effects?
+#258: FILE: include/linux/static_call.h:142:
++#define static_call(name)						\
++	((typeof(STATIC_CALL_TRAMP(name))*)(STATIC_CALL_KEY(name).func))
+
+CHECK:SPACING: No space is necessary after a cast
+#267: FILE: include/linux/static_call.h:151:
++#define EXPORT_STATIC_CALL(name)	EXPORT_SYMBOL(STATIC_CALL_KEY(name))
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#267: FILE: include/linux/static_call.h:151:
++#define EXPORT_STATIC_CALL(name)	EXPORT_SYMBOL(STATIC_CALL_KEY(name))
+
+CHECK:SPACING: No space is necessary after a cast
+#268: FILE: include/linux/static_call.h:152:
++#define EXPORT_STATIC_CALL_GPL(name)	EXPORT_SYMBOL_GPL(STATIC_CALL_KEY(name))
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#268: FILE: include/linux/static_call.h:152:
++#define EXPORT_STATIC_CALL_GPL(name)	EXPORT_SYMBOL_GPL(STATIC_CALL_KEY(name))
+
+CHECK:SPACING: No space is necessary after a cast
+#283: FILE: include/linux/static_call_types.h:8:
++#define STATIC_CALL_KEY(name)		__PASTE(STATIC_CALL_KEY_PREFIX, name)
+
+CHECK:SPACING: No space is necessary after a cast
+#287: FILE: include/linux/static_call_types.h:12:
++#define STATIC_CALL_TRAMP(name)		__PASTE(STATIC_CALL_TRAMP_PREFIX, name)
+
+CHECK:SPACING: No space is necessary after a cast
+#288: FILE: include/linux/static_call_types.h:13:
++#define STATIC_CALL_TRAMP_STR(name)	__stringify(STATIC_CALL_TRAMP(name))
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000092877.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 3 errors, 6 warnings, 21 checks, 180 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000092877.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

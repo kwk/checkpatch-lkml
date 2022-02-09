@@ -1,0 +1,162 @@
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!percents"
+#96: FILE: tools/perf/ui/browsers/hists.c:608:
++		if (percents == NULL) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse '_field' - possible side-effects?
+#130: FILE: tools/perf/ui/browsers/hists.c:642:
++#define __HPP_COLOR_PERCENT_FN(_type, _field)					\
++static int hist_browser__hpp_color_##_type(struct perf_hpp *hpp, 		\
++					   struct hist_entry *he)		\
++{										\
++	int ret;								\
++	double percent = 0.0;							\
++	struct hists *hists = he->hists;					\
++	struct hpp_arg *arg = hpp->ptr;						\
++										\
++	if (hists->stats.total_period)						\
++		percent = 100.0 * he->stat._field / hists->stats.total_period;	\
++										\
++	ui_browser__set_percent_color(arg->b, percent, arg->current_entry); 	\
++	ret = scnprintf(hpp->buf, hpp->size, "%6.2f%%", percent);		\
++	slsmg_printf("%s", hpp->buf);						\
++										\
++	if (symbol_conf.event_group) {						\
++		int i;								\
++		struct perf_evsel *evsel = hists_to_evsel(hists);		\
++		struct hist_entry *pair;					\
++		int nr_members = evsel->nr_members;				\
++		double *percents;						\
++										\
++		if (nr_members <= 1)						\
++			goto out;						\
++										\
++		percents = zalloc(sizeof(*percents) * nr_members);		\
++		if (percents == NULL) {						\
++			pr_warning("Not enough memory!\n");			\
++			goto out;						\
++		}								\
++										\
++		list_for_each_entry(pair, &he->pairs.head, pairs.node) { 	\
++			int idx;						\
++			u64 period = pair->stat._field;				\
++			u64 total = pair->hists->stats.total_period;		\
++										\
++			if (!total)						\
++				continue;					\
++										\
++			evsel = hists_to_evsel(pair->hists);			\
++			idx = perf_evsel__group_idx(evsel);			\
++			percents[idx] = 100.0 * period / total;			\
++		}								\
++										\
++		for (i = 1; i < nr_members; i++) {				\
++			ui_browser__set_percent_color(arg->b, percents[i],	\
++						      arg->current_entry); 	\
++			ret += scnprintf(hpp->buf, hpp->size,			\
++					 " %6.2f%%", percents[i]);		\
++			slsmg_printf("%s", hpp->buf);				\
++		}								\
++		free(percents);							\
++	}									\
++out:										\
++	if (!arg->current_entry || !arg->b->navkeypressed)			\
++		ui_browser__set_color(arg->b, HE_COLORSET_NORMAL);		\
++										\
++	return ret;								\
+ }
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument '_field' may be better as '(_field)' to avoid precedence issues
+#130: FILE: tools/perf/ui/browsers/hists.c:642:
++#define __HPP_COLOR_PERCENT_FN(_type, _field)					\
++static int hist_browser__hpp_color_##_type(struct perf_hpp *hpp, 		\
++					   struct hist_entry *he)		\
++{										\
++	int ret;								\
++	double percent = 0.0;							\
++	struct hists *hists = he->hists;					\
++	struct hpp_arg *arg = hpp->ptr;						\
++										\
++	if (hists->stats.total_period)						\
++		percent = 100.0 * he->stat._field / hists->stats.total_period;	\
++										\
++	ui_browser__set_percent_color(arg->b, percent, arg->current_entry); 	\
++	ret = scnprintf(hpp->buf, hpp->size, "%6.2f%%", percent);		\
++	slsmg_printf("%s", hpp->buf);						\
++										\
++	if (symbol_conf.event_group) {						\
++		int i;								\
++		struct perf_evsel *evsel = hists_to_evsel(hists);		\
++		struct hist_entry *pair;					\
++		int nr_members = evsel->nr_members;				\
++		double *percents;						\
++										\
++		if (nr_members <= 1)						\
++			goto out;						\
++										\
++		percents = zalloc(sizeof(*percents) * nr_members);		\
++		if (percents == NULL) {						\
++			pr_warning("Not enough memory!\n");			\
++			goto out;						\
++		}								\
++										\
++		list_for_each_entry(pair, &he->pairs.head, pairs.node) { 	\
++			int idx;						\
++			u64 period = pair->stat._field;				\
++			u64 total = pair->hists->stats.total_period;		\
++										\
++			if (!total)						\
++				continue;					\
++										\
++			evsel = hists_to_evsel(pair->hists);			\
++			idx = perf_evsel__group_idx(evsel);			\
++			percents[idx] = 100.0 * period / total;			\
++		}								\
++										\
++		for (i = 1; i < nr_members; i++) {				\
++			ui_browser__set_percent_color(arg->b, percents[i],	\
++						      arg->current_entry); 	\
++			ret += scnprintf(hpp->buf, hpp->size,			\
++					 " %6.2f%%", percents[i]);		\
++			slsmg_printf("%s", hpp->buf);				\
++		}								\
++		free(percents);							\
++	}									\
++out:										\
++	if (!arg->current_entry || !arg->b->navkeypressed)			\
++		ui_browser__set_color(arg->b, HE_COLORSET_NORMAL);		\
++										\
++	return ret;								\
+ }
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#131: FILE: tools/perf/ui/browsers/hists.c:643:
++static int hist_browser__hpp_color_##_type(struct perf_hpp *hpp, ^I^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#142: FILE: tools/perf/ui/browsers/hists.c:654:
++^Iui_browser__set_percent_color(arg->b, percent, arg->current_entry); ^I\$
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!percents"
+#157: FILE: tools/perf/ui/browsers/hists.c:669:
++		if (percents == NULL) {						\
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#162: FILE: tools/perf/ui/browsers/hists.c:674:
++^I^Ilist_for_each_entry(pair, &he->pairs.head, pairs.node) { ^I\$
+
+WARNING:SPACE_BEFORE_TAB: please, no space before tabs
+#177: FILE: tools/perf/ui/browsers/hists.c:689:
++^I^I^I^I^I^I      arg->current_entry); ^I\$
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000017342.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 4 warnings, 4 checks, 219 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000017342.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

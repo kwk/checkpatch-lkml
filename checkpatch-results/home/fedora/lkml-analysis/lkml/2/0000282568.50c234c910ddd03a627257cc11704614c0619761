@@ -1,0 +1,333 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#110: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#115: FILE: arch/tile/drivers/Kconfig:1:
++config TILE_SROM
++	bool "Character-device access to the Tilera on-board SROM"
++	default y
++	---help---
++	  This device provides character-level read-write access
++	  to the SROM, typically via the "0", "1", "2", and "info"
++	  devices in /dev/srom/.
++
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#148: FILE: arch/tile/drivers/srom.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#216: FILE: arch/tile/drivers/srom.c:69:
++	char *info_string;		/* String returned by the info device
++					   if this is it; NULL otherwise */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#216: FILE: arch/tile/drivers/srom.c:69:
++					   if this is it; NULL otherwise */
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'func' - possible side-effects?
+#240: FILE: arch/tile/drivers/srom.c:93:
++#define SROM_RD_OR_WR(func, ...) \
++	({								\
++	int _hv_retval = func(__VA_ARGS__);				\
++	int retries;							\
++									\
++	while (_hv_retval < 0) {					\
++		if (_hv_retval == HV_EBUSY) {				\
++			retries = SROM_MAX_WAIT_TRY_TIMES;		\
++									\
++			while (retries > 0) {				\
++				_hv_retval = func(__VA_ARGS__);		\
++				if (_hv_retval == HV_EBUSY) {		\
++					msleep(SROM_WAIT_TRY_INTERVAL);	\
++					retries--;			\
++				} else {				\
++					break;				\
++				}					\
++			}						\
++									\
++			if (_hv_retval == HV_EBUSY) {			\
++				pr_err("srom: "#func" failed ("		\
++				       "timeout)\n");			\
++				retval = -EIO;				\
++				goto op_done;				\
++			}						\
++		} else if (_hv_retval == HV_EAGAIN) {			\
++			_hv_retval = func(__VA_ARGS__);			\
++		} else {						\
++			pr_err("srom: "#func" failed, "			\
++				"error %d\n", _hv_retval);		\
++			retval = -EIO;					\
++			goto op_done;					\
++		}							\
++	}								\
++	_hv_retval;							\
++	})
+
+WARNING:MACRO_WITH_FLOW_CONTROL: Macros with flow control statements should be avoided
+#240: FILE: arch/tile/drivers/srom.c:93:
++#define SROM_RD_OR_WR(func, ...) \
++	({								\
++	int _hv_retval = func(__VA_ARGS__);				\
++	int retries;							\
++									\
++	while (_hv_retval < 0) {					\
++		if (_hv_retval == HV_EBUSY) {				\
++			retries = SROM_MAX_WAIT_TRY_TIMES;		\
++									\
++			while (retries > 0) {				\
++				_hv_retval = func(__VA_ARGS__);		\
++				if (_hv_retval == HV_EBUSY) {		\
++					msleep(SROM_WAIT_TRY_INTERVAL);	\
++					retries--;			\
++				} else {				\
++					break;				\
++				}					\
++			}						\
++									\
++			if (_hv_retval == HV_EBUSY) {			\
++				pr_err("srom: "#func" failed ("		\
++				       "timeout)\n");			\
++				retval = -EIO;				\
++				goto op_done;				\
++			}						\
++		} else if (_hv_retval == HV_EAGAIN) {			\
++			_hv_retval = func(__VA_ARGS__);			\
++		} else {						\
++			pr_err("srom: "#func" failed, "			\
++				"error %d\n", _hv_retval);		\
++			retval = -EIO;					\
++			goto op_done;					\
++		}							\
++	}								\
++	_hv_retval;							\
++	})
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#260: FILE: arch/tile/drivers/srom.c:113:
++				pr_err("srom: "#func" failed ("		\
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#268: FILE: arch/tile/drivers/srom.c:121:
++			pr_err("srom: "#func" failed, "			\
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#280: FILE: arch/tile/drivers/srom.c:133:
++ * @filp: File for this specific open of the device.
+     ^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#284: FILE: arch/tile/drivers/srom.c:137:
++static int srom_open(struct inode *inode, struct file *filp)
+                                                        ^^^^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#295: FILE: arch/tile/drivers/srom.c:148:
++		int instance = iminor(inode);
++		if (instance != srom_info_minor()) {
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#303: FILE: arch/tile/drivers/srom.c:156:
++					     (HV_VirtAddr)&dev->size,
+ 					                  ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#320: FILE: arch/tile/drivers/srom.c:173:
++					     (HV_VirtAddr)&sector_size,
+ 					                  ^
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#324: FILE: arch/tile/drivers/srom.c:177:
++					     (HV_VirtAddr)&page_size,
+ 					                  ^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#330: FILE: arch/tile/drivers/srom.c:183:
++				dev->info_string = kmalloc(info_string_size,
++							GFP_KERNEL);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#332: FILE: arch/tile/drivers/srom.c:185:
++				snprintf(dev->info_string, info_string_size,
++					"sector_size: %d\npage_size: %d\n",
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#353: FILE: arch/tile/drivers/srom.c:206:
++
++
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#357: FILE: arch/tile/drivers/srom.c:210:
++ * @filp: File for this specific open of the device.
+     ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#361: FILE: arch/tile/drivers/srom.c:214:
++static int srom_release(struct inode *inode, struct file *filp)
+                                                           ^^^^
+
+CHECK:SPACING: spaces preferred around that '&' (ctx:VxV)
+#379: FILE: arch/tile/drivers/srom.c:232:
++			      0, (HV_VirtAddr)&dummy, 1, SROM_FLUSH_OFF);
+ 			                      ^
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#389: FILE: arch/tile/drivers/srom.c:242:
++
++
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#392: FILE: arch/tile/drivers/srom.c:245:
++ * @filp: File for this specific open of the device.
+     ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#399: FILE: arch/tile/drivers/srom.c:252:
++static ssize_t srom_read(struct file *filp, char __user *buf,
+                                       ^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#441: FILE: arch/tile/drivers/srom.c:294:
++		hv_retval = SROM_RD_OR_WR(hv_dev_pread, dev->hv_devhdl,
++			      0, (HV_VirtAddr) kernbuf, bytes_this_pass,
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#468: FILE: arch/tile/drivers/srom.c:321:
++ * @filp: File for this specific open of the device.
+     ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#475: FILE: arch/tile/drivers/srom.c:328:
++static ssize_t srom_write(struct file *filp, const char __user *buf,
+                                        ^^^^
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#508: FILE: arch/tile/drivers/srom.c:361:
++		hv_retval = SROM_RD_OR_WR(hv_dev_pwrite, dev->hv_devhdl,
++			      0, (HV_VirtAddr) kernbuf, bytes_this_pass,
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#529: FILE: arch/tile/drivers/srom.c:382:
++ * @filp: File for this specific open of the device.
+     ^^^^
+
+WARNING:TYPO_SPELLING: 'filp' may be misspelled - perhaps 'flip'?
+#535: FILE: arch/tile/drivers/srom.c:388:
++static loff_t srom_llseek(struct file *filp, loff_t off, int whence)
+                                        ^^^^
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#564: FILE: arch/tile/drivers/srom.c:417:
++
++
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#604: FILE: arch/tile/drivers/srom.c:457:
++	if (srom_major)
+[...]
++	else {
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#606: FILE: arch/tile/drivers/srom.c:459:
++	else {
+
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#613: FILE: arch/tile/drivers/srom.c:466:
++
++
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#618: FILE: arch/tile/drivers/srom.c:471:
++	srom_devices = kzalloc(srom_devs * sizeof(struct srom_dev),
++			       GFP_KERNEL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#653: FILE: arch/tile/include/hv/drv_srom_intf.h:1:
++/*
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000282568.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 19 warnings, 17 checks, 591 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000282568.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

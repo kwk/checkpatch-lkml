@@ -1,0 +1,68 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#95: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'file' - possible side-effects?
+#152: FILE: drivers/net/phy/mdio_bus.c:261:
++#define MDIO_BUS_STATS_ATTR(field, file)				\
++static ssize_t mdio_bus_##field##_show(struct device *dev,		\
++				       struct device_attribute *attr,	\
++				       char *buf)			\
++{									\
++	struct mii_bus *bus = to_mii_bus(dev);				\
++	return mdio_bus_stats_##field##_show(&bus->stats, buf);		\
++}									\
++static struct device_attribute dev_attr_mdio_bus_##field = {		\
++	.attr = { .name = file, .mode = 0444 },				\
++	.show = mdio_bus_##field##_show,				\
++};									\
++static ssize_t mdio_bus_device_##field##_show(struct device *dev,	\
++					      struct device_attribute *attr,\
++					      char *buf)		\
++{									\
++	struct mdio_device *mdiodev = to_mdio_device(dev);		\
++	return mdio_bus_stats_##field##_show(&mdiodev->stats, buf);	\
++}									\
++static struct device_attribute dev_attr_mdio_bus_device_##field = {	\
++	.attr = { .name = file, .mode = 0444 },				\
++	.show = mdio_bus_device_##field##_show,				\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'field' may be better as '(field)' to avoid precedence issues
+#176: FILE: drivers/net/phy/mdio_bus.c:285:
++#define MDIO_BUS_STATS_SHOW_NAME(name, file, field, format_string)	\
++static ssize_t mdio_bus_stats_##name##_show(struct mdio_bus_stats *s,	\
++					    char *buf)			\
++{									\
++	unsigned int start;						\
++	ssize_t len;							\
++	u64 tmp;							\
++	do {								\
++		start = u64_stats_fetch_begin(&s->syncp);		\
++		tmp = u64_stats_read(&s->field);			\
++	} while (u64_stats_fetch_retry(&s->syncp, start));		\
++	len = sprintf(buf, format_string ## "\n", tmp);			\
++	return len;							\
++}									\
++MDIO_BUS_STATS_ATTR(name, file)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#192: FILE: drivers/net/phy/mdio_bus.c:301:
++#define MDIO_BUS_STATS_SHOW(field, format_string)			\
++	MDIO_BUS_STATS_SHOW_NAME(field, __stringify(field),		\
++				      field, format_string)
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000287623.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 1 warnings, 3 checks, 251 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000287623.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

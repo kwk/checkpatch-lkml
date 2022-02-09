@@ -1,0 +1,568 @@
+CHECK:LINE_SPACING: Please don't use multiple blank lines
+#48: FILE: include/xen/interface/io/ring.h:286:
+ 
++
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'order' may be better as '(order)' to avoid precedence issues
+#88: FILE: include/xen/interface/io/ring.h:326:
++#define XEN_FLEX_RING_SIZE(order)                                             \
++    (1UL << (order + XEN_PAGE_SHIFT - 1))
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#89: FILE: include/xen/interface/io/ring.h:327:
++    (1UL << (order + XEN_PAGE_SHIFT - 1))$
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#91: FILE: include/xen/interface/io/ring.h:329:
++#define DEFINE_XEN_FLEX_RING_AND_INTF(name)                                   \
++struct name##_data_intf {                                                     \
++    RING_IDX in_cons, in_prod;                                                \
++                                                                              \
++    uint8_t pad1[56];                                                         \
++                                                                              \
++    RING_IDX out_cons, out_prod;                                              \
++                                                                              \
++    uint8_t pad2[56];                                                         \
++                                                                              \
++    RING_IDX ring_order;                                                      \
++    grant_ref_t ref[];                                                        \
++};                                                                            \
++DEFINE_XEN_FLEX_RING(name);
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#93: FILE: include/xen/interface/io/ring.h:331:
++    RING_IDX in_cons, in_prod;                                                \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#94: FILE: include/xen/interface/io/ring.h:332:
++                                                                              \$
+
+Code indent should use tabs instead of spaces.
+Outside of comments, documentation and Kconfig,
+spaces are never used for indentation.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#94: FILE: include/xen/interface/io/ring.h:332:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#95: FILE: include/xen/interface/io/ring.h:333:
++    uint8_t pad1[56];                                                         \$
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#95: FILE: include/xen/interface/io/ring.h:333:
++    uint8_t pad1[56];                                                         \
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#96: FILE: include/xen/interface/io/ring.h:334:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#96: FILE: include/xen/interface/io/ring.h:334:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#97: FILE: include/xen/interface/io/ring.h:335:
++    RING_IDX out_cons, out_prod;                                              \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#98: FILE: include/xen/interface/io/ring.h:336:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#98: FILE: include/xen/interface/io/ring.h:336:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#99: FILE: include/xen/interface/io/ring.h:337:
++    uint8_t pad2[56];                                                         \$
+
+CHECK:PREFER_KERNEL_TYPES: Prefer kernel type 'u8' over 'uint8_t'
+#99: FILE: include/xen/interface/io/ring.h:337:
++    uint8_t pad2[56];                                                         \
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#100: FILE: include/xen/interface/io/ring.h:338:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#100: FILE: include/xen/interface/io/ring.h:338:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#101: FILE: include/xen/interface/io/ring.h:339:
++    RING_IDX ring_order;                                                      \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#102: FILE: include/xen/interface/io/ring.h:340:
++    grant_ref_t ref[];                                                        \$
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#106: FILE: include/xen/interface/io/ring.h:344:
++#define DEFINE_XEN_FLEX_RING(name)                                            \
++static inline RING_IDX name##_mask(RING_IDX idx, RING_IDX ring_size)          \
++{                                                                             \
++    return (idx & (ring_size - 1));                                           \
++}                                                                             \
++                                                                              \
++static inline RING_IDX name##_mask_order(RING_IDX idx, RING_IDX ring_order)   \
++{                                                                             \
++    return (idx & (XEN_FLEX_RING_SIZE(ring_order) - 1));                      \
++}                                                                             \
++                                                                              \
++static inline unsigned char* name##_get_ring_ptr(unsigned char *buf,          \
++                                                 RING_IDX idx,                \
++                                                 RING_IDX ring_order)         \
++{                                                                             \
++    return buf + name##_mask_order(idx, ring_order);                          \
++}                                                                             \
++                                                                              \
++static inline void name##_read_packet(const unsigned char *buf,               \
++        RING_IDX masked_prod, RING_IDX *masked_cons,                          \
++        RING_IDX ring_size, void *opaque, size_t size) {                      \
++    if (*masked_cons < masked_prod ||                                         \
++            size <= ring_size - *masked_cons) {                               \
++        memcpy(opaque, buf + *masked_cons, size);                             \
++    } else {                                                                  \
++        memcpy(opaque, buf + *masked_cons, ring_size - *masked_cons);         \
++        memcpy((unsigned char *)opaque + ring_size - *masked_cons, buf,       \
++                size - (ring_size - *masked_cons));                           \
++    }                                                                         \
++    *masked_cons = name##_mask(*masked_cons + size, ring_size);               \
++}                                                                             \
++                                                                              \
++static inline void name##_write_packet(unsigned char *buf,                    \
++        RING_IDX *masked_prod, RING_IDX masked_cons,                          \
++        RING_IDX ring_size, const void *opaque, size_t size) {                \
++    if (*masked_prod < masked_cons ||                                         \
++        size <= ring_size - *masked_prod) {                                   \
++        memcpy(buf + *masked_prod, opaque, size);                             \
++    } else {                                                                  \
++        memcpy(buf + *masked_prod, opaque, ring_size - *masked_prod);         \
++        memcpy(buf, (unsigned char *)opaque + (ring_size - *masked_prod),     \
++                size - (ring_size - *masked_prod));                           \
++    }                                                                         \
++    *masked_prod = name##_mask(*masked_prod + size, ring_size);               \
++}                                                                             \
++                                                                              \
++struct name##_data {                                                          \
++    unsigned char *in; /* half of the allocation */                           \
++    unsigned char *out; /* half of the allocation */                          \
++};                                                                            \
++                                                                              \
++                                                                              \
++static inline RING_IDX name##_queued(RING_IDX prod,                           \
++        RING_IDX cons, RING_IDX ring_size)                                    \
++{                                                                             \
++    RING_IDX size;                                                            \
++                                                                              \
++    if (prod == cons)                                                         \
++        return 0;                                                             \
++                                                                              \
++    prod = name##_mask(prod, ring_size);                                      \
++    cons = name##_mask(cons, ring_size);                                      \
++                                                                              \
++    if (prod == cons)                                                         \
++        return ring_size;                                                     \
++                                                                              \
++    if (prod > cons)                                                          \
++        size = prod - cons;                                                   \
++    else                                                                      \
++        size = ring_size - (cons - prod);                                     \
++    return size;                                                              \
++};
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#109: FILE: include/xen/interface/io/ring.h:347:
++    return (idx & (ring_size - 1));                                           \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#111: FILE: include/xen/interface/io/ring.h:349:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#111: FILE: include/xen/interface/io/ring.h:349:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#114: FILE: include/xen/interface/io/ring.h:352:
++    return (idx & (XEN_FLEX_RING_SIZE(ring_order) - 1));                      \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#116: FILE: include/xen/interface/io/ring.h:354:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#116: FILE: include/xen/interface/io/ring.h:354:
++                                                                              \$
+
+ERROR:POINTER_LOCATION: "foo* bar" should be "foo *bar"
+#117: FILE: include/xen/interface/io/ring.h:355:
++static inline unsigned char* name##_get_ring_ptr(unsigned char *buf,          \
+
+When using pointer data or a function that returns a pointer type,
+the preferred use of * is adjacent to the data name or function name
+and not adjacent to the type name.
+Examples::
+
+  char *linux_banner;
+  unsigned long long memparse(char *ptr, char **retptr);
+  char *match_strdup(substring_t *s);
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#118: FILE: include/xen/interface/io/ring.h:356:
++                                                 RING_IDX idx,                \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#118: FILE: include/xen/interface/io/ring.h:356:
++                                                 RING_IDX idx,                \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#119: FILE: include/xen/interface/io/ring.h:357:
++                                                 RING_IDX ring_order)         \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#119: FILE: include/xen/interface/io/ring.h:357:
++                                                 RING_IDX ring_order)         \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#121: FILE: include/xen/interface/io/ring.h:359:
++    return buf + name##_mask_order(idx, ring_order);                          \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#123: FILE: include/xen/interface/io/ring.h:361:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#123: FILE: include/xen/interface/io/ring.h:361:
++                                                                              \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#125: FILE: include/xen/interface/io/ring.h:363:
++        RING_IDX masked_prod, RING_IDX *masked_cons,                          \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#125: FILE: include/xen/interface/io/ring.h:363:
++        RING_IDX masked_prod, RING_IDX *masked_cons,                          \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#126: FILE: include/xen/interface/io/ring.h:364:
++        RING_IDX ring_size, void *opaque, size_t size) {                      \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#126: FILE: include/xen/interface/io/ring.h:364:
++        RING_IDX ring_size, void *opaque, size_t size) {                      \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#127: FILE: include/xen/interface/io/ring.h:365:
++    if (*masked_cons < masked_prod ||                                         \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#128: FILE: include/xen/interface/io/ring.h:366:
++            size <= ring_size - *masked_cons) {                               \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#128: FILE: include/xen/interface/io/ring.h:366:
++            size <= ring_size - *masked_cons) {                               \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#129: FILE: include/xen/interface/io/ring.h:367:
++        memcpy(opaque, buf + *masked_cons, size);                             \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#129: FILE: include/xen/interface/io/ring.h:367:
++        memcpy(opaque, buf + *masked_cons, size);                             \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#130: FILE: include/xen/interface/io/ring.h:368:
++    } else {                                                                  \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#131: FILE: include/xen/interface/io/ring.h:369:
++        memcpy(opaque, buf + *masked_cons, ring_size - *masked_cons);         \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#131: FILE: include/xen/interface/io/ring.h:369:
++        memcpy(opaque, buf + *masked_cons, ring_size - *masked_cons);         \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#132: FILE: include/xen/interface/io/ring.h:370:
++        memcpy((unsigned char *)opaque + ring_size - *masked_cons, buf,       \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#132: FILE: include/xen/interface/io/ring.h:370:
++        memcpy((unsigned char *)opaque + ring_size - *masked_cons, buf,       \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#133: FILE: include/xen/interface/io/ring.h:371:
++                size - (ring_size - *masked_cons));                           \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#133: FILE: include/xen/interface/io/ring.h:371:
++                size - (ring_size - *masked_cons));                           \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#134: FILE: include/xen/interface/io/ring.h:372:
++    }                                                                         \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#135: FILE: include/xen/interface/io/ring.h:373:
++    *masked_cons = name##_mask(*masked_cons + size, ring_size);               \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#137: FILE: include/xen/interface/io/ring.h:375:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#137: FILE: include/xen/interface/io/ring.h:375:
++                                                                              \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#139: FILE: include/xen/interface/io/ring.h:377:
++        RING_IDX *masked_prod, RING_IDX masked_cons,                          \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#139: FILE: include/xen/interface/io/ring.h:377:
++        RING_IDX *masked_prod, RING_IDX masked_cons,                          \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#140: FILE: include/xen/interface/io/ring.h:378:
++        RING_IDX ring_size, const void *opaque, size_t size) {                \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#140: FILE: include/xen/interface/io/ring.h:378:
++        RING_IDX ring_size, const void *opaque, size_t size) {                \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#141: FILE: include/xen/interface/io/ring.h:379:
++    if (*masked_prod < masked_cons ||                                         \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#142: FILE: include/xen/interface/io/ring.h:380:
++        size <= ring_size - *masked_prod) {                                   \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#142: FILE: include/xen/interface/io/ring.h:380:
++        size <= ring_size - *masked_prod) {                                   \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#143: FILE: include/xen/interface/io/ring.h:381:
++        memcpy(buf + *masked_prod, opaque, size);                             \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#143: FILE: include/xen/interface/io/ring.h:381:
++        memcpy(buf + *masked_prod, opaque, size);                             \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#144: FILE: include/xen/interface/io/ring.h:382:
++    } else {                                                                  \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#145: FILE: include/xen/interface/io/ring.h:383:
++        memcpy(buf + *masked_prod, opaque, ring_size - *masked_prod);         \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#145: FILE: include/xen/interface/io/ring.h:383:
++        memcpy(buf + *masked_prod, opaque, ring_size - *masked_prod);         \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#146: FILE: include/xen/interface/io/ring.h:384:
++        memcpy(buf, (unsigned char *)opaque + (ring_size - *masked_prod),     \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#146: FILE: include/xen/interface/io/ring.h:384:
++        memcpy(buf, (unsigned char *)opaque + (ring_size - *masked_prod),     \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#147: FILE: include/xen/interface/io/ring.h:385:
++                size - (ring_size - *masked_prod));                           \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#147: FILE: include/xen/interface/io/ring.h:385:
++                size - (ring_size - *masked_prod));                           \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#148: FILE: include/xen/interface/io/ring.h:386:
++    }                                                                         \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#149: FILE: include/xen/interface/io/ring.h:387:
++    *masked_prod = name##_mask(*masked_prod + size, ring_size);               \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#151: FILE: include/xen/interface/io/ring.h:389:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#151: FILE: include/xen/interface/io/ring.h:389:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#153: FILE: include/xen/interface/io/ring.h:391:
++    unsigned char *in; /* half of the allocation */                           \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#154: FILE: include/xen/interface/io/ring.h:392:
++    unsigned char *out; /* half of the allocation */                          \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#156: FILE: include/xen/interface/io/ring.h:394:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#156: FILE: include/xen/interface/io/ring.h:394:
++                                                                              \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#157: FILE: include/xen/interface/io/ring.h:395:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#157: FILE: include/xen/interface/io/ring.h:395:
++                                                                              \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#159: FILE: include/xen/interface/io/ring.h:397:
++        RING_IDX cons, RING_IDX ring_size)                                    \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#159: FILE: include/xen/interface/io/ring.h:397:
++        RING_IDX cons, RING_IDX ring_size)                                    \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#161: FILE: include/xen/interface/io/ring.h:399:
++    RING_IDX size;                                                            \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#162: FILE: include/xen/interface/io/ring.h:400:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#162: FILE: include/xen/interface/io/ring.h:400:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#163: FILE: include/xen/interface/io/ring.h:401:
++    if (prod == cons)                                                         \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#164: FILE: include/xen/interface/io/ring.h:402:
++        return 0;                                                             \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#164: FILE: include/xen/interface/io/ring.h:402:
++        return 0;                                                             \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#165: FILE: include/xen/interface/io/ring.h:403:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#165: FILE: include/xen/interface/io/ring.h:403:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#166: FILE: include/xen/interface/io/ring.h:404:
++    prod = name##_mask(prod, ring_size);                                      \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#167: FILE: include/xen/interface/io/ring.h:405:
++    cons = name##_mask(cons, ring_size);                                      \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#168: FILE: include/xen/interface/io/ring.h:406:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#168: FILE: include/xen/interface/io/ring.h:406:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#169: FILE: include/xen/interface/io/ring.h:407:
++    if (prod == cons)                                                         \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#170: FILE: include/xen/interface/io/ring.h:408:
++        return ring_size;                                                     \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#170: FILE: include/xen/interface/io/ring.h:408:
++        return ring_size;                                                     \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#171: FILE: include/xen/interface/io/ring.h:409:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#171: FILE: include/xen/interface/io/ring.h:409:
++                                                                              \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#172: FILE: include/xen/interface/io/ring.h:410:
++    if (prod > cons)                                                          \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#173: FILE: include/xen/interface/io/ring.h:411:
++        size = prod - cons;                                                   \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#173: FILE: include/xen/interface/io/ring.h:411:
++        size = prod - cons;                                                   \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#174: FILE: include/xen/interface/io/ring.h:412:
++    else                                                                      \$
+
+ERROR:CODE_INDENT: code indent should use tabs where possible
+#175: FILE: include/xen/interface/io/ring.h:413:
++        size = ring_size - (cons - prod);                                     \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#175: FILE: include/xen/interface/io/ring.h:413:
++        size = ring_size - (cons - prod);                                     \$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#176: FILE: include/xen/interface/io/ring.h:414:
++    return size;                                                              \$
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000250662.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 37 errors, 66 warnings, 4 checks, 135 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+NOTE: Whitespace errors detected.
+      You may wish to use scripts/cleanpatch or scripts/cleanfile
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000250662.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

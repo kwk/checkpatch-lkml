@@ -1,0 +1,35 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'result' - possible side-effects?
+#116: FILE: drivers/misc/vmw_balloon.c:145:
++#define VMWARE_BALLOON_CMD(cmd, data, result)			\
++({								\
++	unsigned long __status, __dummy1, __dummy2;		\
++	__asm__ __volatile__ ("inl %%dx" :			\
++		"=a"(__status),					\
++		"=c"(__dummy1),					\
++		"=d"(__dummy2),					\
++		"=b"(result) :					\
++		"0"(VMW_BALLOON_HV_MAGIC),			\
++		"1"(VMW_BALLOON_CMD_##cmd),			\
++		"2"(VMW_BALLOON_HV_PORT),			\
++		"3"(data) :					\
++		"memory");					\
++	if (VMW_BALLOON_CMD_##cmd == VMW_BALLOON_CMD_START)	\
++		result = __dummy1;				\
++	result &= -1UL;						\
++	__status & -1UL;					\
+ })
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#147: FILE: drivers/misc/vmw_balloon.c:244:
++	status = VMWARE_BALLOON_CMD(START, VMW_BALLOON_CAPABILITIES,
++				capabilities);
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000319136.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 0 warnings, 2 checks, 103 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000319136.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

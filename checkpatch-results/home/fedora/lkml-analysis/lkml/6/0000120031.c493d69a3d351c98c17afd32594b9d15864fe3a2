@@ -1,0 +1,164 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#336: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#369: FILE: kunit/common-mocks.c:29:
++#define DEFINE_MATCHER_STRUCT(type_name, type)				       \
++		struct mock_##type_name##_matcher {			       \
++			struct mock_param_matcher matcher;		       \
++			type expected;					       \
++		};
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:SPACING: No space is necessary after a cast
+#393: FILE: kunit/common-mocks.c:53:
++			type actual = *((type *) pactual);		       \
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#398: FILE: kunit/common-mocks.c:58:
++					    "%d "#op" %d",		       \
+
+Concatenated elements should have a space in between.
+Example::
+
+  printk(KERN_INFO"bar");
+
+should be::
+
+  printk(KERN_INFO "bar");
+
+CHECK:CONCATENATED_STRING: Concatenated strings should use spaces between elements
+#403: FILE: kunit/common-mocks.c:63:
++					    "%d not "#op" %d",		       \
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#427: FILE: kunit/common-mocks.c:87:
++#define DEFINE_MATCHER_WITH_TYPENAME(type_name, type)			       \
++		DEFINE_MATCHER_STRUCT(type_name, type)			       \
++		DEFINE_TO_MATCHER_STRUCT(type_name)			       \
++		DEFINE_MATCH_FUNC(type_name, type, eq, ==)		       \
++		DEFINE_MATCH_FACTORY(type_name, type, eq)		       \
++		DEFINE_MATCH_FUNC(type_name, type, ne, !=)		       \
++		DEFINE_MATCH_FACTORY(type_name, type, ne)		       \
++		DEFINE_MATCH_FUNC(type_name, type, le, <=)		       \
++		DEFINE_MATCH_FACTORY(type_name, type, le)		       \
++		DEFINE_MATCH_FUNC(type_name, type, lt, <)		       \
++		DEFINE_MATCH_FACTORY(type_name, type, lt)		       \
++		DEFINE_MATCH_FUNC(type_name, type, ge, >=)		       \
++		DEFINE_MATCH_FACTORY(type_name, type, ge)		       \
++		DEFINE_MATCH_FUNC(type_name, type, gt, >)		       \
++		DEFINE_MATCH_FACTORY(type_name, type, gt)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'type_name' - possible side-effects?
+#427: FILE: kunit/common-mocks.c:87:
++#define DEFINE_MATCHER_WITH_TYPENAME(type_name, type)			       \
++		DEFINE_MATCHER_STRUCT(type_name, type)			       \
++		DEFINE_TO_MATCHER_STRUCT(type_name)			       \
++		DEFINE_MATCH_FUNC(type_name, type, eq, ==)		       \
++		DEFINE_MATCH_FACTORY(type_name, type, eq)		       \
++		DEFINE_MATCH_FUNC(type_name, type, ne, !=)		       \
++		DEFINE_MATCH_FACTORY(type_name, type, ne)		       \
++		DEFINE_MATCH_FUNC(type_name, type, le, <=)		       \
++		DEFINE_MATCH_FACTORY(type_name, type, le)		       \
++		DEFINE_MATCH_FUNC(type_name, type, lt, <)		       \
++		DEFINE_MATCH_FACTORY(type_name, type, lt)		       \
++		DEFINE_MATCH_FUNC(type_name, type, ge, >=)		       \
++		DEFINE_MATCH_FACTORY(type_name, type, ge)		       \
++		DEFINE_MATCH_FUNC(type_name, type, gt, >)		       \
++		DEFINE_MATCH_FACTORY(type_name, type, gt)
+
+CHECK:SPACING: No space is necessary after a cast
+#443: FILE: kunit/common-mocks.c:103:
++#define DEFINE_MATCHER(type) DEFINE_MATCHER_WITH_TYPENAME(type, type)
+
+CHECK:SPACING: No space is necessary after a cast
+#482: FILE: kunit/common-mocks.c:142:
++		stream->add(stream, "%02x, ", ((const char *) actual)[i]);
+
+CHECK:SPACING: No space is necessary after a cast
+#490: FILE: kunit/common-mocks.c:150:
++			    ((const char *) matcher->expected)[i]);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#550: FILE: kunit/common-mocks.c:210:
++#define DEFINE_RETURN_ACTION_STRUCT(type_name, type)			       \
++		struct mock_##type_name##_action {			       \
++			struct mock_action action;			       \
++			type ret;					       \
++		};
+
+CHECK:SPACING: No space is necessary after a cast
+#566: FILE: kunit/common-mocks.c:226:
++			return (void *) &action->ret;			       \
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#588: FILE: kunit/common-mocks.c:248:
++#define DEFINE_RETURN_ACTION_WITH_TYPENAME(type_name, type)		       \
++		DEFINE_RETURN_ACTION_STRUCT(type_name, type);		       \
++		DEFINE_RETURN_ACTION_FUNC(type_name, type);		       \
++		DEFINE_RETURN_ACTION_FACTORY(type_name, type);
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'type_name' - possible side-effects?
+#588: FILE: kunit/common-mocks.c:248:
++#define DEFINE_RETURN_ACTION_WITH_TYPENAME(type_name, type)		       \
++		DEFINE_RETURN_ACTION_STRUCT(type_name, type);		       \
++		DEFINE_RETURN_ACTION_FUNC(type_name, type);		       \
++		DEFINE_RETURN_ACTION_FACTORY(type_name, type);
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#588: FILE: kunit/common-mocks.c:248:
++#define DEFINE_RETURN_ACTION_WITH_TYPENAME(type_name, type)		       \
++		DEFINE_RETURN_ACTION_STRUCT(type_name, type);		       \
++		DEFINE_RETURN_ACTION_FUNC(type_name, type);		       \
++		DEFINE_RETURN_ACTION_FACTORY(type_name, type);
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000120031.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 2 errors, 4 warnings, 9 checks, 504 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000120031.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

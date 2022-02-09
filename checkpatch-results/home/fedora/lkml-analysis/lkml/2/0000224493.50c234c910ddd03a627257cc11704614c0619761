@@ -1,0 +1,185 @@
+CHECK:SPACING: spaces preferred around that '<<' (ctx:VxV)
+#69: FILE: include/linux/dynamic_debug.h:29:
++#define _DPRINTK_FLAGS_APPEND		(1<<5)  /* add query to pending list */
+                              		  ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:BIT_MACRO: Prefer using the BIT macro
+#69: FILE: include/linux/dynamic_debug.h:29:
++#define _DPRINTK_FLAGS_APPEND		(1<<5)  /* add query to pending list */
+
+Defines like: 1 << <digit> could be BIT(digit).
+The BIT() macro is defined via include/linux/bits.h::
+
+  #define BIT(nr)         (1UL << (nr))
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'pq' - possible side-effects?
+#112: FILE: lib/dynamic_debug.c:138:
++#define vpr_info_pq(pq, msg)						\
++do {									\
++	struct ddebug_query *q = &pq->query;				\
++	if (verbose)							\
++		/* trim last char off format print */			\
++		pr_info("%s: func=\"%s\" file=\"%s\" "			\
++			"module=\"%s\" format=\"%.*s\" "		\
++			"lineno=%u-%u "					\
++			"flags=0x%x mask=0x%x",				\
++			msg,						\
++			q->function ? q->function : "",			\
++			q->filename ? q->filename : "",			\
++			q->module ? q->module : "",			\
++			(int)(q->format ? strlen(q->format) - 1 : 0),	\
++			q->format ? q->format : "",			\
++			q->first_lineno, q->last_lineno,		\
++			pq->flags, pq->mask);				\
++} while (0)
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'pq' may be better as '(pq)' to avoid precedence issues
+#112: FILE: lib/dynamic_debug.c:138:
++#define vpr_info_pq(pq, msg)						\
++do {									\
++	struct ddebug_query *q = &pq->query;				\
++	if (verbose)							\
++		/* trim last char off format print */			\
++		pr_info("%s: func=\"%s\" file=\"%s\" "			\
++			"module=\"%s\" format=\"%.*s\" "		\
++			"lineno=%u-%u "					\
++			"flags=0x%x mask=0x%x",				\
++			msg,						\
++			q->function ? q->function : "",			\
++			q->filename ? q->filename : "",			\
++			q->module ? q->module : "",			\
++			(int)(q->format ? strlen(q->format) - 1 : 0),	\
++			q->format ? q->format : "",			\
++			q->first_lineno, q->last_lineno,		\
++			pq->flags, pq->mask);				\
++} while (0)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#140: FILE: lib/dynamic_debug.c:192:
++static int ddebug_change(const struct ddebug_query *query,
+ 			unsigned int flags, unsigned int mask)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#161: FILE: lib/dynamic_debug.c:470:
++	if (!qnew->module != !qcur->module ||
++		!qnew->filename != !qcur->filename ||
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#167: FILE: lib/dynamic_debug.c:476:
++	if (qnew->last_lineno != qcur->last_lineno ||
++		qnew->first_lineno != qcur->first_lineno)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#171: FILE: lib/dynamic_debug.c:480:
++	if ((qnew->module && strcmp(qnew->module, qcur->module)) ||
++		(qnew->filename && strcmp(qnew->filename, qcur->filename)) ||
+
+WARNING:NEEDLESS_IF: kfree(NULL) is safe and this check is probably not required
+#182: FILE: lib/dynamic_debug.c:491:
++	if (pq->query.module)
++		kfree(pq->query.module);
+
+WARNING:NEEDLESS_IF: kfree(NULL) is safe and this check is probably not required
+#184: FILE: lib/dynamic_debug.c:493:
++	if (pq->query.function)
++		kfree(pq->query.function);
+
+WARNING:NEEDLESS_IF: kfree(NULL) is safe and this check is probably not required
+#186: FILE: lib/dynamic_debug.c:495:
++	if (pq->query.filename)
++		kfree(pq->query.filename);
+
+WARNING:NEEDLESS_IF: kfree(NULL) is safe and this check is probably not required
+#188: FILE: lib/dynamic_debug.c:497:
++	if (pq->query.format)
++		kfree(pq->query.format);
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use * on subsequent lines
+#193: FILE: lib/dynamic_debug.c:502:
++/* copy query off stack, save flags & mask, and store or update in
++   pending-list.  Called with ddebug_lock held.
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#196: FILE: lib/dynamic_debug.c:505:
++static int ddebug_save_pending(struct ddebug_query *query,
++				unsigned int flags, unsigned int mask)
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*pq)...) over kzalloc(sizeof(struct pending_query)...)
+#217: FILE: lib/dynamic_debug.c:526:
++	pq = kzalloc(sizeof(struct pending_query), GFP_KERNEL);
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "!pq"
+#218: FILE: lib/dynamic_debug.c:527:
++	if (pq == NULL)
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#223: FILE: lib/dynamic_debug.c:532:
++		if (!(pq->query.module = kstrdup(query->module, GFP_KERNEL)))
+
+Do not use assignments in if condition.
+Example::
+
+  if ((foo = bar(...)) < BAZ) {
+
+should be written as::
+
+  foo = bar(...);
+  if (foo < BAZ) {
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#226: FILE: lib/dynamic_debug.c:535:
++		if (!(pq->query.function = kstrdup(query->function, GFP_KERNEL)))
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#229: FILE: lib/dynamic_debug.c:538:
++		if (!(pq->query.filename = kstrdup(query->filename, GFP_KERNEL)))
+
+ERROR:ASSIGN_IN_IF: do not use assignment in if condition
+#232: FILE: lib/dynamic_debug.c:541:
++		if (!(pq->query.format = kstrdup(query->format, GFP_KERNEL)))
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000224493.commit.50c234c910ddd03a627257cc11704614c0619761 total: 4 errors, 5 warnings, 11 checks, 239 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000224493.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

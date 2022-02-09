@@ -1,0 +1,47 @@
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#163: FILE: include/linux/initrd.h:29:
++extern void _wait_for_initramfs(const char *caller);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:MISPLACED_INIT: __initdata should be placed after initramfs_async
+#176: FILE: init/initramfs.c:533:
++static bool __initdata initramfs_async = CONFIG_INITRAMFS_ASYNC;
+
+It is possible to use section markers on variables in a way
+which gcc doesn't understand (or at least not the way the
+developer intended)::
+
+  static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
+
+does not put exynos4_plls in the .initdata section. The __initdata
+marker can be virtually anywhere on the line, except right after
+"struct". The preferred location is before the "=" sign if there is
+one, or before the trailing ";" otherwise.
+
+See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
+
+WARNING:MISPLACED_INIT: __initdata should be placed after initramfs_wrk
+#184: FILE: init/initramfs.c:541:
++static __initdata struct work_struct initramfs_wrk;
+
+WARNING:SPLIT_STRING: quoted string split across lines
+#202: FILE: init/initramfs.c:559:
++		pr_warn_once("wait_for_initramfs() called by %s"
++			     " before rootfs_initcalls\n", caller);
+
+Quoted strings that appear as messages in userspace and can be
+grepped, should not be split across multiple lines.
+
+See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000089436.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a total: 0 errors, 3 warnings, 1 checks, 148 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.WdLgn8AT7z//home/fedora/lkml-analysis/lkml/9/patch.offset.0000089436.commit.a94d3cd2429d1c5e61eaf14d3f33ddac2d1d586a has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

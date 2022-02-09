@@ -1,0 +1,256 @@
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#208: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#230: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:18:
++static ssize_t debugfs_pam4_tx_taps_write(struct file *f,
++						const char __user *buf,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#338: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:126:
++static ssize_t debugfs_polarity_write(struct file *f, const char __user *buf,
++					size_t count, loff_t *ppos)
+
+CHECK:SPACING: No space is necessary after a cast
+#396: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:184:
++	val |= ((u64) pol_tx) << lane;
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: No space is necessary after a cast
+#401: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:189:
++	val |= ((u64) pol_rx) << lane;
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#420: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:208:
++static ssize_t debugfs_ports_status_read(struct file *f, char __user *buf,
++					size_t count, loff_t *ppos)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#444: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:232:
++			if ((hdev->nic_ports_mask & BIT(i)) &&
++				gaudi->nic_devices[i].active)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#458: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:246:
++			if ((hdev->nic_ports_mask & BIT(i)) &&
++				!gaudi->nic_devices[i].active)
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#467: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:255:
++	rc = simple_read_from_buffer(buf, strlen(tmp_buf) + 1, ppos, tmp_buf,
++					strlen(tmp_buf) + 1);
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fmt' - possible side-effects?
+#477: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:265:
++#define NIC_DEBUGFS(X, fmt, do_reset) \
++static ssize_t debugfs_##X##_read(struct file *f, \
++					char __user *buf, \
++					size_t count, \
++					loff_t *ppos) \
++{ \
++	struct hl_device *hdev = file_inode(f)->i_private; \
++	struct gaudi_device *gaudi = hdev->asic_specific; \
++	char tmp_buf[32]; \
++	ssize_t rc; \
++\
++	if (*ppos) \
++		return 0; \
++\
++	sprintf(tmp_buf, fmt "\n", gaudi->nic_##X); \
++	rc = simple_read_from_buffer(buf, strlen(tmp_buf) + 1, ppos, tmp_buf, \
++			strlen(tmp_buf) + 1); \
++\
++	return rc; \
++} \
++\
++static ssize_t debugfs_##X##_write(struct file *f, \
++					const char __user *buf, \
++					size_t count, \
++					loff_t *ppos) \
++{ \
++	struct hl_device *hdev = file_inode(f)->i_private; \
++	struct gaudi_device *gaudi = hdev->asic_specific; \
++	u64 val, base; \
++	ssize_t rc; \
++\
++	if (!strcmp(fmt, "%d")) \
++		base = 10; \
++	else \
++		base = 16; \
++\
++	rc = kstrtoull_from_user(buf, count, base, &val); \
++	if (rc) \
++		return rc; \
++\
++	if (val == gaudi->nic_##X) \
++		return count; \
++\
++	if (do_reset && gaudi->nic_debugfs_reset) { \
++		gaudi->nic_##X = val; \
++		hl_device_reset(hdev, true, false); \
++		ssleep(HL_PENDING_RESET_PER_SEC); \
++		return count; \
++	} \
++\
++	dev_info(hdev->dev, "NIC reset for %s started\n", __stringify(X)); \
++\
++	rc = gaudi_nic_hard_reset_prepare(hdev); \
++	if (rc) \
++		return rc; \
++\
++	gaudi_nic_stop(hdev); \
++\
++	/* must do this so the ports will be reopened */ \
++	gaudi->hw_cap_initialized &= ~HW_CAP_NIC_DRV; \
++\
++	gaudi->nic_##X = val; \
++\
++	gaudi_nic_ports_reopen(hdev); \
++\
++	dev_info(hdev->dev, "NIC reset for %s finished\n", __stringify(X)); \
++\
++	return count; \
++} \
++\
++static const struct file_operations debugfs_##X##_fops = { \
++	.owner = THIS_MODULE, \
++	.read = debugfs_##X##_read, \
++	.write = debugfs_##X##_write, \
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'do_reset' may be better as '(do_reset)' to avoid precedence issues
+#477: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:265:
++#define NIC_DEBUGFS(X, fmt, do_reset) \
++static ssize_t debugfs_##X##_read(struct file *f, \
++					char __user *buf, \
++					size_t count, \
++					loff_t *ppos) \
++{ \
++	struct hl_device *hdev = file_inode(f)->i_private; \
++	struct gaudi_device *gaudi = hdev->asic_specific; \
++	char tmp_buf[32]; \
++	ssize_t rc; \
++\
++	if (*ppos) \
++		return 0; \
++\
++	sprintf(tmp_buf, fmt "\n", gaudi->nic_##X); \
++	rc = simple_read_from_buffer(buf, strlen(tmp_buf) + 1, ppos, tmp_buf, \
++			strlen(tmp_buf) + 1); \
++\
++	return rc; \
++} \
++\
++static ssize_t debugfs_##X##_write(struct file *f, \
++					const char __user *buf, \
++					size_t count, \
++					loff_t *ppos) \
++{ \
++	struct hl_device *hdev = file_inode(f)->i_private; \
++	struct gaudi_device *gaudi = hdev->asic_specific; \
++	u64 val, base; \
++	ssize_t rc; \
++\
++	if (!strcmp(fmt, "%d")) \
++		base = 10; \
++	else \
++		base = 16; \
++\
++	rc = kstrtoull_from_user(buf, count, base, &val); \
++	if (rc) \
++		return rc; \
++\
++	if (val == gaudi->nic_##X) \
++		return count; \
++\
++	if (do_reset && gaudi->nic_debugfs_reset) { \
++		gaudi->nic_##X = val; \
++		hl_device_reset(hdev, true, false); \
++		ssleep(HL_PENDING_RESET_PER_SEC); \
++		return count; \
++	} \
++\
++	dev_info(hdev->dev, "NIC reset for %s started\n", __stringify(X)); \
++\
++	rc = gaudi_nic_hard_reset_prepare(hdev); \
++	if (rc) \
++		return rc; \
++\
++	gaudi_nic_stop(hdev); \
++\
++	/* must do this so the ports will be reopened */ \
++	gaudi->hw_cap_initialized &= ~HW_CAP_NIC_DRV; \
++\
++	gaudi->nic_##X = val; \
++\
++	gaudi_nic_ports_reopen(hdev); \
++\
++	dev_info(hdev->dev, "NIC reset for %s finished\n", __stringify(X)); \
++\
++	return count; \
++} \
++\
++static const struct file_operations debugfs_##X##_fops = { \
++	.owner = THIS_MODULE, \
++	.read = debugfs_##X##_read, \
++	.write = debugfs_##X##_write, \
++}
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#562: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:350:
++	debugfs_create_file("nic_mac_loopback",
++				0644,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#568: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:356:
++	debugfs_create_file("nic_ports_status",
++				0444,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#574: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:362:
++	debugfs_create_file("nic_pcs_fail_time_frame",
++				0644,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#580: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:368:
++	debugfs_create_file("nic_pcs_fail_threshold",
++				0644,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#586: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:374:
++	debugfs_create_file("nic_pam4_tx_taps",
++				0444,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#592: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:380:
++	debugfs_create_file("nic_polarity",
++				0444,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#598: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:386:
++	debugfs_create_u8("nic_check_link",
++				0644,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#603: FILE: drivers/misc/habanalabs/gaudi/gaudi_nic_debugfs.c:391:
++	debugfs_create_u8("nic_phy_auto_neg_lpbk",
++				0644,
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000001333.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 1 warnings, 18 checks, 488 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000001333.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

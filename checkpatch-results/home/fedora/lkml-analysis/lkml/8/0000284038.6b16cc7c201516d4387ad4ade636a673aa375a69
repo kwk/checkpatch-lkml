@@ -1,0 +1,113 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#110: 
+  https://lore.kernel.org/lkml/20180408065916.GA2832@ircssh-2.c.rugged-nimbus-611.internal
+
+WARNING:MAINTAINERS_STYLE: Misordered MAINTAINERS entry - list file patterns in alphabetic order
+#133: FILE: MAINTAINERS:3212:
+ F:	security/bpf/
++F:	include/linux/bpf_lsm.h
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'FUNC' - possible side-effects?
+#165: FILE: include/linux/bpf_lsm.h:23:
++#define CALL_BPF_LSM_VOID_HOOKS(FUNC, ...)			\
++	do {							\
++		struct security_hook_list *P;			\
++		int _idx;					\
++								\
++		if (hlist_empty(&bpf_lsm_hook_heads.FUNC))	\
++			break;					\
++								\
++		_idx = bpf_lsm_srcu_read_lock();		\
++		hlist_for_each_entry(P, &bpf_lsm_hook_heads.FUNC, list) \
++			P->hook.FUNC(__VA_ARGS__);		\
++		bpf_lsm_srcu_read_unlock(_idx);			\
++	} while (0)
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'RC' - possible side-effects?
+#179: FILE: include/linux/bpf_lsm.h:37:
++#define CALL_BPF_LSM_INT_HOOKS(RC, FUNC, ...) ({		\
++	do {							\
++		struct security_hook_list *P;			\
++		int _idx;					\
++								\
++		if (hlist_empty(&bpf_lsm_hook_heads.FUNC))	\
++			break;					\
++								\
++		_idx = bpf_lsm_srcu_read_lock();		\
++								\
++		hlist_for_each_entry(P,				\
++			&bpf_lsm_hook_heads.FUNC, list) {	\
++			RC = P->hook.FUNC(__VA_ARGS__);		\
++			if (RC && IS_ENABLED(CONFIG_SECURITY_BPF_ENFORCE)) \
++				break;				\
++		}						\
++		bpf_lsm_srcu_read_unlock(_idx);			\
++	} while (0);						\
++	IS_ENABLED(CONFIG_SECURITY_BPF_ENFORCE) ? RC : 0;	\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'FUNC' - possible side-effects?
+#179: FILE: include/linux/bpf_lsm.h:37:
++#define CALL_BPF_LSM_INT_HOOKS(RC, FUNC, ...) ({		\
++	do {							\
++		struct security_hook_list *P;			\
++		int _idx;					\
++								\
++		if (hlist_empty(&bpf_lsm_hook_heads.FUNC))	\
++			break;					\
++								\
++		_idx = bpf_lsm_srcu_read_lock();		\
++								\
++		hlist_for_each_entry(P,				\
++			&bpf_lsm_hook_heads.FUNC, list) {	\
++			RC = P->hook.FUNC(__VA_ARGS__);		\
++			if (RC && IS_ENABLED(CONFIG_SECURITY_BPF_ENFORCE)) \
++				break;				\
++		}						\
++		bpf_lsm_srcu_read_unlock(_idx);			\
++	} while (0);						\
++	IS_ENABLED(CONFIG_SECURITY_BPF_ENFORCE) ? RC : 0;	\
++})
+
+CHECK:LINE_SPACING: Please use a blank line after function/struct/union/enum declarations
+#209: FILE: include/linux/bpf_lsm.h:67:
++}
++static inline void bpf_lsm_srcu_read_unlock(int idx) {}
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:TYPO_SPELLING: 'appeneded' may be misspelled - perhaps 'appended'?
+#282: FILE: security/bpf/lsm.c:18:
++ * hooks dynamically allocated by the BPF LSM are appeneded here.
+                                                   ^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'FUNC' - possible side-effects?
+#313: FILE: security/security.c:659:
++#define call_int_hook(FUNC, IRC, ...) ({				\
++	int RC = IRC;							\
++	do {								\
++		struct security_hook_list *P;				\
+ 		hlist_for_each_entry(P, &security_hook_heads.FUNC, list) { \
++			RC = P->hook.FUNC(__VA_ARGS__);			\
++			if (RC != 0)					\
++				break;					\
++		}							\
++		RC = CALL_BPF_LSM_INT_HOOKS(RC, FUNC, __VA_ARGS__);	\
++	} while (0);							\
++	RC;								\
+ })
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000284038.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 3 warnings, 5 checks, 171 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000284038.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

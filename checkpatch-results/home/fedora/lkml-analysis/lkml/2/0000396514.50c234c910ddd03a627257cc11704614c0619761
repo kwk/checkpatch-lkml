@@ -1,0 +1,32 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'regs' - possible side-effects?
+#55: FILE: arch/sparc/include/asm/perf_event.h:13:
++#define perf_arch_fetch_caller_regs(regs, ip)		\
++do {							\
++	unsigned long _pstate, _asi, _pil, _i7, _fp;	\
++	__asm__ __volatile__("rdpr %%pstate, %0\n\t"	\
++			     "rd %%asi, %1\n\t"		\
++			     "rdpr %%pil, %2\n\t"	\
++			     "mov %%i7, %3\n\t"		\
++			     "mov %%i6, %4\n\t"		\
++			     : "=r" (_pstate),		\
++			       "=r" (_asi),		\
++			       "=r" (_pil),		\
++			       "=r" (_i7),		\
++			       "=r" (_fp));		\
++	(regs)->tstate = (_pstate << 8) |		\
++		(_asi << 24) | (_pil << 20);		\
++	(regs)->tpc = (ip);				\
++	(regs)->tnpc = (regs)->tpc + 4;			\
++	(regs)->u_regs[UREG_I6] = _fp;			\
++	(regs)->u_regs[UREG_I7] = _i7;			\
++} while (0)
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000396514.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 0 warnings, 1 checks, 112 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000396514.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

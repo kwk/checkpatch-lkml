@@ -1,0 +1,64 @@
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#82: FILE: arch/x86/include/asm/svm.h:346:
++#define DEFINE_GHCB_INDICES(field)					\
++	u16 idx = offsetof(struct vmcb_save_area, field) / 8;		\
++	u16 byte_idx  = idx / 8;					\
++	u16 bit_idx   = idx % 8;					\
++	BUILD_BUG_ON(byte_idx > ARRAY_SIZE(ghcb->save.valid_bitmap));
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#94: FILE: arch/x86/include/asm/svm.h:358:
++#define DEFINE_GHCB_SETTER(field)					\
++	static inline void						\
++	ghcb_set_##field(struct ghcb *ghcb, u64 value)			\
++	{								\
++		GHCB_SET_VALID(ghcb, field)				\
++		(ghcb)->save.field = value;				\
++	}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'field' - possible side-effects?
+#102: FILE: arch/x86/include/asm/svm.h:366:
++#define DEFINE_GHCB_ACCESSORS(field)					\
++	static inline bool ghcb_is_valid_##field(const struct ghcb *ghcb)	\
++	{								\
++		DEFINE_GHCB_INDICES(field)				\
++		return !!((ghcb)->save.valid_bitmap[byte_idx]		\
++						& BIT(bit_idx));	\
++	}								\
++									\
++	static inline void						\
++	ghcb_set_##field(struct ghcb *ghcb, u64 value)			\
++	{								\
++		GHCB_SET_VALID(ghcb, field)				\
++		(ghcb)->save.field = value;				\
++	}
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000056071.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 total: 0 errors, 1 warnings, 2 checks, 65 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.rcqww1OAlq//home/fedora/lkml-analysis/lkml/8/patch.offset.0000056071.commit.6b16cc7c201516d4387ad4ade636a673aa375a69 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

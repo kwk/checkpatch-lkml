@@ -1,0 +1,61 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'arr' - possible side-effects?
+#53: FILE: arch/arm/include/asm/barrier.h:62:
++#define ifence_array_ptr(arr, idx, sz)					\
++({									\
++	typeof(&(arr)[0]) __nap_arr = (arr);				\
++	typeof(idx) __nap_idx = (idx);					\
++	typeof(sz) __nap_sz = (sz);					\
++									\
++	unsigned long __nap_ptr = (unsigned long)__nap_arr +		\
++				  sizeof(__nap_arr[0]) * idx;		\
++									\
++	asm volatile(							\
++	"	cmp	%[i], %[s]\n"					\
++	"	bcs	1f\n"						\
++	"	ldr	%[p], %[pp]\n"					\
++	"1:	movcs	%[p], #0\n"					\
++	"	.inst	0xe320f018 @ CSDB\n"				\
++	: [p] "=&r" (__nap_ptr)						\
++	: [pp] "m" (__nap_ptr),						\
++	  [i] "r" ((unsigned long)__nap_idx),				\
++	  [s] "r" ((unsigned long)__nap_sz)				\
++	: "cc");							\
++									\
++	(typeof(&(__nap_arr)[0]))__nap_ptr;				\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'idx' - possible side-effects?
+#53: FILE: arch/arm/include/asm/barrier.h:62:
++#define ifence_array_ptr(arr, idx, sz)					\
++({									\
++	typeof(&(arr)[0]) __nap_arr = (arr);				\
++	typeof(idx) __nap_idx = (idx);					\
++	typeof(sz) __nap_sz = (sz);					\
++									\
++	unsigned long __nap_ptr = (unsigned long)__nap_arr +		\
++				  sizeof(__nap_arr[0]) * idx;		\
++									\
++	asm volatile(							\
++	"	cmp	%[i], %[s]\n"					\
++	"	bcs	1f\n"						\
++	"	ldr	%[p], %[pp]\n"					\
++	"1:	movcs	%[p], #0\n"					\
++	"	.inst	0xe320f018 @ CSDB\n"				\
++	: [p] "=&r" (__nap_ptr)						\
++	: [pp] "m" (__nap_ptr),						\
++	  [i] "r" ((unsigned long)__nap_idx),				\
++	  [s] "r" ((unsigned long)__nap_sz)				\
++	: "cc");							\
++									\
++	(typeof(&(__nap_arr)[0]))__nap_ptr;				\
++})
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000014030.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc total: 0 errors, 0 warnings, 2 checks, 30 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.qpX84cZzJe//home/fedora/lkml-analysis/lkml/5/patch.offset.0000014030.commit.434595544071c7d7b4c4debfe12e3ea7f9ca09dc has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

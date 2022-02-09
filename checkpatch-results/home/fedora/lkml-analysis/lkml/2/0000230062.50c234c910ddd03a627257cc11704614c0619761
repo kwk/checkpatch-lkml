@@ -1,0 +1,207 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sk' - possible side-effects?
+#201: FILE: include/net/sock.h:837:
++#define sk_memory_pressure(sk)						\
++({									\
++	int *__ret = NULL;						\
++	if ((sk)->sk_prot->memory_pressure)				\
++		__ret = (sk)->sk_prot->memory_pressure(sk->sk_cgrp);	\
++	__ret;								\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sk' - possible side-effects?
+#209: FILE: include/net/sock.h:845:
++#define sk_sockets_allocated(sk)				\
++({								\
++	struct percpu_counter *__p;				\
++	__p = (sk)->sk_prot->sockets_allocated(sk->sk_cgrp);	\
++	__p;							\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sk' - possible side-effects?
+#216: FILE: include/net/sock.h:852:
++#define sk_memory_allocated(sk)					\
++({								\
++	atomic_long_t *__mem;					\
++	__mem = (sk)->sk_prot->memory_allocated(sk->sk_cgrp);	\
++	__mem;							\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'sk' - possible side-effects?
+#223: FILE: include/net/sock.h:859:
++#define sk_prot_mem(sk)						\
++({								\
++	long *__mem = (sk)->sk_prot->prot_mem(sk->sk_cgrp);	\
++	__mem;							\
++})
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'prot' - possible side-effects?
+#229: FILE: include/net/sock.h:865:
++#define sg_memory_pressure(prot, sg)				\
++({								\
++	int *__ret = NULL;					\
++	if (prot->memory_pressure)				\
++		__ret = (prot)->memory_pressure(sg);		\
++	__ret;							\
++})
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'prot' may be better as '(prot)' to avoid precedence issues
+#229: FILE: include/net/sock.h:865:
++#define sg_memory_pressure(prot, sg)				\
++({								\
++	int *__ret = NULL;					\
++	if (prot->memory_pressure)				\
++		__ret = (prot)->memory_pressure(sg);		\
++	__ret;							\
++})
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#274: FILE: include/net/tcp.h:256:
++extern long *tcp_sysctl_mem(struct kmem_cgroup *sg);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+WARNING:NETWORKING_BLOCK_COMMENT_STYLE: networking block comments don't use an empty /* line, use /* Comment...
+#413: FILE: net/core/sock.c:1141:
++	/*
++	 * We don't need to protect against anything task-related, because
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "sg"
+#484: FILE: net/core/sock.c:1740:
++	for (sg = sk->sk_cgrp->parent; sg != NULL; sg = sg->parent) {
+
+Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
+are better written as (!foo) and (foo).
+
+WARNING:NETWORKING_BLOCK_COMMENT_STYLE: networking block comments don't use an empty /* line, use /* Comment...
+#487: FILE: net/core/sock.c:1743:
++		/*
++		 * Large nestings are not the common case, and stopping in the
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'allocated > prot_mem[2]'
+#498: FILE: net/core/sock.c:1754:
++	if (parent_failure || (allocated > prot_mem[2]))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "sg"
+#551: FILE: net/core/sock.c:1815:
++	for (sg = sk->sk_cgrp->parent; sg != NULL; sg = sg->parent)
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "sg"
+#569: FILE: net/core/sock.c:1836:
++	for (sg = sk->sk_cgrp->parent; sg != NULL; sg = sg->parent) {
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#571: FILE: net/core/sock.c:1838:
++		atomic_long_sub(sk->sk_forward_alloc >> SK_MEM_QUANTUM_SHIFT,
++						sg_memory_allocated(prot, sg));
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "proto->memory_allocated"
+#609: FILE: net/core/sock.c:2569:
++		   proto->memory_allocated != NULL ?
+
+CHECK:COMPARISON_TO_NULL: Comparison to NULL could be written "proto->memory_pressure"
+#611: FILE: net/core/sock.c:2571:
++		   proto->memory_pressure != NULL ?
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#700: FILE: net/ipv4/sysctl_net_ipv4.c:180:
++static int ipv4_tcp_mem(ctl_table *ctl, int write,
++			   void __user *buffer, size_t *lenp,
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#840: FILE: net/ipv4/tcp.c:311:
++	struct kmem_cgroup *sg = sk->sk_cgrp;
++	if (!sg->tcp_memory_pressure) {
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around sg->tcp_memory_allocated
+#853: FILE: net/ipv4/tcp.c:324:
++	return &(sg->tcp_memory_allocated);
+
+WARNING:NETWORKING_BLOCK_COMMENT_STYLE: networking block comments don't use an empty /* line, use /* Comment...
+#866: FILE: net/ipv4/tcp.c:337:
++	/*
++	 * We can't allow more memory than our parents. Since this
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#869: FILE: net/ipv4/tcp.c:340:
++	 * */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'val > sg->parent->tcp_max_memory'
+#870: FILE: net/ipv4/tcp.c:341:
++	if (sg->parent && (val > sg->parent->tcp_max_memory))
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#976: FILE: net/ipv4/tcp.c:447:
++EXPORT_SYMBOL(memory_pressure_tcp);
+
+EXPORT_SYMBOL should immediately follow the symbol to be exported.
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#977: FILE: net/ipv4/tcp.c:448:
++EXPORT_SYMBOL(sockets_allocated_tcp);
+
+WARNING:EXPORT_SYMBOL: EXPORT_SYMBOL(foo); should immediately follow its function/variable
+#980: FILE: net/ipv4/tcp.c:451:
++EXPORT_SYMBOL(memory_allocated_tcp);
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000230062.commit.50c234c910ddd03a627257cc11704614c0619761 total: 0 errors, 8 warnings, 17 checks, 1084 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000230062.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

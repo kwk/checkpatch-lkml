@@ -1,0 +1,159 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#80: 
+to me for now (fixing this would need a new separate save/restore interface)
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#175: FILE: drivers/char/random.c:496:
++#define for_each_nb_pool(i, pool) for (i = 0; i < num_possible_nodes(); i++) { \
++	pool = nonblocking_node_pool[i];
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#175: FILE: drivers/char/random.c:496:
++#define for_each_nb_pool(i, pool) for (i = 0; i < num_possible_nodes(); i++) { \
++	pool = nonblocking_node_pool[i];
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#175: FILE: drivers/char/random.c:496:
++#define for_each_nb_pool(i, pool) for (i = 0; i < num_possible_nodes(); i++) { \
++	pool = nonblocking_node_pool[i];
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#177: FILE: drivers/char/random.c:498:
++#define end_for_each_nb() }
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#234: FILE: drivers/char/random.c:798:
++	unsigned long time = random_get_entropy() ^ jiffies;
++	spin_lock_irqsave(&pool->lock, flags);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#266: FILE: drivers/char/random.c:822:
++		for_each_nb_pool (i, pool) {
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (16, 8)
+#268: FILE: drivers/char/random.c:824:
++		} end_for_each_nb()
++	}
+
+WARNING:VSPRINTF_POINTER_EXTENSION: Invalid vsprintf pointer extension '%pF' - use %pS instead
+#280: FILE: drivers/char/random.c:1309:
++	if (unlikely(pool->initialized == 0))
+ 		printk(KERN_NOTICE "random: %pF get_random_bytes called "
+ 		       "with %d bits of entropy available\n",
+ 		       (void *) _RET_IP_,
++		       pool->entropy_total);
+
+WARNING:ALLOC_WITH_MULTIPLY: Prefer kcalloc over kzalloc with multiply
+#310: FILE: drivers/char/random.c:1453:
++	nonblocking_node_pool = kzalloc(num_nodes * sizeof(void *),
++					GFP_KERNEL|__GFP_NOFAIL);
+
+Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
+sizeof multiply.
+
+See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#311: FILE: drivers/char/random.c:1454:
++					GFP_KERNEL|__GFP_NOFAIL);
+ 					          ^
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kzalloc(sizeof(*pool)...) over kzalloc(sizeof(struct entropy_store)...)
+#318: FILE: drivers/char/random.c:1461:
++		struct entropy_store *pool = kzalloc(sizeof(struct entropy_store),
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#319: FILE: drivers/char/random.c:1462:
++						     GFP_KERNEL|__GFP_NOFAIL);
+ 						               ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#326: FILE: drivers/char/random.c:1469:
++				     GFP_KERNEL|__GFP_NOFAIL);
+ 				               ^
+
+WARNING:SIZEOF_PARENTHESIS: sizeof name should be sizeof(name)
+#328: FILE: drivers/char/random.c:1471:
++		snprintf(name, sizeof name, "nonblocking pool %d", i);
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#329: FILE: drivers/char/random.c:1472:
++		pool->name = kstrdup(name, GFP_KERNEL|__GFP_NOFAIL);
+ 		                                     ^
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#372: FILE: drivers/char/random.c:1600:
++	for_each_nb_pool (i, pool) {
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 8)
+#376: FILE: drivers/char/random.c:1604:
++	} end_for_each_nb()
+[...]
+ 	return (ssize_t)count;
+
+WARNING:SPACING: space prohibited between function name and open parenthesis '('
+#396: FILE: drivers/char/random.c:1655:
++		for_each_nb_pool (i, pool) {
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000250396.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 2 errors, 11 warnings, 6 checks, 253 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000250396.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

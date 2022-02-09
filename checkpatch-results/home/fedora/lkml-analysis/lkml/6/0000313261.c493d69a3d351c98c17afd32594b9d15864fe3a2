@@ -1,0 +1,506 @@
+WARNING:COMMIT_MESSAGE: Missing commit description - Add an appropriate one
+
+The patch is missing a commit description.  A brief
+description of the changes made by the patch should be added.
+
+See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:VxV)
+#217: FILE: arch/x86/include/asm/cpufeatures.h:206:
++#define X86_FEATURE_USE_IBRS_FW	( 7*32+22) /* "" Use IBRS during runtime firmware calls */
+                                	   ^
+
+Whitespace style used in the kernel sources is described in kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#217: FILE: arch/x86/include/asm/cpufeatures.h:206:
++#define X86_FEATURE_USE_IBRS_FW	( 7*32+22) /* "" Use IBRS during runtime firmware calls */
+                                	      ^
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#217: FILE: arch/x86/include/asm/cpufeatures.h:206:
++#define X86_FEATURE_USE_IBRS_FW	( 7*32+22) /* "" Use IBRS during runtime firmware calls */
+
+ERROR:MULTISTATEMENT_MACRO_USE_DO_WHILE: Macros with multiple statements should be enclosed in a do - while loop
+#303: FILE: arch/x86/include/asm/nospec-branch.h:36:
++#define __FILL_RETURN_BUFFER(reg, nr, sp)	\
++	mov	$(nr/2), reg;			\
++771:						\
++	call	772f;				\
++773:	/* speculation trap */			\
++	pause;					\
++	lfence;					\
++	jmp	773b;				\
++772:						\
++	call	774f;				\
++775:	/* speculation trap */			\
++	pause;					\
++	lfence;					\
++	jmp	775b;				\
++774:						\
++	dec	reg;				\
++	jnz	771b;				\
++	add	$(BITS_PER_LONG/8) * nr, sp;
+
+Macros with multiple statements should be enclosed in a
+do - while block.  Same should also be the case for macros
+starting with `if` to avoid logic defects::
+
+  #define macrofun(a, b, c)                 \
+    do {                                    \
+            if (a == 5)                     \
+                    do_this(b, c);          \
+    } while (0)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'reg' - possible side-effects?
+#303: FILE: arch/x86/include/asm/nospec-branch.h:36:
++#define __FILL_RETURN_BUFFER(reg, nr, sp)	\
++	mov	$(nr/2), reg;			\
++771:						\
++	call	772f;				\
++773:	/* speculation trap */			\
++	pause;					\
++	lfence;					\
++	jmp	773b;				\
++772:						\
++	call	774f;				\
++775:	/* speculation trap */			\
++	pause;					\
++	lfence;					\
++	jmp	775b;				\
++774:						\
++	dec	reg;				\
++	jnz	771b;				\
++	add	$(BITS_PER_LONG/8) * nr, sp;
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'nr' - possible side-effects?
+#303: FILE: arch/x86/include/asm/nospec-branch.h:36:
++#define __FILL_RETURN_BUFFER(reg, nr, sp)	\
++	mov	$(nr/2), reg;			\
++771:						\
++	call	772f;				\
++773:	/* speculation trap */			\
++	pause;					\
++	lfence;					\
++	jmp	773b;				\
++772:						\
++	call	774f;				\
++775:	/* speculation trap */			\
++	pause;					\
++	lfence;					\
++	jmp	775b;				\
++774:						\
++	dec	reg;				\
++	jnz	771b;				\
++	add	$(BITS_PER_LONG/8) * nr, sp;
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'nr' may be better as '(nr)' to avoid precedence issues
+#303: FILE: arch/x86/include/asm/nospec-branch.h:36:
++#define __FILL_RETURN_BUFFER(reg, nr, sp)	\
++	mov	$(nr/2), reg;			\
++771:						\
++	call	772f;				\
++773:	/* speculation trap */			\
++	pause;					\
++	lfence;					\
++	jmp	773b;				\
++772:						\
++	call	774f;				\
++775:	/* speculation trap */			\
++	pause;					\
++	lfence;					\
++	jmp	775b;				\
++774:						\
++	dec	reg;				\
++	jnz	771b;				\
++	add	$(BITS_PER_LONG/8) * nr, sp;
+
+WARNING:TRAILING_SEMICOLON: macros should not use a trailing semicolon
+#303: FILE: arch/x86/include/asm/nospec-branch.h:36:
++#define __FILL_RETURN_BUFFER(reg, nr, sp)	\
++	mov	$(nr/2), reg;			\
++771:						\
++	call	772f;				\
++773:	/* speculation trap */			\
++	pause;					\
++	lfence;					\
++	jmp	773b;				\
++772:						\
++	call	774f;				\
++775:	/* speculation trap */			\
++	pause;					\
++	lfence;					\
++	jmp	775b;				\
++774:						\
++	dec	reg;				\
++	jnz	771b;				\
++	add	$(BITS_PER_LONG/8) * nr, sp;
+
+Macro definition should not end with a semicolon. The macro
+invocation style should be consistent with function calls.
+This can prevent any unexpected code paths::
+
+  #define MAC do_something;
+
+If this macro is used within a if else statement, like::
+
+  if (some_condition)
+          MAC;
+
+  else
+          do_something;
+
+Then there would be a compilation error, because when the macro is
+expanded there are two trailing semicolons, so the else branch gets
+orphaned.
+
+See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#304: FILE: arch/x86/include/asm/nospec-branch.h:37:
++	mov	$(nr/2), reg;			\
+ 	   	    ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxE)
+#305: FILE: arch/x86/include/asm/nospec-branch.h:38:
++771:						\
+    ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxW)
+#307: FILE: arch/x86/include/asm/nospec-branch.h:40:
++773:	/* speculation trap */			\
+    ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxE)
+#311: FILE: arch/x86/include/asm/nospec-branch.h:44:
++772:						\
+    ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxW)
+#313: FILE: arch/x86/include/asm/nospec-branch.h:46:
++775:	/* speculation trap */			\
+    ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxE)
+#317: FILE: arch/x86/include/asm/nospec-branch.h:50:
++774:						\
+    ^
+
+CHECK:SPACING: spaces preferred around that '/' (ctx:VxV)
+#320: FILE: arch/x86/include/asm/nospec-branch.h:53:
++	add	$(BITS_PER_LONG/8) * nr, sp;
+ 	   	               ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxE)
+#335: FILE: arch/x86/include/asm/nospec-branch.h:76:
++	.Lannotate_\@:
+ 	             ^
+
+CHECK:CAMELCASE: Avoid CamelCase: <Lannotate_>
+#335: FILE: arch/x86/include/asm/nospec-branch.h:76:
++	.Lannotate_\@:
+
+Avoid CamelCase Identifiers.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#349: FILE: arch/x86/include/asm/nospec-branch.h:118:
++	ALTERNATIVE_2 __stringify(ANNOTATE_RETPOLINE_SAFE; jmp *\reg),	\
+ 	                                                       ^
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#349: FILE: arch/x86/include/asm/nospec-branch.h:118:
++	ALTERNATIVE_2 __stringify(ANNOTATE_RETPOLINE_SAFE; jmp *\reg),	\
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#352: FILE: arch/x86/include/asm/nospec-branch.h:120:
++		__stringify(lfence; ANNOTATE_RETPOLINE_SAFE; jmp *\reg), X86_FEATURE_RETPOLINE_AMD
+ 		                                                 ^
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#361: FILE: arch/x86/include/asm/nospec-branch.h:129:
++	ALTERNATIVE_2 __stringify(ANNOTATE_RETPOLINE_SAFE; call *\reg),	\
+ 	                                                        ^
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#361: FILE: arch/x86/include/asm/nospec-branch.h:129:
++	ALTERNATIVE_2 __stringify(ANNOTATE_RETPOLINE_SAFE; call *\reg),	\
+
+CHECK:SPACING: spaces preferred around that '*' (ctx:WxV)
+#364: FILE: arch/x86/include/asm/nospec-branch.h:131:
++		__stringify(lfence; ANNOTATE_RETPOLINE_SAFE; call *\reg), X86_FEATURE_RETPOLINE_AMD
+ 		                                                  ^
+
+CHECK:SPACING: spaces required around that ':' (ctx:VxV)
+#376: FILE: arch/x86/include/asm/nospec-branch.h:141:
++.macro FILL_RETURN_BUFFER reg:req nr:req ftr:req
+                              ^
+
+CHECK:SPACING: spaces required around that ':' (ctx:VxV)
+#376: FILE: arch/x86/include/asm/nospec-branch.h:141:
++.macro FILL_RETURN_BUFFER reg:req nr:req ftr:req
+                                     ^
+
+CHECK:SPACING: spaces required around that ':' (ctx:VxV)
+#376: FILE: arch/x86/include/asm/nospec-branch.h:141:
++.macro FILL_RETURN_BUFFER reg:req nr:req ftr:req
+                                             ^
+
+WARNING:LINE_CONTINUATIONS: Avoid unnecessary line continuations
+#380: FILE: arch/x86/include/asm/nospec-branch.h:144:
++	ALTERNATIVE "jmp .Lskip_rsb_\@",				\
+
+ERROR:SPACING: space required after that ',' (ctx:VxV)
+#381: FILE: arch/x86/include/asm/nospec-branch.h:145:
++		__stringify(__FILL_RETURN_BUFFER(\reg,\nr,%_ASM_SP))	\
+ 		                                     ^
+
+ERROR:SPACING: space required after that ',' (ctx:VxO)
+#381: FILE: arch/x86/include/asm/nospec-branch.h:145:
++		__stringify(__FILL_RETURN_BUFFER(\reg,\nr,%_ASM_SP))	\
+ 		                                         ^
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:OxV)
+#381: FILE: arch/x86/include/asm/nospec-branch.h:145:
++		__stringify(__FILL_RETURN_BUFFER(\reg,\nr,%_ASM_SP))	\
+ 		                                          ^
+
+ERROR:SPACING: spaces required around that ':' (ctx:VxE)
+#383: FILE: arch/x86/include/asm/nospec-branch.h:147:
++.Lskip_rsb_\@:
+              ^
+
+CHECK:CAMELCASE: Avoid CamelCase: <Lskip_rsb_>
+#383: FILE: arch/x86/include/asm/nospec-branch.h:147:
++.Lskip_rsb_\@:
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:BxV)
+#420: FILE: arch/x86/include/asm/nospec-branch.h:233:
++				  __stringify(__FILL_RETURN_BUFFER(%0, RSB_CLEAR_LOOPS, %1)),
+ 				                                   ^
+
+CHECK:SPACING: spaces preferred around that '%' (ctx:WxV)
+#420: FILE: arch/x86/include/asm/nospec-branch.h:233:
++				  __stringify(__FILL_RETURN_BUFFER(%0, RSB_CLEAR_LOOPS, %1)),
+ 				                                                        ^
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#424: FILE: arch/x86/include/asm/nospec-branch.h:237:
++		      : : "memory" );
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#428: FILE: arch/x86/include/asm/nospec-branch.h:241:
++#define alternative_msr_write(_msr, _val, _feature)		\
++	asm volatile(ALTERNATIVE("",				\
++				 "movl %[msr], %%ecx\n\t"	\
++				 "movl %[val], %%eax\n\t"	\
++				 "movl $0, %%edx\n\t"		\
++				 "wrmsr",			\
++				 _feature)			\
++		     : : [msr] "i" (_msr), [val] "i" (_val)	\
++		     : "eax", "ecx", "edx", "memory")
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#494: FILE: arch/x86/include/asm/paravirt.h:874:
++		  jmp PARA_INDIRECT(pv_cpu_ops+PV_CPU_iret);)
+ 		                              ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#523: FILE: arch/x86/include/asm/paravirt.h:916:
++		  call PARA_INDIRECT(pv_cpu_ops+PV_CPU_swapgs);		\
+ 		                               ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#529: FILE: arch/x86/include/asm/paravirt.h:921:
++	call PARA_INDIRECT(pv_mmu_ops+PV_MMU_read_cr2);
+ 	                             ^
+
+CHECK:SPACING: spaces preferred around that '+' (ctx:VxV)
+#539: FILE: arch/x86/include/asm/paravirt.h:932:
++		  jmp PARA_INDIRECT(pv_cpu_ops+PV_CPU_usergs_sysret64);)
+ 		                              ^
+
+WARNING:PRINTF_L: %Lx is non-standard C, use %llx
+#754: FILE: arch/x86/kernel/module.c:212:
++	pr_err("x86/modules: Skipping invalid relocation target, existing value is nonzero for type %d, loc %p, val %Lx\n",
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1481: FILE: drivers/md/bcache/super.c:968:
++			pr_err("Tried to attach %s but duplicate UUID already attached",
++				buf);
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#1518: FILE: drivers/md/bcache/super.c:1884:
++		blkdev_put(bdev, FMODE_READ|FMODE_WRITE|FMODE_EXCL);
+ 		                           ^
+
+CHECK:SPACING: spaces preferred around that '|' (ctx:VxV)
+#1518: FILE: drivers/md/bcache/super.c:1884:
++		blkdev_put(bdev, FMODE_READ|FMODE_WRITE|FMODE_EXCL);
+ 		                                       ^
+
+CHECK:CAMELCASE: Avoid CamelCase: <SCxRDR>
+#1780: FILE: drivers/tty/serial/sh-sci.c:939:
++		serial_port_in(port, SCxRDR);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#1849: FILE: drivers/usb/mon/mon_text.c:380:
++static ssize_t mon_text_copy_to_user(struct mon_reader_text *rp,
++    char __user * const buf, const size_t nbytes)
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1849: FILE: drivers/usb/mon/mon_text.c:380:
++    char __user * const buf, const size_t nbytes)$
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1863: FILE: drivers/usb/mon/mon_text.c:393:
++    size_t nbytes, loff_t *ppos)$
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#1888: FILE: drivers/usb/mon/mon_text.c:403:
++	if (rp->printf_togo == 0) {
++
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+WARNING:LEADING_SPACE: please, no spaces at the start of a line
+#1920: FILE: drivers/usb/mon/mon_text.c:432:
++    size_t nbytes, loff_t *ppos)$
+
+CHECK:BRACES: Blank lines aren't necessary after an open brace '{'
+#1946: FILE: drivers/usb/mon/mon_text.c:442:
++	if (rp->printf_togo == 0) {
++
+
+ERROR:SPACING: space prohibited after that open parenthesis '('
+#2012: FILE: drivers/usb/storage/unusual_devs.h:2141:
++UNUSUAL_DEV(  0x152d, 0x2567, 0x0117, 0x0117,
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2013: FILE: drivers/usb/storage/unusual_devs.h:2142:
++UNUSUAL_DEV(  0x152d, 0x2567, 0x0117, 0x0117,
++		"JMicron",
+
+ERROR:SPACING: space prohibited before that close parenthesis ')'
+#2016: FILE: drivers/usb/storage/unusual_devs.h:2145:
++		US_FL_BROKEN_FUA ),
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around 'ulReason == NMI_UNKNOWN'
+#2483: FILE: drivers/watchdog/hpwdt.c:116:
++	if ((ulReason == NMI_UNKNOWN) && !hpwdt_my_nmi())
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:CAMELCASE: Avoid CamelCase: <ulReason>
+#2483: FILE: drivers/watchdog/hpwdt.c:116:
++	if ((ulReason == NMI_UNKNOWN) && !hpwdt_my_nmi())
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#2702: FILE: fs/nfs/write.c:1851:
++static int __nfs_commit_inode(struct inode *inode, int how,
++		struct writeback_control *wbc)
+
+CHECK:MULTIPLE_ASSIGNMENTS: multiple assignments should be avoided
+#2717: FILE: fs/nfs/write.c:1861:
++		ret = nscan = nfs_scan_commit(inode, &head, &cinfo);
+
+Multiple assignments on a single line makes the code unnecessarily
+complicated. So on a single line assign value to a single variable
+only, this makes the code more readable and helps avoid typos.
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#2797: FILE: fs/nfs/write.c:1912:
++	if (!ret) {
+[...]
++	} else if (nfsi->commit_info.ncommit)
+[...]
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2817: FILE: include/drm/drm_crtc_helper.h:77:
++extern bool drm_kms_helper_is_poll_worker(void);
+
+Function prototypes don't need to be declared extern in .h
+files.  It's assumed by the compiler and is unnecessary.
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#2871: FILE: include/linux/init.h:49:
++#define __init		__section(.init.text) __cold notrace __latent_entropy __noinitretpoline
+
+CHECK:AVOID_EXTERNS: extern prototypes should be avoided in .h files
+#2993: FILE: include/linux/workqueue.h:456:
++extern struct work_struct *current_work(void);
+
+CHECK:SPACING: spaces preferred around that '-' (ctx:VxV)
+#3090: FILE: net/bridge/netfilter/ebtables.c:2097:
++		if (offsets[i-1] > offsets[i])
+ 		             ^
+
+WARNING:LINE_SPACING: Missing a blank line after declarations
+#3702: FILE: sound/pci/hda/patch_realtek.c:4769:
++		hda_nid_t conn[2] = { 0x02, 0x03 };
++		snd_hda_override_conn_list(codec, 0x17, 2, conn);
+
+Vertical space is wasted given the limited number of lines an
+editor window can display when multiple blank lines are used.
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000313261.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 total: 16 errors, 10 warnings, 39 checks, 3169 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.etvluNLVsb//home/fedora/lkml-analysis/lkml/6/patch.offset.0000313261.commit.c493d69a3d351c98c17afd32594b9d15864fe3a2 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

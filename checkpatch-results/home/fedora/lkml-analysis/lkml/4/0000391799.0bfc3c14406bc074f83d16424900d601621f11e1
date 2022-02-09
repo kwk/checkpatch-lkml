@@ -1,0 +1,207 @@
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ch_done_mask' - possible side-effects?
+#116: FILE: drivers/crypto/talitos2.h:226:
++#define DEF_TALITOS_DONE(name, ch_done_mask)				\
++static void talitos_done_##name(unsigned long data)			\
++{									\
++	struct device *dev = (struct device *)data;			\
++	struct talitos_private *priv = dev_get_drvdata(dev);		\
++	unsigned long flags;						\
++									\
++	if (ch_done_mask & 1)						\
++		talitos_flush_channel(dev, 0, 0, 0);			\
++	if (priv->num_channels == 1)					\
++		goto out;						\
++	if (ch_done_mask & (1 << 2))					\
++		talitos_flush_channel(dev, 1, 0, 0);			\
++	if (ch_done_mask & (1 << 4))					\
++		talitos_flush_channel(dev, 2, 0, 0);			\
++	if (ch_done_mask & (1 << 6))					\
++		talitos_flush_channel(dev, 3, 0, 0);			\
++									\
++out:									\
++	/* At this point, all completed channels have been processed */	\
++	/* Unmask done interrupts for channels completed later on. */	\
++	spin_lock_irqsave(&priv->reg_lock, flags);			\
++	setbits32(priv->reg + TALITOS_IMR, ch_done_mask);		\
++	setbits32(priv->reg + TALITOS_IMR_LO, TALITOS_IMR_LO_INIT);	\
++	spin_unlock_irqrestore(&priv->reg_lock, flags);			\
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ch_done_mask' may be better as '(ch_done_mask)' to avoid precedence issues
+#116: FILE: drivers/crypto/talitos2.h:226:
++#define DEF_TALITOS_DONE(name, ch_done_mask)				\
++static void talitos_done_##name(unsigned long data)			\
++{									\
++	struct device *dev = (struct device *)data;			\
++	struct talitos_private *priv = dev_get_drvdata(dev);		\
++	unsigned long flags;						\
++									\
++	if (ch_done_mask & 1)						\
++		talitos_flush_channel(dev, 0, 0, 0);			\
++	if (priv->num_channels == 1)					\
++		goto out;						\
++	if (ch_done_mask & (1 << 2))					\
++		talitos_flush_channel(dev, 1, 0, 0);			\
++	if (ch_done_mask & (1 << 4))					\
++		talitos_flush_channel(dev, 2, 0, 0);			\
++	if (ch_done_mask & (1 << 6))					\
++		talitos_flush_channel(dev, 3, 0, 0);			\
++									\
++out:									\
++	/* At this point, all completed channels have been processed */	\
++	/* Unmask done interrupts for channels completed later on. */	\
++	spin_lock_irqsave(&priv->reg_lock, flags);			\
++	setbits32(priv->reg + TALITOS_IMR, ch_done_mask);		\
++	setbits32(priv->reg + TALITOS_IMR_LO, TALITOS_IMR_LO_INIT);	\
++	spin_unlock_irqrestore(&priv->reg_lock, flags);			\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ch_done_mask' - possible side-effects?
+#143: FILE: drivers/crypto/talitos2.h:253:
++#define DEF_TALITOS_INTERRUPT(name, ch_done_mask, ch_err_mask, tlet)	       \
++static irqreturn_t talitos_interrupt_##name(int irq, void *data)	       \
++{									       \
++	struct device *dev = data;					       \
++	struct talitos_private *priv = dev_get_drvdata(dev);		       \
++	u32 isr, isr_lo;						       \
++	unsigned long flags;						       \
++									       \
++	spin_lock_irqsave(&priv->reg_lock, flags);			       \
++	isr = in_be32(priv->reg + TALITOS_ISR);				       \
++	isr_lo = in_be32(priv->reg + TALITOS_ISR_LO);			       \
++	/* Acknowledge interrupt */					       \
++	out_be32(priv->reg + TALITOS_ICR, isr & (ch_done_mask | ch_err_mask)); \
++	out_be32(priv->reg + TALITOS_ICR_LO, isr_lo);			       \
++									       \
++	if (unlikely(isr & ch_err_mask || isr_lo)) {			       \
++		spin_unlock_irqrestore(&priv->reg_lock, flags);		       \
++		talitos_error(dev, isr & ch_err_mask, isr_lo);		       \
++	}								       \
++	else {								       \
++		if (likely(isr & ch_done_mask)) {			       \
++			/* mask further done interrupts. */		       \
++			clrbits32(priv->reg + TALITOS_IMR, ch_done_mask);      \
++			/* done_task will unmask done interrupts at exit */    \
++			tasklet_schedule(&priv->done_task[tlet]);	       \
++		}							       \
++		spin_unlock_irqrestore(&priv->reg_lock, flags);		       \
++	}								       \
++									       \
++	return (isr & (ch_done_mask | ch_err_mask) || isr_lo) ? IRQ_HANDLED :  \
++								IRQ_NONE;      \
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ch_done_mask' may be better as '(ch_done_mask)' to avoid precedence issues
+#143: FILE: drivers/crypto/talitos2.h:253:
++#define DEF_TALITOS_INTERRUPT(name, ch_done_mask, ch_err_mask, tlet)	       \
++static irqreturn_t talitos_interrupt_##name(int irq, void *data)	       \
++{									       \
++	struct device *dev = data;					       \
++	struct talitos_private *priv = dev_get_drvdata(dev);		       \
++	u32 isr, isr_lo;						       \
++	unsigned long flags;						       \
++									       \
++	spin_lock_irqsave(&priv->reg_lock, flags);			       \
++	isr = in_be32(priv->reg + TALITOS_ISR);				       \
++	isr_lo = in_be32(priv->reg + TALITOS_ISR_LO);			       \
++	/* Acknowledge interrupt */					       \
++	out_be32(priv->reg + TALITOS_ICR, isr & (ch_done_mask | ch_err_mask)); \
++	out_be32(priv->reg + TALITOS_ICR_LO, isr_lo);			       \
++									       \
++	if (unlikely(isr & ch_err_mask || isr_lo)) {			       \
++		spin_unlock_irqrestore(&priv->reg_lock, flags);		       \
++		talitos_error(dev, isr & ch_err_mask, isr_lo);		       \
++	}								       \
++	else {								       \
++		if (likely(isr & ch_done_mask)) {			       \
++			/* mask further done interrupts. */		       \
++			clrbits32(priv->reg + TALITOS_IMR, ch_done_mask);      \
++			/* done_task will unmask done interrupts at exit */    \
++			tasklet_schedule(&priv->done_task[tlet]);	       \
++		}							       \
++		spin_unlock_irqrestore(&priv->reg_lock, flags);		       \
++	}								       \
++									       \
++	return (isr & (ch_done_mask | ch_err_mask) || isr_lo) ? IRQ_HANDLED :  \
++								IRQ_NONE;      \
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'ch_err_mask' - possible side-effects?
+#143: FILE: drivers/crypto/talitos2.h:253:
++#define DEF_TALITOS_INTERRUPT(name, ch_done_mask, ch_err_mask, tlet)	       \
++static irqreturn_t talitos_interrupt_##name(int irq, void *data)	       \
++{									       \
++	struct device *dev = data;					       \
++	struct talitos_private *priv = dev_get_drvdata(dev);		       \
++	u32 isr, isr_lo;						       \
++	unsigned long flags;						       \
++									       \
++	spin_lock_irqsave(&priv->reg_lock, flags);			       \
++	isr = in_be32(priv->reg + TALITOS_ISR);				       \
++	isr_lo = in_be32(priv->reg + TALITOS_ISR_LO);			       \
++	/* Acknowledge interrupt */					       \
++	out_be32(priv->reg + TALITOS_ICR, isr & (ch_done_mask | ch_err_mask)); \
++	out_be32(priv->reg + TALITOS_ICR_LO, isr_lo);			       \
++									       \
++	if (unlikely(isr & ch_err_mask || isr_lo)) {			       \
++		spin_unlock_irqrestore(&priv->reg_lock, flags);		       \
++		talitos_error(dev, isr & ch_err_mask, isr_lo);		       \
++	}								       \
++	else {								       \
++		if (likely(isr & ch_done_mask)) {			       \
++			/* mask further done interrupts. */		       \
++			clrbits32(priv->reg + TALITOS_IMR, ch_done_mask);      \
++			/* done_task will unmask done interrupts at exit */    \
++			tasklet_schedule(&priv->done_task[tlet]);	       \
++		}							       \
++		spin_unlock_irqrestore(&priv->reg_lock, flags);		       \
++	}								       \
++									       \
++	return (isr & (ch_done_mask | ch_err_mask) || isr_lo) ? IRQ_HANDLED :  \
++								IRQ_NONE;      \
++}
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ch_err_mask' may be better as '(ch_err_mask)' to avoid precedence issues
+#143: FILE: drivers/crypto/talitos2.h:253:
++#define DEF_TALITOS_INTERRUPT(name, ch_done_mask, ch_err_mask, tlet)	       \
++static irqreturn_t talitos_interrupt_##name(int irq, void *data)	       \
++{									       \
++	struct device *dev = data;					       \
++	struct talitos_private *priv = dev_get_drvdata(dev);		       \
++	u32 isr, isr_lo;						       \
++	unsigned long flags;						       \
++									       \
++	spin_lock_irqsave(&priv->reg_lock, flags);			       \
++	isr = in_be32(priv->reg + TALITOS_ISR);				       \
++	isr_lo = in_be32(priv->reg + TALITOS_ISR_LO);			       \
++	/* Acknowledge interrupt */					       \
++	out_be32(priv->reg + TALITOS_ICR, isr & (ch_done_mask | ch_err_mask)); \
++	out_be32(priv->reg + TALITOS_ICR_LO, isr_lo);			       \
++									       \
++	if (unlikely(isr & ch_err_mask || isr_lo)) {			       \
++		spin_unlock_irqrestore(&priv->reg_lock, flags);		       \
++		talitos_error(dev, isr & ch_err_mask, isr_lo);		       \
++	}								       \
++	else {								       \
++		if (likely(isr & ch_done_mask)) {			       \
++			/* mask further done interrupts. */		       \
++			clrbits32(priv->reg + TALITOS_IMR, ch_done_mask);      \
++			/* done_task will unmask done interrupts at exit */    \
++			tasklet_schedule(&priv->done_task[tlet]);	       \
++		}							       \
++		spin_unlock_irqrestore(&priv->reg_lock, flags);		       \
++	}								       \
++									       \
++	return (isr & (ch_done_mask | ch_err_mask) || isr_lo) ? IRQ_HANDLED :  \
++								IRQ_NONE;      \
++}
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000391799.commit.0bfc3c14406bc074f83d16424900d601621f11e1 total: 0 errors, 0 warnings, 6 checks, 133 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.E3vXILOKSl//home/fedora/lkml-analysis/lkml/4/patch.offset.0000391799.commit.0bfc3c14406bc074f83d16424900d601621f11e1 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

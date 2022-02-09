@@ -1,0 +1,208 @@
+WARNING:TYPO_SPELLING: 'convertors' may be misspelled - perhaps 'converters'?
+#42: 
+   The solution is to use "k" prefix and add convertors for more types.
+                                             ^^^^^^^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+WARNING:CONFIG_DESCRIPTION: please write a help paragraph that fully describes the config symbol
+#158: FILE: lib/Kconfig.debug:1126:
++config TEST_KSTRTOX
++	tristate "Test kstrto*() family of functions at runtime"
+
+Kconfig symbols should have a help text which fully describes
+it.
+
+WARNING:FILE_PATH_CHANGES: added, moved or deleted file(s), does MAINTAINERS need updating?
+#174: 
+new file mode 100644
+
+Whenever files are added, moved, or deleted, the MAINTAINERS file
+patterns can be out of sync or outdated.
+
+So MAINTAINERS might need updating in these cases.
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#179: FILE: lib/kstrtox.c:1:
++/*
+
+The source file is missing or has an improper SPDX identifier tag.
+The Linux kernel requires the precise SPDX identifier in all source files,
+and it is thoroughly documented in the kernel docs.
+
+See: https://www.kernel.org/doc/html/latest/process/license-rules.html
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#210: FILE: lib/kstrtox.c:32:
++		if (s[0] == '0') {
+[...]
++		} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:BRACES: Unbalanced braces around else statement
+#215: FILE: lib/kstrtox.c:37:
++		} else
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#226: FILE: lib/kstrtox.c:48:
++		if ('0' <= *s && *s <= '9')
+[...]
++		else if ('a' <= _tolower(*s) && _tolower(*s) <= 'f')
+[...]
++		else if (*s == '\n') {
+[...]
++		} else
+[...]
+
+WARNING:UNNECESSARY_ELSE: else is not generally useful after a break or return
+#233: FILE: lib/kstrtox.c:55:
++				break;
++			else
+
+CHECK:BRACES: Unbalanced braces around else statement
+#235: FILE: lib/kstrtox.c:57:
++		} else
+
+WARNING:SPDX_LICENSE_TAG: Missing or malformed SPDX-License-Identifier tag in line 1
+#410: FILE: lib/test-kstrtox.c:1:
++#include <linux/init.h>
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'i' - possible side-effects?
+#414: FILE: lib/test-kstrtox.c:5:
++#define for_each_test(i, test)	\
++	for (i = 0; i < sizeof(test) / sizeof(test[0]); i++)
+
+WARNING:ARRAY_SIZE: Prefer ARRAY_SIZE(test)
+#415: FILE: lib/test-kstrtox.c:6:
++	for (i = 0; i < sizeof(test) / sizeof(test[0]); i++)
+
+The ARRAY_SIZE(foo) macro should be preferred over
+sizeof(foo)/sizeof(foo[0]) for finding number of elements in an
+array.
+
+The macro is defined in include/linux/kernel.h::
+
+  #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+
+ERROR:INIT_ATTRIBUTE: Use of const init definition must use __initconst
+#423: FILE: lib/test-kstrtox.c:14:
++	const struct test_fail test[] __initdata
+
+Const init definitions should use __initconst instead of
+__initdata.
+
+Similarly init definitions without const require a separate
+use of const.
+
+ERROR:COMPLEX_MACRO: Macros with complex values should be enclosed in parentheses
+#425: FILE: lib/test-kstrtox.c:16:
++#define DECLARE_TEST_OK(type, test_type)	\
++	test_type {				\
++		const char *str;		\
++		unsigned int base;		\
++		type expected_res;		\
++	}
+
+ERROR:INIT_ATTRIBUTE: Use of const init definition must use __initconst
+#433: FILE: lib/test-kstrtox.c:24:
++	const type test[] __initdata
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'test' - possible side-effects?
+#435: FILE: lib/test-kstrtox.c:26:
++#define TEST_FAIL(fn, type, fmt, test)					\
++{									\
++	unsigned int i;							\
++									\
++	for_each_test(i, test) {					\
++		const struct test_fail *t = &test[i];			\
++		type tmp;						\
++		int rv;							\
++									\
++		tmp = 0;						\
++		rv = fn(t->str, t->base, &tmp);				\
++		if (rv >= 0) {						\
++			WARN(1, "str '%s', base %u, expected -E, got %d/" fmt "\n",	\
++				t->str, t->base, rv, tmp);		\
++			continue;					\
++		}							\
++	}								\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'fmt' - possible side-effects?
+#454: FILE: lib/test-kstrtox.c:45:
++#define TEST_OK(fn, type, fmt, test)					\
++{									\
++	unsigned int i;							\
++									\
++	for_each_test(i, test) {					\
++		const typeof(test[0]) *t = &test[i];			\
++		type res;						\
++		int rv;							\
++									\
++		rv = fn(t->str, t->base, &res);				\
++		if (rv != 0) {						\
++			WARN(1, "str '%s', base %u, expected 0/" fmt ", got %d\n",	\
++				t->str, t->base, t->expected_res, rv);	\
++			continue;					\
++		}							\
++		if (res != t->expected_res) {				\
++			WARN(1, "str '%s', base %u, expected " fmt ", got " fmt "\n",	\
++				t->str, t->base, t->expected_res, res);	\
++			continue;					\
++		}							\
++	}								\
++}
+
+CHECK:MACRO_ARG_REUSE: Macro argument reuse 'test' - possible side-effects?
+#454: FILE: lib/test-kstrtox.c:45:
++#define TEST_OK(fn, type, fmt, test)					\
++{									\
++	unsigned int i;							\
++									\
++	for_each_test(i, test) {					\
++		const typeof(test[0]) *t = &test[i];			\
++		type res;						\
++		int rv;							\
++									\
++		rv = fn(t->str, t->base, &res);				\
++		if (rv != 0) {						\
++			WARN(1, "str '%s', base %u, expected 0/" fmt ", got %d\n",	\
++				t->str, t->base, t->expected_res, rv);	\
++			continue;					\
++		}							\
++		if (res != t->expected_res) {				\
++			WARN(1, "str '%s', base %u, expected " fmt ", got " fmt "\n",	\
++				t->str, t->base, t->expected_res, res);	\
++			continue;					\
++		}							\
++	}								\
++}
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000420274.commit.50c234c910ddd03a627257cc11704614c0619761 total: 3 errors, 7 warnings, 8 checks, 807 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.D4vrp8Dlxe//home/fedora/lkml-analysis/lkml/2/patch.offset.0000420274.commit.50c234c910ddd03a627257cc11704614c0619761 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.

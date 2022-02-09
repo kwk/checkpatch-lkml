@@ -1,0 +1,181 @@
+WARNING:COMMIT_LOG_LONG_LINE: Possible unwrapped commit description (prefer a maximum 75 chars per line)
+#30: 
+inode, allowing most prelimary work to be done prior to acquiring the mutex.
+
+WARNING:TYPO_SPELLING: 'ment' may be misspelled - perhaps 'meant'?
+#94: 
+| ment with  |      |      |      |      |      |      |      |      |      |
+  ^^^^
+
+Some words may have been misspelled.  Consider reviewing them.
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#136: FILE: fs/ext4/ext4.h:1227:
++	struct mutex s_ondisk_orphan_lock;
+
+CHECK:UNCOMMENTED_DEFINITION: struct mutex definition without comment
+#137: FILE: fs/ext4/ext4.h:1228:
++	struct mutex *s_orphan_op_mutex;
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ext4_sb' may be better as '(ext4_sb)' to avoid precedence issues
+#151: FILE: fs/ext4/namei.c:53:
++#define	LOCK_EXT4I_ORPHAN(ext4_sb, ext4_i)		\
++	mutex_lock(&ext4_sb->s_orphan_op_mutex[ORPHAN_OP_INDEX(ext4_i)])
+
+CHECK:MACRO_ARG_PRECEDENCE: Macro argument 'ext4_sb' may be better as '(ext4_sb)' to avoid precedence issues
+#153: FILE: fs/ext4/namei.c:55:
++#define	UNLOCK_EXT4I_ORPHAN(ext4_sb, ext4_i)		\
++	mutex_unlock(&ext4_sb->s_orphan_op_mutex[ORPHAN_OP_INDEX(ext4_i)])
+
+WARNING:SUSPECT_CODE_INDENT: suspect code indent for conditional statements (8, 24)
+#173: FILE: fs/ext4/namei.c:2591:
+ 	if (NEXT_ORPHAN(inode) && NEXT_ORPHAN(inode) <=
+[...]
++			brelse(iloc.bh);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#184: FILE: fs/ext4/namei.c:2599:
++			jbd_debug(4, "superblock will point to %lu\n",
++				inode->i_ino);
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#186: FILE: fs/ext4/namei.c:2601:
++			jbd_debug(4, "orphan inode %lu will point to %d\n",
++				inode->i_ino, NEXT_ORPHAN(inode));
+
+WARNING:BLOCK_COMMENT_STYLE: Block comments use a trailing */ on a separate line
+#217: FILE: fs/ext4/namei.c:2621:
++		 * anyway on the next recovery. */
+
+The comment style is incorrect.  The preferred style for multi-
+line comments is::
+
+  /*
+  * This is the preferred style
+  * for multi line comments.
+  */
+
+The networking comment style is a bit different, with the first line
+not empty like the former::
+
+  /* This is the preferred comment style
+  * for files in net/ and drivers/net/
+  */
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#224: FILE: fs/ext4/namei.c:2625:
++		jbd_debug(4, "orphan inode %lu will point to %d\n",
+ 			inode->i_ino, NEXT_ORPHAN(inode));
+
+CHECK:UNNECESSARY_PARENTHESES: Unnecessary parentheses around '!sbi->s_journal'
+#246: FILE: fs/ext4/namei.c:2648:
++	if ((!sbi->s_journal) &&
++		!(sbi->s_mount_state & EXT4_ORPHAN_FS))
+
+Parentheses are not required in the following cases:
+
+  1. Function pointer uses::
+
+      (foo->bar)();
+
+    could be::
+
+      foo->bar();
+
+  2. Comparisons in if::
+
+      if ((foo->bar) && (foo->baz))
+      if ((foo == bar))
+
+    could be::
+
+      if (foo->bar && foo->baz)
+      if (foo == bar)
+
+  3. addressof/dereference single Lvalues::
+
+      &(foo->bar)
+      *(foo->bar)
+
+    could be::
+
+      &foo->bar
+      *foo->bar
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#247: FILE: fs/ext4/namei.c:2649:
++	if ((!sbi->s_journal) &&
++		!(sbi->s_mount_state & EXT4_ORPHAN_FS))
+
+CHECK:BRACES: braces {} should be used on all arms of this statement
+#273: FILE: fs/ext4/namei.c:2663:
++	if (!handle) {
+[...]
++	} else
+[...]
+
+The placement of braces is stylistically incorrect.
+The preferred way is to put the opening brace last on the line,
+and put the closing brace first::
+
+  if (x is true) {
+          we do y
+  }
+
+This applies for all non-functional blocks.
+However, there is one special case, namely functions: they have the
+opening brace at the beginning of the next line, thus::
+
+  int function(int x)
+  {
+          body of function
+  }
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
+
+CHECK:PARENTHESIS_ALIGNMENT: Alignment should match open parenthesis
+#275: FILE: fs/ext4/namei.c:2665:
++		jbd_debug(4, "remove inode %lu from orphan list\n",
++			inode->i_ino);
+
+CHECK:BRACES: Unbalanced braces around else statement
+#279: FILE: fs/ext4/namei.c:2669:
++	} else
+
+CHECK:ALLOC_SIZEOF_STRUCT: Prefer kmalloc(sizeof(*sbi->s_orphan_op_mutex)...) over kmalloc(sizeof(struct mutex)...)
+#355: FILE: fs/ext4/super.c:3925:
++	sbi->s_orphan_op_mutex = kmalloc(sizeof(struct mutex) <<
+
+The allocation style is bad.  In general for family of
+allocation functions using sizeof() to get memory size,
+constructs like::
+
+  p = alloc(sizeof(struct foo), ...)
+
+should be::
+
+  p = alloc(sizeof(*p), ...)
+
+See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
+
+WARNING:AVOID_BUG: Avoid crashing the kernel - try using WARN_ON & recovery code rather than BUG() or BUG_ON()
+#357: FILE: fs/ext4/super.c:3927:
++	BUG_ON(!sbi->s_orphan_op_mutex);
+
+BUG() or BUG_ON() should be avoided totally.
+Use WARN() and WARN_ON() instead, and handle the "impossible"
+error condition as gracefully as possible.
+
+See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000186426.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 total: 0 errors, 5 warnings, 13 checks, 227 lines checked
+
+NOTE: For some of the reported defects, checkpatch may be able to
+      mechanically convert to the typical style using --fix or --fix-inplace.
+
+./tmp.Jsq0oAcd9p//home/fedora/lkml-analysis/lkml/3/patch.offset.0000186426.commit.67c58aa0ce68d7ec56c09b3f7d1d22099beb0ff3 has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.
